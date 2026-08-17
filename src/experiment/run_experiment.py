@@ -57,7 +57,17 @@ def _interpolate_m_star(
         m_star = float(all_m[-1])
         status = "at_oracle_ceiling"
     else:
-        m_star = float(np.interp(target_cpc, cpc_curve_monotonic, all_m))
+        # Leftmost crossing rule for isotonic inversion
+        idx = int(np.searchsorted(cpc_curve_monotonic, target_cpc, side="left"))
+        if abs(cpc_curve_monotonic[idx] - target_cpc) < 1e-9:
+            m_star = float(all_m[idx])
+        else:
+            prev_cpc = cpc_curve_monotonic[idx - 1]
+            next_cpc = cpc_curve_monotonic[idx]
+            prev_m = all_m[idx - 1]
+            next_m = all_m[idx]
+            frac = (target_cpc - prev_cpc) / (next_cpc - prev_cpc)
+            m_star = float(prev_m + frac * (next_m - prev_m))
         status = "interpolated" if m_star <= 100000.0 else "extrapolated_towards_total"
 
     return m_star, status
