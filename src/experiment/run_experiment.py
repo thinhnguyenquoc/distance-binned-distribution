@@ -120,8 +120,10 @@ def run_target_city_experiments(
     bin_labels = city_data.bin_labels
     pair_o = city_data.pair_o_idx
     pair_d = city_data.pair_d_idx
+    pair_dist = city_data.pair_distance
+    pair_dist_km = torch.expm1(pair_dist)
 
-    inter_mask = (pair_o != pair_d) & (bin_labels > 0)
+    inter_mask = (pair_o != pair_d) & (pair_dist_km > 0.0)
     n_inter_pairs = int(inter_mask.sum().item())
     total_inter_trips = float(t_true[inter_mask].sum().item())
     total_trips = float(t_true.sum().item())
@@ -130,12 +132,12 @@ def run_target_city_experiments(
     # Condition M0: Pure Zero-Shot Inference
     # -----------------------------------------------------------------------
     t_pred_zs = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
-    m0_metrics = evaluate_moving_and_full(t_true, t_pred_zs, pair_o, pair_d, bin_labels)
+    m0_metrics = evaluate_moving_and_full(t_true, t_pred_zs, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
 
     # -----------------------------------------------------------------------
     # Moving-Bin Target Distributions (Oracle & Real)
     # -----------------------------------------------------------------------
-    yd_moving_oracle = extract_yd_moving_oracle(t_true, bin_labels, pair_o, pair_d)
+    yd_moving_oracle = extract_yd_moving_oracle(t_true, bin_labels, pair_o, pair_d, pair_distance=pair_dist)
     yd_moving_real = extract_yd_moving_real(city_name, meta_prior_dir=meta_prior_dir)
 
     # Distributional Overlap on Moving Bins
@@ -148,18 +150,18 @@ def run_target_city_experiments(
     # Condition M1^{oracle, +}: Oracle Moving-Bin Reference (q=1.0)
     # -----------------------------------------------------------------------
     t_pred_oracle_plus = calibrate_moving_bins(
-        t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_oracle, q=1.0
+        t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_oracle, q=1.0, pair_distance=pair_dist
     )
-    m1_oracle_plus_metrics = evaluate_moving_and_full(t_true, t_pred_oracle_plus, pair_o, pair_d, bin_labels)
+    m1_oracle_plus_metrics = evaluate_moving_and_full(t_true, t_pred_oracle_plus, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
 
     # -----------------------------------------------------------------------
     # Condition M1^{real, +}: Primary Meta Moving-Bin Calibration (q=1.0)
     # -----------------------------------------------------------------------
     if yd_moving_real is not None:
         t_pred_real_plus = calibrate_moving_bins(
-            t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=1.0
+            t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=1.0, pair_distance=pair_dist
         )
-        m1_real_plus_metrics = evaluate_moving_and_full(t_true, t_pred_real_plus, pair_o, pair_d, bin_labels)
+        m1_real_plus_metrics = evaluate_moving_and_full(t_true, t_pred_real_plus, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
     else:
         m1_real_plus_metrics = None
 
@@ -169,7 +171,7 @@ def run_target_city_experiments(
     yd_4bin_real = extract_yd_4bin_real(city_name, meta_prior_dir=meta_prior_dir)
     if yd_4bin_real is not None:
         t_pred_4bin_ablation = calibrate_4bin_legacy_ablation(t_pred_zs, bin_labels, yd_4bin_real)
-        m1_4bin_ablation_metrics = evaluate_moving_and_full(t_true, t_pred_4bin_ablation, pair_o, pair_d, bin_labels)
+        m1_4bin_ablation_metrics = evaluate_moving_and_full(t_true, t_pred_4bin_ablation, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
     else:
         m1_4bin_ablation_metrics = None
 
@@ -179,8 +181,8 @@ def run_target_city_experiments(
     q_curve = {}
     if yd_moving_real is not None:
         for q_val in [0.0, 0.25, 0.5, 0.75, 1.0]:
-            t_pred_q = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=q_val)
-            q_metrics = evaluate_moving_and_full(t_true, t_pred_q, pair_o, pair_d, bin_labels)
+            t_pred_q = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=q_val, pair_distance=pair_dist)
+            q_metrics = evaluate_moving_and_full(t_true, t_pred_q, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
             q_curve[f"q_{q_val:.2f}"] = {
                 "q": q_val,
                 "cpc_inter": q_metrics["cpc_inter"],
@@ -211,8 +213,8 @@ def run_target_city_experiments(
             else:
                 yd_m_moving = np.array([0.5, 0.4, 0.1])
 
-            t_pred_m = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_m_moving, q=1.0)
-            metrics_m = evaluate_moving_and_full(t_true, t_pred_m, pair_o, pair_d, bin_labels)
+            t_pred_m = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_m_moving, q=1.0, pair_distance=pair_dist)
+            metrics_m = evaluate_moving_and_full(t_true, t_pred_m, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
             seed_cpcs.append(metrics_m["cpc_inter"])
 
         m_key = "inf" if np.isinf(m) else str(int(m))
@@ -222,6 +224,7 @@ def run_target_city_experiments(
             "m": m,
             "num_seeds": len(cpc_arr),
             "std_ddof": 1,
+            "per_seed_cpcs": [float(x) for x in cpc_arr],
             "cpc_inter_mean": float(np.mean(cpc_arr)),
             "cpc_inter_std": float(np.std(cpc_arr, ddof=1)) if len(cpc_arr) > 1 else 0.0,
             "cpc_inter_median": float(np.median(cpc_arr)),

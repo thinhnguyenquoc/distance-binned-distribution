@@ -45,3 +45,6 @@ This matrix maps every locked architectural and scientific decision from the Int
 | **T39** | RQ1 Estimands | Marginal value $\Delta R^{\text{real},+}, \Delta R^{\text{oracle},+}$ and realization gap definitions | `test_delta_r_and_realization_gap_formulas` | `test_experiment_contracts.py` | `reference` |
 | **T40** | Provenance | Experiment manifest verifies seed, split, and zero target leakage | `test_experiment_manifest_reproducibility` | `test_experiment_contracts.py` | `scientific` |
 | **T41** | Smoke Test | End-to-end moving-bin target city experiment pipeline run on test city | `test_run_target_city_experiments_smoke` | `test_experiment_contracts.py` | `contract` |
+| **T42** | Provenance | Seed curves compute sample SD with Bessel's correction ($ddof=1$) | `test_seed_band_recomputed_with_ddof_1` | `test_experiment_contracts.py` | `scientific` |
+| **T43** | Provenance | $M_m^+$ curve records $ddof=1$, $num\_seeds$, and per-seed arrays | `test_mq_and_mm_curve_ddof_consistency` | `test_experiment_contracts.py` | `contract` |
+| **T44** | Support $\Omega_c^+$ | Distance matrix invariants ($D_{ii}=0$, symmetry, no NaN/Inf) and GT independence | `test_omega_plus_independent_of_ground_truth` | `test_experiment_contracts.py` | `scientific` |
