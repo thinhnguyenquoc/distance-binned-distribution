@@ -1,4 +1,4 @@
-"""
+r"""
 Gravity-Informed Urban-GNN Zero-Shot Model (M_0).
 (neuroGravity-inspired neural transferable architecture)
 
