@@ -43,7 +43,7 @@ def calibrate_moving_bins(
     target_moving_yd: np.ndarray | torch.Tensor,
     q: float = 1.0,
     eps: float = 1e-8,
-    tolerance: float = 1e-4,
+    tolerance: float = 1e-5,
 ) -> torch.Tensor:
     """
     Applies interzonal moving-bin calibration on Omega_c^+ (bins 1, 2, 3).
@@ -55,6 +55,7 @@ def calibrate_moving_bins(
         pair_d_idx:       (E,) destination indices.
         target_moving_yd: (3,) normalized moving-bin distribution for bins {1, 2, 3} (sums to 1.0).
         q:                soft calibration parameter in [0, 1]. q=1 is full match, q=0 is zero-shot.
+        tolerance:        numerical precision tolerance (default 1e-5).
 
     Returns:
         t_cal: (E,) calibrated flows with intrazonal preserved and interzonal re-scaled.
@@ -67,7 +68,10 @@ def calibrate_moving_bins(
         p_raw = target_moving_yd.to(device=t_pred_zero_shot.device, dtype=torch.float32)
 
     # Normalize moving target
-    p_raw = p_raw / torch.clamp(torch.sum(p_raw), min=eps)
+    raw_sum = torch.sum(p_raw)
+    if raw_sum <= 0:
+        return t_pred_zero_shot.clone()
+    p_raw = p_raw / raw_sum
 
     # Mask for interzonal pairs Omega_c^+ (i != j and bin > 0)
     inter_mask = (pair_o_idx != pair_d_idx) & (bin_labels > 0)
@@ -93,24 +97,26 @@ def calibrate_moving_bins(
     p_active = p_raw * active_mask.float()
     active_sum = torch.sum(p_active)
     if active_sum <= 0:
-        p_cond = implied_b / (n_inter_hat + eps)
+        p_cond = implied_b / n_inter_hat
     else:
         p_cond = p_active / active_sum
 
-    implied_p = implied_b / (n_inter_hat + eps)
+    implied_p = implied_b / n_inter_hat
 
     # Compute soft weights w_k(q) = (p_cond / implied_p)^q
     w = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
     for idx in range(3):
         if active_mask[idx] and implied_p[idx] > 0:
-            ratio = (p_cond[idx] + eps) / (implied_p[idx] + eps)
+            ratio = p_cond[idx] / implied_p[idx]
             w[idx] = ratio ** q
         else:
             w[idx] = 1.0
 
     # Normalization to ensure interzonal mass preservation: \sum \hat{T}^{cal} == \sum \hat{T}^{ZS}
     weighted_mass = torch.sum(implied_p * w)
-    s = w / (weighted_mass + eps)  # (3,)
+    s = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
+    if weighted_mass > 0:
+        s = w / weighted_mass
 
     # Apply scaling to interzonal pairs
     for idx, bin_k in enumerate([1, 2, 3]):
@@ -118,29 +124,31 @@ def calibrate_moving_bins(
         if k_mask.any():
             t_cal[k_mask] = t_pred_zero_shot[k_mask] * s[idx]
 
-    # Invariant 1: Interzonal mass preservation
+    # Invariant 1: Interzonal mass preservation within numerical tolerance
     cal_inter_mass = torch.sum(t_cal[inter_mask])
     mass_diff_rel = torch.abs(cal_inter_mass - n_inter_hat) / n_inter_hat
     if mass_diff_rel > tolerance:
-        t_cal[inter_mask] = t_cal[inter_mask] * (n_inter_hat / (cal_inter_mass + eps))
+        t_cal[inter_mask] = t_cal[inter_mask] * (n_inter_hat / cal_inter_mass)
 
     # Invariant 2: Intrazonal identity
-    assert torch.allclose(t_cal[intra_mask], t_pred_zero_shot[intra_mask], atol=1e-5), "Intrazonal violated!"
+    assert torch.allclose(t_cal[intra_mask], t_pred_zero_shot[intra_mask], atol=1e-6), "Intrazonal violated!"
 
-    # Invariant 3: If q=1, verify bin matching on active bins
+    # Invariant 3: If q=1, verify bin matching on active bins within 1e-5
     if abs(q - 1.0) < 1e-4:
         cal_inter_p = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
+        total_inter_cal = torch.sum(t_cal[inter_mask])
         for idx, bin_k in enumerate([1, 2, 3]):
             if active_mask[idx]:
                 cal_inter_p[idx] = torch.sum(t_cal[inter_mask & (bin_labels == bin_k)])
-        cal_inter_p = cal_inter_p / (torch.sum(t_cal[inter_mask]) + eps)
+        if total_inter_cal > 0:
+            cal_inter_p = cal_inter_p / total_inter_cal
 
         for idx in range(3):
             if active_mask[idx]:
                 bin_err = torch.abs(cal_inter_p[idx] - p_cond[idx]).item()
                 assert bin_err < tolerance, (
-                    f"Invariant failed on moving bin {idx+1}: target={p_cond[idx].item():.4f}, "
-                    f"got={cal_inter_p[idx].item():.4f}, err={bin_err:.4f}"
+                    f"Invariant failed on moving bin {idx+1}: target={p_cond[idx].item():.6f}, "
+                    f"got={cal_inter_p[idx].item():.6f}, err={bin_err:.6f}"
                 )
 
     return t_cal

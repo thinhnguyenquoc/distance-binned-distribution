@@ -1,5 +1,5 @@
 """
-Tests for Experiment Contracts, Model Freezing, Shared State, and Manifest Integrity.
+Tests for Experiment Contracts, Moving-Bin Support, and Manifest Integrity.
 (Tests T37 to T41)
 """
 
@@ -9,15 +9,13 @@ import numpy as np
 from od_plan_tester.project_adapter import (
     train_zero_shot_model,
     load_cities,
-    load_city,
     run_target_city_experiments,
-    ZeroShotODModel,
 )
 
 
 @pytest.mark.scientific
 def test_model_freezing_theta_star():
-    """T37: Model parameters theta* are completely frozen (requires_grad=False) before inference."""
+    """T37: Model parameters theta* are completely frozen (requires_grad=False) before target inference."""
     model, _ = train_zero_shot_model(
         train_city_names=["Raleigh", "Denver"],
         data_root="data",
@@ -32,7 +30,7 @@ def test_model_freezing_theta_star():
 
 @pytest.mark.scientific
 def test_shared_support_omega_c_across_conditions():
-    """T38: All experimental conditions (M0, M1^oracle, M1^real, Mq) evaluate on identical candidate support Omega_c."""
+    """T38: All moving-bin experimental conditions evaluate on identical candidate support Omega_c."""
     train_data_list, fitted_scaler = load_cities(["Raleigh", "Denver"], data_root="data")
     model, _ = train_zero_shot_model(
         train_city_names=["Raleigh", "Denver"],
@@ -52,28 +50,29 @@ def test_shared_support_omega_c_across_conditions():
         device_str="cpu",
     )
 
-    # Number of candidate pairs must be identical
+    # Number of candidate pairs must be positive and consistent
     assert res["n_pairs"] > 0
+    assert res["n_inter_pairs"] > 0
     assert "M0" in res
-    assert "M1_oracle" in res
-    assert "M1_real" in res
-    assert "Mq_curve" in res
+    assert "M1_oracle_plus" in res
+    assert "M1_real_plus" in res
+    assert "Mm_sampling_curve" in res
 
 
 @pytest.mark.reference
 def test_delta_r_and_realization_gap_formulas():
-    """T39: Verify Delta R and realization gap arithmetic formulas."""
-    cpc_m0 = 0.40
-    cpc_m1_real = 0.48
-    cpc_m1_oracle = 0.55
+    """T39: Verify Delta R^+ and realization gap arithmetic formulas on interzonal metrics."""
+    cpc_m0 = 0.35
+    cpc_m1_real = 0.42
+    cpc_m1_oracle = 0.50
 
     delta_r_real = cpc_m1_real - cpc_m0
     delta_r_oracle = cpc_m1_oracle - cpc_m0
     realization_gap = cpc_m1_oracle - cpc_m1_real
 
-    assert pytest.approx(0.08, rel=1e-5) == delta_r_real
+    assert pytest.approx(0.07, rel=1e-5) == delta_r_real
     assert pytest.approx(0.15, rel=1e-5) == delta_r_oracle
-    assert pytest.approx(0.07, rel=1e-5) == realization_gap
+    assert pytest.approx(0.08, rel=1e-5) == realization_gap
 
 
 @pytest.mark.scientific
@@ -96,7 +95,7 @@ def test_experiment_manifest_reproducibility():
 
 @pytest.mark.contract
 def test_run_target_city_experiments_smoke():
-    """T41: Smoke test verifying target city experiment runner produces all expected keys."""
+    """T41: Smoke test verifying moving-bin target city experiment runner produces all expected keys."""
     train_data_list, fitted_scaler = load_cities(["Raleigh"], data_root="data")
     model, _ = train_zero_shot_model(
         train_city_names=["Raleigh"],
@@ -117,9 +116,11 @@ def test_run_target_city_experiments_smoke():
     )
 
     expected_keys = [
-        "city", "n_tracts", "n_pairs", "total_trips", "M0", "M1_oracle",
-        "M1_real", "Mq_curve", "delta_r_oracle", "delta_r_real",
-        "realization_gap", "m_star_real", "q_star_real", "m_star_oracle", "q_star_oracle"
+        "city", "n_tracts", "n_pairs", "n_inter_pairs", "total_trips", "total_inter_trips",
+        "distributional_overlap", "M0", "M1_real_plus", "M1_oracle_plus", "M1_4bin_ablation",
+        "Mq_soft_curve", "Mm_sampling_curve", "delta_r_oracle_plus", "delta_r_real_plus",
+        "realization_gap_plus", "delta_r_4bin_ablation", "m_star_real", "q_star_real",
+        "m_star_oracle", "q_star_oracle"
     ]
     for k in expected_keys:
-        assert k in res, f"Missing key {k} in experiment result dictionary"
+        assert k in res, f"Missing moving-bin key {k} in experiment result dictionary"

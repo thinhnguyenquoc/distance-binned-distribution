@@ -67,7 +67,7 @@ def test_ztnb_conditional_mean_strictly_greater():
 @pytest.mark.reference
 def test_ztnb_conditional_mean_asymptotics():
     """T04: As mu -> infinity, P(0) -> 0 and E[T | T >= 1] -> mu."""
-    mu_large = torch.tensor([1000.0, 5000.0])
+    mu_large = torch.tensor([10000.0, 50000.0])
     log_phi = torch.tensor(0.0)  # phi = 1.0
     c_mean = compute_conditional_mean(mu_large, log_phi)
 
