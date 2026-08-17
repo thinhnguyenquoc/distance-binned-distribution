@@ -94,11 +94,22 @@ No target-city OD used. Pure zero-shot baseline.
 
 All conditions share:
 1. The **same frozen model** $\theta^*$
-2. The **same calibration operator**: bin-wise multiplicative calibration
+2. The **same calibration operator**: KL projection onto the distance-bin constraint set
+
+**Theoretical framing (KL projection)**:
+$$\hat{T}^{YD} = \arg\min_{T}\, D_{KL}(T \,\|\, \hat{T}^{ZS}) \quad \text{s.t.} \quad B(T)[k] = Y_D[k]\ \forall k$$
+
+where $B(T)[k] = \frac{\sum_{(i,j)\in\Omega_c\cap B_k} T_{ij}}{\sum_{(i,j)\in\Omega_c} T_{ij}}$ is the bin fraction.
+
+This is the **forward KL / I-projection**: minimum-information-change update that brings $\hat{T}^{ZS}$ as close as possible to satisfying $Y_D$ while disturbing it least. Since bins are disjoint, Lagrange multipliers give a closed-form solution:
 
 $$\hat{Y}_D[k] = \frac{\sum_{(i,j) \in \Omega_c \cap B_k} \hat{T}^{ZS}_{ij}}{\sum_{(i,j)\in\Omega_c} \hat{T}^{ZS}_{ij}}, \qquad s_k = \frac{Y_D[k] + \epsilon}{\hat{Y}_D[k] + \epsilon}, \qquad \hat{T}^{\text{cal}}_{ij} = s_{k(i,j)} \cdot \hat{T}^{ZS}_{ij}$$
 
-> **Why not IPF**: distance bins are non-overlapping → single-pass multiplicative rescaling suffices; no iteration needed.
+**Implementation = KL projection closed-form**: bin-wise multiplicative scaling is not a heuristic — it IS the solution to the KL minimization.
+
+> **KL direction note for Methods**: we minimize $D_{KL}(T \| \hat{T}^{ZS})$, not $D_{KL}(\hat{T}^{ZS} \| T)$. The forward direction gives the minimum-relative-entropy update and yields the multiplicative scaling. Reviewer question on direction choice: forward KL encodes "change $T$ as little as possible from $\hat{T}^{ZS}$", consistent with $\theta^*$ being frozen.
+
+> **Why not IPF**: distance bins are non-overlapping → single-pass multiplicative rescaling is the exact closed-form solution; no iteration needed.
 
 | Condition | $Y_D$ source | Purpose |
 |---|---|---|
@@ -225,16 +236,15 @@ src/
 ├── models/
 │   ├── node_encoder.py     # GraphBERT-style urban GNN
 │   ├── gravity.py          # Classical 2-param gravity prior
-│   ├── decoder.py          # Pairwise OD decoder (π and μ heads)
+│   ├── decoder.py          # Pairwise OD decoder (single mu head, ZTNB)
 │   └── zero_shot_model.py  # Full M0 pipeline
 ├── loss/
-│   ├── bce_weighted.py     # Weighted BCE with class-prior correction
-│   └── ztnb.py             # Zero-truncated NB NLL
+│   └── ztnb.py             # ZTNB NLL + NB sensitivity (6/6 unit tests pass)
 ├── calibration/
 │   └── bin_calibration.py  # Bin-wise multiplicative calibration (M0 → M1, Mq)
 ├── training/
 │   ├── train.py            # Cross-city training loop
-│   └── evaluate.py         # CPC, RMSE-log1p, Pearson on full N² matrix
+│   └── evaluate.py         # CPC, RMSE-log1p, Pearson on Omega_c
 └── experiment/
     ├── run_experiment.py   # Orchestrates all 4 conditions per fold
     ├── compute_delta_r.py  # ΔR and Pr(ΔR>0) across 50 cities
@@ -243,22 +253,30 @@ src/
 
 ---
 
-## Decision Table (Complete)
-
 | Component | Decision |
 |---|---|
-| Urban GNN graph | Spatial proximity graph; pilot k-NN vs radius; invariant: no OD used |
-| OD decoder | All-pairs pairwise MLP; N² at inference |
-| Gravity prior | Classical 2-param (stable for cross-city) |
-| Link head label | "Observed non-zero flow prediction" (not "structural topology") |
-| Loss | BCE (weighted) + ZTNB NLL |
+| **Zero-shot model role** | Instrument/baseline to measure $\Delta R$; not the primary contribution |
+| Urban GNN graph | $G^{\text{urban}}$ from spatial proximity only; pilot k-NN vs radius; invariant: no OD used |
+| OD decoder | Single $\mu_{ij}$ head; pairwise MLP; all $\Omega_c$ pairs at inference |
+| $\mu_{ij}$ interpretation | $E[T_{ij} \mid T_{ij}>0]$ (ZTNB conditional mean) |
+| Gravity prior | Classical 2-param $G + \log P_i + \log P_j - \alpha \log D_{ij}$ (stable for cross-city) |
+| BCE / hurdle | **Removed** (no zero labels in candidate set $\Omega_c$) |
+| Primary likelihood | **ZTNB** — conservative assumption; missingness mechanism not fully identified |
+| Sensitivity likelihood | NB unconditional (pilot comparison) |
 | $\phi$ | Global trainable scalar per fold |
-| $\lambda_1, \lambda_2$ | = 1, mean losses; monitor gradient norms |
-| $Y_D$ calibration | Bin-wise multiplicative (NOT IPF) |
-| $M_q$ sampling | Multinomial trip sampling |
-| $q^*$ definition | $R_c(q^*_c) = R_c^{YD,\text{real}}$, via monotonic interpolation |
-| $q^*$ interpretation | Reconstruction-value equivalent under ideal trip-sampling |
-| Realization gap | $\Delta R^{\text{realization}}$; secondary diagnostic, no causal claim |
+| Training support | $\Omega_c$ = candidate pairs in pair files |
+| Evaluation support | $\Omega_c$ of held-out city (NOT full $N^2$) |
+| Pairs outside $\Omega_c$ | Unknown/excluded; not zero-filled |
+| Full $N^2$ reconstruction claim | **Removed** from paper framing |
+| $Y_D$ calibration | **KL projection** (forward KL I-projection); closed-form = bin-wise multiplicative scaling |
+| $Y_D^{\text{oracle}}$ | Computed over $\Omega_c$; apples-to-apples with model predictions |
+| $Y_D^{\text{real}}$ | Meta mobility (county-level); support compatibility check required before $M_1^{\text{real}}$ |
+| $Y_D$ support mismatch | Acknowledged; $\Delta R^{\text{realization}}$ not interpreted causally |
+| $M_q$ sampling | Multinomial trip sampling (not uniform cell sampling) |
+| $q^*$ definition | $R_c(q^*_c) = R_c^{YD,\text{real}}$, via monotonic interpolation over $m$ grid |
+| $q^*$ interpretation | Trip-fraction equivalent under ideal Multinomial sampling — not "% raw OD" |
+| $m$ grid | $\{100, 500, 1\text{k}, 5\text{k}, 10\text{k}, 50\text{k}, 100\text{k}, \infty\}$; convert to $q_c$ per city |
+| Realization gap | $\Delta R^{\text{realization}} = R^{\text{oracle}} - R^{\text{real}}$; secondary diagnostic, no causal claim |
 | $\theta^*$ | Frozen throughout all calibration stages |
-| Target-city model update | None |
-| Evaluation | Full $N^2$ matrix, no sampling |
+| Target-city model update | **None** |
+| NeuroGravity (actual) | Optional robustness check if resources allow; not primary contribution |
