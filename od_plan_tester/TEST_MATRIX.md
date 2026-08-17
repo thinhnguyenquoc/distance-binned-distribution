@@ -48,3 +48,4 @@ This matrix maps every locked architectural and scientific decision from the Int
 | **T42** | Provenance | Seed curves compute sample SD with Bessel's correction ($ddof=1$) | `test_seed_band_recomputed_with_ddof_1` | `test_experiment_contracts.py` | `scientific` |
 | **T43** | Provenance | $M_m^+$ curve records $ddof=1$, $num\_seeds$, and per-seed arrays | `test_mq_and_mm_curve_ddof_consistency` | `test_experiment_contracts.py` | `contract` |
 | **T44** | Support $\Omega_c^+$ | Distance matrix invariants ($D_{ii}=0$, symmetry, no NaN/Inf) and GT independence | `test_omega_plus_independent_of_ground_truth` | `test_experiment_contracts.py` | `scientific` |
+| **T45** | Zero Leakage | Changing, permuting, or zeroing target ground-truth $T^{\text{GT}}$ has zero effect on $M_0$ predictions | `test_target_ground_truth_permutation_invariance_for_m0` | `test_experiment_contracts.py` | `scientific` |
