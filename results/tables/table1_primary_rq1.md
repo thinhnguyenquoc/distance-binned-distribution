@@ -1,4 +1,4 @@
-### Table 1: Primary RQ1 Estimands — Marginal Value of Coarse Mobility Information (Interzonal $\Omega_c^+$)
+### Table 1: Out-of-Fold Descriptive Statistics Across All 50 Cities
 
 | Metric / Condition | Zero-Shot ($M_0$) | Real Moving-Bin ($M_1^{\text{real},+}$) | Oracle Reference ($M_1^{\text{oracle},+}$) | Realization Gap |
 |---|---|---|---|---|

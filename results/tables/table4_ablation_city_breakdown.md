@@ -1,4 +1,4 @@
-### Table 4: City-Level Ablation Breakdown — Moving-Bin vs Legacy 4-Bin (Penalty of Bin 0 Inclusion)
+### Table 4: City-Level Ablation Breakdown — Moving-Bin vs Legacy 4-Bin Penalty
 
 | City | $M_0$ $\text{CPC}_{\text{inter}}$ | $M_1^{\text{real},+}$ $\text{CPC}_{\text{inter}}$ | $M_1^{\text{4bin}}$ $\text{CPC}_{\text{inter}}$ | $\Delta R^{\text{real},+}$ | $\Delta R^{\text{4bin}}$ | Ablation Penalty ($\Delta R^{\text{real},+} - \Delta R^{\text{4bin}}$) |
 |---|---|---|---|---|---|---|
