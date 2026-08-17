@@ -1,11 +1,11 @@
-# Implementation Plan (Final — Locked)
+# Implementation Plan (Final — Locked & Verified)
 ## Quantifying the Marginal Value of Distance-Binned Mobility Information
 
 ---
 
 ## Core Framing
 
-> **This study does not propose another zero-shot OD generator. It quantifies how much additional OD-relevant information a coarse target-city mobility observation contributes beyond zero-shot inference, evaluated over the candidate OD pair support available for each held-out city.**
+> **This study does not propose another zero-shot OD generator. It quantifies how much additional OD-relevant information a coarse target-city mobility observation contributes beyond zero-shot inference, evaluated over the candidate OD pair support $\Omega_c$ available for each held-out city.**
 
 NeuroGravity (Yang et al., 2026) demonstrated that a physics-informed GNN can reconstruct and transfer OD flows across unseen cities using only urban features and pairwise distance. **This study begins exactly there**: given such a frozen model, what does a target-city distance-binned mobility distribution ($Y_D$) add?
 
@@ -13,270 +13,126 @@ NeuroGravity (Yang et al., 2026) demonstrated that a physics-informed GNN can re
 
 ## Architecture: Physics-Informed GNN with Pairwise Decoder
 
-$$\boxed{\text{Urban GNN} \rightarrow h_i \rightarrow \text{Pairwise OD Decoder} \rightarrow \pi_{ij},\ \mu_{ij}}$$
+$$\boxed{\text{Urban GNN} \rightarrow h_i \rightarrow \text{Pairwise OD Decoder} \rightarrow \mu_{NB, ij} \rightarrow \hat{T}^{ZS}_{ij} = E[T_{ij} \mid T_{ij} \ge 1]}$$
 
 ### Sub-module 1: Node Encoder (Urban GNN)
 $$h_i = \text{GNN}_\theta(X,\ G^{\text{urban}})$$
 
-- **Node features** $X_i$: census (population, income, employment), POI (office, commercial, education density), road (density, motorway length)
-- **Graph** $G^{\text{urban}} = g(\text{observable geography only})$ — constructed from spatial proximity, NOT from OD data
-- **Graph construction**: pilot both $k$-NN ($k \in \{5, 10, 20\}$) and radius-based graph (radius normalized to city spatial scale). Lock one rule after pilot; must be identical for all cities including held-out targets.
-- **Architecture**: GraphBERT-style edge-conditioned attention (as in NeuroGravity)
+- **Node features** $X_i$: 26 features spanning census (population, income, employment), POI (office, commercial, education density), road (density, motorway length).
+- **Graph** $G^{\text{urban}} = g(\text{observable geography only})$ — constructed strictly from spatial coordinates, NEVER from OD data.
+- **Graph construction (Locked after Pilot)**: **Radius graph with $r = 5.0\text{ km}$** (with fallback to 1-NN for isolated tracts). Evaluated in topology pilot against $k$-NN ($k \in \{5, 10, 20\}$) and demonstrated superior held-out transfer performance (CPC 0.0454 vs 0.0327–0.0357).
+- **StandardScaler**: fitted strictly on source training cities' node features ($X_{\text{train}}$); target city node features are strictly normalized using the pre-fitted scaler.
 
 ### Sub-module 2: Gravity Prior
 $$\log T^{\text{grav}}_{ij} = G + \log P_i + \log P_j - \alpha \log D_{ij}$$
-Classical 2-parameter gravity model (stable for cross-city transfer per NeuroGravity findings). $G$ and $\alpha$ are global trainable parameters.
+Classical 2-parameter gravity model. $G$ and $\alpha$ are global trainable parameters shared across all cities in a fold.
 
-### Sub-module 3: Pairwise OD Decoder
+### Sub-module 3: Pairwise OD Decoder (Single Base Magnitude Head)
 Edge representation:
-$$e_{ij} = [h_i,\ h_j,\ \log D_{ij},\ \log T^{\text{grav}}_{ij}]$$
+$$e_{ij} = [h_i,\ h_j,\ \log(1 + D_{ij}),\ \log T^{\text{grav}}_{ij}]$$
 
-Two prediction heads:
-- **Observed-nonzero probability**: $\pi_{ij} = \sigma(f_\pi(e_{ij}))$
-- **Positive flow magnitude**: $\mu_{ij} = \text{softplus}(f_\mu(e_{ij})) = E[T_{ij} \mid T_{ij} > 0]$
+Single prediction head producing base Negative Binomial mean:
+$$\mu_{NB, ij} = \text{softplus}(f_\mu(e_{ij})) > 0$$
 
-> **Note**: $\mu_{ij}$ is parameterized as the conditional mean of the zero-truncated NB, not the unconditional NB mean. This avoids the $\hat{T} \neq \pi\mu$ inconsistency.
-
-Zero-shot expected OD:
-$$\boxed{\hat{T}^{ZS}_{ij} = \pi_{ij} \cdot \mu_{ij}}$$
-
-**Training**: negative-sample OD pairs for BCE efficiency, with class-prior correction (weighted BCE so $\pi_{ij}$ remains calibrated).
-**Inference**: evaluate decoder on **all $N^2$ OD pairs** — no sampling.
+- **Training**: minimizes exact Zero-Truncated Negative Binomial negative log-likelihood $\mathcal{L}_{\text{train}}$ on positive candidate observations $\Omega_c$.
+- **Inference**: evaluates exact conditional expectation on candidate support $\Omega_c$:
+$$\boxed{\hat{T}^{ZS}_{ij} = E[T_{ij} \mid T_{ij} \ge 1] = \frac{\mu_{NB, ij}}{1 - P_{NB}(0; \mu_{NB, ij}, \phi)} = \frac{\mu_{NB, ij}}{1 - \left(\frac{\phi}{\mu_{NB, ij} + \phi}\right)^\phi}}$$
 
 ---
 
 ## Loss Function (Locked)
 
-$$\boxed{\mathcal{L}_{\text{train}} = -\frac{1}{|\Omega^+|}\sum_{(i,j)\in\Omega^+} \log P_{\text{ZTNB}}(T_{ij};\, \mu_{ij},\, \phi)}$$
+$$\boxed{\mathcal{L}_{\text{train}} = -\frac{1}{|\Omega^+|}\sum_{(i,j)\in\Omega^+} \log P_{\text{ZTNB}}(T_{ij};\, \mu_{NB, ij},\, \phi)}$$
 
-where $\Omega^+ = \Omega_c$ = candidate pairs present in the pair files.
+where:
+$$\log P_{\text{ZTNB}}(T=t \mid T \ge 1) = \log P_{NB}(t; \mu_{NB}, \phi) - \log(1 - P_{NB}(0; \mu_{NB}, \phi))$$
+and $\Omega^+ = \Omega_c$ is the set of candidate pairs present in the pair files ($T_{ij} \ge 1$).
 
-**Likelihood choice**: ZTNB is adopted as the **primary conservative assumption** — not proven correct by provenance audit. The audit established that $\Omega_c$ contains only positive-flow pairs and that the missingness mechanism is not a simple distance cutoff, making positive-only selection plausible. NB (unconditional) is used as a **sensitivity model** in pilot runs.
-
-> **Methods wording**: *"Training OD records contain only pairs with observed positive flows. Pairs absent from both distance and OD files are excluded from training and evaluation; their missingness mechanism cannot be determined from available data and they are not treated as confirmed zero flows."*
-
-| Component | Definition |
-|---|---|
-| $z_{ij}$ | $\mathbf{1}(T_{ij} > 0)$ — observed non-zero flow indicator |
-| $\mathcal{L}_{\text{BCE}}$ | Weighted BCE on $z_{ij}$ vs $\pi_{ij}$; negative sampling with class-prior correction |
-| $\mathcal{L}_{\text{ZTNB}}$ | Zero-truncated NB NLL on positive pairs only: $\log P_{NB}(t) - \log(1 - P_{NB}(0))$ |
-| $\phi$ | Global trainable dispersion, per fold |
-| $\lambda_1 = \lambda_2$ | $= 1$, mean losses; monitor loss scale and gradient norms in pilot |
-| Zero labels | Acknowledged: $T_{ij}=0$ may be structural zero OR unobserved flow (noted in Limitations) |
-| BCE head label | "Observed non-zero flow prediction" — NOT "structural link existence" |
+- $\phi = \exp(\log \phi) > 0$ is a global trainable dispersion parameter per fold.
+- Missing pairs outside $\Omega_c$ are treated as **unknown/excluded** (not zero-filled).
 
 ---
 
-## Data Split: 5-Fold City Cross-Validation
+## 5-Fold Stratified City Cross-Validation
 
-Cities stratified by tract count before folding (to balance size distribution):
+Cities stratified by tract count (10 strata $\times$ 5 cities) to balance size distributions across folds:
 
-| Fold | Train (40 cities) | Test (10 cities) |
+| Fold | Train (40 cities) | Test (10 held-out cities) |
 |:---:|---|---|
-| 1–5 | Rotating | Each city tested exactly once |
+| 1–5 | Rotating 40 source cities | Each city evaluated as held-out target exactly once |
 
-Total: all 50 cities evaluated as held-out target.
-
----
-
-## Experimental Pipeline
-
-### Stage A — Cross-city Training
-Train $f_\theta$ on source cities. After convergence: **freeze all parameters → $\theta^*$**.
-
-### Stage B — Zero-shot Transfer ($M_0$)
-$$(X^{c^*},\ D^{c^*}) \xrightarrow{f_{\theta^*}} \hat{T}^{ZS}$$
-No target-city OD used. Pure zero-shot baseline.
+Total: all 50 US cities evaluated out-of-sample.
 
 ---
 
-## Four Experimental Conditions
+## Four Experimental Conditions & Calibration
 
 All conditions share:
 1. The **same frozen model** $\theta^*$
-2. The **same calibration operator**: KL projection onto the distance-bin constraint set
+2. The **same calibration operator**: Support-Conditioned KL Projection onto the distance-bin constraint set
 
-**Theoretical framing (KL projection)**:
-$$\hat{T}^{YD} = \arg\min_{T}\, D_{KL}(T \,\|\, \hat{T}^{ZS}) \quad \text{s.t.} \quad B(T)[k] = Y_D[k]\ \forall k$$
+### Calibration Formulation (Support-Conditioned KL Projection)
+$$\hat{T}^{\text{cal}} = \arg\min_{T}\, D_{KL}(T \,\|\, \hat{T}^{ZS}) \quad \text{s.t.} \quad B(T)[k] = Y_D^{\Omega_c}[k]\ \forall k \in \text{active bins}$$
 
-where $B(T)[k] = \frac{\sum_{(i,j)\in\Omega_c\cap B_k} T_{ij}}{\sum_{(i,j)\in\Omega_c} T_{ij}}$ is the bin fraction.
+Where the target distribution is conditioned on the active spatial support of $\Omega_c$ (for cities with diameter $< 100$ km):
+$$Y_D^{\Omega_c}[k] = \frac{Y_D[k] \cdot \mathbf{1}(k \in \text{active})}{\sum_{l} Y_D[l] \cdot \mathbf{1}(l \in \text{active})}$$
 
-This is the **forward KL / I-projection**: minimum-information-change update that brings $\hat{T}^{ZS}$ as close as possible to satisfying $Y_D$ while disturbing it least. Since bins are disjoint, Lagrange multipliers give a closed-form solution:
+Closed-form mass-preserving multiplicative solution:
+$$\hat{N} = \sum_{(i,j)\in\Omega_c} \hat{T}^{ZS}_{ij}, \qquad B_k^{\text{target}} = Y_D^{\Omega_c}[k] \cdot \hat{N}, \qquad \hat{B}_k = \sum_{(i,j)\in\Omega_c, b(i,j)=k} \hat{T}^{ZS}_{ij}$$
+$$s_k = \frac{B_k^{\text{target}} + \epsilon}{\hat{B}_k + \epsilon}, \qquad \boxed{\hat{T}^{\text{cal}}_{ij} = s_{b(i,j)} \cdot \hat{T}^{ZS}_{ij}}$$
 
-$$\hat{Y}_D[k] = \frac{\sum_{(i,j) \in \Omega_c \cap B_k} \hat{T}^{ZS}_{ij}}{\sum_{(i,j)\in\Omega_c} \hat{T}^{ZS}_{ij}}, \qquad s_k = \frac{Y_D[k] + \epsilon}{\hat{Y}_D[k] + \epsilon}, \qquad \hat{T}^{\text{cal}}_{ij} = s_{k(i,j)} \cdot \hat{T}^{ZS}_{ij}$$
-
-**Implementation = KL projection closed-form**: bin-wise multiplicative scaling is not a heuristic — it IS the solution to the KL minimization.
-
-> **KL direction note for Methods**: we minimize $D_{KL}(T \| \hat{T}^{ZS})$, not $D_{KL}(\hat{T}^{ZS} \| T)$. The forward direction gives the minimum-relative-entropy update and yields the multiplicative scaling. Reviewer question on direction choice: forward KL encodes "change $T$ as little as possible from $\hat{T}^{ZS}$", consistent with $\theta^*$ being frozen.
-
-> **Why not IPF**: distance bins are non-overlapping → single-pass multiplicative rescaling is the exact closed-form solution; no iteration needed.
+**Strict Invariants**:
+1. Exact total flow mass preservation: $\sum \hat{T}^{\text{cal}} \equiv \sum \hat{T}^{ZS}$.
+2. Exact bin proportion matching: $\frac{\sum_{b(i,j)=k} \hat{T}^{\text{cal}}_{ij}}{\sum \hat{T}^{\text{cal}}_{ij}} \equiv Y_D^{\Omega_c}[k]$.
 
 | Condition | $Y_D$ source | Purpose |
 |---|---|---|
 | **$M_0$** | None | Baseline $R^{ZS}_c$ |
-| **$M_1^{\text{oracle}}$** | $Y_D^{\text{GT}}$ computed from $T^{GT}$ | Ceiling: max gain from perfect 4-bin knowledge |
-| **$M_1^{\text{real}}$** | $Y_D^{\text{Meta}}$ from Meta mobility data (county-level, averaged over temporal snapshots) | Real-world gain |
-| **$M_q$** | $\tilde{Y}_D^{(q)}$ estimated from $q$-fraction Multinomial trip sample | Reference curve for $q^*$ |
+| **$M_1^{\text{oracle}}$** | $Y_D^{\text{oracle}}$ computed from GT over $\Omega_c$ | Theoretical ceiling of 4-bin constraint |
+| **$M_1^{\text{real}}$** | $Y_D^{\text{real}}$ extracted from Meta mobility data (FIPS-mapped, snapshot-averaged) | Real-world information gain |
+| **$M_q$** | $\tilde{Y}_D^{(m)}$ from Multinomial trip sampling ($S=20$ seeds per $m$ level) | Reference curve for $m^*$ and $q^*$ |
 
 ---
 
-## Y_D Sources
-
-**Oracle**: $Y_D^{\text{oracle}}[k] = \sum_{(i,j) \in \Omega_c \cap B_k} T^{GT}_{ij}\ /\ \sum_{(i,j)\in\Omega_c} T^{GT}_{ij}$
-
-> **Note**: $Y_D^{\text{oracle}}$ is computed over $\Omega_c$ (candidate pairs only), NOT over all $N^2$ pairs.
-
-**Real**: extracted from Meta mobility distribution maps.
-- City → county mapping via FIPS code.
-- Average all available temporal snapshots (April–August 2026).
-- 4 bins map to Meta categories: `0`, `(0,10)`, `[10,100)`, `100+` km.
-
-> **Y_D support compatibility check** (required before running $M_1^{\text{real}}$): $Y_D^{\text{oracle}}$ is defined over $\Omega_c$; $Y_D^{\text{real}}$ reflects Meta's full observed mobility population. These two are over **different spatial and mobility supports**. Their difference ($\Delta R^{\text{realization}}$) therefore conflates measurement noise, temporal mismatch, and support mismatch — none of which can be separated without additional data. This must be acknowledged in Methods and is the primary reason $\Delta R^{\text{realization}}$ is reported as a descriptive secondary diagnostic, not interpreted causally.
-
-**Multinomial sample** (for $M_q$):
-$$n_{ij} \sim \text{Multinomial}\!\left(m,\ \frac{T^{GT}_{ij}}{\sum_{ij} T^{GT}_{ij}}\right), \qquad q = \frac{m}{\sum_{ij} T^{GT}_{ij}}$$
-$$\tilde{Y}_D^{(q)}[k] = \frac{\sum_{(i,j) \in B_k} n_{ij}}{m}$$
-
-Repeat with $S=20$ seeds per $m$ level; report mean $R_c(m)$ and uncertainty band.
-
-**Grid defined on absolute trip count $m$** (not on fraction $q$ directly):
-$$m \in \{100,\ 500,\ 1\text{k},\ 5\text{k},\ 10\text{k},\ 50\text{k},\ 100\text{k},\ \infty\}$$
-
-Convert to per-city fraction: $q_c = m\ /\ \sum_{ij} T^{GT}_{ij}$.
-
-> **Why $m$-based, not $q$-based grid**: the statistical precision of a 4-category Multinomial estimate depends on sample size $m$, not on city size. A fixed $q$ (e.g., $q=0.01$) corresponds to vastly different $m$ across cities (tens of trips in small cities vs. hundreds of thousands in New York), making the reference curve incomparable across cities. A fixed $m$ grid ensures equal estimation precision at each grid point, making cross-city comparison of $q^*$ meaningful.
-
-> **Why Multinomial, not uniform cell sampling**: mobility data is collected per trip in practice (GPS, CDR, fare gates). Multinomial sampling reflects this; uniform cell sampling would sample mostly zeros, making $\tilde{Y}_D$ estimation noisy and unrealistic.
-
-> **Statistical precision check**: to estimate a 4-bin distribution with per-bin standard error $\leq 0.01$, at least $m \geq 2500$ trips are needed — independent of city size. The grid above spans this threshold.
-
----
-
-## Metrics
-
-All metrics on **all $N^2$ OD pairs** of the held-out city:
+## Evaluation Metrics (Evaluated on $\Omega_c$)
 
 | Metric | Formula | Role |
 |---|---|---|
 | **CPC** | $\frac{2\sum \min(T_{ij}, \hat{T}_{ij})}{\sum T_{ij} + \sum \hat{T}_{ij}}$ | **Primary** |
-| **RMSE-log1p** | $\sqrt{\frac{1}{N_{\text{pairs}}}\sum_{ij}[\log(1+T_{ij}) - \log(1+\hat{T}_{ij})]^2}$ | Secondary (evaluation only); `log1p` handles $T_{ij}=0$ |
-| **Pearson $r$** | — | Secondary |
+| **RMSE-log1p** | $\sqrt{\frac{1}{|\Omega_c|}\sum_{(i,j)\in\Omega_c}[\log(1+T_{ij}) - \log(1+\hat{T}_{ij})]^2}$ | Secondary |
+| **Pearson $r$** | $\text{Corr}(T_{ij}, \hat{T}_{ij})$ over $\Omega_c$ | Secondary |
 
 ---
 
-## Answering RQ1: $\Delta R$ (Stage B)
+## Research Questions & Estimands
 
-$$\boxed{\Delta R_c = R_c^{YD,\text{real}} - R_c^{ZS}}$$
+### RQ1: Marginal Information Value ($\Delta R$)
+$$\boxed{\Delta R_c^{\text{real}} = R_c(M_1^{\text{real}}) - R_c(M_0)}$$
+$$\Delta R_c^{\text{oracle}} = R_c(M_1^{\text{oracle}}) - R_c(M_0)$$
+$$\Delta R_c^{\text{realization}} = R_c(M_1^{\text{oracle}}) - R_c(M_1^{\text{real}})$$
 
-Report across 50 cities:
-- Median $\Delta R_c$, mean ± std
-- $\Pr(\Delta R_c > 0)$
-- Distribution plot + paired Wilcoxon signed-rank test
+Statistical tests across 50 cities: Mean $\pm$ std, median, IQR, $\Pr(\Delta R > 0)$, and paired Wilcoxon signed-rank test.
 
-**Answers**: *Does $Y_D$ improve OD reconstruction beyond zero-shot?*
-
----
-
-## Answering RQ2: $q^*$ (Stage C)
-
-Build reference curve $R_c(q)$ for each city. Then:
-
-$$\boxed{q_c^* = R_c^{-1}\!\left(R_c^{YD,\text{real}}\right)}$$
-
-Found via monotonic interpolation over the $m$-grid, then converted:
-$$q^*_c = m^*_c\ /\ \sum_{ij} T^{GT}_{ij,c}$$
-
-**Interpretation (locked)**:
-> The fraction of ideal randomly sampled trips required to derive a distance-bin constraint with the same OD-reconstruction value as the real target-city $Y_D$.
-
-> **Do NOT state**: "$Y_D \equiv q^*\%$ raw OD data." The equivalence holds only under the bin-calibration operator and the ideal Multinomial sampling experiment.
-
-Report:
-- Primary: distribution of $q^*_c$ across 50 cities (median, mean ± std) — relative, comparable across city sizes
-- Appendix: distribution of $m^*_c$ — absolute trip count, reflects practical data collection cost
-
-**Answers**: *How much ideal trip observation yields an equally useful distance-bin signal?*
+### RQ2: Observation-Equivalence ($m^*$ and $q^*$)
+$$\boxed{m_c^{*,\text{real}} = \text{Isotonic\_Invert}(R_c(m), R_c(M_1^{\text{real}}))}, \qquad \boxed{q_c^{*,\text{real}} = \frac{m_c^{*,\text{real}}}{T_c^{\text{total}}}}$$
+- $S=20$ random Multinomial sampling seeds per $m \in \{100, 500, 1\text{k}, 5\text{k}, 10\text{k}, 50\text{k}, 100\text{k}, \infty\}$.
+- Isotonic regression ensures strictly non-decreasing empirical curve $R_c(m)$.
+- Reports both $m^*$ (absolute trips required) and $q^*$ (fraction of total trips).
 
 ---
 
-## Secondary Diagnostic: Realization Gap (Stage D)
+## Decision Table (Final & Verified)
 
-$$\boxed{\Delta R_c^{\text{realization}} = R_c^{YD,\text{oracle}} - R_c^{YD,\text{real}}}$$
-
-**Interpretation**: how much of the reconstruction gain available under ideal 4-bin knowledge is realized by the empirical Meta observation. Does NOT attribute the gap to any specific cause (spatial aggregation, temporal mismatch, sampling bias, mobility-purpose mismatch).
-
-Reported in Discussion; does NOT open a new research gap.
-
----
-
-## Cross-city Analysis
-
-Regress $\Delta R_c$ on city characteristics to answer: **when is $Y_D$ most valuable?**
-
-| Predictor | Proxy for |
+| Component | Final Locked Decision |
 |---|---|
-| Tract count | City size |
-| Mean pairwise $D_{ij}$ | Urban sprawl |
-| $H(Y_D^{\text{oracle}})$ | Distance distribution entropy |
-| Median income | Socioeconomic profile |
-| Population density | Urban compactness |
-
----
-
-## Codebase Structure
-
-```
-src/
-├── data/
-│   ├── dataset.py          # 50-city loader (census/POI/road + OD + distance)
-│   ├── urban_graph.py      # G^urban: k-NN and radius-based construction
-│   ├── yd_extractor.py     # Y_D oracle (from GT) and real (from Meta CSVs)
-│   ├── trip_sampler.py     # Multinomial trip sampling for M_q
-│   └── city_splits.py      # 5-fold stratified city split
-├── models/
-│   ├── node_encoder.py     # GraphBERT-style urban GNN
-│   ├── gravity.py          # Classical 2-param gravity prior
-│   ├── decoder.py          # Pairwise OD decoder (single mu head, ZTNB)
-│   └── zero_shot_model.py  # Full M0 pipeline
-├── loss/
-│   └── ztnb.py             # ZTNB NLL + NB sensitivity (6/6 unit tests pass)
-├── calibration/
-│   └── bin_calibration.py  # Bin-wise multiplicative calibration (M0 → M1, Mq)
-├── training/
-│   ├── train.py            # Cross-city training loop
-│   └── evaluate.py         # CPC, RMSE-log1p, Pearson on Omega_c
-└── experiment/
-    ├── run_experiment.py   # Orchestrates all 4 conditions per fold
-    ├── compute_delta_r.py  # ΔR and Pr(ΔR>0) across 50 cities
-    └── compute_qstar.py    # q* interpolation per city
-```
-
----
-
-| Component | Decision |
-|---|---|
-| **Zero-shot model role** | Instrument/baseline to measure $\Delta R$; not the primary contribution |
-| Urban GNN graph | $G^{\text{urban}}$ from spatial proximity only; pilot k-NN vs radius; invariant: no OD used |
-| OD decoder | Single $\mu_{ij}$ head; pairwise MLP; all $\Omega_c$ pairs at inference |
-| $\mu_{ij}$ interpretation | $E[T_{ij} \mid T_{ij}>0]$ (ZTNB conditional mean) |
-| Gravity prior | Classical 2-param $G + \log P_i + \log P_j - \alpha \log D_{ij}$ (stable for cross-city) |
-| BCE / hurdle | **Removed** (no zero labels in candidate set $\Omega_c$) |
-| Primary likelihood | **ZTNB** — conservative assumption; missingness mechanism not fully identified |
-| Sensitivity likelihood | NB unconditional (pilot comparison) |
-| $\phi$ | Global trainable scalar per fold |
-| Training support | $\Omega_c$ = candidate pairs in pair files |
-| Evaluation support | $\Omega_c$ of held-out city (NOT full $N^2$) |
-| Pairs outside $\Omega_c$ | Unknown/excluded; not zero-filled |
-| Full $N^2$ reconstruction claim | **Removed** from paper framing |
-| $Y_D$ calibration | **KL projection** (forward KL I-projection); closed-form = bin-wise multiplicative scaling |
-| $Y_D^{\text{oracle}}$ | Computed over $\Omega_c$; apples-to-apples with model predictions |
-| $Y_D^{\text{real}}$ | Meta mobility (county-level); support compatibility check required before $M_1^{\text{real}}$ |
-| $Y_D$ support mismatch | Acknowledged; $\Delta R^{\text{realization}}$ not interpreted causally |
-| $M_q$ sampling | Multinomial trip sampling (not uniform cell sampling) |
-| $q^*$ definition | $R_c(q^*_c) = R_c^{YD,\text{real}}$, via monotonic interpolation over $m$ grid |
-| $q^*$ interpretation | Trip-fraction equivalent under ideal Multinomial sampling — not "% raw OD" |
-| $m$ grid | $\{100, 500, 1\text{k}, 5\text{k}, 10\text{k}, 50\text{k}, 100\text{k}, \infty\}$; convert to $q_c$ per city |
-| Realization gap | $\Delta R^{\text{realization}} = R^{\text{oracle}} - R^{\text{real}}$; secondary diagnostic, no causal claim |
-| $\theta^*$ | Frozen throughout all calibration stages |
-| Target-city model update | **None** |
-| NeuroGravity (actual) | Optional robustness check if resources allow; not primary contribution |
+| **Zero-shot role** | Baseline instrument to measure marginal value $\Delta R$; not proposed as novel OD model |
+| **Urban GNN graph** | **Radius graph ($r=5.0\text{ km}$)** with 1-NN fallback; selected via empirical topology pilot |
+| **OD decoder** | Single head producing $\mu_{NB, ij}$; conditional expectation $\hat{T} = E[T \mid T \ge 1]$ at inference |
+| **Likelihood** | Zero-Truncated Negative Binomial (ZTNB) on positive pairs in $\Omega_c$ |
+| **Evaluation support** | Candidate pairs $\Omega_c$ (pairs outside $\Omega_c$ are unknown, not zero-filled) |
+| **Scaler isolation** | Fitted strictly on $X_{\text{train}}$ of source cities; target city strictly transformed |
+| **Parameter freeze** | $\theta^*$ completely frozen before target city inference |
+| **Calibration** | Support-conditioned mass-preserving KL projection; closed-form bin multiplicative scaling |
+| **Meta Y_D extraction** | Official FIPS $\rightarrow$ GADM county mapping, snapshot-level 4-bin aggregation across all temporal files |
+| **$M_q$ sampling** | Multinomial trip sampling with $S=20$ seeds per grid point |
+| **$m^*$ & $q^*$ inversion** | Isotonic regression over empirical curve $R_c(m)$ |
