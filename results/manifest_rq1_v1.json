@@ -2,7 +2,7 @@
   "bundle_name": "Moving-Bin RQ1 v1",
   "git_commit_hash": "aa06f9e5f0a5efbeab7ffdb02694a21868a1bc70",
   "timestamp": "2026-08-17T17:58:00Z",
-  "test_suite_status": "47/47 PASS (100%)",
+  "test_suite_status": "48/48 PASS (100%)",
   "environment": {
     "python_version": "3.11.9",
     "torch_version": "2.x",
@@ -82,6 +82,7 @@
   "file_sha256_hashes": {
     "results/5fold_results.json": "12fa73f6a3a553bc886e6f18923ac038c813c0bd9f036042f76dfdd872c9803b",
     "results/backbone_robustness_results.json": "382c9061d5e68d3ae138cecc28868d998036194c1dd559367d029a49a81b491d",
+    "results/pytest_raw_output.txt": "67cf2db3d9aac7fc98ffc4456945f7289d98afd5b764260e699001196285a54b",
     "src/data/city_splits.py": "d455310932d0b649220c31dbe0eeb35697a68f7aa5b3be0a257ffdc6ec9931ea",
     "src/data/dataset.py": "d8603257ef1f266cdb18c18ef7d0ea1b9aade66a4a22422ed8087d9684e72fda",
     "src/models/zero_shot_model.py": "521d9d4e6792eb182b60568e2e619ec516cc04920a251d21d11549f8138415d0",
@@ -90,6 +91,7 @@
     "src/experiment/generate_tables.py": "6fa44316a7a3edf55f7b49de16b4aebaa66764931093ef8f98b220ab8796defc",
     "src/experiment/run_backbone_robustness.py": "1424f712756d6be1b9fb61dfc21c39b03bd78a1eddfffba0f95129db4e91796c",
     "src/experiment/compute_mechanism_and_secondary_metrics.py": "2b27243d5b48244c0a6ceb5eb66e9fe8b5be832653e78c2598f300c6f083a5c8",
+    "od_plan_tester/tests/test_experiment_contracts.py": "363ac1fab8e5334d77f0c2eafb3b680a01fc6b69bf41e38279e0663252224edd",
     "results/tables/confirmatory_fold2_5.md": "12245deebdc52be0ea72af1e0cea21f2dd5f955eec9f7eb5551b51e930f16f06",
     "results/tables/table1_primary_rq1.md": "fc6c2f6062b37963e9895fb2ea9dcc8bebe6c20cfa30869045be8d97cdeaba77",
     "results/tables/table2_ablation.md": "76cedb4df3d2db880a7333b29e24fea7d036b67c48187357a8e72c93298294dd",
@@ -102,5 +104,12 @@
     "dirty_rationale": "New analysis scripts, test T45, and tables added post-commit aa06f9e5f0a5efbeab7ffdb02694a21868a1bc70",
     "tracked_files_hash_count": 16
   },
-  "task_scope_bounding": "Positive-edge flow-intensity reconstruction conditional on candidate target topology Omega_c (mean coverage 98.03% across 50 cities)"
+  "task_scope_bounding": "Positive-edge flow-intensity reconstruction conditional on candidate target topology Omega_c (mean coverage 98.03% across 50 cities)",
+  "scientific_contract_audit": {
+    "T38_shared_support_check": "PASSED (exact n_inter_pairs match & candidate dataset alignment)",
+    "T40_production_manifest_check": "PASSED (valid 40-char hash, strict 5-fold disjointness, on-disk SHA256 match)",
+    "T43_live_runtime_metadata_check": "PASSED (live test city Mm curve verifies std_ddof=1, num_seeds=4, cpc_inter_std formula)",
+    "T44_omega_plus_invariants_check": "PASSED (distance threshold <=> bin_labels {1,2,3} on real Denver & Portland datasets)",
+    "T45_ground_truth_invariance_check": "PASSED (torch.testing.assert_close with rtol=0, atol=1e-6 under random GT permutations and zeros)"
+  }
 }

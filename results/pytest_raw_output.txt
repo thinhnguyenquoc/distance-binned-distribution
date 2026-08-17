@@ -3,7 +3,7 @@ platform win32 -- Python 3.11.9, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Thinh Ng
 cachedir: .pytest_cache
 rootdir: D:\DBD\distance-binned-distribution\od_plan_tester
 configfile: pytest.ini
-collecting ... collected 47 items
+collecting ... collected 48 items
 
 od_plan_tester\tests\test_experiment_contracts.py::test_model_freezing_theta_star PASSED [  2%]
 od_plan_tester\tests\test_experiment_contracts.py::test_shared_support_omega_c_across_conditions PASSED [  4%]
@@ -12,38 +12,39 @@ od_plan_tester\tests\test_experiment_contracts.py::test_experiment_manifest_repr
 od_plan_tester\tests\test_experiment_contracts.py::test_run_target_city_experiments_smoke PASSED [ 10%]
 od_plan_tester\tests\test_experiment_contracts.py::test_seed_band_recomputed_with_ddof_1 PASSED [ 12%]
 od_plan_tester\tests\test_experiment_contracts.py::test_mq_and_mm_curve_ddof_consistency PASSED [ 14%]
-od_plan_tester\tests\test_experiment_contracts.py::test_omega_plus_independent_of_ground_truth PASSED [ 17%]
-od_plan_tester\tests\test_graph_topology.py::test_radius_graph_5km_threshold PASSED [ 19%]
-od_plan_tester\tests\test_graph_topology.py::test_radius_graph_isolated_fallback_1nn PASSED [ 21%]
-od_plan_tester\tests\test_graph_topology.py::test_urban_graph_zero_od_leakage PASSED [ 23%]
-od_plan_tester\tests\test_graph_topology.py::test_graph_symmetric_and_self_loops PASSED [ 25%]
-od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_monotonicity_enforcement PASSED [ 27%]
-od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_plateau_leftmost_crossing PASSED [ 29%]
-od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_boundary_below_min_grid PASSED [ 31%]
-od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_boundary_at_oracle_reference PASSED [ 34%]
-od_plan_tester\tests\test_isotonic_inversion.py::test_qstar_ratio_computation PASSED [ 36%]
-od_plan_tester\tests\test_kl_calibration.py::test_moving_mass_preservation PASSED [ 38%]
-od_plan_tester\tests\test_kl_calibration.py::test_intrazonal_identity PASSED [ 40%]
-od_plan_tester\tests\test_kl_calibration.py::test_q_zero_is_zero_shot_identity PASSED [ 42%]
-od_plan_tester\tests\test_kl_calibration.py::test_q_one_matches_target_distribution PASSED [ 44%]
-od_plan_tester\tests\test_kl_calibration.py::test_q_monotonic_soft_response PASSED [ 46%]
-od_plan_tester\tests\test_kl_calibration.py::test_inactive_bin_conditioning PASSED [ 48%]
-od_plan_tester\tests\test_kl_calibration.py::test_calibrate_moving_bins_with_pair_distance PASSED [ 51%]
-od_plan_tester\tests\test_leakage_and_splits.py::test_stratified_5fold_split_structure PASSED [ 53%]
-od_plan_tester\tests\test_leakage_and_splits.py::test_stratified_5fold_exact_single_coverage PASSED [ 55%]
-od_plan_tester\tests\test_leakage_and_splits.py::test_scaler_train_isolation PASSED [ 57%]
-od_plan_tester\tests\test_leakage_and_splits.py::test_omega_c_provenance_strictly_positive PASSED [ 59%]
-od_plan_tester\tests\test_leakage_and_splits.py::test_unobserved_pairs_excluded_not_zero_filled PASSED [ 61%]
-od_plan_tester\tests\test_leakage_and_splits.py::test_omega_c_plus_distance_equivalence PASSED [ 63%]
-od_plan_tester\tests\test_leakage_and_splits.py::test_all_50_cities_omega_plus_invariants PASSED [ 65%]
+od_plan_tester\tests\test_experiment_contracts.py::test_omega_plus_independent_of_ground_truth PASSED [ 16%]
+od_plan_tester\tests\test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0 PASSED [ 18%]
+od_plan_tester\tests\test_graph_topology.py::test_radius_graph_5km_threshold PASSED [ 20%]
+od_plan_tester\tests\test_graph_topology.py::test_radius_graph_isolated_fallback_1nn PASSED [ 22%]
+od_plan_tester\tests\test_graph_topology.py::test_urban_graph_zero_od_leakage PASSED [ 25%]
+od_plan_tester\tests\test_graph_topology.py::test_graph_symmetric_and_self_loops PASSED [ 27%]
+od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_monotonicity_enforcement PASSED [ 29%]
+od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_plateau_leftmost_crossing PASSED [ 31%]
+od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_boundary_below_min_grid PASSED [ 33%]
+od_plan_tester\tests\test_isotonic_inversion.py::test_isotonic_boundary_at_oracle_reference PASSED [ 35%]
+od_plan_tester\tests\test_isotonic_inversion.py::test_qstar_ratio_computation PASSED [ 37%]
+od_plan_tester\tests\test_kl_calibration.py::test_moving_mass_preservation PASSED [ 39%]
+od_plan_tester\tests\test_kl_calibration.py::test_intrazonal_identity PASSED [ 41%]
+od_plan_tester\tests\test_kl_calibration.py::test_q_zero_is_zero_shot_identity PASSED [ 43%]
+od_plan_tester\tests\test_kl_calibration.py::test_q_one_matches_target_distribution PASSED [ 45%]
+od_plan_tester\tests\test_kl_calibration.py::test_q_monotonic_soft_response PASSED [ 47%]
+od_plan_tester\tests\test_kl_calibration.py::test_inactive_bin_conditioning PASSED [ 50%]
+od_plan_tester\tests\test_kl_calibration.py::test_calibrate_moving_bins_with_pair_distance PASSED [ 52%]
+od_plan_tester\tests\test_leakage_and_splits.py::test_stratified_5fold_split_structure PASSED [ 54%]
+od_plan_tester\tests\test_leakage_and_splits.py::test_stratified_5fold_exact_single_coverage PASSED [ 56%]
+od_plan_tester\tests\test_leakage_and_splits.py::test_scaler_train_isolation PASSED [ 58%]
+od_plan_tester\tests\test_leakage_and_splits.py::test_omega_c_provenance_strictly_positive PASSED [ 60%]
+od_plan_tester\tests\test_leakage_and_splits.py::test_unobserved_pairs_excluded_not_zero_filled PASSED [ 62%]
+od_plan_tester\tests\test_leakage_and_splits.py::test_omega_c_plus_distance_equivalence PASSED [ 64%]
+od_plan_tester\tests\test_leakage_and_splits.py::test_all_50_cities_omega_plus_invariants PASSED [ 66%]
 od_plan_tester\tests\test_metrics.py::test_cpc_bounds_and_symmetry PASSED [ 68%]
 od_plan_tester\tests\test_metrics.py::test_cpc_norm_1_minus_tvd PASSED   [ 70%]
 od_plan_tester\tests\test_metrics.py::test_rmse_log1p_zero_on_identical PASSED [ 72%]
-od_plan_tester\tests\test_metrics.py::test_pearson_r_bounds PASSED       [ 74%]
-od_plan_tester\tests\test_metrics.py::test_evaluate_all_contract PASSED  [ 76%]
-od_plan_tester\tests\test_yd_and_sampling.py::test_yd_moving_oracle_assignment PASSED [ 78%]
-od_plan_tester\tests\test_yd_and_sampling.py::test_yd_moving_real_meta_sum PASSED [ 80%]
-od_plan_tester\tests\test_yd_and_sampling.py::test_distributional_overlap_bounds PASSED [ 82%]
+od_plan_tester\tests\test_metrics.py::test_pearson_r_bounds PASSED       [ 75%]
+od_plan_tester\tests\test_metrics.py::test_evaluate_all_contract PASSED  [ 77%]
+od_plan_tester\tests\test_yd_and_sampling.py::test_yd_moving_oracle_assignment PASSED [ 79%]
+od_plan_tester\tests\test_yd_and_sampling.py::test_yd_moving_real_meta_sum PASSED [ 81%]
+od_plan_tester\tests\test_yd_and_sampling.py::test_distributional_overlap_bounds PASSED [ 83%]
 od_plan_tester\tests\test_yd_and_sampling.py::test_multinomial_sampling_stochastic_validity PASSED [ 85%]
 od_plan_tester\tests\test_yd_and_sampling.py::test_multinomial_sampling_asymptotic_convergence PASSED [ 87%]
 od_plan_tester\tests\test_ztnb_oracle.py::test_ztnb_log_prob_zero_formula PASSED [ 89%]
@@ -53,4 +54,30 @@ od_plan_tester\tests\test_ztnb_oracle.py::test_ztnb_conditional_mean_asymptotics
 od_plan_tester\tests\test_ztnb_oracle.py::test_gravity_prior_formula_and_decay PASSED [ 97%]
 od_plan_tester\tests\test_ztnb_oracle.py::test_gravity_prior_learnable_gradients PASSED [100%]
 
-============================= 47 passed in 37.07s =============================
+============================== warnings summary ===============================
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+  D:\DBD\distance-binned-distribution\src\data\urban_graph.py:21: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    lons = np.radians(lon_lat[:, 0])
+
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+  D:\DBD\distance-binned-distribution\src\data\urban_graph.py:22: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    lats = np.radians(lon_lat[:, 1])
+
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+  D:\DBD\distance-binned-distribution\src\data\urban_graph.py:27: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    a = np.sin(dlat / 2.0) ** 2 + np.cos(lats[:, None]) * np.cos(lats[None, :]) * np.sin(dlon / 2.0) ** 2
+
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+  C:\Users\Thinh Nguyen\AppData\Local\Programs\Python\Python311\Lib\site-packages\numpy\_core\fromnumeric.py:45: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    return conv.wrap(result, to_scalar=False)
+
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+tests/test_experiment_contracts.py::test_target_ground_truth_permutation_invariance_for_m0
+  D:\DBD\distance-binned-distribution\src\data\urban_graph.py:28: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    c = 2.0 * np.arcsin(np.sqrt(np.clip(a, 0.0, 1.0)))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 48 passed, 9 warnings in 46.79s =======================
