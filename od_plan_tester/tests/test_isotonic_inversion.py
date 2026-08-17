@@ -63,10 +63,13 @@ def test_isotonic_boundary_at_oracle_ceiling():
 
 @pytest.mark.contract
 def test_qstar_ratio_computation():
-    """T36: Observation equivalence ratio q* = m* / T_total is in [0, 1]."""
-    total_trips = 1000000.0
-    m_star = 25000.0
-    q_star = m_star / total_trips
+    """T36: Observation equivalence ratio q* = m* / T_total is strictly <= 1.0 even when T_inter < 100,000."""
+    total_trips = 45000.0  # smaller than 100k grid level
+    m_finite = [100.0, 500.0, 1000.0, 5000.0, 10000.0, 50000.0, 100000.0]
+    mean_cpcs = [0.40, 0.45, 0.50, 0.55, 0.60, 0.68, 0.70]
+    oracle_cpc = 0.68
 
-    assert q_star == 0.025
+    m_star, status = _interpolate_m_star(0.68, m_finite, mean_cpcs, oracle_cpc, total_trips)
+    assert m_star <= total_trips
+    q_star = m_star / total_trips
     assert 0.0 <= q_star <= 1.0

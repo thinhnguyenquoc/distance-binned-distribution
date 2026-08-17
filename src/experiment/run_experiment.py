@@ -40,12 +40,24 @@ def _interpolate_m_star(
     oracle_cpc: float,
     total_trips: float,
 ) -> tuple[float, str]:
-    all_m = list(m_finite_values)
-    all_cpc = list(mean_cpcs)
+    """
+    Isotonic monotonic regression inversion to find m* matching target_cpc.
+    Guarantees m* <= total_trips so that q* = m* / total_trips <= 1.0 strictly.
+    """
+    if total_trips <= 0:
+        return 0.0, "zero_total_trips"
 
-    if total_trips > all_m[-1]:
-        all_m.append(total_trips)
-        all_cpc.append(oracle_cpc)
+    # Filter finite values strictly below total_trips
+    all_m = []
+    all_cpc = []
+    for m, cpc in zip(m_finite_values, mean_cpcs):
+        if m < total_trips:
+            all_m.append(float(m))
+            all_cpc.append(float(cpc))
+
+    # Always append total_trips with oracle_cpc as the finite population ceiling
+    all_m.append(float(total_trips))
+    all_cpc.append(float(oracle_cpc))
 
     iso = IsotonicRegression(increasing=True, out_of_bounds="clip")
     cpc_curve_monotonic = iso.fit_transform(all_m, all_cpc)
@@ -66,10 +78,15 @@ def _interpolate_m_star(
             next_cpc = cpc_curve_monotonic[idx]
             prev_m = all_m[idx - 1]
             next_m = all_m[idx]
-            frac = (target_cpc - prev_cpc) / (next_cpc - prev_cpc)
-            m_star = float(prev_m + frac * (next_m - prev_m))
-        status = "interpolated" if m_star <= 100000.0 else "extrapolated_towards_total"
+            if next_cpc > prev_cpc:
+                frac = (target_cpc - prev_cpc) / (next_cpc - prev_cpc)
+                m_star = float(prev_m + frac * (next_m - prev_m))
+            else:
+                m_star = float(prev_m)
+        status = "interpolated" if m_star < total_trips else "at_oracle_ceiling"
 
+    # Clip to total_trips to strictly enforce q* <= 1.0
+    m_star = min(m_star, float(total_trips))
     return m_star, status
 
 

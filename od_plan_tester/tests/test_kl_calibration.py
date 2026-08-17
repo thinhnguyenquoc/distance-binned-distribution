@@ -95,7 +95,7 @@ def test_q_monotonic_soft_response():
     d_idx = torch.tensor([1, 2])
     bins = torch.tensor([1, 2])
     t0 = torch.tensor([10.0, 90.0])  # implied: [0.1, 0.9]
-    target_moving = np.array([0.5, 0.5])  # target: [0.5, 0.5] (bin 1 needs increase, bin 2 needs decrease)
+    target_moving = np.array([0.5, 0.5, 0.0])  # target for bins 1, 2, 3
 
     t_q0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
     t_q5 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.5)

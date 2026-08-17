@@ -1,4 +1,4 @@
-"""
+r"""
 Interzonal Moving-Bin Calibration on Omega_c^+ via Soft KL Projection.
 
 Mathematical Formulation:
