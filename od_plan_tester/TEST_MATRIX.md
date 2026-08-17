@@ -38,7 +38,7 @@ This matrix maps every locked architectural and scientific decision from the Int
 | **T32** | RQ2 Inversion | Isotonic regression enforces non-decreasing curve $R_c(m)$ | `test_isotonic_monotonicity_enforcement` | `test_isotonic_inversion.py` | `reference` |
 | **T33** | RQ2 Inversion | Plateau handling: leftmost crossing picks minimal sample size $m^*$ | `test_isotonic_plateau_leftmost_crossing` | `test_isotonic_inversion.py` | `reference` |
 | **T34** | RQ2 Inversion | Boundary case: target $\le R(m_{\min}) \implies m^* = m_{\min}$, `below_min_grid` | `test_isotonic_boundary_below_min_grid` | `test_isotonic_inversion.py` | `reference` |
-| **T35** | RQ2 Inversion | Boundary case: target $\ge R(m_{\max}) \implies m^* = T_{\text{total}}$, `at_oracle_ceiling` | `test_isotonic_boundary_at_oracle_ceiling` | `test_isotonic_inversion.py` | `reference` |
+| **T35** | RQ2 Inversion | Boundary case: target $\ge R(m_{\max}) \implies m^* = T_{\text{total}}$, `at_oracle_reference` | `test_isotonic_boundary_at_oracle_reference` | `test_isotonic_inversion.py` | `reference` |
 | **T36** | RQ2 Inversion | Observation equivalence ratio $q^* = m^* / T^{\text{inter, total}}$ | `test_qstar_ratio_computation` | `test_isotonic_inversion.py` | `contract` |
 | **T37** | Integrity | Parameter freeze: $\theta^*$ frozen (`requires_grad=False`) before target inference | `test_model_freezing_theta_star` | `test_experiment_contracts.py` | `scientific` |
 | **T38** | Integrity | Shared support $\Omega_c$ strictly identical across $M_0, M_1^{\text{oracle},+}, M_1^{\text{real},+}, M_m^+$ | `test_shared_support_omega_c_across_conditions` | `test_experiment_contracts.py` | `scientific` |

@@ -55,7 +55,7 @@ def _interpolate_m_star(
             all_m.append(float(m))
             all_cpc.append(float(cpc))
 
-    # Always append total_trips with oracle_cpc as the finite population ceiling
+    # Always append total_trips with oracle_cpc as the finite population oracle reference
     all_m.append(float(total_trips))
     all_cpc.append(float(oracle_cpc))
 
@@ -67,7 +67,7 @@ def _interpolate_m_star(
         status = "below_min_grid"
     elif target_cpc >= cpc_curve_monotonic[-1]:
         m_star = float(all_m[-1])
-        status = "at_oracle_ceiling"
+        status = "at_oracle_reference"
     else:
         # Leftmost crossing rule for isotonic inversion
         idx = int(np.searchsorted(cpc_curve_monotonic, target_cpc, side="left"))
@@ -83,7 +83,7 @@ def _interpolate_m_star(
                 m_star = float(prev_m + frac * (next_m - prev_m))
             else:
                 m_star = float(prev_m)
-        status = "interpolated" if m_star < total_trips else "at_oracle_ceiling"
+        status = "interpolated" if m_star < total_trips else "at_oracle_reference"
 
     # Clip to total_trips to strictly enforce q* <= 1.0
     m_star = min(m_star, float(total_trips))
@@ -220,8 +220,10 @@ def run_target_city_experiments(
 
         mq_results[m_key] = {
             "m": m,
+            "num_seeds": len(cpc_arr),
+            "std_ddof": 1,
             "cpc_inter_mean": float(np.mean(cpc_arr)),
-            "cpc_inter_std": float(np.std(cpc_arr)),
+            "cpc_inter_std": float(np.std(cpc_arr, ddof=1)) if len(cpc_arr) > 1 else 0.0,
             "cpc_inter_median": float(np.median(cpc_arr)),
             "cpc_inter_p25": float(np.percentile(cpc_arr, 25)),
             "cpc_inter_p75": float(np.percentile(cpc_arr, 75)),
