@@ -1,47 +1,170 @@
 """
-Bin-wise Multiplicative Calibration via Mass-Preserving KL Projection.
+Interzonal Moving-Bin Calibration on Omega_c^+ via Soft KL Projection.
 
-Formulation on Spatial Support Omega_c:
-    Certain cities have spatial diameters smaller than 100 km (e.g. Bin 3 has 0 candidate pairs).
-    The target distribution Y_D is conditioned on the active spatial bins of Omega_c:
-        p_k^{cond} = \frac{p_k \cdot \mathbf{1}(\text{bin } k \text{ has pairs})}{\sum_{k'} p_{k'} \cdot \mathbf{1}(\text{bin } k' \text{ has pairs})}
+Mathematical Formulation:
+    1. Interzonal Domain:
+        Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}
+        Intrazonal pairs (i == j, D_ii = 0) are kept intact: \hat{T}_{ii}^{cal} = \hat{T}_{ii}^{ZS}.
 
-    \hat{N} = \sum_{(i,j)\in\Omega_c} \hat{T}^{(0)}_{ij}    (total zero-shot predicted mass)
-    B_k^{target} = p_k^{cond} \cdot \hat{N}                 (target mass for bin k)
-    \hat{B}_k = \sum_{b(i,j)=k} \hat{T}^{(0)}_{ij}           (model implied mass for bin k)
+    2. Moving-Bin Target Distribution:
+        Y_{c, k}^{Meta, +} = Y_{c, k}^{Meta} / sum_{l=1}^3 Y_{c, l}^{Meta}   for k in {1, 2, 3}
+        Y_{c, k}^{oracle, +} = sum_{(i,j) in Omega_{c,k}^+} T_{ij}^{GT} / sum_{(i,j) in Omega_c^+} T_{ij}^{GT}
 
-    s_k = \frac{B_k^{target} + \epsilon}{\hat{B}_k + \epsilon}
-    \hat{T}^{(1)}_{ij} = s_{b(i,j)} \cdot \hat{T}^{(0)}_{ij}
+    3. Support Conditioning:
+        For cities with diameter < 100 km (where bin 3 has 0 pairs), condition target on active moving bins:
+        p_k^{cond, +} = Y_k^+ * 1(k active) / sum_{l active} Y_l^+
 
-Strict Invariants Verified Automatically:
-    1. Total mass preservation: \sum \hat{T}^{(1)} == \sum \hat{T}^{(0)} (within 1e-4 relative error).
-    2. Bin distribution matching: \frac{\sum_{b(i,j)=k} \hat{T}^{(1)}_{ij}}{\sum \hat{T}^{(1)}_{ij}} \approx p_k^{cond}.
+    4. Soft Calibration Multipliers (0 <= q <= 1):
+        \hat{B}_k^+ = sum_{(i,j) in Omega_{c,k}^+} \hat{T}_{ij}^{ZS}
+        \hat{N}^+ = sum_{(i,j) in Omega_c^+} \hat{T}_{ij}^{ZS}
+        \hat{Y}_k^{ZS, +} = \hat{B}_k^+ / \hat{N}^+
+
+        w_k(q) = ( p_k^{cond, +} / \hat{Y}_k^{ZS, +} )^q
+        s_k = w_k(q) / sum_{l active} [ \hat{Y}_l^{ZS, +} * w_l(q) ]
+
+        \hat{T}_{ij}^{cal} = s_{b(i,j)} * \hat{T}_{ij}^{ZS}   for (i,j) in Omega_c^+
+
+Strict Invariants:
+    1. Interzonal mass preservation: \sum_{Omega^+} \hat{T}^{cal} == \sum_{Omega^+} \hat{T}^{ZS}.
+    2. Intrazonal identity: \hat{T}_{ii}^{cal} == \hat{T}_{ii}^{ZS}.
+    3. At q=1: implied moving-bin proportions match p_k^{cond, +} exactly within 1e-5.
+    4. At q=0: \hat{T}^{cal} == \hat{T}^{ZS} (pure zero-shot).
 """
 
 import numpy as np
 import torch
 
 
-def calibrate_by_distance_bins(
+def calibrate_moving_bins(
     t_pred_zero_shot: torch.Tensor,
     bin_labels: torch.Tensor,
-    target_yd_probs: np.ndarray | torch.Tensor,
+    pair_o_idx: torch.Tensor,
+    pair_d_idx: torch.Tensor,
+    target_moving_yd: np.ndarray | torch.Tensor,
+    q: float = 1.0,
     eps: float = 1e-8,
     tolerance: float = 1e-4,
 ) -> torch.Tensor:
     """
-    Applies exact mass-preserving KL projection calibration conditioned on Omega_c support.
+    Applies interzonal moving-bin calibration on Omega_c^+ (bins 1, 2, 3).
+
+    Args:
+        t_pred_zero_shot: (E,) zero-shot predicted flows on Omega_c.
+        bin_labels:       (E,) bin index (0=intrazonal, 1=(0,10), 2=[10,100), 3=100+).
+        pair_o_idx:       (E,) origin indices.
+        pair_d_idx:       (E,) destination indices.
+        target_moving_yd: (3,) normalized moving-bin distribution for bins {1, 2, 3} (sums to 1.0).
+        q:                soft calibration parameter in [0, 1]. q=1 is full match, q=0 is zero-shot.
+
+    Returns:
+        t_cal: (E,) calibrated flows with intrazonal preserved and interzonal re-scaled.
     """
-    if isinstance(target_yd_probs, np.ndarray):
-        p_raw = torch.tensor(target_yd_probs, dtype=torch.float32, device=t_pred_zero_shot.device)
+    assert 0.0 <= q <= 1.0, f"q must be in [0, 1], got {q}"
+
+    if isinstance(target_moving_yd, np.ndarray):
+        p_raw = torch.tensor(target_moving_yd, dtype=torch.float32, device=t_pred_zero_shot.device)
     else:
-        p_raw = target_yd_probs.to(device=t_pred_zero_shot.device, dtype=torch.float32)
+        p_raw = target_moving_yd.to(device=t_pred_zero_shot.device, dtype=torch.float32)
+
+    # Normalize moving target
+    p_raw = p_raw / torch.clamp(torch.sum(p_raw), min=eps)
+
+    # Mask for interzonal pairs Omega_c^+ (i != j and bin > 0)
+    inter_mask = (pair_o_idx != pair_d_idx) & (bin_labels > 0)
+    intra_mask = ~inter_mask
+
+    # Clone predictions
+    t_cal = t_pred_zero_shot.clone()
+
+    n_inter_hat = torch.sum(t_pred_zero_shot[inter_mask])
+    if n_inter_hat <= 0:
+        return t_cal
+
+    # Compute implied mass on moving bins {1, 2, 3}
+    implied_b = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
+    active_mask = torch.zeros(3, dtype=torch.bool, device=t_pred_zero_shot.device)
+
+    for idx, bin_k in enumerate([1, 2, 3]):
+        k_mask = inter_mask & (bin_labels == bin_k)
+        implied_b[idx] = torch.sum(t_pred_zero_shot[k_mask])
+        active_mask[idx] = k_mask.any()
+
+    # Condition target on active moving bins
+    p_active = p_raw * active_mask.float()
+    active_sum = torch.sum(p_active)
+    if active_sum <= 0:
+        p_cond = implied_b / (n_inter_hat + eps)
+    else:
+        p_cond = p_active / active_sum
+
+    implied_p = implied_b / (n_inter_hat + eps)
+
+    # Compute soft weights w_k(q) = (p_cond / implied_p)^q
+    w = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
+    for idx in range(3):
+        if active_mask[idx] and implied_p[idx] > 0:
+            ratio = (p_cond[idx] + eps) / (implied_p[idx] + eps)
+            w[idx] = ratio ** q
+        else:
+            w[idx] = 1.0
+
+    # Normalization to ensure interzonal mass preservation: \sum \hat{T}^{cal} == \sum \hat{T}^{ZS}
+    weighted_mass = torch.sum(implied_p * w)
+    s = w / (weighted_mass + eps)  # (3,)
+
+    # Apply scaling to interzonal pairs
+    for idx, bin_k in enumerate([1, 2, 3]):
+        k_mask = inter_mask & (bin_labels == bin_k)
+        if k_mask.any():
+            t_cal[k_mask] = t_pred_zero_shot[k_mask] * s[idx]
+
+    # Invariant 1: Interzonal mass preservation
+    cal_inter_mass = torch.sum(t_cal[inter_mask])
+    mass_diff_rel = torch.abs(cal_inter_mass - n_inter_hat) / n_inter_hat
+    if mass_diff_rel > tolerance:
+        t_cal[inter_mask] = t_cal[inter_mask] * (n_inter_hat / (cal_inter_mass + eps))
+
+    # Invariant 2: Intrazonal identity
+    assert torch.allclose(t_cal[intra_mask], t_pred_zero_shot[intra_mask], atol=1e-5), "Intrazonal violated!"
+
+    # Invariant 3: If q=1, verify bin matching on active bins
+    if abs(q - 1.0) < 1e-4:
+        cal_inter_p = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
+        for idx, bin_k in enumerate([1, 2, 3]):
+            if active_mask[idx]:
+                cal_inter_p[idx] = torch.sum(t_cal[inter_mask & (bin_labels == bin_k)])
+        cal_inter_p = cal_inter_p / (torch.sum(t_cal[inter_mask]) + eps)
+
+        for idx in range(3):
+            if active_mask[idx]:
+                bin_err = torch.abs(cal_inter_p[idx] - p_cond[idx]).item()
+                assert bin_err < tolerance, (
+                    f"Invariant failed on moving bin {idx+1}: target={p_cond[idx].item():.4f}, "
+                    f"got={cal_inter_p[idx].item():.4f}, err={bin_err:.4f}"
+                )
+
+    return t_cal
+
+
+def calibrate_4bin_legacy_ablation(
+    t_pred_zero_shot: torch.Tensor,
+    bin_labels: torch.Tensor,
+    target_4bin_yd: np.ndarray | torch.Tensor,
+    eps: float = 1e-8,
+) -> torch.Tensor:
+    """
+    Legacy 4-bin calibration (Ablation M1^{real, 4bin}) deliberately retaining
+    the semantic mismatch of Bin 0 to demonstrate its empirical penalty.
+    """
+    if isinstance(target_4bin_yd, np.ndarray):
+        p_raw = torch.tensor(target_4bin_yd, dtype=torch.float32, device=t_pred_zero_shot.device)
+    else:
+        p_raw = target_4bin_yd.to(device=t_pred_zero_shot.device, dtype=torch.float32)
 
     n_hat = torch.sum(t_pred_zero_shot)
     if n_hat <= 0:
         return t_pred_zero_shot
 
-    # Compute implied bin mass \hat{B}_k on Omega_c
     implied_b = torch.zeros(4, dtype=torch.float32, device=t_pred_zero_shot.device)
     active_mask = torch.zeros(4, dtype=torch.bool, device=t_pred_zero_shot.device)
     for k in range(4):
@@ -49,55 +172,36 @@ def calibrate_by_distance_bins(
         implied_b[k] = torch.sum(t_pred_zero_shot[mask])
         active_mask[k] = mask.any()
 
-    # Condition target distribution on active bins of Omega_c
     p_active = p_raw * active_mask.float()
-    active_sum = torch.sum(p_active)
-    if active_sum <= 0:
-        # Fallback if target has 0 mass on all active bins
-        p_cond = implied_b / (n_hat + eps)
-    else:
-        p_cond = p_active / active_sum
+    p_cond = p_active / torch.clamp(torch.sum(p_active), min=eps)
 
-    # Target mass per bin: B_k^{target} = p_k^{cond} * \hat{N}
-    target_b = p_cond * n_hat
-
-    # Scaling factor s_k = B_k^{target} / \hat{B}_k
-    s = (target_b + eps) / (implied_b + eps)  # (4,)
-
-    # Apply scaling
+    s = (p_cond * n_hat + eps) / (implied_b + eps)
     t_cal = t_pred_zero_shot * s[bin_labels]
 
-    # Invariant Check 1: Total mass preservation
     cal_mass = torch.sum(t_cal)
-    mass_diff_rel = torch.abs(cal_mass - n_hat) / n_hat
-    if mass_diff_rel > tolerance:
-        t_cal = t_cal * (n_hat / (cal_mass + eps))
-
-    # Invariant Check 2: Implied bin distribution matches conditional target p_cond
-    cal_implied_p = torch.zeros(4, dtype=torch.float32, device=t_pred_zero_shot.device)
-    for k in range(4):
-        if active_mask[k]:
-            cal_implied_p[k] = torch.sum(t_cal[bin_labels == k])
-    cal_implied_p = cal_implied_p / (torch.sum(t_cal) + eps)
-
-    for k in range(4):
-        if active_mask[k]:
-            bin_err = torch.abs(cal_implied_p[k] - p_cond[k]).item()
-            assert bin_err < tolerance or target_b[k] < eps, (
-                f"Calibration invariant failed on active bin {k}: target_cond={p_cond[k].item():.5f}, "
-                f"got={cal_implied_p[k].item():.5f}, error={bin_err:.5f}"
-            )
-
+    t_cal = t_cal * (n_hat / (cal_mass + eps))
     return t_cal
 
 
 if __name__ == "__main__":
-    t0 = torch.tensor([100.0, 300.0, 600.0])  # only bins 0, 1, 2
-    bins = torch.tensor([0, 1, 2])
-    yd = np.array([0.10, 0.30, 0.40, 0.20])  # has 20% in bin 3 (which is absent in city)
+    t0 = torch.tensor([50.0, 100.0, 300.0, 600.0])  # pair 0 is intrazonal, 1,2,3 are interzonal
+    bins = torch.tensor([0, 1, 2, 3])
+    o_idx = torch.tensor([0, 0, 0, 0])
+    d_idx = torch.tensor([0, 1, 2, 3])  # pair 0 is (0,0) intrazonal
+    target_moving = np.array([0.25, 0.45, 0.30])  # sums to 1.0 for bins 1, 2, 3
 
-    t1 = calibrate_by_distance_bins(t0, bins, yd)
-    print("Zero-shot total mass:", t0.sum().item())
-    print("Calibrated total mass:", t1.sum().item())
-    print("Calibrated flows:", t1.tolist())
-    print("Unit tests passed.")
+    # q=1.0 (Full calibration)
+    t_cal_1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
+    print("Zero-shot t0:      ", t0.tolist())
+    print("Calibrated t_cal(1):", t_cal_1.tolist())
+    print("Intrazonal flow 0: ", t_cal_1[0].item(), "== t0[0]:", t0[0].item())
+    print("Interzonal mass:   ", t_cal_1[1:].sum().item(), "== t0[1:].sum:", t0[1:].sum().item())
+
+    # q=0.5 (Soft calibration)
+    t_cal_half = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.5)
+    print("Soft t_cal(0.5):   ", t_cal_half.tolist())
+
+    # q=0.0 (Zero-shot identity)
+    t_cal_0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
+    assert torch.allclose(t_cal_0, t0), "q=0 must equal zero-shot!"
+    print("q=0 equals zero-shot: PASS")

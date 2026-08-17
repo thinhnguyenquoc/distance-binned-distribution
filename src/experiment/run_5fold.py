@@ -1,12 +1,5 @@
 """
-Master 5-Fold Cross-Validation Experiment Runner across all 50 US cities.
-
-Protocol:
-    - 5 folds (each fold: 40 source cities for training, 10 held-out target cities for evaluation).
-    - Every city appears as a held-out evaluation target exactly once.
-    - Evaluates M0, M1_oracle, M1_real, Mq across all 50 cities (S=20 seeds per m grid point).
-    - Saves detailed experiment results to results/5fold_results.json.
-    - Produces final publication-ready summary tables for RQ1 (Delta R) and RQ2 (q*).
+Master 5-Fold Cross-Validation Experiment Runner (Moving-Bin Calibration Framework).
 """
 
 import os
@@ -52,11 +45,12 @@ def run_5fold_experiment(
     if folds_to_run is None:
         folds_to_run = [1, 2, 3, 4, 5]
 
-    print("=" * 80)
-    print("STARTING 5-FOLD CROSS-VALIDATION EXPERIMENT (50 US CITIES)")
-    print(f"Device: {device_str} | Epochs/fold: {epochs_per_fold} | Loss: {loss_type} | Graph: {graph_type} (r={radius_km}km, k={knn_k}) | Seeds: {num_trip_seeds}")
+    print("=" * 85)
+    print("STARTING 5-FOLD CROSS-VALIDATION (MOVING-BIN CALIBRATION FRAMEWORK)")
+    print(f"Device: {device_str} | Epochs: {epochs_per_fold} | Graph: {graph_type} (r={radius_km}km) | Seeds: {num_trip_seeds}")
+    print(f"Primary Calibration Domain: Omega_c^+ (Interzonal moving bins 1, 2, 3)")
     print(f"Folds to run: {folds_to_run}")
-    print("=" * 80)
+    print("=" * 85)
 
     all_city_results = []
     fold_summaries = {}
@@ -68,10 +62,10 @@ def run_5fold_experiment(
         train_cities = split["train"]
         test_cities = split["test"]
 
-        print("\n" + "#" * 80)
+        print("\n" + "#" * 85)
         print(f"FOLD {fold_id}/5: Training on {len(train_cities)} cities -> Testing on {len(test_cities)} held-out cities")
         print(f"Held-out targets: {test_cities}")
-        print("#" * 80)
+        print("#" * 85)
 
         # Stage A: Cross-city Training
         fold_start = time.time()
@@ -111,14 +105,20 @@ def run_5fold_experiment(
             fold_city_results.append(city_res)
             all_city_results.append(city_res)
 
-            real_str = f"{city_res['M1_real']['cpc']:.4f}" if city_res['M1_real'] is not None else "N/A"
-            delta_real_str = f"{city_res['delta_r_real']:+.4f}" if city_res['delta_r_real'] is not None else "N/A"
-            print(f" | M0: {city_res['M0']['cpc']:.4f} | M1_real: {real_str} (Delta: {delta_real_str}) | M1_oracle: {city_res['M1_oracle']['cpc']:.4f} | {time.time() - t0:.1f}s")
+            m0_c = city_res['M0']['cpc_inter']
+            m1_r = city_res['M1_real_plus']['cpc_inter'] if city_res['M1_real_plus'] else None
+            m1_o = city_res['M1_oracle_plus']['cpc_inter']
+            delta_r = city_res['delta_r_real_plus']
+            overlap = city_res['distributional_overlap']
+
+            r_str = f"{m1_r:.4f}" if m1_r is not None else "N/A"
+            d_str = f"{delta_r:+.4f}" if delta_r is not None else "N/A"
+            ov_str = f"{overlap*100:.1f}%" if overlap is not None else "N/A"
+            print(f" | M0: {m0_c:.4f} | M1_real+: {r_str} (Delta: {d_str}, Overlap: {ov_str}) | M1_oracle+: {m1_o:.4f} | {time.time() - t0:.1f}s")
 
         fold_summaries[f"fold_{fold_id}"] = {
             "test_cities": test_cities,
-            "mean_delta_r_oracle": float(sum(r["delta_r_oracle"] for r in fold_city_results) / len(fold_city_results)),
-            "mean_delta_r_real": float(sum(r["delta_r_real"] for r in fold_city_results if r["delta_r_real"] is not None) / max(1, len([r for r in fold_city_results if r["delta_r_real"] is not None]))),
+            "mean_delta_r_inter": float(sum(r["delta_r_real_plus"] for r in fold_city_results if r["delta_r_real_plus"] is not None) / max(1, len([r for r in fold_city_results if r["delta_r_real_plus"] is not None]))),
         }
 
     # Cross-city Statistical Aggregation
@@ -147,37 +147,33 @@ def run_5fold_experiment(
     with open(out_file, "w") as f:
         json.dump(final_results, f, indent=2)
 
-    print("\n" + "=" * 80)
-    print("FINAL 5-FOLD CROSS-VALIDATION SUMMARY")
-    print("=" * 80)
+    print("\n" + "=" * 85)
+    print("FINAL SUMMARY: MOVING-BIN CALIBRATION ON OMEGA_c^+")
+    print("=" * 85)
     print(f"Total cities evaluated: {len(all_city_results)}/50")
 
-    if "real" in delta_r_analysis:
-        print(f"\n[RQ1: Marginal Value of Real Y_D^Meta (Primary)]")
-        print(f"  M1 Real CPC (Mean +- Std):        {delta_r_analysis['real']['m1_real_cpc_mean']:.4f}")
-        print(f"  Delta R^real Mean +- Std:         {delta_r_analysis['real']['delta_r_mean']:+.4f} +- {delta_r_analysis['real']['delta_r_std']:.4f}")
-        print(f"  Delta R^real Median:              {delta_r_analysis['real']['delta_r_median']:+.4f}")
-        print(f"  P(Delta R^real > 0):              {delta_r_analysis['real']['p_improved'] * 100:.1f}%")
-        if "wilcoxon_p" in delta_r_analysis["real"]:
-            print(f"  Wilcoxon p-value:                 {delta_r_analysis['real']['wilcoxon_p']:.4e}")
-        if delta_r_analysis['real']['realization_gap_mean'] is not None:
-            print(f"  Realization Gap (Oracle - Real):  {delta_r_analysis['real']['realization_gap_mean']:+.4f}")
+    if "real_plus" in delta_r_analysis:
+        rp = delta_r_analysis["real_plus"]
+        print(f"\n[RQ1: Primary Moving-Bin Meta Calibration (M1^real, + on Omega_c^+)]")
+        print(f"  Distributional Overlap with Meta (Mean +- Std): {rp['distributional_overlap']['mean']*100:.2f}% +- {rp['distributional_overlap']['std']*100:.2f}%")
+        print(f"  M1 Real+ Interzonal CPC (Mean +- Std):          {rp['m1_real_cpc_inter']['mean']:.4f} +- {rp['m1_real_cpc_inter']['std']:.4f}")
+        print(f"  Delta R^real+ Mean +- Std:                      {rp['delta_r_inter']['mean']:+.4f} +- {rp['delta_r_inter']['std']:.4f}")
+        print(f"  Delta R^real+ Median (IQR):                     {rp['delta_r_inter']['median']:+.4f} ({rp['delta_r_inter']['iqr']:.4f})")
+        print(f"  P(Delta R^real+ > 0):                           {rp['p_improved'] * 100:.1f}%")
+        if "wilcoxon_one_sided_p" in rp:
+            print(f"  Wilcoxon One-Sided p-value (H1: Delta > 0):     {rp['wilcoxon_one_sided_p']:.4e}")
+            print(f"  Wilcoxon Two-Sided p-value:                     {rp['wilcoxon_two_sided_p']:.4e}")
+        rg = rp["realization_gap"]
+        print(f"  Realization Gap (Oracle+ - Real+):              Mean = {rg['mean']:+.4f} | Median = {rg['median']:+.4f} | MAE = {rg['mae']:.4f}")
 
-    print(f"\n[RQ1: Marginal Value of Oracle Y_D^GT (Ceiling)]")
-    print(f"  M0 Zero-Shot CPC (Mean):          {delta_r_analysis['oracle']['m0_cpc_mean']:.4f}")
-    print(f"  M1 Oracle CPC (Mean):             {delta_r_analysis['oracle']['m1_oracle_cpc_mean']:.4f}")
-    print(f"  Delta R^oracle Mean +- Std:       {delta_r_analysis['oracle']['delta_r_mean']:+.4f} +- {delta_r_analysis['oracle']['delta_r_std']:.4f}")
-    print(f"  P(Delta R^oracle > 0):            {delta_r_analysis['oracle']['p_improved'] * 100:.1f}%")
-
-    if "real" in qstar_analysis:
-        print(f"\n[RQ2: Observation-Equivalence q* and m* for Real Y_D^Meta (Primary)]")
-        print(f"  m*_real (Trips required - Median): {qstar_analysis['real']['m_star']['median']:.1f} trips")
-        print(f"  m*_real (Trips required - Mean):   {qstar_analysis['real']['m_star']['mean']:.1f} +- {qstar_analysis['real']['m_star']['std']:.1f}")
-        print(f"  q*_real (Trip fraction - Median):  {qstar_analysis['real']['q_star']['median']:.6f}")
-        print(f"  q*_real (Trip fraction - Mean):    {qstar_analysis['real']['q_star']['mean']:.6f} +- {qstar_analysis['real']['q_star']['std']:.6f}")
+    if "4bin_ablation" in delta_r_analysis:
+        ab = delta_r_analysis["4bin_ablation"]
+        print(f"\n[Ablation: Legacy 4-Bin Calibration (M1^real, 4bin — keeping Bin 0 mismatch)]")
+        print(f"  Delta R (4-bin) Mean +- Std:                    {ab['delta_r_inter']['mean']:+.4f} +- {ab['delta_r_inter']['std']:.4f}")
+        print(f"  P(Delta R (4-bin) > 0):                         {ab['p_improved'] * 100:.1f}%")
 
     print(f"\nSaved full results to: {out_file.resolve()}")
-    print("=" * 80)
+    print("=" * 85)
     return final_results
 
 

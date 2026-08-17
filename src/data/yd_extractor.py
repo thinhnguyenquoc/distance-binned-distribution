@@ -1,31 +1,30 @@
 """
-Y_D Extractor for Oracle and Real Meta Mobility Data.
+Y_D Extractor for Moving Bins (Primary) and Full 4-Bin (Ablation).
 
-Bins:
-    0: 0 km (intrazonal)
-    1: (0, 10) km
-    2: [10, 100) km
-    3: 100+ km
+Primary Moving-Bin Formulation:
+    Excludes stay-at-home / immobility Bin 0.
+    Normalizes across actual movement/displacement categories {1, 2, 3}:
+        Bin 1: (0, 10) km
+        Bin 2: [10, 100) km
+        Bin 3: 100+ km
 
-Oracle Y_D:
-    Computed directly from ground truth OD flows over candidate support Omega_c:
-    Y_D^oracle[k] = sum_{(i,j) in Omega_c and B_k} T_ij / sum_{(i,j) in Omega_c} T_ij
+    Y_{c, k}^{Meta, +}   = Y_{c, k}^{Meta} / sum_{l=1}^3 Y_{c, l}^{Meta}
+    Y_{c, k}^{oracle, +} = sum_{(i,j) in Omega_{c,k}^+} T_{ij}^{GT} / sum_{(i,j) in Omega_c^+} T_{ij}^{GT}
 
-Real Y_D:
-    Extracted from Meta mobility datasets in meta_prior/ using official City -> County FIPS & GADM mapping.
-    Aggregation protocol:
-        1. For each temporal snapshot file f:
-           compute the 4-bin distribution p^{(f)}_k across constituent counties.
-        2. Average across all temporal snapshots: p_k = (1/F) * sum_f p^{(f)}_k.
-        3. Normalize: sum_k p_k = 1.0.
+Distributional Overlap Metric (CPC_dist / Overlap):
+    Overlap(p, q) = sum_k min(p_k, q_k) = 1 - 0.5 * ||p - q||_1
 """
 
 import os
+import sys
 import glob
 import pandas as pd
 import numpy as np
 import torch
 from pathlib import Path
+
+# Ensure root directory is in sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 
 # Comprehensive official mapping of 50 US cities to County Names, State, and FIPS
@@ -89,7 +88,6 @@ META_CAT_TO_BIN = {
     "100+": 3,
 }
 
-# Cache for temporal snapshot dataframes
 _SNAPSHOT_CACHE = None
 
 
@@ -116,33 +114,8 @@ def _load_snapshot_dataframes(meta_prior_dir: str = "meta_prior") -> list[pd.Dat
     return _SNAPSHOT_CACHE
 
 
-def extract_yd_oracle(pair_trips: torch.Tensor, bin_labels: torch.Tensor) -> np.ndarray:
-    """
-    Computes oracle distance-bin distribution from GT flows over Omega_c.
-    """
-    yd = np.zeros(4, dtype=np.float64)
-    trips_np = pair_trips.detach().cpu().numpy()
-    bins_np = bin_labels.detach().cpu().numpy()
-
-    total_flow = float(np.sum(trips_np))
-    if total_flow == 0:
-        return np.array([0.25, 0.25, 0.25, 0.25])
-
-    for k in range(4):
-        mask = (bins_np == k)
-        yd[k] = np.sum(trips_np[mask])
-
-    return yd / total_flow
-
-
-def extract_yd_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
-    """
-    Extracts real Y_D distribution from Meta mobility datasets for the city.
-    Protocol:
-        1. For each snapshot file: compute mean ping fraction across matching counties for each bin.
-        2. Average across all temporal snapshots.
-        3. Normalize to sum to 1.0.
-    """
+def extract_yd_4bin_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
+    """Extracts raw 4-bin Meta distribution (including Bin 0) for ablation."""
     city_info = CITY_FIPS_GADM.get(city_name, None)
     if city_info is None:
         return None
@@ -153,7 +126,6 @@ def extract_yd_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.nd
         return None
 
     snapshot_distributions = []
-
     for df in snapshots:
         matched = df[df["gadm_name"].isin(counties)]
         if len(matched) == 0:
@@ -172,19 +144,83 @@ def extract_yd_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.nd
     if not snapshot_distributions:
         return None
 
-    # Step 2: Average across temporal snapshots
     mean_yd = np.mean(snapshot_distributions, axis=0)
-
-    # Step 3: Normalize
     total = np.sum(mean_yd)
-    if total <= 0:
+    return mean_yd / total if total > 0 else None
+
+
+def extract_yd_moving_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
+    """
+    Primary Meta extractor: extracts the 3 moving bins {1, 2, 3} normalized to sum to 1.0.
+    Excludes stay-at-home / immobility Bin 0.
+    """
+    yd_4 = extract_yd_4bin_real(city_name, meta_prior_dir=meta_prior_dir)
+    if yd_4 is None:
         return None
-    return mean_yd / total
+
+    moving_3 = yd_4[1:].copy()  # bins 1, 2, 3
+    total_moving = np.sum(moving_3)
+    if total_moving <= 0:
+        return None
+    return moving_3 / total_moving
+
+
+def extract_yd_4bin_oracle(pair_trips: torch.Tensor, bin_labels: torch.Tensor) -> np.ndarray:
+    """Extracts raw 4-bin oracle distribution from GT flows."""
+    yd = np.zeros(4, dtype=np.float64)
+    trips_np = pair_trips.detach().cpu().numpy()
+    bins_np = bin_labels.detach().cpu().numpy()
+    total_flow = float(np.sum(trips_np))
+    if total_flow <= 0:
+        return np.array([0.25, 0.25, 0.25, 0.25])
+    for k in range(4):
+        yd[k] = np.sum(trips_np[bins_np == k])
+    return yd / total_flow
+
+
+def extract_yd_moving_oracle(
+    pair_trips: torch.Tensor,
+    bin_labels: torch.Tensor,
+    pair_o_idx: torch.Tensor,
+    pair_d_idx: torch.Tensor,
+) -> np.ndarray:
+    """
+    Primary Oracle extractor: computes 3-bin distribution on interzonal pairs Omega_c^+ (bins 1, 2, 3).
+    """
+    trips_np = pair_trips.detach().cpu().numpy()
+    bins_np = bin_labels.detach().cpu().numpy()
+    o_np = pair_o_idx.detach().cpu().numpy()
+    d_np = pair_d_idx.detach().cpu().numpy()
+
+    inter_mask = (o_np != d_np) & (bins_np > 0)
+    inter_trips = trips_np[inter_mask]
+    inter_bins = bins_np[inter_mask]
+
+    yd_3 = np.zeros(3, dtype=np.float64)
+    total_inter = np.sum(inter_trips)
+    if total_inter <= 0:
+        return np.array([0.5, 0.4, 0.1])
+
+    for idx, bin_k in enumerate([1, 2, 3]):
+        yd_3[idx] = np.sum(inter_trips[inter_bins == bin_k])
+
+    return yd_3 / total_inter
+
+
+def compute_distributional_overlap(p: np.ndarray, q: np.ndarray) -> float:
+    """
+    Computes Distributional Overlap (CPC_dist) between two probability vectors:
+    Overlap(p, q) = sum_k min(p_k, q_k) = 1 - 0.5 * ||p - q||_1
+    """
+    return float(np.sum(np.minimum(p, q)))
 
 
 if __name__ == "__main__":
-    for test_city in ["Raleigh", "Philadelphia", "Denver", "Chicago", "New_York"]:
-        yd_r = extract_yd_real(test_city, "meta_prior")
-        fips = CITY_FIPS_GADM[test_city]["fips"]
-        state = CITY_FIPS_GADM[test_city]["state"]
-        print(f"{test_city:<15} ({state}, FIPS {fips}): Y_D^real = {np.round(yd_r, 4).tolist()} | sum={np.sum(yd_r):.4f}")
+    from src.data.dataset import load_city
+
+    for city in ["Philadelphia", "Austin", "Raleigh", "Denver", "Seattle"]:
+        cd = load_city(city, "data")
+        o_3 = extract_yd_moving_oracle(cd.pair_trips, cd.bin_labels, cd.pair_o_idx, cd.pair_d_idx)
+        r_3 = extract_yd_moving_real(city, "meta_prior")
+        overlap = compute_distributional_overlap(o_3, r_3)
+        print(f"{city:<15}: Oracle_moving = {np.round(o_3, 4).tolist()} | Meta_moving = {np.round(r_3, 4).tolist()} | Overlap = {overlap*100:.2f}%")
