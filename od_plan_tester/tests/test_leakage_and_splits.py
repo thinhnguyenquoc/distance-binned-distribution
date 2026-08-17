@@ -74,3 +74,49 @@ def test_unobserved_pairs_excluded_not_zero_filled():
     assert len(cd.pair_trips) == cd.n_pairs
     # Ensure there are no 0s stored
     assert not (cd.pair_trips == 0).any()
+
+
+@pytest.mark.scientific
+def test_omega_c_plus_distance_equivalence():
+    """T15b: Omega_c^+ definition invariant: (bin_labels > 0) <=> (D_ij > 0) <=> (pair_o != pair_d)."""
+    test_cities = ["Philadelphia", "Denver", "Raleigh", "Austin", "Seattle"]
+    for c_name in test_cities:
+        cd = load_city(c_name, data_root="data")
+        dist_km = torch.expm1(cd.pair_distance)
+
+        # 1. Invariant: bin_labels > 0 iff distance_km > 0
+        assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Bin label vs distance mismatch in {c_name}"
+
+        # 2. Invariant: (pair_o != pair_d) & (bin_labels > 0) strictly matches (pair_o != pair_d) & (D_ij > 0)
+        mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
+        mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
+        assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ mask mismatch in {c_name}"
+
+        # 3. Invariant: Intrazonal pairs have distance == 0 and bin == 0
+        intra_mask = (cd.pair_o_idx == cd.pair_d_idx)
+        assert torch.all(dist_km[intra_mask] == 0.0)
+        assert torch.all(cd.bin_labels[intra_mask] == 0)
+
+
+@pytest.mark.scientific
+def test_all_50_cities_omega_plus_invariants():
+    """T15c: Exhaustive verification across all 50 dataset cities that D_ij > 0 <=> bin_labels > 0."""
+    from src.data.city_splits import get_all_cities_sorted_by_size
+    all_cities_info = get_all_cities_sorted_by_size(data_root="data")
+    assert len(all_cities_info) == 50
+
+    for c_info in all_cities_info:
+        c_name = c_info["city"]
+        cd = load_city(c_name, data_root="data")
+        dist_km = torch.expm1(cd.pair_distance)
+
+        # Invariant: bin_labels > 0 strictly equals distance_km > 0
+        assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Distance vs bin mismatch in {c_name}"
+
+        # Invariant: Omega_c^+ mask strictly identical
+        mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
+        mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
+        assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ definition discrepancy in {c_name}"
+
+
+

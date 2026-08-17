@@ -170,8 +170,8 @@ def run_5fold_experiment(
     if "4bin_ablation" in delta_r_analysis:
         ab = delta_r_analysis["4bin_ablation"]
         print(f"\n[Ablation: Legacy 4-Bin Calibration (M1^real, 4bin — keeping Bin 0 mismatch)]")
-        print(f"  Delta R (4-bin) Mean +- Std:                    {ab['delta_r_inter']['mean']:+.4f} +- {ab['delta_r_inter']['std']:.4f}")
-        print(f"  P(Delta R (4-bin) > 0):                         {ab['p_improved'] * 100:.1f}%")
+        p_imp_inter = ab.get('p_improved_inter', ab.get('p_improved', 0.0)) * 100
+        print(f"  P(Delta R (4-bin) > 0 on Interzonal):           {p_imp_inter:.1f}%")
 
     print(f"\nSaved full results to: {out_file.resolve()}")
     tables_dir = Path(output_dir) / "tables"

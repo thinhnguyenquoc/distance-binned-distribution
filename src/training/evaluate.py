@@ -62,6 +62,7 @@ def evaluate_moving_and_full(
     pair_o_idx: torch.Tensor,
     pair_d_idx: torch.Tensor,
     bin_labels: torch.Tensor,
+    pair_distance: torch.Tensor | None = None,
 ) -> dict[str, float]:
     """
     Computes all locked metrics partitioned by Interzonal Omega_c^+ and Full Support Omega_c.
@@ -72,7 +73,12 @@ def evaluate_moving_and_full(
     d_np = pair_d_idx.detach().cpu().numpy()
     b_np = bin_labels.detach().cpu().numpy()
 
-    inter_mask = (o_np != d_np) & (b_np > 0)
+    if pair_distance is not None:
+        p_dist = pair_distance.detach().cpu().numpy()
+        dist_km = np.expm1(p_dist) if np.max(p_dist) < 20.0 else p_dist
+        inter_mask = (o_np != d_np) & (dist_km > 0.0)
+    else:
+        inter_mask = (o_np != d_np) & (b_np > 0)
 
     # 1. Interzonal Domain Omega_c^+ (Primary)
     t_t_inter = t_t[inter_mask]

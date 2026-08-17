@@ -78,23 +78,23 @@ def main():
     print("=" * 70)
     print(f"{'Condition / Metric':<30} {'ZTNB (Primary)':>18} {'NB (Sensitivity)':>18}")
     print("-" * 70)
-    print(f"{'M0 (Zero-Shot) CPC':<30} {res_ztnb['M0']['cpc']:>18.4f} {res_nb['M0']['cpc']:>18.4f}")
-    print(f"{'M1_oracle CPC':<30} {res_ztnb['M1_oracle']['cpc']:>18.4f} {res_nb['M1_oracle']['cpc']:>18.4f}")
-    print(f"{'Delta R (CPC gain)':<30} {res_ztnb['delta_r_oracle']:>18.4f} {res_nb['delta_r_oracle']:>18.4f}")
-    print(f"{'M0 RMSE-log1p':<30} {res_ztnb['M0']['rmse_log1p']:>18.4f} {res_nb['M0']['rmse_log1p']:>18.4f}")
-    print(f"{'M1_oracle RMSE-log1p':<30} {res_ztnb['M1_oracle']['rmse_log1p']:>18.4f} {res_nb['M1_oracle']['rmse_log1p']:>18.4f}")
-    print(f"{'m* (estimated trips)':<30} {res_ztnb['m_star']:>18.1f} {res_nb['m_star']:>18.1f}")
-    print(f"{'q* (fraction of trips)':<30} {res_ztnb['q_star']:>18.6f} {res_nb['q_star']:>18.6f}")
+    print(f"{'M0 Interzonal CPC':<30} {res_ztnb['M0']['cpc_inter']:>18.4f} {res_nb['M0']['cpc_inter']:>18.4f}")
+    print(f"{'M1_oracle+ Interzonal CPC':<30} {res_ztnb['M1_oracle_plus']['cpc_inter']:>18.4f} {res_nb['M1_oracle_plus']['cpc_inter']:>18.4f}")
+    print(f"{'Delta R+ (CPC gain)':<30} {res_ztnb['delta_r_oracle_plus']:>18.4f} {res_nb['delta_r_oracle_plus']:>18.4f}")
+    print(f"{'M0 RMSE_inter':<30} {res_ztnb['M0']['rmse_inter']:>18.4f} {res_nb['M0']['rmse_inter']:>18.4f}")
+    print(f"{'M1_oracle+ RMSE_inter':<30} {res_ztnb['M1_oracle_plus']['rmse_inter']:>18.4f} {res_nb['M1_oracle_plus']['rmse_inter']:>18.4f}")
+    print(f"{'m* (oracle interzonal)':<30} {res_ztnb['m_star_oracle']:>18.1f} {res_nb['m_star_oracle']:>18.1f}")
+    print(f"{'q* (oracle interzonal)':<30} {res_ztnb['q_star_oracle']:>18.6f} {res_nb['q_star_oracle']:>18.6f}")
 
-    if res_ztnb['M1_real'] is not None:
-        print(f"{'M1_real CPC':<30} {res_ztnb['M1_real']['cpc']:>18.4f} {res_nb['M1_real']['cpc']:>18.4f}")
-        print(f"{'Realization gap':<30} {res_ztnb['realization_gap']:>18.4f} {res_nb['realization_gap']:>18.4f}")
+    if res_ztnb['M1_real_plus'] is not None:
+        print(f"{'M1_real+ Interzonal CPC':<30} {res_ztnb['M1_real_plus']['cpc_inter']:>18.4f} {res_nb['M1_real_plus']['cpc_inter']:>18.4f}")
+        print(f"{'Realization gap+':<30} {res_ztnb['realization_gap_plus']:>18.4f} {res_nb['realization_gap_plus']:>18.4f}")
     else:
-        print(f"{'M1_real (Meta mobility)':<30} {'Not in prior dir':>18} {'Not in prior dir':>18}")
+        print(f"{'M1_real+ (Meta mobility)':<30} {'Not in prior dir':>18} {'Not in prior dir':>18}")
 
-    print("\nM_q Curve (ZTNB):")
-    for k, v in res_ztnb["Mq_curve"].items():
-        print(f"  m = {k:>7}: CPC = {v['cpc_mean']:.4f} +- {v['cpc_std']:.4f} | RMSE = {v['rmse_mean']:.4f}")
+    print("\nM_m Sampling Curve (ZTNB):")
+    for k, v in res_ztnb["Mm_sampling_curve"].items():
+        print(f"  m = {k:>7}: CPC_inter = {v['cpc_inter_mean']:.4f} +- {v['cpc_inter_std']:.4f} | RMSE_inter = {v['rmse_inter_mean']:.4f}")
 
     print("\n" + "=" * 70)
     print("3-CITY PILOT COMPLETED SUCCESSFULLY.")

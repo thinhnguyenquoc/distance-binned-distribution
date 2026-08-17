@@ -42,6 +42,7 @@ def calibrate_moving_bins(
     pair_d_idx: torch.Tensor,
     target_moving_yd: np.ndarray | torch.Tensor,
     q: float = 1.0,
+    pair_distance: torch.Tensor | None = None,
     eps: float = 1e-8,
     tolerance: float = 1e-5,
 ) -> torch.Tensor:
@@ -55,6 +56,7 @@ def calibrate_moving_bins(
         pair_d_idx:       (E,) destination indices.
         target_moving_yd: (3,) normalized moving-bin distribution for bins {1, 2, 3} (sums to 1.0).
         q:                soft calibration parameter in [0, 1]. q=1 is full match, q=0 is zero-shot.
+        pair_distance:    Optional (E,) pairwise distance tensor (log1p km or km).
         tolerance:        numerical precision tolerance (default 1e-5).
 
     Returns:
@@ -73,8 +75,13 @@ def calibrate_moving_bins(
         return t_pred_zero_shot.clone()
     p_raw = p_raw / raw_sum
 
-    # Mask for interzonal pairs Omega_c^+ (i != j and bin > 0)
-    inter_mask = (pair_o_idx != pair_d_idx) & (bin_labels > 0)
+    # Mask for interzonal pairs Omega_c^+ (i != j and D_ij > 0)
+    if pair_distance is not None:
+        p_dist = pair_distance.to(device=t_pred_zero_shot.device)
+        dist_km = torch.expm1(p_dist) if p_dist.max() < 20.0 else p_dist
+        inter_mask = (pair_o_idx != pair_d_idx) & (dist_km > 0.0)
+    else:
+        inter_mask = (pair_o_idx != pair_d_idx) & (bin_labels > 0)
     intra_mask = ~inter_mask
 
     # Clone predictions

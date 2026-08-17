@@ -125,3 +125,26 @@ def test_inactive_bin_conditioning():
 
     assert pytest.approx(0.5, abs=1e-5) == p_b1
     assert pytest.approx(0.5, abs=1e-5) == p_b2
+
+
+@pytest.mark.scientific
+def test_calibrate_moving_bins_with_pair_distance():
+    """T21b: Verify calibrate_moving_bins using direct pair_distance tensor (D_ij > 0)."""
+    torch.manual_seed(42)
+    o_idx = torch.tensor([0, 1, 0, 2, 3, 3])
+    d_idx = torch.tensor([0, 1, 1, 3, 2, 3])  # 0, 1, 5 are intrazonal
+    bins = torch.tensor([0, 0, 1, 2, 3, 0])
+    dist_km = torch.tensor([0.0, 0.0, 5.2, 25.0, 120.0, 0.0])
+    pair_distance = torch.log1p(dist_km)
+    t0 = torch.tensor([50.0, 120.0, 30.0, 80.0, 20.0, 200.0])
+    target_moving = np.array([0.25, 0.50, 0.25])
+
+    t_cal_bins = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
+    t_cal_dist = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0, pair_distance=pair_distance)
+
+    assert torch.allclose(t_cal_bins, t_cal_dist, atol=1e-6)
+    # Intrazonal identity
+    assert torch.allclose(t_cal_dist[[0, 1, 5]], t0[[0, 1, 5]], atol=1e-6)
+    # Interzonal mass preservation
+    assert pytest.approx(t0[[2, 3, 4]].sum().item(), rel=1e-5) == t_cal_dist[[2, 3, 4]].sum().item()
+

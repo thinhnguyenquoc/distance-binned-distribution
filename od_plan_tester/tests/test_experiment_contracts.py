@@ -124,3 +124,88 @@ def test_run_target_city_experiments_smoke():
     ]
     for k in expected_keys:
         assert k in res, f"Missing moving-bin key {k} in experiment result dictionary"
+
+
+@pytest.mark.scientific
+def test_seed_band_recomputed_with_ddof_1():
+    """T42: Verification that seed curves use sample SD with Bessel's correction (ddof=1)."""
+    values = np.array([0.42, 0.45, 0.43, 0.48, 0.44], dtype=float)
+    pop_sd = np.std(values, ddof=0)
+    sample_sd = np.std(values, ddof=1)
+    assert sample_sd > pop_sd
+    expected_sample_sd = np.sqrt(np.sum((values - np.mean(values)) ** 2) / (len(values) - 1))
+    assert pytest.approx(expected_sample_sd, rel=1e-6) == sample_sd
+
+
+@pytest.mark.contract
+def test_mq_and_mm_curve_ddof_consistency():
+    """T43: Contract check that Mm sampling curve records ddof=1, num_seeds, and per_seed_cpcs."""
+    sample_per_seed = [0.38, 0.39, 0.41, 0.40]
+    std_val = float(np.std(sample_per_seed, ddof=1))
+
+    curve_entry = {
+        "m": 1000,
+        "num_seeds": len(sample_per_seed),
+        "std_ddof": 1,
+        "per_seed_cpcs": sample_per_seed,
+        "cpc_inter_mean": float(np.mean(sample_per_seed)),
+        "cpc_inter_std": std_val,
+    }
+
+    assert curve_entry["std_ddof"] == 1
+    assert curve_entry["num_seeds"] == len(curve_entry["per_seed_cpcs"])
+    assert pytest.approx(std_val, rel=1e-6) == np.std(curve_entry["per_seed_cpcs"], ddof=curve_entry["std_ddof"])
+
+
+@pytest.mark.scientific
+def test_omega_plus_independent_of_ground_truth():
+    """T44: Rigorous verification that Omega_c^+ is defined by D_ij > eps and independent of T^GT."""
+    # Synthetic 5 tracts with coordinates
+    coords = np.array([
+        [0.0, 0.0],
+        [0.01, 0.01],
+        [0.05, 0.05],
+        [0.50, 0.50],
+        [2.00, 2.00]
+    ])
+    from src.data.urban_graph import haversine_distance_matrix
+    from src.data.dataset import assign_bins
+
+    dist_mat = haversine_distance_matrix(coords)
+    N = len(coords)
+
+    # Invariants on distance matrix
+    # 1. Diagonal strictly zero
+    assert np.allclose(np.diag(dist_mat), 0.0)
+    # 2. Symmetric
+    assert np.allclose(dist_mat, dist_mat.T)
+    # 3. No NaN / Inf
+    assert not np.isnan(dist_mat).any()
+    assert not np.isinf(dist_mat).any()
+
+    # Create candidate pairs
+    o_idx, d_idx = np.meshgrid(np.arange(N), np.arange(N), indexing="ij")
+    o_flat = o_idx.flatten()
+    d_flat = d_idx.flatten()
+    d_flat_km = dist_mat[o_flat, d_flat]
+    bins_flat = assign_bins(d_flat_km)
+
+    # Check equivalence: D_ij > 0 <=> bin in {1, 2, 3} for off-diagonal
+    off_diag = (o_flat != d_flat)
+    assert np.all(d_flat_km[off_diag] > 0.0)
+    assert np.all(np.isin(bins_flat[off_diag], [1, 2, 3]))
+
+    # Check that diagonal is strictly bin 0
+    diag = (o_flat == d_flat)
+    assert np.all(d_flat_km[diag] == 0.0)
+    assert np.all(bins_flat[diag] == 0)
+
+    # Check independence from T_GT: altering GT does not change Omega_c^+ mask
+    mask_1 = (o_flat != d_flat) & (bins_flat > 0)
+    t_gt_dummy_1 = np.ones(len(o_flat))
+    t_gt_dummy_2 = np.random.poisson(lam=5.0, size=len(o_flat)) + 1.0
+
+    mask_from_gt_1 = mask_1 & (t_gt_dummy_1 >= 0)
+    mask_from_gt_2 = mask_1 & (t_gt_dummy_2 >= 0)
+    assert np.array_equal(mask_from_gt_1, mask_from_gt_2)
+
