@@ -1,15 +1,17 @@
 """
-Pairwise OD Decoder with Single Magnitude Head (ZTNB).
+Pairwise OD Decoder with Single Base Magnitude Head (ZTNB).
 
 Input edge representation:
     e_ij = [h_i, h_j, log(1 + D_ij), log(T^{grav}_ij)]
 
-Single prediction head:
-    mu_ij = softplus(f_mu(e_ij)) > 0
-    Interpretation: mu_ij = E[T_ij | T_ij > 0] (conditional positive flow under ZTNB).
+Single prediction head producing base Negative Binomial parameter:
+    mu_nb_ij = softplus(f_mu(e_ij)) > 0
+    Interpretation: mu_nb_ij is the base mean of the underlying count process.
 
-Expected Zero-Shot Prediction:
-    \hat{T}^{ZS}_ij = mu_ij  for all (i,j) in Omega_c.
+Exact ZTNB Likelihood & Predictions:
+    At training: loss = -log P_ZTNB(T_ij; mu_nb_ij, phi) on positive observations in Omega_c.
+    At inference: expected zero-shot prediction is the conditional expectation:
+        \hat{T}^{ZS}_ij = E[T_ij | T_ij >= 1] = compute_conditional_mean(mu_nb_ij, log_phi).
 """
 
 import torch
@@ -54,7 +56,7 @@ class PairwiseODDecoder(nn.Module):
             log_t_grav:   (E,) or (E, 1) log gravity flow.
 
         Returns:
-            mu: (E,) positive flow magnitude E[T|T>0].
+            mu_nb: (E,) positive base mean parameter mu_nb_ij > 0.
         """
         if log_distance.dim() == 1:
             log_distance = log_distance.unsqueeze(-1)
@@ -65,9 +67,9 @@ class PairwiseODDecoder(nn.Module):
         e_ij = torch.cat([h_i, h_j, log_distance, log_t_grav], dim=-1)
         
         raw_out = self.net(e_ij).squeeze(-1)  # (E,)
-        # softplus ensures mu_ij > 0 strictly
-        mu = F.softplus(raw_out) + 1e-4
-        return mu
+        # softplus ensures mu_nb > 0 strictly
+        mu_nb = F.softplus(raw_out) + 1e-4
+        return mu_nb
 
 
 if __name__ == "__main__":
@@ -76,5 +78,5 @@ if __name__ == "__main__":
     h_j = torch.randn(100, 32)
     ld = torch.randn(100)
     ltg = torch.randn(100)
-    mu = dec(h_i, h_j, ld, ltg)
-    print("Decoder mu output shape:", mu.shape, "min:", mu.min().item(), "max:", mu.max().item())
+    mu_nb = dec(h_i, h_j, ld, ltg)
+    print("Decoder mu_nb output shape:", mu_nb.shape, "min:", mu_nb.min().item(), "max:", mu_nb.max().item())
