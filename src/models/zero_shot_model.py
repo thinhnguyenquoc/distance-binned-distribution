@@ -4,11 +4,16 @@ Full Physics-Informed Zero-Shot OD Model (M_0).
 Coordinates:
     1. UrbanGNN: X, G^urban -> h_i
     2. GravityPrior: P_i, P_j, D_ij -> log T_ij^grav
-    3. PairwiseODDecoder: [h_i, h_j, log D_ij, log T_ij^grav] -> mu_ij
+    3. PairwiseODDecoder: [h_i, h_j, log D_ij, log T_ij^grav] -> mu_nb_ij
     4. Learnable global dispersion parameter phi for ZTNB likelihood.
 
-Zero-Shot inference:
-    \hat{T}^{ZS}_ij = mu_ij  for all candidate pairs in Omega_c.
+At Training Time:
+    Model outputs base parameter mu_nb_ij.
+    Loss is computed via ZTNB NLL(-log P_ZTNB(T_ij; mu_nb_ij, phi)).
+
+At Inference Time:
+    Zero-Shot prediction is the conditional expectation:
+    \hat{T}^{ZS}_ij = E[T_ij | T_ij >= 1] = compute_conditional_mean(mu_nb_ij, log_phi).
 """
 
 import torch
@@ -16,6 +21,7 @@ import torch.nn as nn
 from src.models.node_encoder import UrbanGNN
 from src.models.gravity import GravityPrior
 from src.models.decoder import PairwiseODDecoder
+from src.loss.ztnb import compute_conditional_mean
 
 
 class ZeroShotODModel(nn.Module):
@@ -42,7 +48,7 @@ class ZeroShotODModel(nn.Module):
         # 2. Gravity Prior
         self.gravity_prior = GravityPrior()
 
-        # 3. Pairwise Decoder
+        # 3. Pairwise Decoder (outputs base mean mu_nb > 0)
         self.decoder = PairwiseODDecoder(
             node_dim=node_out_dim,
             hidden_dim=decoder_hidden_dim,
@@ -65,23 +71,17 @@ class ZeroShotODModel(nn.Module):
         pair_d_idx: torch.Tensor,
         pair_distance_log1p: torch.Tensor,
         population: torch.Tensor,
+        return_conditional_mean: bool = False,
     ) -> torch.Tensor:
         """
-        Forward pass predicting flow magnitude mu_ij for requested candidate pairs.
+        Forward pass predicting flows for candidate pairs on Omega_c.
 
         Args:
-            x:                   (N, F) normalized node features.
-            spatial_edge_index:  (2, E_graph) G^urban edges.
-            spatial_edge_dist:   (E_graph,) G^urban edge distances (km).
-            pair_o_idx:          (E_pairs,) origin tract indices.
-            pair_d_idx:          (E_pairs,) destination tract indices.
-            pair_distance_log1p: (E_pairs,) log1p(distance_km).
-            population:          (N,) raw tract population.
-
-        Returns:
-            mu: (E_pairs,) predicted expected flows \hat{T}^{ZS}_ij.
+            return_conditional_mean:
+                If False (training): returns base parameter mu_nb for ZTNB likelihood.
+                If True (inference): returns exact conditional expectation E[T | T >= 1].
         """
-        # Step 1: Compute node embeddings from observable urban graph
+        # Step 1: Compute node embeddings from observable urban graph G^urban
         h = self.node_encoder(x, spatial_edge_index, spatial_edge_dist)  # (N, d)
 
         # Gather origin and destination embeddings for candidate pairs
@@ -89,15 +89,18 @@ class ZeroShotODModel(nn.Module):
         h_d = h[pair_d_idx]  # (E_pairs, d)
 
         # Step 2: Compute Physics Gravity prior
-        # Recover un-logged distance in km for gravity formulation
         dist_km = torch.expm1(pair_distance_log1p)
         pop_o = population[pair_o_idx]
         pop_d = population[pair_d_idx]
         log_t_grav = self.gravity_prior(pop_o, pop_d, dist_km)  # (E_pairs,)
 
-        # Step 3: Decode pairwise flows
-        mu = self.decoder(h_o, h_d, pair_distance_log1p, log_t_grav)  # (E_pairs,)
-        return mu
+        # Step 3: Decode pairwise flows (mu_nb > 0)
+        mu_nb = self.decoder(h_o, h_d, pair_distance_log1p, log_t_grav)  # (E_pairs,)
+
+        if return_conditional_mean:
+            # \hat{T} = E[T | T >= 1]
+            return compute_conditional_mean(mu_nb, self.log_phi)
+        return mu_nb
 
 
 if __name__ == "__main__":
@@ -108,15 +111,9 @@ if __name__ == "__main__":
     ei, ed = build_knn_graph(cd.lon_lat.numpy(), k=10)
 
     model = ZeroShotODModel()
-    mu = model(
-        cd.node_features,
-        ei,
-        ed,
-        cd.pair_o_idx,
-        cd.pair_d_idx,
-        cd.pair_distance,
-        cd.population,
-    )
-    print(f"ZeroShotODModel test forward pass:")
-    print(f"  mu shape: {mu.shape}, min: {mu.min().item():.3f}, max: {mu.max().item():.3f}")
-    print(f"  phi: {model.phi.item():.4f}")
+    mu_nb = model(cd.node_features, ei, ed, cd.pair_o_idx, cd.pair_d_idx, cd.pair_distance, cd.population, return_conditional_mean=False)
+    t_hat = model(cd.node_features, ei, ed, cd.pair_o_idx, cd.pair_d_idx, cd.pair_distance, cd.population, return_conditional_mean=True)
+    print("Forward pass base mu_nb shape:", mu_nb.shape, "min:", mu_nb.min().item())
+    print("Forward pass t_hat shape:", t_hat.shape, "min:", t_hat.min().item())
+    assert (t_hat >= mu_nb).all(), "Conditioning must increase or maintain expectation"
+    print("Model check passed.")

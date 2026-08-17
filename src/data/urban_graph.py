@@ -7,8 +7,7 @@ Crucial requirement: G^urban uses ONLY observable spatial geography, NEVER OD fl
 Supports:
 1. k-NN graph: connects each node to its k geographically nearest neighbors.
 2. Radius graph: connects nodes within a geographic distance threshold d_max (km).
-
-Returns PyTorch Geometric compatible edge_index (2, E) and optional edge_weight (distance in km).
+3. Adaptive Radius graph: radius normalized to the city's empirical spatial diameter / extent.
 """
 
 import math
@@ -17,16 +16,8 @@ import torch
 
 
 def haversine_distance_matrix(lon_lat: np.ndarray) -> np.ndarray:
-    """
-    Computes pairwise Haversine distances in kilometers.
-
-    Args:
-        lon_lat: (N, 2) array of [lon, lat] coordinates in degrees.
-
-    Returns:
-        (N, N) distance matrix in km.
-    """
-    R = 6371.0  # Earth radius in km
+    """Computes pairwise Haversine distances in kilometers."""
+    R = 6371.0
     lons = np.radians(lon_lat[:, 0])
     lats = np.radians(lon_lat[:, 1])
 
@@ -39,28 +30,14 @@ def haversine_distance_matrix(lon_lat: np.ndarray) -> np.ndarray:
 
 
 def build_knn_graph(lon_lat: np.ndarray, k: int = 10, include_self_loop: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
-    """
-    Constructs a k-nearest neighbor spatial graph.
-
-    Args:
-        lon_lat: (N, 2) coordinates.
-        k: number of nearest neighbors.
-        include_self_loop: whether to include self-loops.
-
-    Returns:
-        edge_index: (2, E) LongTensor
-        edge_dist:  (E,) FloatTensor distance in km
-    """
+    """Constructs a k-nearest neighbor spatial graph."""
     N = len(lon_lat)
-    k = min(k, N - 1)  # cap at N-1
+    k = min(k, N - 1)
     dist_mat = haversine_distance_matrix(lon_lat)
 
     rows, cols, dists = [], [], []
-
     for i in range(N):
-        # Sort neighbors by distance (excluding self for neighbor selection)
         indices = np.argsort(dist_mat[i])
-        # indices[0] is self (dist = 0)
         neighbors = indices[1 : k + 1]
 
         if include_self_loop:
@@ -73,12 +50,10 @@ def build_knn_graph(lon_lat: np.ndarray, k: int = 10, include_self_loop: bool = 
             cols.append(nbr)
             dists.append(dist_mat[i, nbr])
 
-    # Convert to symmetric / undirected if needed, or maintain directed k-NN
-    # By default, we make the graph symmetric for message passing:
     edge_dict = {}
     for r, c, d in zip(rows, cols, dists):
         edge_dict[(r, c)] = d
-        edge_dict[(c, r)] = d  # make undirected
+        edge_dict[(c, r)] = d
 
     e_rows = [k[0] for k in edge_dict.keys()]
     e_cols = [k[1] for k in edge_dict.keys()]
@@ -89,16 +64,16 @@ def build_knn_graph(lon_lat: np.ndarray, k: int = 10, include_self_loop: bool = 
     return edge_index, edge_dist
 
 
-def build_radius_graph(lon_lat: np.ndarray, radius_km: float = 5.0, include_self_loop: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
-    """
-    Constructs a radius-based spatial graph connecting nodes within radius_km.
-    Guarantees at least 1 neighbor per node (fallback to 1-NN if isolated).
-    """
+def build_radius_graph(
+    lon_lat: np.ndarray,
+    radius_km: float = 5.0,
+    include_self_loop: bool = True,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Constructs a radius-based spatial graph connecting nodes within radius_km."""
     N = len(lon_lat)
     dist_mat = haversine_distance_matrix(lon_lat)
 
     rows, cols, dists = [], [], []
-
     for i in range(N):
         if include_self_loop:
             rows.append(i)
@@ -107,7 +82,6 @@ def build_radius_graph(lon_lat: np.ndarray, radius_km: float = 5.0, include_self
 
         within_radius = np.where((dist_mat[i] <= radius_km) & (dist_mat[i] > 0))[0]
         if len(within_radius) == 0:
-            # Fallback: connect to closest neighbor
             closest = np.argsort(dist_mat[i])[1]
             within_radius = [closest]
 
@@ -130,15 +104,29 @@ def build_radius_graph(lon_lat: np.ndarray, radius_km: float = 5.0, include_self
     return edge_index, edge_dist
 
 
+def build_adaptive_radius_graph(
+    lon_lat: np.ndarray,
+    scale_fraction: float = 0.15,
+    min_radius_km: float = 2.0,
+    include_self_loop: bool = True,
+) -> tuple[torch.Tensor, torch.Tensor, float]:
+    """
+    Constructs a spatial radius graph where radius_km is normalized to the city's
+    empirical spatial diameter (max distance * scale_fraction).
+    """
+    dist_mat = haversine_distance_matrix(lon_lat)
+    diameter = float(np.max(dist_mat))
+    adaptive_radius = max(min_radius_km, diameter * scale_fraction)
+    ei, ed = build_radius_graph(lon_lat, radius_km=adaptive_radius, include_self_loop=include_self_loop)
+    return ei, ed, adaptive_radius
+
+
 if __name__ == "__main__":
-    # Quick test
     coords = np.array([
-        [-84.3880, 33.7490],  # node 0
-        [-84.3900, 33.7500],  # node 1 (very close to 0)
-        [-84.4000, 33.7600],  # node 2
-        [-84.5000, 33.8000],  # node 3 (further)
+        [-84.3880, 33.7490],
+        [-84.3900, 33.7500],
+        [-84.4000, 33.7600],
+        [-84.5000, 33.8000],
     ])
-    ei, ed = build_knn_graph(coords, k=2)
-    print(f"k-NN graph edge_index shape: {ei.shape}, dists: {ed.shape}")
-    print(f"Edge index:\n{ei}")
-    print("urban_graph.py test passed.")
+    ei, ed, r = build_adaptive_radius_graph(coords, scale_fraction=0.2)
+    print(f"Adaptive radius: {r:.2f} km | Edges: {ei.shape[1]}")
