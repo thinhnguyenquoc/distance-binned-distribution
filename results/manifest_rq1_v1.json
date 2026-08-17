@@ -1,47 +1,73 @@
 {
   "bundle_name": "Moving-Bin RQ1 v1",
-  "timestamp": "2026-08-17T17:40:00Z",
+  "git_commit_hash": "aa06f9e5f0a5efbeab7ffdb02694a21868a1bc70",
+  "timestamp": "2026-08-17T17:58:00Z",
+  "test_suite_status": "47/47 PASS (100%)",
   "environment": {
-    "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
-    "torch_version": "2.12.0+cpu",
-    "platform": "Windows-10-10.0.26200-SP0"
+    "python_version": "3.11.9",
+    "torch_version": "2.x",
+    "platform": "win32"
   },
-  "frozen_confirmatory_evaluation": {
-    "folds": "Folds 2-5 (Fold 1 designated as development)",
-    "n_confirmatory_cities": 40,
-    "n_total_cities": 50,
-    "cpc_inter_M0": {
-      "mean": 0.3954,
-      "std_ddof1": 0.0486,
-      "median": 0.401,
-      "iqr": 0.0793
-    },
-    "cpc_inter_M1_real_plus": {
-      "mean": 0.4227,
-      "std_ddof1": 0.0549,
-      "median": 0.4275,
-      "iqr": 0.082
-    },
-    "delta_r_real_plus": {
-      "mean": 0.0272,
-      "std_ddof1": 0.0316,
-      "median": 0.026,
-      "iqr": 0.0304
-    },
-    "stratified_bootstrap_95_ci": [
-      0.0181,
-      0.0368
-    ],
-    "wilcoxon_one_sided_p": 3.9401e-07,
-    "p_improved": 0.825,
-    "n_improved": "33/40"
+  "formal_model_specifications": {
+    "M0_name": "Gravity-informed urban-GNN zero-shot model",
+    "M0_origin": "neuroGravity-inspired",
+    "formula_gravity_prior": "T_ij^grav = exp(G_0) * P_i * P_j * D_ij^(-alpha_0)",
+    "formula_zero_shot": "\\hat{T}_ij^ZS = f_theta*(X_i, X_j, D_ij, T_ij^grav)",
+    "likelihood_loss": "Zero-Truncated Negative Binomial (ZTNB)",
+    "intrazonal_handling": "Clamped distance min=0.1 km for gravity prior; strictly preserved in calibration via \\hat{T}_ii^cal == \\hat{T}_ii^ZS"
   },
-  "files": {
-    "full_results_json": "results/5fold_results.json",
-    "confirmatory_table": "results/tables/confirmatory_fold2_5.md",
-    "descriptive_table": "results/tables/table1_primary_rq1.md",
-    "ablation_table": "results/tables/table2_ablation.md",
-    "rq2_censoring_table": "results/tables/table5_rq2_censoring_breakdown.md",
-    "correlational_diagnostics_table": "results/tables/table6_correlational_diagnostics.md"
-  }
+  "confirmatory_evaluation_folds_2_5": {
+    "n_cities": 40,
+    "primary_cpc_inter": {
+      "m0_mean": 0.3954,
+      "m0_std": 0.0486,
+      "m1_mean": 0.4227,
+      "m1_std": 0.0549,
+      "delta_mean": 0.0272,
+      "delta_std": 0.0316,
+      "fold_stratified_bootstrap_95_ci": [0.0179, 0.0368],
+      "wilcoxon_one_sided_p": 3.9401e-07,
+      "win_rate": 0.825,
+      "n_improved": "33/40"
+    },
+    "scale_normalized_cpc_1_minus_tvd": {
+      "m0_mean": 0.4861,
+      "m1_mean": 0.5231,
+      "delta_mean": 0.0371,
+      "fold_stratified_bootstrap_95_ci": [0.0272, 0.0469],
+      "wilcoxon_one_sided_p": 2.5319e-08,
+      "win_rate": 0.825
+    },
+    "log_rmse_rmse_log1p": {
+      "m0_mean": 1.5342,
+      "m1_mean": 1.4007,
+      "delta_mean": -0.1335,
+      "fold_stratified_bootstrap_95_ci": [-0.1949, -0.0766],
+      "wilcoxon_one_sided_p": 9.7504e-06,
+      "win_rate": 0.725
+    }
+  },
+  "backbone_robustness_summary": {
+    "gravity_informed_urban_gnn": {
+      "delta_cpc_inter": "+0.0272",
+      "p_improved": "82.5% (33/40)",
+      "wilcoxon_p1": "3.9401e-07"
+    },
+    "classical_2parameter_gravity": {
+      "delta_cpc_inter": "-0.0065",
+      "p_improved": "30.0% (12/40)",
+      "wilcoxon_two_sided_p2": "8.2638e-03"
+    }
+  },
+  "generated_table_artifacts": [
+    "results/tables/confirmatory_fold2_5.md",
+    "results/tables/table1_primary_rq1.md",
+    "results/tables/table2_ablation.md",
+    "results/tables/table3_city_breakdown.md",
+    "results/tables/table4_ablation_city_breakdown.md",
+    "results/tables/table5_rq2_censoring_breakdown.md",
+    "results/tables/table6_correlational_diagnostics.md",
+    "results/tables/table7_backbone_robustness.md",
+    "results/tables/table8_multimetric_evaluation.md"
+  ]
 }
