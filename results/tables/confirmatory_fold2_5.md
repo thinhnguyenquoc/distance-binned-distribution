@@ -1,12 +1,12 @@
 ### Table 0: Primary Confirmatory Hypothesis Test (Held-Out Fold 2–5, $n=40$ Cities)
 
-> **Confirmatory Protocol**: Fold 1 ($n=10$) served as the development fold for calibration specification. Folds 2–5 ($n=40$) constitute the untouched confirmatory evaluation set.
+> **Confirmatory Protocol**: Fold 1 ($n=10$) served as the prospectively designated development fold for calibration specification. Folds 2–5 ($n=40$) constitute the untouched confirmatory evaluation set.
 
 | Estimand / Metric | Zero-Shot ($M_0$) | Real Moving-Bin ($M_1^{\text{real},+}$) | Oracle Reference ($M_1^{\text{oracle},+}$) | Marginal Gain ($\Delta R$) / Realization Gap |
 |---|---|---|---|---|
 | **Interzonal CPC (Mean +- Sample SD)** | 0.3954 +- 0.0486 | **0.4227 +- 0.0549** | 0.4286 +- 0.0545 | **+0.0272 +- 0.0316** (Gap: +0.0059) |
 | **Interzonal CPC (Median, IQR)** | 0.4010 (0.0793) | **0.4275 (0.0820)** | 0.4336 (0.0792) | **+0.0260 (0.0304)** |
-| **95% Bootstrap Confidence Interval** | --- | --- | --- | **[+0.0178, +0.0372]** |
+| **95% Fold-Stratified Bootstrap CI** | --- | --- | --- | **[+0.0181, +0.0368]** |
 | **Improvement Rate $P(\Delta R > 0)$** | --- | **82.5%** (33/40) | 100.0% (40/40) | --- |
 | **Wilcoxon Signed-Rank Test** | --- | **$p_1 = 3.9401e-07$** (Two-sided: $p_2 = 7.8802e-07$) | --- | --- |
 

@@ -1,12 +1,14 @@
 ### Table 5: RQ2 Observation Equivalence ($m^*, q^*$) Inversion & Censoring Analysis
 
-> **Observation Equivalence Ratio**: $q^* = m^* / T_{\text{inter}}$, where $T_{\text{inter}} = \sum_{\Omega_c^+} T_{ij}^{GT}$ is the candidate interzonal trip volume.
+> **Interval-Censoring Finding**: The observation-equivalence analysis is strongly interval-censored: 66% of cities require no more than the minimum grid size, whereas 22% are not resolved before the oracle-reference endpoint.
+> 
+> **Observation Equivalence Ratio**: $q^* = m^* / T_{\text{inter}}$, where $T_{\text{inter}} = \sum_{\Omega_c^+} T_{ij}^{GT}$ is candidate interzonal trip volume.
 
 | Inversion Regime / Status | Count ($n/50$) | Percentage | Mean $m^*$ (trips) | Median $m^*$ (trips) | Median $q^*$ ($m^* / T_{\text{inter}}$) | Interpretation |
 |---|---|---|---|---|---|---|
 | **Interior Crossing (`interpolated`)** | 6/50 | 12.0% | 587.4 | 415.0 | 0.000048 (0.0048%) | Exact crossing within sampled grid [100, 100k] |
-| **Left-Censored (`below_min_grid`)** | 33/50 | 66.0% | 100.0 | 100.0 | ~0.001% (grid floor) | Real Meta matched by <= 100 random trips |
-| **Right-Censored (`at_oracle_reference`)** | 11/50 | 22.0% | 6,592,581 | 6,339,794 | 1.000000 (100.0%) | Real Meta reached or exceeded finite asymptote |
+| **Left-Censored (`below_min_grid`)** | 33/50 | 66.0% | <= 100.0 | <= 100.0 | <= 100 / T_inter | Real Meta matched by <= 100 random trips |
+| **Right-Censored (`at_oracle_reference`)** | 11/50 | 22.0% | >= 100k | T_inter | Unresolved / >= 1.0 | Real Meta unresolved before finite oracle asymptote |
 
 #### Interior Solution Details ($n=6$):
 | City | Interzonal Trips ($T_{\text{inter}}$) | $\Delta R^{\text{real},+}$ | Equivalent Trips ($m^*$) | Equivalent Ratio ($q^* = m^* / T_{\text{inter}}$) |
