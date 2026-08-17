@@ -56,6 +56,15 @@ def compute_pearson_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
     return float(cov / (std_t * std_p))
 
 
+def compute_spearman_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes Spearman rank correlation of pairwise flows."""
+    if len(t_true) < 2 or np.std(t_true) == 0 or np.std(t_pred) == 0:
+        return 0.0
+    from scipy import stats
+    rho, _ = stats.spearmanr(t_true, t_pred)
+    return float(rho) if not np.isnan(rho) else 0.0
+
+
 def evaluate_moving_and_full(
     t_true: torch.Tensor,
     t_pred: torch.Tensor,
@@ -88,12 +97,14 @@ def evaluate_moving_and_full(
     cpc_inter_norm = compute_cpc_norm_pair(t_t_inter, t_p_inter)
     rmse_inter = compute_rmse_log1p_pair(t_t_inter, t_p_inter)
     pearson_inter = compute_pearson_pair(t_t_inter, t_p_inter)
+    spearman_inter = compute_spearman_pair(t_t_inter, t_p_inter)
 
     # 2. Full Matrix Domain Omega_c (Secondary)
     cpc_full = compute_cpc_pair(t_t, t_p)
     cpc_full_norm = compute_cpc_norm_pair(t_t, t_p)
     rmse_full = compute_rmse_log1p_pair(t_t, t_p)
     pearson_full = compute_pearson_pair(t_t, t_p)
+    spearman_full = compute_spearman_pair(t_t, t_p)
 
     return {
         # Primary interzonal metrics
@@ -102,11 +113,13 @@ def evaluate_moving_and_full(
         "cpc_inter_norm": cpc_inter_norm,
         "rmse_inter": rmse_inter,
         "pearson_inter": pearson_inter,
+        "spearman_inter": spearman_inter,
         # Secondary full-matrix metrics
         "cpc_full": cpc_full,
         "cpc_full_norm": cpc_full_norm,
         "rmse_full": rmse_full,
         "pearson_full": pearson_full,
+        "spearman_full": spearman_full,
     }
 
 
