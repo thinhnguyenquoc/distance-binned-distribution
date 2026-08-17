@@ -18,6 +18,7 @@ from src.training.train import train_zero_shot_model
 from src.experiment.run_experiment import run_target_city_experiments
 from src.experiment.compute_delta_r import analyze_delta_r
 from src.experiment.compute_qstar import analyze_qstar
+from src.experiment.generate_tables import generate_tables
 
 
 def run_5fold_experiment(
@@ -173,6 +174,9 @@ def run_5fold_experiment(
         print(f"  P(Delta R (4-bin) > 0):                         {ab['p_improved'] * 100:.1f}%")
 
     print(f"\nSaved full results to: {out_file.resolve()}")
+    tables_dir = Path(output_dir) / "tables"
+    generate_tables(str(out_file), output_dir=str(tables_dir))
+    print(f"Saved summary tables and ablation breakdown to: {tables_dir.resolve()}")
     print("=" * 85)
     return final_results
 

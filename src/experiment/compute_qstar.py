@@ -10,15 +10,19 @@ import numpy as np
 from typing import List, Dict, Any
 
 
-def _summary_stats(arr: np.ndarray) -> Dict[str, float]:
+def _summary_stats(arr: np.ndarray, ddof: int = 1) -> Dict[str, Any]:
+    """Compute summary statistics with sample standard deviation (ddof=1) and sample size n."""
+    n = int(len(arr))
+    std_val = float(np.std(arr, ddof=ddof)) if n > 1 else 0.0
     return {
+        "n": n,
         "mean": float(np.mean(arr)),
-        "std": float(np.std(arr)),
+        "std": std_val,
         "median": float(np.median(arr)),
-        "p25": float(np.percentile(arr, 25)),
-        "p75": float(np.percentile(arr, 75)),
-        "min": float(np.min(arr)),
-        "max": float(np.max(arr)),
+        "p25": float(np.percentile(arr, 25)) if n > 0 else 0.0,
+        "p75": float(np.percentile(arr, 75)) if n > 0 else 0.0,
+        "min": float(np.min(arr)) if n > 0 else 0.0,
+        "max": float(np.max(arr)) if n > 0 else 0.0,
     }
 
 

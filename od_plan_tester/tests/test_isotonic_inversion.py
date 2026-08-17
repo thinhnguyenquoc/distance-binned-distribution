@@ -49,8 +49,8 @@ def test_isotonic_boundary_below_min_grid():
 
 
 @pytest.mark.reference
-def test_isotonic_boundary_at_oracle_ceiling():
-    """T35: Boundary case: target CPC >= oracle CPC returns m* = total_trips with status 'at_oracle_ceiling'."""
+def test_isotonic_boundary_at_oracle_reference():
+    """T35: Boundary case: target CPC >= oracle CPC returns m* = total_trips with status 'at_oracle_reference'."""
     m_finite = [100.0, 500.0, 1000.0, 5000.0]
     mean_cpcs = [0.45, 0.50, 0.55, 0.60]
     oracle_cpc = 0.70
@@ -58,7 +58,7 @@ def test_isotonic_boundary_at_oracle_ceiling():
 
     m_star, status = _interpolate_m_star(0.72, m_finite, mean_cpcs, oracle_cpc, total_trips)
     assert m_star == total_trips
-    assert status == "at_oracle_ceiling"
+    assert status == "at_oracle_reference"
 
 
 @pytest.mark.contract
