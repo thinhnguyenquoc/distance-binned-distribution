@@ -1,19 +1,16 @@
 """
-Full Physics-Informed Zero-Shot OD Model (M_0).
+Gravity-Informed Urban-GNN Zero-Shot Model (M_0).
+(neuroGravity-inspired neural transferable architecture)
 
-Coordinates:
-    1. UrbanGNN: X, G^urban -> h_i
-    2. GravityPrior: P_i, P_j, D_ij -> log T_ij^grav
-    3. PairwiseODDecoder: [h_i, h_j, log D_ij, log T_ij^grav] -> mu_nb_ij
+Mathematical Formulation:
+    1. Classical Gravity Prior:
+        T_ij^grav = exp(G_0) * P_i * P_j * D_ij^(-alpha_0)
+    2. Urban GNN Representation:
+        h_i = GNN_theta(X_i, G^urban)
+    3. Neural Transfer Decoder:
+        \hat{T}_ij^ZS = f_theta*(X_i, X_j, D_ij, T_ij^grav)
+        where f_theta maps [h_i, h_j, log(1+D_ij), log(T_ij^grav)] to conditional mean E[T_ij | T_ij >= 1].
     4. Learnable global dispersion parameter phi for ZTNB likelihood.
-
-At Training Time:
-    Model outputs base parameter mu_nb_ij.
-    Loss is computed via ZTNB NLL(-log P_ZTNB(T_ij; mu_nb_ij, phi)).
-
-At Inference Time:
-    Zero-Shot prediction is the conditional expectation:
-    \hat{T}^{ZS}_ij = E[T_ij | T_ij >= 1] = compute_conditional_mean(mu_nb_ij, log_phi).
 """
 
 import torch

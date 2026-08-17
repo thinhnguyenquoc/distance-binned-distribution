@@ -1,0 +1,47 @@
+{
+  "bundle_name": "Moving-Bin RQ1 v1",
+  "timestamp": "2026-08-17T17:40:00Z",
+  "environment": {
+    "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "torch_version": "2.12.0+cpu",
+    "platform": "Windows-10-10.0.26200-SP0"
+  },
+  "frozen_confirmatory_evaluation": {
+    "folds": "Folds 2-5 (Fold 1 designated as development)",
+    "n_confirmatory_cities": 40,
+    "n_total_cities": 50,
+    "cpc_inter_M0": {
+      "mean": 0.3954,
+      "std_ddof1": 0.0486,
+      "median": 0.401,
+      "iqr": 0.0793
+    },
+    "cpc_inter_M1_real_plus": {
+      "mean": 0.4227,
+      "std_ddof1": 0.0549,
+      "median": 0.4275,
+      "iqr": 0.082
+    },
+    "delta_r_real_plus": {
+      "mean": 0.0272,
+      "std_ddof1": 0.0316,
+      "median": 0.026,
+      "iqr": 0.0304
+    },
+    "stratified_bootstrap_95_ci": [
+      0.0181,
+      0.0368
+    ],
+    "wilcoxon_one_sided_p": 3.9401e-07,
+    "p_improved": 0.825,
+    "n_improved": "33/40"
+  },
+  "files": {
+    "full_results_json": "results/5fold_results.json",
+    "confirmatory_table": "results/tables/confirmatory_fold2_5.md",
+    "descriptive_table": "results/tables/table1_primary_rq1.md",
+    "ablation_table": "results/tables/table2_ablation.md",
+    "rq2_censoring_table": "results/tables/table5_rq2_censoring_breakdown.md",
+    "correlational_diagnostics_table": "results/tables/table6_correlational_diagnostics.md"
+  }
+}

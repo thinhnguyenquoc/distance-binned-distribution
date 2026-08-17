@@ -328,12 +328,12 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     tables["table5_rq2_censoring_breakdown.md"] = "\n".join(t5_md)
 
     # =========================================================================
-    # TABLE 6: 50-City Diagnostic Correlational Analysis & Negative City Diagnosis
+    # TABLE 6: Exploratory Correlational Diagnostics Across 50 Benchmark Cities
     # =========================================================================
     dr_all = np.array([r["delta_r_real_plus"] for r in city_results])
     overlap_all = np.array([r["distributional_overlap"] for r in city_results])
     m0_all = np.array([r["M0"]["cpc_inter"] for r in city_results])
-    n_tracts_all = np.array([r["n_tracts"] for r in city_results])
+    n_zones_all = np.array([r["n_tracts"] for r in city_results])
 
     gt_short_all = np.array([r["yd_moving_oracle"][0] for r in city_results])
     gt_long_all = np.array([r["yd_moving_oracle"][1] + r["yd_moving_oracle"][2] for r in city_results])
@@ -341,37 +341,78 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     long_bias_all = meta_long_all - gt_long_all
 
     diag_dict = {
-        "Long-Mass Bias ((p2+p3) - (y2+y3))": long_bias_all,
         "GT Short-Distance Share (b_1)": gt_short_all,
-        "Number of Tracts (N)": n_tracts_all,
-        "Distributional Overlap": overlap_all,
-        "Zero-Shot Baseline (M0 CPC)": m0_all,
+        "Long-Mass Bias ((p_2+p_3) - (y_2+y_3))": long_bias_all,
+        "Number of Zones (Spatial Discretization N)": n_zones_all,
+        "Distributional Overlap (Magnitude Overlap)": overlap_all,
+        "Zero-Shot Baseline (M_0 CPC)": m0_all,
     }
 
+    names = list(diag_dict.keys())
+    raw_p_vals = []
+    raw_rhos = []
+    strat_cis = {}
+
+    for name in names:
+        arr = diag_dict[name]
+        rho, p_val = stats.spearmanr(arr, dr_all)
+        raw_rhos.append(rho)
+        raw_p_vals.append(p_val)
+
+        # Fold-stratified bootstrap for correlation
+        boot_rhos = []
+        for _ in range(5000):
+            sampled_x = []
+            sampled_y = []
+            for f in range(1, 6):
+                c_names = splits[f]["test"]
+                f_idx = [i for i, r in enumerate(city_results) if r["city"] in c_names]
+                chosen_idx = rng.choice(f_idx, size=len(f_idx), replace=True)
+                sampled_x.extend(arr[chosen_idx])
+                sampled_y.extend(dr_all[chosen_idx])
+            r_b, _ = stats.spearmanr(sampled_x, sampled_y)
+            boot_rhos.append(r_b)
+        ci_l, ci_h = np.percentile(boot_rhos, [2.5, 97.5])
+        strat_cis[name] = (ci_l, ci_h)
+
+    # Holm-Bonferroni correction
+    sorted_indices = np.argsort(raw_p_vals)
+    k = len(raw_p_vals)
+    holm_p_vals = [0.0] * k
+    for rank, idx in enumerate(sorted_indices):
+        m_step = k - rank
+        holm_p_vals[idx] = min(1.0, raw_p_vals[idx] * m_step)
+
+    for i in range(1, k):
+        prev_idx = sorted_indices[i - 1]
+        curr_idx = sorted_indices[i]
+        if holm_p_vals[curr_idx] < holm_p_vals[prev_idx]:
+            holm_p_vals[curr_idx] = holm_p_vals[prev_idx]
+
     t6_md = []
-    t6_md.append("### Table 6: Diagnostic Correlational Analysis Across All 50 Cities")
+    t6_md.append("### Table 6: Exploratory Correlational Diagnostics Across 50 Out-of-Fold Benchmark Cities")
+    t6_md.append("")
+    t6_md.append("> **Diagnostic Scope & Disclaimer**: These exploratory associations are evaluation-time diagnostics (requiring ground-truth reference flows) that characterize observation–target mismatch. They do not establish causality, nor do they constitute an OD-free deployment rule.")
+    t6_md.append("> ")
+    t6_md.append("> **Collinearity Note**: Because $\\sum b_k = 1$, GT Short-Distance Share ($b_1 = y_1$) and Long-Mass Bias ($(p_2+p_3) - (y_2+y_3) = y_1 - p_1$) share algebraic structure and are not independent evidence.")
     t6_md.append("")
     t6_md.append("#### Part A: Spearman Rank Correlations with Marginal Gain ($\\Delta R^{\\text{real},+}, N=50$)")
-    t6_md.append("| Predictor / Characteristic | Spearman $\\rho_s$ | $p$-value | 95% Bootstrap CI | Statistical Significance |")
+    t6_md.append("| Characteristic / Metric | Spearman $\\rho_s$ | 95% Fold-Stratified Bootstrap CI | Raw $p$-value | Holm-Adjusted $p$ |")
     t6_md.append("|---|---|---|---|---|")
 
-    for name, arr in diag_dict.items():
-        rho, p_val = stats.spearmanr(arr, dr_all)
-        boot_rhos = []
-        for _ in range(2000):
-            idx = rng.choice(len(dr_all), size=len(dr_all), replace=True)
-            r_b, _ = stats.spearmanr(arr[idx], dr_all[idx])
-            boot_rhos.append(r_b)
-        rho_ci_low, rho_ci_high = np.percentile(boot_rhos, [2.5, 97.5])
-        sig = "p < 0.001" if p_val < 0.001 else ("p < 0.05" if p_val < 0.05 else "Not Significant")
-        t6_md.append(f"| **{name}** | **{rho:+.3f}** | {p_val:.4e} | [{rho_ci_low:+.3f}, {rho_ci_high:+.3f}] | {sig} |")
+    for i, name in enumerate(names):
+        rho = raw_rhos[i]
+        ci_l, ci_h = strat_cis[name]
+        p_raw = raw_p_vals[i]
+        p_holm = holm_p_vals[i]
+        t6_md.append(f"| **{name}** | **{rho:+.3f}** | [{ci_l:+.3f}, {ci_h:+.3f}] | {p_raw:.4e} | **{p_holm:.4e}** |")
 
     t6_md.append("")
     t6_md.append("#### Part B: Diagnostic Inspection of Negative Marginal Gain Cities ($\\Delta R^{\\text{real},+} < 0, n=8$)")
     t6_md.append("")
-    t6_md.append("> **Interpretation**: All eight negative cases have exceptionally short-distance-concentrated commuter distributions ($>94\\%$ in Bin 1, $<10\\text{ km}$), while the Meta mobility prior over-allocates mass to medium/long-distance bins ($15\\%–25\\%$ in Bin 2/3). Positive oracle-reference gains in all eight negative-real cases support the interpretation that degradation is associated with target-distribution mismatch rather than an inherent inability of the calibration operator to exploit correctly specified bin totals.")
+    t6_md.append("> **Interpretation**: All eight negative cases have exceptionally short-distance-concentrated commuter distributions ($>94\\%$ in Bin 1, $<10\\text{ km}$), while the Meta mobility prior allocates more mass to medium- and long-distance bins ($15\\%–25\\%$ in Bin 2/3), reflecting potential differences in temporal support, population coverage, and mobility constructs. Positive oracle-reference gains in all eight negative-real cases support the interpretation that degradation is associated with target-distribution mismatch rather than an inherent inability of the calibration operator to exploit correctly specified bin totals.")
     t6_md.append("")
-    t6_md.append("| Target City | Tracts ($N$) | Overlap | Real $\\Delta R$ | Oracle $\\Delta R$ | GT Bin Proportions $[b_1, b_2, b_3]$ | Meta Bin Proportions $[p_1, p_2, p_3]$ | Primary Factor |")
+    t6_md.append("| Target City | Zones ($N$) | Overlap | Real $\\Delta R$ | Oracle $\\Delta R$ | GT Bin Proportions $[b_1, b_2, b_3]$ | Meta Bin Proportions $[p_1, p_2, p_3]$ | Primary Diagnostic Factor |")
     t6_md.append("|---|---|---|---|---|---|---|---|")
 
     neg_cities = [r for r in city_results if r.get("delta_r_real_plus") is not None and r.get("delta_r_real_plus") < 0]
@@ -383,7 +424,7 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
         dr_o_val = r["delta_r_oracle_plus"]
         yd_o = [f"{x*100:.1f}%" for x in r["yd_moving_oracle"]]
         yd_r = [f"{x*100:.1f}%" for x in r["yd_moving_real"]]
-        t6_md.append(f"| **{c_name}** | {n_tr} | {ov_val:.1f}% | **{dr_r_val:+.4f}** | {dr_o_val:+.4f} | {yd_o} | {yd_r} | Short-distance commuter concentration + Meta medium-bin overestimation |")
+        t6_md.append(f"| **{c_name}** | {n_tr} | {ov_val:.1f}% | **{dr_r_val:+.4f}** | {dr_o_val:+.4f} | {yd_o} | {yd_r} | Short-distance commuter concentration ($>94\\%$) + Meta medium-bin bias |")
 
     tables["table6_correlational_diagnostics.md"] = "\n".join(t6_md)
 
