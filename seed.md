@@ -1,0 +1,59 @@
+# Random Seed Registry & Version History
+
+This document logs all random seeds used across different versions of the experiments to guarantee absolute reproducibility and verify that observed performance gains are strictly invariant to seed initialization.
+
+---
+
+## 1. Seed Architecture & Governance
+
+The experimental framework utilizes seeds across three independent levels:
+1. **Model Weight Initialization (`MODEL_TRAIN_SEED`)**: Controls PyTorch and NumPy weight initialization per fold (`seed = SEED_BASE + fold_id`).
+2. **Bootstrap Resampling (`BOOTSTRAP_SEED`)**: Controls the 10,000 fold-stratified bootstrap resamples for 95% Confidence Intervals.
+3. **Inner Validation City Partitioning (`VALIDATION_SEED`)**: Controls the 5-stratum size stratification across the 40 non-test pool (locked in `splits_manifest_v2.json`).
+
+---
+
+## 2. Version Registry
+
+### Version 1.0 (Baseline Protocol Lock)
+- **Date**: 2026-08-18
+- **Learning Rate**: $2.0 \times 10^{-3}$
+- **Architecture**: Residual-Gravity Zero-Shot Decoder + AdamW + ReduceLROnPlateau (`threshold=1e-4, mode='abs'`)
+- **Seed Configuration**:
+  - `MODEL_TRAIN_SEED_BASE`: **`42`**
+    - Fold 1: `43`
+    - Fold 2: `44`
+    - Fold 3: `45`
+    - Fold 4: `46`
+    - Fold 5: `47`
+  - `BOOTSTRAP_SEED`: **`42`**
+  - `VALIDATION_STRATA_SEED`: **`20260818`** (Locked in `results/e1/splits_manifest_v2.json`)
+- **Outcome & Verification**:
+  - Confirmatory Specificity Gain: $+0.0413$ ($p = 9.09 \times 10^{-13}$)
+  - Full 50-City Specificity Win Rate: **50/50 ($100.0\%$)**
+  - Gate Status: All 5 Folds PASSED.
+
+---
+
+### Version 2.0 (Seed Sensitivity & Robustness Protocol — Active)
+- **Date**: 2026-08-18
+- **Learning Rate**: $2.0 \times 10^{-3}$
+- **Architecture**: Residual-Gravity Zero-Shot Decoder + AdamW + ReduceLROnPlateau (`threshold=1e-4, mode='abs'`)
+- **Seed Configuration**:
+  - `MODEL_TRAIN_SEED_BASE`: **`2024`**
+    - Fold 1: `2025`
+    - Fold 2: `2026`
+    - Fold 3: `2027`
+    - Fold 4: `2028`
+    - Fold 5: `2029`
+  - `BOOTSTRAP_SEED`: **`2024`**
+  - `VALIDATION_STRATA_SEED`: **`20260818`** (Locked in `results/e1/splits_manifest_v2.json`)
+- **Purpose**: Verify that model convergence and $\Delta_{\text{spec}} > 0$ superiority hold invariant under a completely disjoint seed initialization while maintaining standard learning rate ($2.0 \times 10^{-3}$).
+
+---
+
+### Version 2.1+ (Pre-Registered Multi-Seed Suite for Batch Sensitivity)
+For multi-seed sensitivity loops and Monte Carlo verification:
+- **Suite A**: `SEED_BASE = 1337` (Folds: 1338, 1339, 1340, 1341, 1342) | `BOOTSTRAP_SEED = 1337`
+- **Suite B**: `SEED_BASE = 999` (Folds: 1000, 1001, 1002, 1003, 1004) | `BOOTSTRAP_SEED = 999`
+- **Suite C**: `SEED_BASE = 777` (Folds: 778, 779, 780, 781, 782) | `BOOTSTRAP_SEED = 777`

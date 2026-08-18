@@ -126,7 +126,7 @@ RESULTS_DIR = Path("results/e1")
 LOG_FILE    = RESULTS_DIR / "e1_execution.log"
 MANIFEST_PATH = RESULTS_DIR / "splits_manifest_v2.json"
 TOLERANCE   = 1e-5       # Floating-point tolerance for mass preservation & bin matching
-SEED        = 42         # Fixed random seed for deterministic training initialization
+SEED        = 2024       # Fixed random seed (Version 2.0) for deterministic training initialization
 
 
 def log_msg(msg: str = "", print_to_console: bool = True):
@@ -360,7 +360,7 @@ def fold_bootstrap(
     )
 
 
-def compute_summary(results: list, fold_manifest: dict = None) -> dict:
+def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: int = 2024) -> dict:
     """
     Aggregates per-city results into primary statistics:
       - Full out-of-fold descriptive coverage (n=50)
@@ -378,9 +378,9 @@ def compute_summary(results: list, fold_manifest: dict = None) -> dict:
     n = len(results)
     ddof = 1 if n > 1 else 0
 
-    ci_tl, ci_th, _ = fold_bootstrap(dt, fid)
-    ci_wl, ci_wh, _ = fold_bootstrap(dw, fid)
-    ci_sl, ci_sh, _ = fold_bootstrap(ds, fid)
+    ci_tl, ci_th, _ = fold_bootstrap(dt, fid, seed=bootstrap_seed)
+    ci_wl, ci_wh, _ = fold_bootstrap(dw, fid, seed=bootstrap_seed)
+    ci_sl, ci_sh, _ = fold_bootstrap(ds, fid, seed=bootstrap_seed)
 
     _, pt = safe_wilcoxon(dt, alternative="greater")
     _, pw = safe_wilcoxon(dw, alternative="greater")
@@ -410,9 +410,9 @@ def compute_summary(results: list, fold_manifest: dict = None) -> dict:
         c_n = 40
         c_ddof = 1
 
-        c_ci_tl, c_ci_th, _ = fold_bootstrap(c_dt, conf_fid)
-        c_ci_wl, c_ci_wh, _ = fold_bootstrap(c_dw, conf_fid)
-        c_ci_sl, c_ci_sh, _ = fold_bootstrap(c_ds, conf_fid)
+        c_ci_tl, c_ci_th, _ = fold_bootstrap(c_dt, conf_fid, seed=bootstrap_seed)
+        c_ci_wl, c_ci_wh, _ = fold_bootstrap(c_dw, conf_fid, seed=bootstrap_seed)
+        c_ci_sl, c_ci_sh, _ = fold_bootstrap(c_ds, conf_fid, seed=bootstrap_seed)
         _, c_pt = safe_wilcoxon(c_dt, alternative="greater")
         _, c_pw = safe_wilcoxon(c_dw, alternative="greater")
         _, c_ps = safe_wilcoxon(c_ds, alternative="greater")
@@ -708,6 +708,7 @@ def run_e1(
     smoke_cities: list = None,
     device_str: str = "cpu",
     num_threads: int | None = None,
+    seed: int = SEED,
 ):
     """
     Main E1 execution loop with structured step-by-step logging.
@@ -785,7 +786,7 @@ def run_e1(
             patience=PATIENCE,
             min_delta=MIN_DELTA,
             return_info=True,
-            seed=SEED + fold_id,
+            seed=seed + fold_id,
         )
 
         # Verify per-fold convergence gate
@@ -883,7 +884,7 @@ def run_e1(
         log_msg("Warning: Fewer than 2 cities evaluated; skipping statistical synthesis.")
         return all_results, None
 
-    summary = compute_summary(all_results, fold_manifest=fold_manifest)
+    summary = compute_summary(all_results, fold_manifest=fold_manifest, bootstrap_seed=seed)
     (RESULTS_DIR / "e1_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     write_tables(all_results, summary)
 
@@ -926,5 +927,6 @@ if __name__ == "__main__":
     parser.add_argument("--cities", nargs="+", default=None, help="Custom list of test cities to run")
     parser.add_argument("--device", default="cpu", help="PyTorch device (cpu/cuda)")
     parser.add_argument("--num-threads", "-t", type=int, default=None, help="Number of CPU intra-op threads for PyTorch/OpenMP")
+    parser.add_argument("--seed", type=int, default=SEED, help="Random seed for model training and bootstrap")
     args = parser.parse_args()
-    run_e1(smoke=args.smoke, smoke_cities=args.cities, device_str=args.device, num_threads=args.num_threads)
+    run_e1(smoke=args.smoke, smoke_cities=args.cities, device_str=args.device, num_threads=args.num_threads, seed=args.seed)
