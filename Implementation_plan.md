@@ -21,15 +21,27 @@
 
 $$\boxed{\text{Urban GNN} \rightarrow h_i \rightarrow \text{Pairwise OD Decoder} \rightarrow \mu_{NB, ij} \rightarrow \hat{T}^{ZS}_{ij} = E[T_{ij} \mid T_{ij} \ge 1]}$$
 
+### Information Regime
+Both zero-shot baseline $\hat{T}^{(0)}$ and calibrated model $\hat{T}^{(YD)}$ share the exact same underlying representation and frozen parameters:
+$$\hat{T}^{(0)} = f_{\theta^*}\left(X_{\text{urban}}^{26}, G_{\text{spatial}}, D_{ij}, P_i, P_j\right), \qquad \hat{T}^{(YD)} = \operatorname{Adjust}\left(\hat{T}^{(0)}, Y_D\right)$$
+
+### Three Distinct Distance Channels
+Geographic distance $D_{ij}$ enters the system through three dedicated functional pathways:
+$$D_{ij} \longrightarrow \begin{cases} G^{\text{urban}},\ \text{edge\_dist} & \text{Urban GNN (Local spatial graph \& message passing)} \\ \log(1 + D_{ij}) & \text{Pairwise Decoder (Direct OD pair interaction)} \\ -\alpha \log D_{ij} & \text{Gravity Prior (Global physics decay prior)} \end{cases}$$
+*Note on coordinates*: Coordinates (`lon_lat`) are not direct node features, but they determine the spatial graph ($G^{\text{urban}}$) and edge-distance attributes used by the Urban GNN.
+
 ### Sub-module 1: Node Encoder (Urban GNN)
 $$h_i = \text{GNN}_\theta(X,\ G^{\text{urban}})$$
-- **Node features** $X_i$: 26 features spanning census, POI, road densities.
+- **Node features** $X_i$: 26 features spanning census (demographics, commute/vehicle proxies), POI, road densities.
 - **Graph** $G^{\text{urban}}$: Radius graph ($r = 5.0\text{ km}$ with 1-NN fallback) built strictly from spatial coordinates.
 - **StandardScaler**: fitted strictly on source training cities' node features ($X_{\text{train}}$); target city strictly transformed.
 
 ### Sub-module 2: Gravity Prior
 $$\log T^{\text{grav}}_{ij} = G + \log P_i + \log P_j - \alpha \log D_{ij}$$
 Classical 2-parameter global gravity prior.
+
+> **Population Routing & Robustness Ablation**:
+> `total_population` is present in the 26 node features and directly in the gravity prior ($\log P_i + \log P_j$). This intentional feature reuse/multi-channel prior is subject to a secondary robustness ablation (A: GNN only; B: Gravity prior only; C: Both [default]), without altering the locked primary E1 protocol.
 
 ### Sub-module 3: Pairwise OD Decoder (Single Base Magnitude Head)
 Edge representation: $e_{ij} = [h_i,\ h_j,\ \log(1 + D_{ij}),\ \log T^{\text{grav}}_{ij}]$.
@@ -39,6 +51,8 @@ $$\mu_{NB, ij} = \text{softplus}(f_\mu(e_{ij})) > 0$$
 - **Training**: minimizes exact Zero-Truncated Negative Binomial negative log-likelihood $\mathcal{L}_{\text{train}}$ on positive candidate observations $\Omega_c$.
 - **Inference**: evaluates exact conditional expectation on $\Omega_c$:
 $$\boxed{\hat{T}^{ZS}_{ij} = E[T_{ij} \mid T_{ij} \ge 1] = \frac{\mu_{NB, ij}}{1 - P_{NB}(0; \mu_{NB, ij}, \phi)} = \frac{\mu_{NB, ij}}{1 - \left(\frac{\phi}{\mu_{NB, ij} + \phi}\right)^\phi}}$$
+
+> **Zero-Shot Definition**: Defined strictly as *"Zero-shot without target-city OD flows or target-city distance-binned distribution"* (recognizing that census features inherently contain mobility proxies such as commute and vehicle ownership).
 
 ---
 
