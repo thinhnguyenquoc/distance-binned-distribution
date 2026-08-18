@@ -4,9 +4,8 @@ Pairwise OD Decoder with Single Base Magnitude Head (ZTNB).
 Input edge representation:
     e_ij = [h_i, h_j, log(1 + D_ij), log(T^{grav}_ij)]
 
-Single prediction head producing base Negative Binomial parameter:
-    mu_nb_ij = softplus(f_mu(e_ij)) > 0
-    Interpretation: mu_nb_ij is the base mean of the underlying count process.
+Single prediction head producing base Negative Binomial parameter via
+residual-gravity initialization: mu_nb_ij = softplus(log_t_grav + residual_ij).
 
 Exact ZTNB Likelihood & Predictions:
     At training: loss = -log P_ZTNB(T_ij; mu_nb_ij, phi) on positive observations in Omega_c.
@@ -41,6 +40,10 @@ class PairwiseODDecoder(nn.Module):
             nn.Linear(hidden_dim // 2, 1),
         )
 
+        # Zero-init final layer so the model starts as a pure gravity prior (residual == 0)
+        nn.init.zeros_(self.net[-1].weight)
+        nn.init.zeros_(self.net[-1].bias)
+
     def forward(
         self,
         h_i: torch.Tensor,
@@ -65,10 +68,11 @@ class PairwiseODDecoder(nn.Module):
 
         # Concatenate edge representation e_ij
         e_ij = torch.cat([h_i, h_j, log_distance, log_t_grav], dim=-1)
-        
-        raw_out = self.net(e_ij).squeeze(-1)  # (E,)
-        # softplus ensures mu_nb > 0 strictly
-        mu_nb = F.softplus(raw_out) + 1e-4
+
+        residual = self.net(e_ij)  # (E, 1), ~0 at init
+        # Residual-gravity: mu_nb starts equal to the gravity prior, GNN learns the deviation
+        log_mu_nb = log_t_grav + residual
+        mu_nb = F.softplus(log_mu_nb.squeeze(-1)) + 1e-4
         return mu_nb
 
 
@@ -80,3 +84,7 @@ if __name__ == "__main__":
     ltg = torch.randn(100)
     mu_nb = dec(h_i, h_j, ld, ltg)
     print("Decoder mu_nb output shape:", mu_nb.shape, "min:", mu_nb.min().item(), "max:", mu_nb.max().item())
+
+    # At init, residual ~ 0, so mu_nb should track softplus(log_t_grav) closely
+    expected = F.softplus(ltg) + 1e-4
+    print("Max deviation from pure gravity at init:", (mu_nb - expected).abs().max().item())
