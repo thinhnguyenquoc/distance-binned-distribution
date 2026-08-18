@@ -110,7 +110,8 @@ def train_zero_shot_model(
     val_city_names: List[str] | None = None,
     patience: int = 5,
     min_delta: float = 1e-4,
-) -> tuple[ZeroShotODModel, object]:
+    return_info: bool = False,
+) -> tuple:
     """
     Train ZeroShotODModel with optional validation-based early stopping.
 
@@ -120,9 +121,10 @@ def train_zero_shot_model(
                           trains for exactly `epochs` epochs (pre-specified).
         patience:         Epochs without val CPC improvement before stopping.
         min_delta:        Minimum improvement to count as improvement.
+        return_info:      If True, returns (model, scaler, train_info_dict).
 
     Returns:
-        (best_model, scaler) — model parameters are frozen (requires_grad=False).
+        (best_model, scaler) or (best_model, scaler, info)
     """
     import copy
     import numpy as _np
@@ -157,7 +159,6 @@ def train_zero_shot_model(
                 ei, ed = build_knn_graph(coords, k=knn_k)
             val_city_graphs.append((ei, ed))
 
-
     model = ZeroShotODModel(
         node_in_dim=train_cities[0].node_features.shape[1],
         node_hidden_dim=hidden_dim,
@@ -170,9 +171,13 @@ def train_zero_shot_model(
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     best_val_cpc = -float("inf")
+    best_epoch = epochs
     best_state = None
     patience_counter = 0
     use_early_stopping = bool(val_city_names)
+
+    val_history = []
+    loss_history = []
 
     start_time = time.time()
     for epoch in range(1, epochs + 1):
@@ -184,6 +189,7 @@ def train_zero_shot_model(
             loss_type=loss_type,
             device=device,
         )
+        loss_history.append(loss_val)
         scheduler.step()
 
         # --- Validation CPC (interzonal) ---
@@ -204,11 +210,13 @@ def train_zero_shot_model(
                         from src.training.evaluate import compute_cpc_pair
                         val_cpcs.append(compute_cpc_pair(t_gt_np[inter], t_hat_np[inter]))
             mean_val_cpc = float(_np.mean(val_cpcs)) if val_cpcs else 0.0
+            val_history.append(mean_val_cpc)
             val_cpc_str = f" | ValCPC: {mean_val_cpc:.4f}"
 
             # Best-model tracking
             if mean_val_cpc > best_val_cpc + min_delta:
                 best_val_cpc = mean_val_cpc
+                best_epoch = epoch
                 best_state = copy.deepcopy(model.state_dict())
                 patience_counter = 0
             else:
@@ -223,18 +231,30 @@ def train_zero_shot_model(
         # --- Early stopping ---
         if use_early_stopping and patience_counter >= patience:
             if verbose:
-                print(f"Early stopping at epoch {epoch} (patience={patience}).")
+                print(f"Early stopping at epoch {epoch} (best epoch {best_epoch}, best val CPC {best_val_cpc:.4f}).")
             break
 
     # Restore best checkpoint (if early stopping was used and improved)
     if use_early_stopping and best_state is not None:
         model.load_state_dict(best_state)
         if verbose:
-            print(f"Restored best model (val CPC={best_val_cpc:.4f}).")
+            print(f"Restored best model (epoch={best_epoch}, val CPC={best_val_cpc:.4f}).")
 
     model.eval()
     for p in model.parameters():
         p.requires_grad = False
 
+    info = {
+        "best_epoch": best_epoch,
+        "best_val_cpc": best_val_cpc if use_early_stopping else None,
+        "epochs_trained": epoch,
+        "stopped_early": use_early_stopping and (patience_counter >= patience),
+        "val_cpc_history": val_history,
+        "train_loss_history": loss_history,
+    }
+
+    if return_info:
+        return model, scaler, info
     return model, scaler
+
 

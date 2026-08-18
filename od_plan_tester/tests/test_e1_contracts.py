@@ -127,3 +127,32 @@ def test_t55_donor_city_deterministic_and_distinct():
 
     # Verify wrap-around
     assert get_donor_city("Seattle", test_cities) == "Austin"
+
+
+def test_t56_confirmatory_guard_on_incomplete_subsets():
+    """Verify that smoke / partial results are NOT reported as confirmatory."""
+    from src.experiment.run_e1 import compute_summary
+
+    # Dummy partial results (only 2 cities in Folds 4 and 5)
+    dummy_results = [
+        {
+            "city": "Portland", "fold": 4, "donor_city": "Denver", "n_inter_pairs": 1000,
+            "K_active": 8, "cpc_baseline": 0.40, "cpc_baseline_norm": 0.50,
+            "cpc_target_yd": 0.43, "cpc_target_yd_norm": 0.53, "delta_cpc_target": 0.03,
+            "cpc_wrong_yd": 0.39, "cpc_wrong_yd_norm": 0.49, "delta_cpc_wrong": -0.01,
+            "Y_D_target": [0.125]*8, "Y_D_wrong": [0.125]*8
+        },
+        {
+            "city": "Denver", "fold": 5, "donor_city": "Portland", "n_inter_pairs": 1000,
+            "K_active": 8, "cpc_baseline": 0.42, "cpc_baseline_norm": 0.52,
+            "cpc_target_yd": 0.45, "cpc_target_yd_norm": 0.55, "delta_cpc_target": 0.03,
+            "cpc_wrong_yd": 0.41, "cpc_wrong_yd_norm": 0.51, "delta_cpc_wrong": -0.01,
+            "Y_D_target": [0.125]*8, "Y_D_wrong": [0.125]*8
+        }
+    ]
+
+    summary = compute_summary(dummy_results)
+    assert not summary["is_confirmatory_complete"], "Partial 2-city run was falsely marked as confirmatory complete!"
+    assert not summary["is_full_50_complete"], "Partial 2-city run was falsely marked as full 50 complete!"
+    assert summary["confirmatory_folds_2_5"]["status"] == "not_available", "Confirmatory status should be not_available!"
+
