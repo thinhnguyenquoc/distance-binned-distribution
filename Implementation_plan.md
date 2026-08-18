@@ -34,7 +34,13 @@ $$D_{ij} \longrightarrow \begin{cases} G^{\text{urban}},\ \text{edge\_dist} & \t
 $$h_i = \text{GNN}_\theta(X,\ G^{\text{urban}})$$
 - **Node features** $X_i$: 26 features spanning census (demographics, commute/vehicle proxies), POI, road densities.
 - **Graph** $G^{\text{urban}}$: Radius graph ($r = 5.0\text{ km}$ with 1-NN fallback) built strictly from spatial coordinates.
+- **Architecture**: 2-layer Message Passing GNN with edge distance modulation.
 - **StandardScaler**: fitted strictly on source training cities' node features ($X_{\text{train}}$); target city strictly transformed.
+
+> **Graph Radius ($r=5.0\text{ km}$) & GNN Depth ($L=2$) Methodological Framing**:
+> - **Radius ($r=5.0\text{ km}$)**: *"The 5-km radius was prespecified as an engineering choice and applied consistently across all folds. Its sensitivity is assessed separately; it is not claimed to be optimal."*
+> - **Depth ($L=2$ Layers / 2-Hop Receptive Field)**: *"We use two message-passing layers as a prespecified engineering choice to capture second-order spatial context while limiting model depth and over-smoothing. Depth sensitivity is evaluated separately."*
+> - **Methodological Policy**: Any depth/radius sensitivity tests on validation serve strictly as secondary robustness checks and do not alter the locked primary confirmatory E1 protocol. No optimality claims are made.
 
 ### Sub-module 2: Gravity Prior
 $$\log T^{\text{grav}}_{ij} = G + \log P_i + \log P_j - \alpha \log D_{ij}$$
