@@ -111,6 +111,7 @@ def train_zero_shot_model(
     patience: int = 5,
     min_delta: float = 1e-4,
     return_info: bool = False,
+    seed: int | None = None,
 ) -> tuple:
     """
     Train ZeroShotODModel with optional validation-based early stopping.
@@ -122,6 +123,7 @@ def train_zero_shot_model(
         patience:         Epochs without val CPC improvement before stopping.
         min_delta:        Minimum improvement to count as improvement.
         return_info:      If True, returns (model, scaler, train_info_dict).
+        seed:             Optional random seed for reproducible weight initialization.
 
     Returns:
         (best_model, scaler) or (best_model, scaler, info)
@@ -129,7 +131,12 @@ def train_zero_shot_model(
     import copy
     import numpy as _np
 
+    if seed is not None:
+        torch.manual_seed(seed)
+        _np.random.seed(seed)
+
     device = torch.device(device_str)
+
     if verbose:
         print(f"Loading {len(train_city_names)} source cities onto {device}...")
 
