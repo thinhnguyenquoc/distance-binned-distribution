@@ -97,7 +97,7 @@ def train_zero_shot_model(
     train_city_names: List[str],
     data_root: str = "data",
     epochs: int = 200,
-    lr: float = 2e-3,
+    lr: float = 3.2e-3,
     weight_decay: float = 1e-4,
     hidden_dim: int = 64,
     num_gnn_layers: int = 2,

@@ -26,7 +26,7 @@ def run_5fold_experiment(
     meta_prior_dir: str = "meta_prior",
     output_dir: str = "results",
     epochs_per_fold: int = 25,
-    lr: float = 1e-3,
+    lr: float = 3.2e-3,
     hidden_dim: int = 64,
     num_gnn_layers: int = 2,
     graph_type: str = "radius",
