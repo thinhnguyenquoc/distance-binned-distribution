@@ -1,4 +1,4 @@
-"""
+r"""
 Cross-City Training and Transfer Pipeline.
 
 Stage A: Cross-city Training
@@ -152,19 +152,55 @@ def train_zero_shot_model(
             ei, ed = build_knn_graph(coords, k=knn_k)
         city_graphs.append((ei, ed))
 
-    # Precompute graphs for validation cities (if provided)
-    val_cities_data = []
-    val_city_graphs = []
+    # Pre-move training tensors onto device to avoid repeated host-to-device transfers per epoch
+    train_cities_dev = [
+        CityData(
+            city_name     = c.city_name,
+            n_tracts      = c.n_tracts,
+            n_pairs       = c.n_pairs,
+            node_features = c.node_features.to(device),
+            population    = c.population.to(device),
+            lon_lat       = c.lon_lat.to(device),
+            pair_o_idx    = c.pair_o_idx.to(device),
+            pair_d_idx    = c.pair_d_idx.to(device),
+            pair_distance = c.pair_distance.to(device),
+            pair_trips    = c.pair_trips.to(device),
+            bin_labels    = c.bin_labels.to(device),
+        )
+        for c in train_cities
+    ]
+    city_graphs_dev = [(ei.to(device), ed.to(device)) for (ei, ed) in city_graphs]
+
+    # Precompute device-resident structures & masks for validation cities (if provided)
+    val_data_on_device = []
     if val_city_names:
         for name in val_city_names:
             vc = load_city(name, data_root=data_root, feature_scaler=scaler)
-            val_cities_data.append(vc)
             coords = vc.lon_lat.numpy()
             if graph_type == "radius":
                 ei, ed = build_radius_graph(coords, radius_km=radius_km)
             else:
                 ei, ed = build_knn_graph(coords, k=knn_k)
-            val_city_graphs.append((ei, ed))
+
+            # Precompute interzonal mask and ground truth on device once
+            dist_km = _np.expm1(vc.pair_distance.numpy())
+            inter_cpu = (vc.pair_o_idx.numpy() != vc.pair_d_idx.numpy()) & (dist_km > 0.0)
+            inter_mask = torch.tensor(inter_cpu, dtype=torch.bool, device=device)
+            t_gt_inter = vc.pair_trips.to(device)[inter_mask]
+
+            val_data_on_device.append({
+                "x": vc.node_features.to(device),
+                "ei": ei.to(device),
+                "ed": ed.to(device),
+                "p_o": vc.pair_o_idx.to(device),
+                "p_d": vc.pair_d_idx.to(device),
+                "p_dist": vc.pair_distance.to(device),
+                "pop": vc.population.to(device),
+                "inter_mask": inter_mask,
+                "t_gt_inter": t_gt_inter,
+                "t_gt_sum": torch.sum(t_gt_inter),
+                "has_inter": bool(inter_cpu.sum() > 0),
+            })
 
     model = ZeroShotODModel(
         node_in_dim=train_cities[0].node_features.shape[1],
@@ -190,8 +226,8 @@ def train_zero_shot_model(
     for epoch in range(1, epochs + 1):
         loss_val = train_epoch(
             model=model,
-            train_cities=train_cities,
-            city_graphs=city_graphs,
+            train_cities=train_cities_dev,
+            city_graphs=city_graphs_dev,
             optimizer=optimizer,
             loss_type=loss_type,
             device=device,
@@ -199,23 +235,26 @@ def train_zero_shot_model(
         loss_history.append(loss_val)
         scheduler.step()
 
-        # --- Validation CPC (interzonal) ---
+        # --- Fast GPU-Vectorized Validation CPC (interzonal) ---
         val_cpc_str = ""
-        if use_early_stopping and val_cities_data:
+        if use_early_stopping and val_data_on_device:
             val_cpcs = []
             model.eval()
             with torch.no_grad():
-                for vcd, (vei, ved) in zip(val_cities_data, val_city_graphs):
-                    t_hat = infer_zero_shot(model, vcd, vei, ved, device=device)
-                    t_hat_np = t_hat.numpy()
-                    t_gt_np  = vcd.pair_trips.numpy()
-                    dist_km  = _np.expm1(vcd.pair_distance.numpy())
-                    o_np = vcd.pair_o_idx.numpy()
-                    d_np = vcd.pair_d_idx.numpy()
-                    inter = (o_np != d_np) & (dist_km > 0.0)
-                    if inter.sum() > 0:
-                        from src.training.evaluate import compute_cpc_pair
-                        val_cpcs.append(compute_cpc_pair(t_gt_np[inter], t_hat_np[inter]))
+                for item in val_data_on_device:
+                    if not item["has_inter"]:
+                        continue
+                    t_hat = model(
+                        item["x"], item["ei"], item["ed"],
+                        item["p_o"], item["p_d"], item["p_dist"],
+                        item["pop"], return_conditional_mean=True
+                    )
+                    t_hat_inter = t_hat[item["inter_mask"]]
+                    sum_min = torch.sum(torch.minimum(item["t_gt_inter"], t_hat_inter))
+                    sum_total = item["t_gt_sum"] + torch.sum(t_hat_inter)
+                    cpc_val = (2.0 * sum_min / sum_total).item() if sum_total > 0 else 0.0
+                    val_cpcs.append(cpc_val)
+
             mean_val_cpc = float(_np.mean(val_cpcs)) if val_cpcs else 0.0
             val_history.append(mean_val_cpc)
             val_cpc_str = f" | ValCPC: {mean_val_cpc:.4f}"

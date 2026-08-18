@@ -182,30 +182,46 @@ def _load_pairs(od_path: Path, dist_path: Path):
     )
 
 
-# ---------------------------------------------------------------------------
-# Main loader
-# ---------------------------------------------------------------------------
+@dataclasses.dataclass
+class RawCityData:
+    city_name:      str
+    n_tracts:       int
+    n_pairs:        int
+    X_raw:          np.ndarray         # (N, F) unscaled float32
+    population:     torch.Tensor       # (N,)   raw population float32
+    lon_lat:        torch.Tensor       # (N, 2) [lon, lat] float32
+    pair_o_idx:     torch.LongTensor   # (E,)
+    pair_d_idx:     torch.LongTensor   # (E,)
+    pair_distance:  torch.Tensor       # (E,) log1p(km) float32
+    pair_trips:     torch.Tensor       # (E,) raw counts, all >= 1 float32
+    bin_labels:     torch.LongTensor   # (E,) distance bin index (0-3)
+    dist_km:        np.ndarray         # (E,) raw pairwise distance in km
 
-def load_city(
+
+# Global In-Memory Caches for parsed raw CSV city datasets & normalized CityData instances
+_RAW_CITY_CACHE: Dict[tuple[str, str], RawCityData] = {}
+_CITY_DATA_CACHE: Dict[tuple[str, str, int | None], CityData] = {}
+
+
+def clear_city_cache() -> None:
+    """Flushes both raw and normalized in-memory city dataset caches."""
+    global _RAW_CITY_CACHE, _CITY_DATA_CACHE
+    _RAW_CITY_CACHE.clear()
+    _CITY_DATA_CACHE.clear()
+
+
+def load_raw_city(
     city_name: str,
     data_root: str = "data",
-    feature_scaler: Optional["StandardScaler"] = None,
-    fit_scaler: bool = False,
-) -> CityData:
+    use_cache: bool = True,
+) -> RawCityData:
     """
-    Load one city's data.
-
-    Args:
-        city_name:      Directory name under data_root.
-        data_root:      Root of the data/ directory.
-        feature_scaler: Optional fitted sklearn StandardScaler.
-                        If None and fit_scaler=True, fits a new one.
-        fit_scaler:     If True, fits scaler on this city's data (use only for
-                        training set aggregate; see load_cities()).
-
-    Returns:
-        CityData instance.
+    Load or retrieve unscaled raw city data from disk / in-memory cache.
     """
+    cache_key = (city_name, str(Path(data_root).resolve()))
+    if use_cache and cache_key in _RAW_CITY_CACHE:
+        return _RAW_CITY_CACHE[cache_key]
+
     base = Path(data_root) / city_name
 
     # --- Node features ---
@@ -213,13 +229,13 @@ def load_city(
     poi    = _load_csv_columns(base / "nodes" / "poi.csv",    POI_COLS)
     road   = _load_csv_columns(base / "nodes" / "road.csv",   ROAD_COLS)
     X_raw  = np.concatenate([census, poi, road], axis=1)   # (N, F)
+    X_raw  = np.nan_to_num(X_raw, nan=0.0, posinf=0.0, neginf=0.0)
 
     # Population for gravity prior (first census column)
     population = census[:, 0].copy()   # total_population
 
     # Coordinates
     lon_lat = _load_meta(base / "meta.csv")   # (N, 2)
-
     n_tracts = X_raw.shape[0]
 
     # --- Pair data ---
@@ -229,43 +245,103 @@ def load_city(
     )
     assert (trips >= 1).all(), f"{city_name}: found zero trip counts in candidate set"
 
-    # --- Normalize node features ---
-    if feature_scaler is not None:
-        X_norm = feature_scaler.transform(X_raw)
-    elif fit_scaler:
-        from sklearn.preprocessing import StandardScaler
-        feature_scaler = StandardScaler()
-        X_norm = feature_scaler.fit_transform(X_raw)
-    else:
-        X_norm = X_raw   # raw, use with caution
-
-    # Replace NaN/Inf that may arise from missing features
-    X_norm = np.nan_to_num(X_norm, nan=0.0, posinf=0.0, neginf=0.0)
-
-    # --- Distance encoding: log1p ---
     log_dist = np.log1p(dist_km)
-
-    # --- Bin labels ---
     bin_labels = assign_bins(dist_km)
 
-    return CityData(
+    raw_data = RawCityData(
         city_name     = city_name,
         n_tracts      = n_tracts,
         n_pairs       = len(o_idx),
-        node_features = torch.tensor(X_norm,     dtype=torch.float32),
+        X_raw         = X_raw,
         population    = torch.tensor(population, dtype=torch.float32),
         lon_lat       = torch.tensor(lon_lat,    dtype=torch.float32),
         pair_o_idx    = torch.tensor(o_idx,      dtype=torch.long),
         pair_d_idx    = torch.tensor(d_idx,      dtype=torch.long),
         pair_distance = torch.tensor(log_dist,   dtype=torch.float32),
-        pair_trips    = torch.tensor(trips,       dtype=torch.float32),
-        bin_labels    = torch.tensor(bin_labels,  dtype=torch.long),
+        pair_trips    = torch.tensor(trips,      dtype=torch.float32),
+        bin_labels    = torch.tensor(bin_labels, dtype=torch.long),
+        dist_km       = dist_km,
     )
+
+    if use_cache:
+        _RAW_CITY_CACHE[cache_key] = raw_data
+
+    return raw_data
+
+
+# ---------------------------------------------------------------------------
+# Main loader
+# ---------------------------------------------------------------------------
+
+def load_city(
+    city_name: str,
+    data_root: str = "data",
+    feature_scaler: Optional["StandardScaler"] = None,
+    fit_scaler: bool = False,
+    use_cache: bool = True,
+) -> CityData:
+    """
+    Load one city's data, optionally applying or fitting a feature scaler.
+
+    Args:
+        city_name:      Directory name under data_root.
+        data_root:      Root of the data/ directory.
+        feature_scaler: Optional fitted sklearn StandardScaler.
+                        If None and fit_scaler=True, fits a new one.
+        fit_scaler:     If True, fits scaler on this city's data.
+        use_cache:      If True, retrieves raw parsed data from in-memory cache.
+
+    Returns:
+        CityData instance.
+    """
+    scaler_id = id(feature_scaler) if feature_scaler is not None else None
+    resolved_root = str(Path(data_root).resolve())
+    cache_key = (city_name, resolved_root, scaler_id)
+
+    if use_cache and not fit_scaler and cache_key in _CITY_DATA_CACHE:
+        return _CITY_DATA_CACHE[cache_key]
+
+    raw = load_raw_city(city_name, data_root=data_root, use_cache=use_cache)
+
+    # --- Normalize node features ---
+    if feature_scaler is not None:
+        X_norm = feature_scaler.transform(raw.X_raw)
+    elif fit_scaler:
+        from sklearn.preprocessing import StandardScaler
+        feature_scaler = StandardScaler()
+        X_norm = feature_scaler.fit_transform(raw.X_raw)
+        scaler_id = id(feature_scaler)
+        cache_key = (city_name, resolved_root, scaler_id)
+    else:
+        X_norm = raw.X_raw
+
+    # Replace NaN/Inf that may arise from missing features
+    X_norm = np.nan_to_num(X_norm, nan=0.0, posinf=0.0, neginf=0.0)
+
+    cd = CityData(
+        city_name     = raw.city_name,
+        n_tracts      = raw.n_tracts,
+        n_pairs       = raw.n_pairs,
+        node_features = torch.tensor(X_norm, dtype=torch.float32),
+        population    = raw.population,
+        lon_lat       = raw.lon_lat,
+        pair_o_idx    = raw.pair_o_idx,
+        pair_d_idx    = raw.pair_d_idx,
+        pair_distance = raw.pair_distance,
+        pair_trips    = raw.pair_trips,
+        bin_labels    = raw.bin_labels,
+    )
+
+    if use_cache:
+        _CITY_DATA_CACHE[cache_key] = cd
+
+    return cd
 
 
 def load_cities(
     city_names: List[str],
     data_root: str = "data",
+    use_cache: bool = True,
 ) -> tuple[List[CityData], object]:
     """
     Load multiple cities, fitting a single StandardScaler on all training
@@ -276,25 +352,65 @@ def load_cities(
     """
     from sklearn.preprocessing import StandardScaler
 
-    # First pass: collect all raw features to fit scaler
-    all_X = []
-    raw_cities = []
-    for name in city_names:
-        base = Path(data_root) / name
-        census = _load_csv_columns(base / "nodes" / "census.csv", CENSUS_COLS)
-        poi    = _load_csv_columns(base / "nodes" / "poi.csv",    POI_COLS)
-        road   = _load_csv_columns(base / "nodes" / "road.csv",   ROAD_COLS)
-        X_raw  = np.concatenate([census, poi, road], axis=1)
-        X_raw  = np.nan_to_num(X_raw, nan=0.0, posinf=0.0, neginf=0.0)
-        all_X.append(X_raw)
-        raw_cities.append(name)
+    # First pass: collect raw features from memory cache
+    raw_list = [load_raw_city(name, data_root=data_root, use_cache=use_cache) for name in city_names]
+    all_X = [r.X_raw for r in raw_list]
 
     scaler = StandardScaler()
     scaler.fit(np.concatenate(all_X, axis=0))
+    scaler_id = id(scaler)
+    resolved_root = str(Path(data_root).resolve())
 
-    # Second pass: load with fitted scaler
-    cities = [load_city(name, data_root, feature_scaler=scaler) for name in city_names]
+    # Second pass: construct CityData with fitted scaler and cache into _CITY_DATA_CACHE
+    cities = []
+    for raw in raw_list:
+        cache_key = (raw.city_name, resolved_root, scaler_id)
+        if use_cache and cache_key in _CITY_DATA_CACHE:
+            cities.append(_CITY_DATA_CACHE[cache_key])
+        else:
+            cd = CityData(
+                city_name     = raw.city_name,
+                n_tracts      = raw.n_tracts,
+                n_pairs       = raw.n_pairs,
+                node_features = torch.tensor(np.nan_to_num(scaler.transform(raw.X_raw), nan=0.0, posinf=0.0, neginf=0.0), dtype=torch.float32),
+                population    = raw.population,
+                lon_lat       = raw.lon_lat,
+                pair_o_idx    = raw.pair_o_idx,
+                pair_d_idx    = raw.pair_d_idx,
+                pair_distance = raw.pair_distance,
+                pair_trips    = raw.pair_trips,
+                bin_labels    = raw.bin_labels,
+            )
+            if use_cache:
+                _CITY_DATA_CACHE[cache_key] = cd
+            cities.append(cd)
+
     return cities, scaler
+
+
+def preload_all_cities(
+    data_root: str = "data",
+    city_names: Optional[List[str]] = None,
+    build_graphs: bool = True,
+    radius_km: float = 5.0,
+) -> None:
+    """
+    Preloads all cities into in-memory cache upfront.
+    Optionally computes spatial radius graphs and distance matrices.
+    Completely eliminates disk I/O during multi-fold cross-validation.
+    """
+    from src.data.urban_graph import build_radius_graph
+    if city_names is None:
+        p = Path(data_root)
+        if p.exists():
+            city_names = sorted([d.name for d in p.iterdir() if d.is_dir() and (d / "meta.csv").exists()])
+        else:
+            city_names = []
+
+    for name in city_names:
+        raw = load_raw_city(name, data_root=data_root, use_cache=True)
+        if build_graphs:
+            build_radius_graph(raw.lon_lat, radius_km=radius_km, use_cache=True)
 
 
 # ---------------------------------------------------------------------------
