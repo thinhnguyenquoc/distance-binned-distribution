@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import os
 import csv
+import hashlib
 import dataclasses
 from pathlib import Path
 from typing import List, Optional, Dict
@@ -200,7 +201,23 @@ class RawCityData:
 
 # Global In-Memory Caches for parsed raw CSV city datasets & normalized CityData instances
 _RAW_CITY_CACHE: Dict[tuple[str, str], RawCityData] = {}
-_CITY_DATA_CACHE: Dict[tuple[str, str, int | None], CityData] = {}
+_CITY_DATA_CACHE: Dict[tuple[str, str, Optional[str]], CityData] = {}
+
+
+def get_scaler_fingerprint(scaler: Optional[object]) -> Optional[str]:
+    """
+    Computes a deterministic content-based fingerprint (SHA-256) of a fitted StandardScaler.
+    Prevents cross-fold leakage / normalization contamination caused by Python memory address (id(scaler)) reuse.
+    Returns None if scaler is None.
+    """
+    if scaler is None:
+        return None
+    if hasattr(scaler, "mean_") and scaler.mean_ is not None:
+        m_bytes = np.ascontiguousarray(scaler.mean_, dtype=np.float64).tobytes()
+        v_bytes = np.ascontiguousarray(getattr(scaler, "var_", np.zeros_like(scaler.mean_)), dtype=np.float64).tobytes()
+        s_bytes = np.ascontiguousarray(getattr(scaler, "scale_", np.ones_like(scaler.mean_)), dtype=np.float64).tobytes()
+        return hashlib.sha256(m_bytes + v_bytes + s_bytes).hexdigest()
+    return f"unfitted_{id(scaler)}"
 
 
 def clear_city_cache() -> None:
@@ -294,9 +311,9 @@ def load_city(
     Returns:
         CityData instance.
     """
-    scaler_id = id(feature_scaler) if feature_scaler is not None else None
+    scaler_key = get_scaler_fingerprint(feature_scaler)
     resolved_root = str(Path(data_root).resolve())
-    cache_key = (city_name, resolved_root, scaler_id)
+    cache_key = (city_name, resolved_root, scaler_key)
 
     if use_cache and not fit_scaler and cache_key in _CITY_DATA_CACHE:
         return _CITY_DATA_CACHE[cache_key]
@@ -310,8 +327,8 @@ def load_city(
         from sklearn.preprocessing import StandardScaler
         feature_scaler = StandardScaler()
         X_norm = feature_scaler.fit_transform(raw.X_raw)
-        scaler_id = id(feature_scaler)
-        cache_key = (city_name, resolved_root, scaler_id)
+        scaler_key = get_scaler_fingerprint(feature_scaler)
+        cache_key = (city_name, resolved_root, scaler_key)
     else:
         X_norm = raw.X_raw
 
@@ -358,13 +375,13 @@ def load_cities(
 
     scaler = StandardScaler()
     scaler.fit(np.concatenate(all_X, axis=0))
-    scaler_id = id(scaler)
+    scaler_key = get_scaler_fingerprint(scaler)
     resolved_root = str(Path(data_root).resolve())
 
     # Second pass: construct CityData with fitted scaler and cache into _CITY_DATA_CACHE
     cities = []
     for raw in raw_list:
-        cache_key = (raw.city_name, resolved_root, scaler_id)
+        cache_key = (raw.city_name, resolved_root, scaler_key)
         if use_cache and cache_key in _CITY_DATA_CACHE:
             cities.append(_CITY_DATA_CACHE[cache_key])
         else:

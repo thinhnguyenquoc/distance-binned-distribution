@@ -138,7 +138,7 @@ def train_zero_shot_model(
     device = torch.device(device_str)
 
     if verbose:
-        print(f"Loading {len(train_city_names)} source cities onto {device}...")
+        print(f"    [Setup] Precomputing graph structures for {len(train_city_names)} source cities onto {device}...", flush=True)
 
     train_cities, scaler = load_cities(train_city_names, data_root=data_root)
 
@@ -268,23 +268,26 @@ def train_zero_shot_model(
             else:
                 patience_counter += 1
 
-        if verbose and (epoch % 5 == 0 or epoch == 1 or epoch == epochs):
+        if verbose:
             elapsed = time.time() - start_time
-            print(f"Epoch {epoch:02d}/{epochs:02d} | Loss ({loss_type}): {loss_val:.4f} | "
-                  f"phi: {model.phi.item():.3f} | alpha: {model.gravity_prior.alpha.item():.3f} | "
-                  f"{elapsed:.1f}s{val_cpc_str}")
+            pat_str = f" | Patience: {patience_counter}/{patience}" if use_early_stopping else ""
+            print(
+                f"    [Epoch {epoch:03d}/{epochs:03d}] Loss: {loss_val:.4f}{val_cpc_str}{pat_str} | "
+                f"phi: {model.phi.item():.3f} | {elapsed:.1f}s",
+                flush=True,
+            )
 
         # --- Early stopping ---
         if use_early_stopping and patience_counter >= patience:
             if verbose:
-                print(f"Early stopping at epoch {epoch} (best epoch {best_epoch}, best val CPC {best_val_cpc:.4f}).")
+                print(f"    -> Early stopping triggered at epoch {epoch} (best epoch {best_epoch}, best val CPC {best_val_cpc:.4f}).", flush=True)
             break
 
     # Restore best checkpoint (if early stopping was used and improved)
     if use_early_stopping and best_state is not None:
         model.load_state_dict(best_state)
         if verbose:
-            print(f"Restored best model (epoch={best_epoch}, val CPC={best_val_cpc:.4f}).")
+            print(f"    -> Restored best model checkpoint (epoch={best_epoch}, val CPC={best_val_cpc:.4f}).", flush=True)
 
     model.eval()
     for p in model.parameters():
