@@ -1,18 +1,35 @@
 """
 E1: Oracle Aggregated-Distance Existence Test
 =============================================
-Protocol:
-  - 5-fold stratified city CV: 35 train / 5 val / 10 test per fold
-  - Model selection / early stopping on validation interzonal CPC (patience=5)
-  - K_move=8 moving-distance bins (pair-weighted quantile from 35 train cities)
-  - q=1.0 within-tolerance calibration (closed-form, mass-preservation and bin-matching errors < 10^-5)
-  - 3 conditions: Zero-Shot (M0) / + Oracle Y_D (target) / + Oracle Y_D (wrong donor placebo)
-  - Primary metric: Delta-CPC on Omega_c^+ (interzonal)
-  - Fold-stratified bootstrap CI (10,000 resamples) + Wilcoxon signed-rank test
-  - Sample standard deviation with ddof=1 recorded in metadata
-  - Full per-fold summary and validation manifest
 
-NOTE: Y_D is outcome-derived oracle aggregate -- not independent mobility data.
+Research Question:
+    Does target-city distance-binned aggregate information (Y_D^{GT,+}) provide
+    marginal value for OD reconstruction beyond a zero-shot gravity-informed urban GNN?
+
+Formal Protocol:
+  - 5-Fold Stratified City-Level Cross-Validation (35 Train / 5 Validation / 10 Held-out Test per fold).
+  - Model Selection: Early stopping on validation set interzonal CPC (patience=5, max_epochs=25).
+  - Quantile Discretization: K_move = 8 moving-distance bins (Bin 0 intrazonal excluded), computed
+    strictly from training cities of each fold. Strict invariant: K_active == 8.
+  - Calibration Operator: q = 1.0 within-tolerance closed-form multiplier scaling (numerical tolerance 1e-5).
+  - 3 Conditions per test city:
+      * Condition A: Zero-Shot Baseline (M0: Theta* frozen, no target information)
+      * Condition B: Treatment (+ Oracle Target Y_D: K=8 aggregate histogram from target ground truth)
+      * Condition C: Placebo Control (+ Oracle Wrong Donor Y_D: K=8 aggregate from another test city)
+  - Evaluation Domain: Interzonal pairs Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}.
+  - Statistical Analysis:
+      * Primary Confirmatory: Prospectively designated untouched Folds 2–5 (n=40 cities).
+      * Exploratory / Development: Fold 1 (n=10 cities).
+      * Descriptive Coverage: All 50 out-of-fold cities.
+      * 95% Fold-Stratified Bootstrap CI (10,000 resamples) + Paired Wilcoxon Signed-Rank Test.
+      * Sample standard deviation with ddof=1 recorded across all metadata.
+
+Artifacts Generated:
+  - results/e1/e1_per_city_results.json
+  - results/e1/e1_validation_manifest.json
+  - results/e1/e1_summary.json
+  - results/e1/tables/e1_main_table.md
+  - results/e1/tables/e1_per_city.md
 """
 
 import json
@@ -24,10 +41,10 @@ import numpy as np
 from scipy import stats
 import torch
 
+# Ensure repository root is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.data.city_splits import generate_35_5_10_splits, get_donor_city
-
 from src.data.dataset import load_city
 from src.data.urban_graph import build_radius_graph
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
@@ -35,26 +52,35 @@ from src.calibration.bin_calibration import calibrate_kbins
 from src.training.train import train_zero_shot_model, infer_zero_shot
 from src.training.evaluate import compute_cpc_pair, compute_cpc_norm_pair
 
-K_MOVE   = 8
-Q_CALIB  = 1.0
-EPOCHS   = 25
-PATIENCE = 5
-DATA_ROOT = "data"
+# ---------------------------------------------------------------------------
+# Global Experiment Parameters (Pre-specified, locked before evaluation)
+# ---------------------------------------------------------------------------
+K_MOVE    = 8          # Number of moving-distance bins (Bin 0 intrazonal excluded)
+Q_CALIB   = 1.0        # Calibration strength (1.0 = exact within-tolerance distribution match)
+EPOCHS    = 25         # Maximum training epochs per fold
+PATIENCE  = 5          # Early stopping patience based on validation CPC
+DATA_ROOT = "data"     # Dataset root folder containing 50 city directories
 RESULTS_DIR = Path("results/e1")
+TOLERANCE = 1e-5       # Floating-point tolerance for mass preservation & bin matching
 
 
 def build_inter_mask(cd, dist_km: np.ndarray) -> np.ndarray:
-    """Mask for interzonal pairs Omega_c^+: i != j and D_ij > 0."""
-    o, d = cd.pair_o_idx.numpy(), cd.pair_d_idx.numpy()
+    """
+    Construct boolean mask for interzonal candidate support Omega_c^+.
+    Strict definition: Origin != Destination and Pairwise Distance > 0.
+    """
+    o = cd.pair_o_idx.numpy()
+    d = cd.pair_d_idx.numpy()
     return (o != d) & (dist_km > 0.0)
 
 
 def safe_wilcoxon(diff: np.ndarray, alternative: str = "greater") -> tuple[float, float]:
     """
-    Defensive Wilcoxon signed-rank test handling edge cases:
-      - n < 2 observations
-      - all differences are exactly zero
-      - ties / degeneracies
+    Defensive non-parametric Wilcoxon signed-rank test.
+    Handles edge cases:
+      - n < 2 observations (returns p=1.0)
+      - All zero differences / ties (returns p=1.0)
+      - Non-zero filtering using wilcox zero-method
     """
     diff_clean = diff[~np.isnan(diff)]
     if len(diff_clean) < 2:
@@ -71,39 +97,62 @@ def safe_wilcoxon(diff: np.ndarray, alternative: str = "greater") -> tuple[float
 
 def run_city(
     city: str,
-    model,
-    scaler,
+    model: torch.nn.Module,
+    scaler: object,
     bin_edges: np.ndarray,
     K_active: int,
     donor: str,
     fold_id: int,
     device: torch.device,
 ) -> dict:
-    # --- Target city load & Zero-Shot ---
+    """
+    Evaluates 3 experimental conditions on a single held-out test city.
+
+    Condition A (Zero-Shot Baseline M0):
+        Input: (X_c, G_c^urban, D_c). Forward pass of frozen model Theta*.
+        Output: T_c^(0) = E[T | T >= 1].
+
+    Condition B (Treatment: Target Oracle Y_D):
+        Input: T_c^(0) and Y_{D,c}^{GT,+} (K-dim aggregate distance histogram).
+        Operator: Moving-bin closed-form scaling on Omega_c^+.
+        Output: T_c^(YD).
+
+    Condition C (Placebo Control: Wrong Donor Oracle Y_D):
+        Input: T_c^(0) and Y_{D,c'}^{GT,+} (K-dim aggregate from donor test city).
+        Operator: Identical moving-bin scaling on Omega_c^+.
+        Output: T_c^(wrong).
+    """
+    # 1. Load target city features normalized with training scaler
     cd = load_city(city, data_root=DATA_ROOT, feature_scaler=scaler)
     ei, ed = build_radius_graph(cd.lon_lat.numpy(), radius_km=5.0)
+
+    # 2. Condition A: Zero-Shot Forward Inference
     T0 = infer_zero_shot(model, cd, ei, ed, device=device)
     t0 = T0.numpy().astype(np.float64)
+
+    # Compute interzonal mask and ground truth flows
     dist_km = np.expm1(cd.pair_distance.numpy())
     inter = build_inter_mask(cd, dist_km)
-    t_gt  = cd.pair_trips.numpy().astype(np.float64)
+    t_gt = cd.pair_trips.numpy().astype(np.float64)
+    n_inter = int(inter.sum())
 
     cpc0      = compute_cpc_pair(t_gt[inter], t0[inter])
     cpc0_norm = compute_cpc_norm_pair(t_gt[inter], t0[inter])
 
-    # --- Condition B: Target Oracle Y_D ---
+    # 3. Condition B: Target Oracle Y_D Extraction & Calibration
+    # Note: t_gt is aggregated into K-dim histogram only; individual T_ij are never passed to calibration
     Y_D_tgt = extract_yd_kbins(dist_km, t_gt, bin_edges, inter)
-    T_yd    = calibrate_kbins(t0, dist_km, inter, Y_D_tgt, bin_edges, q=Q_CALIB)
+    T_yd    = calibrate_kbins(t0, dist_km, inter, Y_D_tgt, bin_edges, q=Q_CALIB, tolerance=TOLERANCE)
     cpc_yd      = compute_cpc_pair(t_gt[inter], T_yd[inter])
     cpc_yd_norm = compute_cpc_norm_pair(t_gt[inter], T_yd[inter])
 
-    # --- Condition C: Wrong Donor Oracle Y_D (Placebo) ---
-    cd_d   = load_city(donor, data_root=DATA_ROOT, feature_scaler=scaler)
-    dist_d = np.expm1(cd_d.pair_distance.numpy())
+    # 4. Condition C: Wrong Donor Oracle Y_D Extraction & Calibration (Placebo)
+    cd_d    = load_city(donor, data_root=DATA_ROOT, feature_scaler=scaler)
+    dist_d  = np.expm1(cd_d.pair_distance.numpy())
     inter_d = build_inter_mask(cd_d, dist_d)
     t_gt_d  = cd_d.pair_trips.numpy().astype(np.float64)
     Y_D_wr  = extract_yd_kbins(dist_d, t_gt_d, bin_edges, inter_d)
-    T_wr    = calibrate_kbins(t0, dist_km, inter, Y_D_wr, bin_edges, q=Q_CALIB)
+    T_wr    = calibrate_kbins(t0, dist_km, inter, Y_D_wr, bin_edges, q=Q_CALIB, tolerance=TOLERANCE)
     cpc_wr      = compute_cpc_pair(t_gt[inter], T_wr[inter])
     cpc_wr_norm = compute_cpc_norm_pair(t_gt[inter], T_wr[inter])
 
@@ -111,16 +160,20 @@ def run_city(
         "city": city,
         "fold": fold_id,
         "donor_city": donor,
-        "n_inter_pairs": int(inter.sum()),
+        "n_inter_pairs": n_inter,
         "K_active": K_active,
+        # Baseline (M0)
         "cpc_baseline": cpc0,
         "cpc_baseline_norm": cpc0_norm,
+        # Target Oracle (+Y_D^target)
         "cpc_target_yd": cpc_yd,
         "cpc_target_yd_norm": cpc_yd_norm,
         "delta_cpc_target": cpc_yd - cpc0,
+        # Wrong Donor Placebo (+Y_D^wrong)
         "cpc_wrong_yd": cpc_wr,
         "cpc_wrong_yd_norm": cpc_wr_norm,
         "delta_cpc_wrong": cpc_wr - cpc0,
+        # Raw histogram vectors for transparency
         "Y_D_target": Y_D_tgt.tolist(),
         "Y_D_wrong":  Y_D_wr.tolist(),
     }
@@ -133,6 +186,10 @@ def fold_bootstrap(
     seed: int = 42,
     alpha: float = 0.05,
 ) -> tuple:
+    """
+    Computes Fold-Stratified Bootstrap 95% Confidence Interval.
+    Resamples observations within each fold independently to account for shared model covariance.
+    """
     rng = np.random.default_rng(seed)
     folds = sorted(set(fold_ids))
     boot = []
@@ -155,6 +212,12 @@ def fold_bootstrap(
 
 
 def compute_summary(results: list, fold_manifest: dict = None) -> dict:
+    """
+    Aggregates per-city results into primary statistics:
+      - Full out-of-fold descriptive coverage (n=50)
+      - Confirmatory test set (n=40, Folds 2-5, gated strictly upon complete execution)
+      - Per-fold breakdown (Folds 1 to 5)
+    """
     dt  = np.array([r["delta_cpc_target"] for r in results])
     dw  = np.array([r["delta_cpc_wrong"]  for r in results])
     fid = np.array([r["fold"]             for r in results])
@@ -172,7 +235,7 @@ def compute_summary(results: list, fold_manifest: dict = None) -> dict:
     _, pw = safe_wilcoxon(dw, alternative="greater")
     _, ps = safe_wilcoxon(dt - dw, alternative="greater")
 
-    # --- Confirmatory Evaluation Guard (Requires exact 40 cities across Folds 2-5) ---
+    # --- Confirmatory Evaluation Guard (Requires strictly complete 40 cities across Folds 2-5) ---
     conf_mask = (fid >= 2)
     conf_fid = fid[conf_mask]
     is_confirmatory_complete = bool(
@@ -231,10 +294,12 @@ def compute_summary(results: list, fold_manifest: dict = None) -> dict:
     else:
         conf_summary = {
             "status": "not_available",
-            "reason": f"Incomplete confirmatory set (observed {int(conf_mask.sum())}/40 required cities)",
+            "reason": f"Incomplete confirmatory test set (observed {int(conf_mask.sum())}/40 required test cities across Folds 2–5; 10 test cities per fold required)",
         }
 
-    # --- Per-fold summary breakdown ---
+
+
+    # --- Per-Fold Breakdown ---
     per_fold = {}
     for f in sorted(set(fid)):
         idx = (fid == f)
@@ -265,7 +330,7 @@ def compute_summary(results: list, fold_manifest: dict = None) -> dict:
         "is_full_50_complete": is_full_50_complete,
         "is_confirmatory_complete": is_confirmatory_complete,
         "std_ddof": ddof,
-        # Full Out-of-Fold
+        # Full Out-of-Fold (n=50)
         "cpc_baseline_mean": float(c0.mean()),
         "cpc_baseline_std":  float(c0.std(ddof=ddof)),
         "cpc_target_yd_mean": float(cyd.mean()),
@@ -299,8 +364,10 @@ def compute_summary(results: list, fold_manifest: dict = None) -> dict:
     }
 
 
-
 def write_tables(results: list, summary: dict):
+    """
+    Generates paper-ready markdown tables for E1 results.
+    """
     tdir = RESULTS_DIR / "tables"
     tdir.mkdir(parents=True, exist_ok=True)
     n  = summary["n_cities"]
@@ -351,9 +418,11 @@ def write_tables(results: list, summary: dict):
         lines.extend([
             "## E1-A: Confirmatory Test Set Outcomes (Folds 2–5, n=40)",
             "",
-            f"> *Status: NOT AVAILABLE ({len(results)}/50 cities run; Confirmatory evaluation strictly requires complete 40 test cities across Folds 2–5).* ",
+            f"> *Status: NOT AVAILABLE (Observed {int(conf_mask.sum()) if 'conf_mask' in locals() else len([r for r in results if r['fold']>=2])}/40 test cities; Confirmatory evaluation strictly requires complete 40 test cities across Folds 2–5, with 10 test cities per fold).* ",
             "",
         ])
+
+
 
     # Section 2: Observed Subset / Full Out-of-Fold Outcomes
     cov_label = "Full Out-of-Fold Descriptive Coverage (50 Cities, Folds 1–5)" if is_full else f"Observed Test Subset ({n} Cities)"
@@ -414,8 +483,6 @@ def write_tables(results: list, summary: dict):
     (tdir / "e1_main_table.md").write_text("\n".join(lines), encoding="utf-8")
 
     hdr = "| City | Fold | n_pairs | CPC₀ | CPC_target | ΔCPC_target | CPC_wrong | ΔCPC_wrong | Donor City |"
-
-
     sep = "|---|---|---|---|---|---|---|---|---|"
     rows = [hdr, sep]
     for r in sorted(results, key=lambda x: x["city"]):
@@ -426,21 +493,36 @@ def write_tables(results: list, summary: dict):
             f"{r['delta_cpc_wrong']:+.4f} | {r['donor_city']} |"
         )
     (tdir / "e1_per_city.md").write_text("# E1: Complete Per-City Breakdown (50 Cities)\n\n" + "\n".join(rows) + "\n", encoding="utf-8")
-    print(f"  Generated Markdown tables in {tdir}")
+    print(f"  [Artifact] Generated Markdown tables in {tdir}")
 
 
 def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cpu"):
-    t0 = time.time()
+    """
+    Main E1 execution loop with structured step-by-step logging.
+    """
+    t_global_start = time.time()
     device = torch.device(device_str)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # -----------------------------------------------------------------------
+    # STEP 1: Generate 5-Fold Splits (35 Train / 5 Val / 10 Test)
+    # -----------------------------------------------------------------------
+    print(f"\n{'='*75}")
+    print(f"E1 EXPERIMENT PIPELINE: ORACLE AGGREGATED-DISTANCE EXISTENCE TEST")
+    print(f"{'='*75}")
+    print(f"[STEP 1/5] Partitioning 50 cities into 5 stratified folds (35 Train / 5 Val / 10 Test)...")
     splits = generate_35_5_10_splits(DATA_ROOT)
+    
     all_results = []
     fold_manifest = {}
+    total_test_cities = 50 if not smoke else len(smoke_cities or ["Portland", "Denver"])
+    city_counter = 0
 
     for fold_id, split in splits.items():
-        train35 = split["train"]   # 35 cities
-        val5    = split["val"]     # 5 cities
-        test10  = sorted(split["test"])  # 10 cities
+        t_fold_start = time.time()
+        train35 = split["train"]   # 35 training cities
+        val5    = split["val"]     # 5 validation cities
+        test10  = sorted(split["test"])  # 10 test cities
 
         run_test = test10
         if smoke:
@@ -448,17 +530,26 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
             if not run_test:
                 continue
 
-        print(f"\n{'='*60}\nFOLD {fold_id}: train={len(train35)}, val={len(val5)}, test={len(run_test)}\n{'='*60}")
+        fold_role = "Exploratory / Development" if fold_id == 1 else "Confirmatory Out-of-Fold"
+        print(f"\n{'-'*75}")
+        print(f">>> FOLD {fold_id}/5 [{fold_role}] | Train: {len(train35)} | Val: {len(val5)} | Test: {len(run_test)}/{len(test10)}")
+        print(f"{'-'*75}")
 
-        # Step 1: Compute bin edges from 35 train cities
-        print(f"  Computing K_move={K_MOVE} pair-weighted bin edges...")
+        # -------------------------------------------------------------------
+        # STEP 2: Compute Pair-Weighted Quantile Bin Edges from 35 Train Cities
+        # -------------------------------------------------------------------
+        print(f"  [STEP 2/5: Fold {fold_id}] Computing K_move={K_MOVE} quantile bin edges from 35 train cities...")
         bin_edges, K_active = compute_kbin_edges(train35, K=K_MOVE, data_root=DATA_ROOT)
+        
+        # Enforce strict 8-bin invariant
         if K_active != K_MOVE:
-            raise RuntimeError(f"E1 requires exactly {K_MOVE} active bins, got {K_active}")
-        print(f"  K_active={K_active} (verified {K_MOVE}-bin strict), internal edges (km): {np.round(bin_edges[1:-1], 2).tolist()}")
+            raise RuntimeError(f"E1 invariant violated: Expected exactly {K_MOVE} active bins, got {K_active}")
+        print(f"    -> Strict {K_MOVE}-bin verified. Internal cut points (km): {np.round(bin_edges[1:-1], 2).tolist()}")
 
-        # Step 2: Train backbone with validation early stopping
-        print(f"  Training backbone (max_epochs={EPOCHS}, patience={PATIENCE})...")
+        # -------------------------------------------------------------------
+        # STEP 3: Train Zero-Shot Backbone & Select Best Validation Checkpoint
+        # -------------------------------------------------------------------
+        print(f"  [STEP 3/5: Fold {fold_id}] Training backbone with validation model selection (max_epochs={EPOCHS}, patience={PATIENCE})...")
         model, scaler, train_info = train_zero_shot_model(
             train_city_names=train35,
             data_root=DATA_ROOT,
@@ -472,6 +563,7 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
 
         fold_manifest[fold_id] = {
             "fold_id": fold_id,
+            "role": fold_role,
             "train_cities": train35,
             "val_cities": val5,
             "test_cities": test10,
@@ -484,61 +576,84 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
             "stopped_early": train_info["stopped_early"],
             "val_cpc_history": train_info["val_cpc_history"],
         }
-        print(f"  Backbone frozen (best epoch={train_info['best_epoch']}, best val CPC={train_info['best_val_cpc']:.4f}).")
+        print(f"    -> Backbone frozen at best epoch {train_info['best_epoch']} (Validation CPC = {train_info['best_val_cpc']:.4f}).")
 
-        # Step 3: Evaluate test cities
-        for city in run_test:
+        # -------------------------------------------------------------------
+        # STEP 4: Evaluate Held-Out Test Cities (Conditions A, B, C)
+        # -------------------------------------------------------------------
+        print(f"  [STEP 4/5: Fold {fold_id}] Evaluating {len(run_test)} held-out test cities...")
+        for i_city, city in enumerate(run_test):
+            city_counter += 1
             donor = get_donor_city(city, test10)
-            print(f"  [{fold_id}] {city} (donor: {donor})")
+            
             res = run_city(city, model, scaler, bin_edges, K_active, donor, fold_id, device)
             all_results.append(res)
-            print(f"    dCPC_target={res['delta_cpc_target']:+.4f}  dCPC_wrong={res['delta_cpc_wrong']:+.4f}  n_inter={res['n_inter_pairs']}")
+            
+            d_target = res['delta_cpc_target']
+            d_wrong  = res['delta_cpc_wrong']
+            spec_marker = "(Target > Wrong)" if d_target > d_wrong else "(Wrong >= Target)"
+            print(
+                f"    [{city_counter:02d}/{total_test_cities:02d}] City: {city:<16} (Donor: {donor:<16}) | "
+                f"M0={res['cpc_baseline']:.4f} -> +Target={res['cpc_target_yd']:.4f} (dCPC={d_target:+.4f}) | "
+                f"+Wrong={res['cpc_wrong_yd']:.4f} (dCPC={d_wrong:+.4f}) {spec_marker}"
+            )
 
-    # Step 4: Save raw results and validation manifest
+        t_fold_elapsed = time.time() - t_fold_start
+        print(f"  [Fold {fold_id} Complete] Elapsed time: {t_fold_elapsed:.1f}s")
+
+    # -----------------------------------------------------------------------
+    # STEP 5: Statistical Aggregation, Verification, and Artifact Output
+    # -----------------------------------------------------------------------
+    print(f"\n{'-'*75}")
+    print(f"[STEP 5/5] Synthesizing summary, fold-stratified bootstrap CI, and writing artifacts...")
+    
     (RESULTS_DIR / "e1_per_city_results.json").write_text(json.dumps(all_results, indent=2), encoding="utf-8")
     (RESULTS_DIR / "e1_validation_manifest.json").write_text(json.dumps(fold_manifest, indent=2), encoding="utf-8")
-    print(f"\nSaved {len(all_results)} city results and validation manifest.")
 
     if len(all_results) < 2:
-        print("Too few cities for statistics (smoke test).")
+        print("Warning: Fewer than 2 cities evaluated; skipping statistical synthesis.")
         return all_results, None
 
-    # Step 5: Compute statistical summary with ddof=1 and Wilcoxon protections
     summary = compute_summary(all_results, fold_manifest=fold_manifest)
     (RESULTS_DIR / "e1_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     write_tables(all_results, summary)
 
-    elapsed = time.time() - t0
+    t_global_elapsed = time.time() - t_global_start
     is_conf = summary.get("is_confirmatory_complete", False)
     is_full = summary.get("is_full_50_complete", False)
     conf = summary.get("confirmatory_folds_2_5", {})
 
-    print(f"\n{'='*60}\nE1 Complete in {elapsed:.0f}s ({'Full 50-City Run' if is_full else f'Subset Run with {len(all_results)} cities'})")
-    print(f"  ΔCPC_target: mean={summary['delta_cpc_target_mean']:+.4f} (median={summary['delta_cpc_target_median']:+.4f}, std[ddof=1]={summary['delta_cpc_target_std']:.4f})")
-    print(f"  95% Fold-stratified CI: [{summary['delta_cpc_target_ci_l']:+.4f}, {summary['delta_cpc_target_ci_h']:+.4f}]")
-    print(f"  Win rate: {summary['win_rate_target']} cities | Wilcoxon p={summary['p_wilcoxon_target']:.2e}")
-    print(f"  Placebo (wrong donor): mean={summary['delta_cpc_wrong_mean']:+.4f} | Win rate: {summary['win_rate_wrong']}")
-    print(f"  Specificity Wilcoxon p: {summary['p_specificity']:.2e}")
+    print(f"\n{'='*75}")
+    print(f"E1 EXECUTION SUMMARY (Total Elapsed Time: {t_global_elapsed:.1f}s)")
+    print(f"{'='*75}")
+    print(f"  Cities Evaluated: {len(all_results)}/50 | Mode: {'Full 50-City Protocol' if is_full else 'Exploratory Subset'}")
+    print(f"  Overall dCPC Target: mean = {summary['delta_cpc_target_mean']:+.4f} (median = {summary['delta_cpc_target_median']:+.4f}, std[ddof=1] = {summary['delta_cpc_target_std']:.4f})")
+    print(f"  95% Fold-Stratified Bootstrap CI: [{summary['delta_cpc_target_ci_l']:+.4f}, {summary['delta_cpc_target_ci_h']:+.4f}]")
+    print(f"  Win Rate (Target > 0): {summary['win_rate_target']} | Wilcoxon p = {summary['p_wilcoxon_target']:.2e}")
+    print(f"  Placebo (Wrong Donor): mean = {summary['delta_cpc_wrong_mean']:+.4f} | Win Rate: {summary['win_rate_wrong']}")
+    print(f"  Specificity Wilcoxon p (Target > Wrong): {summary['p_specificity']:.2e}")
 
     if is_conf and conf.get("status") == "confirmatory_complete":
-        print(
-            f"  Confirmatory Criteria (Folds 2-5, n=40): "
-            f"CI_lower>0: {'✓ PASS' if conf['ci_lower_bound_positive'] else '✗ FAIL'} | "
-            f"Target>Wrong: {'✓ PASS' if conf['target_beats_wrong'] else '✗ FAIL'} | "
-            f"Win Rate: {conf['win_rate_target']}"
-        )
+        pass_ci = "PASS" if conf['ci_lower_bound_positive'] else "FAIL"
+        pass_tw = "PASS" if conf['target_beats_wrong'] else "FAIL"
+        print(f"\n  CONFIRMATORY HYPOTHESIS TEST OUTCOMES (Folds 2-5, n=40):")
+        print(f"    * 95% CI Lower Bound > 0 : {pass_ci} ([{conf['delta_cpc_target_ci_l']:+.4f}, {conf['delta_cpc_target_ci_h']:+.4f}])")
+        print(f"    * Target > Wrong Placebo : {pass_tw} ({conf['delta_cpc_target_mean']:+.4f} vs {conf['delta_cpc_wrong_mean']:+.4f})")
+        print(f"    * Confirmatory Win Rate  : {conf['win_rate_target']} (Wilcoxon p = {conf['p_wilcoxon_target']:.2e})")
     else:
-        print(f"  Confirmatory Criteria (Folds 2-5): NOT AVAILABLE ({len(all_results)}/50 cities run; requires complete 40 cities across Folds 2-5).")
-    print(f"{'='*60}")
+        conf_count = len([r for r in all_results if r['fold'] >= 2])
+        print(f"\n  CONFIRMATORY STATUS: NOT AVAILABLE (Observed {conf_count}/40 test cities; strictly requires complete 40 test cities across Folds 2-5, with 10 test cities per fold).")
+    print(f"{'='*75}\n")
+
+
 
     return all_results, summary
 
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--smoke",  action="store_true", help="Run smoke test on 2 test cities (Portland, Denver)")
+    parser = argparse.ArgumentParser(description="E1 Oracle Aggregated-Distance Existence Test")
+    parser.add_argument("--smoke",  action="store_true", help="Run smoke test on Portland (Fold 4) and Denver (Fold 5)")
     parser.add_argument("--cities", nargs="+", default=None, help="Custom list of test cities to run")
-    parser.add_argument("--device", default="cpu", help="PyTorch device")
+    parser.add_argument("--device", default="cpu", help="PyTorch device (cpu/cuda)")
     args = parser.parse_args()
     run_e1(smoke=args.smoke, smoke_cities=args.cities, device_str=args.device)
