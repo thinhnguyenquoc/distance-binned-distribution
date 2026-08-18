@@ -106,14 +106,34 @@ def train_zero_shot_model(
     loss_type: str = "ztnb",
     device_str: str = "cuda" if torch.cuda.is_available() else "cpu",
     verbose: bool = True,
+    # --- Validation / early stopping ---
+    val_city_names: List[str] | None = None,
+    patience: int = 5,
+    min_delta: float = 1e-4,
 ) -> tuple[ZeroShotODModel, object]:
+    """
+    Train ZeroShotODModel with optional validation-based early stopping.
+
+    Args:
+        train_city_names: Cities to train on.
+        val_city_names:   Validation cities for early stopping. If None,
+                          trains for exactly `epochs` epochs (pre-specified).
+        patience:         Epochs without val CPC improvement before stopping.
+        min_delta:        Minimum improvement to count as improvement.
+
+    Returns:
+        (best_model, scaler) — model parameters are frozen (requires_grad=False).
+    """
+    import copy
+    import numpy as _np
+
     device = torch.device(device_str)
     if verbose:
         print(f"Loading {len(train_city_names)} source cities onto {device}...")
 
     train_cities, scaler = load_cities(train_city_names, data_root=data_root)
 
-    # Precompute spatial graphs G^urban
+    # Precompute spatial graphs G^urban for training cities
     city_graphs = []
     for c in train_cities:
         coords = c.lon_lat.numpy()
@@ -122,6 +142,21 @@ def train_zero_shot_model(
         else:
             ei, ed = build_knn_graph(coords, k=knn_k)
         city_graphs.append((ei, ed))
+
+    # Precompute graphs for validation cities (if provided)
+    val_cities_data = []
+    val_city_graphs = []
+    if val_city_names:
+        for name in val_city_names:
+            vc = load_city(name, data_root=data_root, feature_scaler=scaler)
+            val_cities_data.append(vc)
+            coords = vc.lon_lat.numpy()
+            if graph_type == "radius":
+                ei, ed = build_radius_graph(coords, radius_km=radius_km)
+            else:
+                ei, ed = build_knn_graph(coords, k=knn_k)
+            val_city_graphs.append((ei, ed))
+
 
     model = ZeroShotODModel(
         node_in_dim=train_cities[0].node_features.shape[1],
@@ -133,6 +168,11 @@ def train_zero_shot_model(
 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+
+    best_val_cpc = -float("inf")
+    best_state = None
+    patience_counter = 0
+    use_early_stopping = bool(val_city_names)
 
     start_time = time.time()
     for epoch in range(1, epochs + 1):
@@ -146,12 +186,55 @@ def train_zero_shot_model(
         )
         scheduler.step()
 
+        # --- Validation CPC (interzonal) ---
+        val_cpc_str = ""
+        if use_early_stopping and val_cities_data:
+            val_cpcs = []
+            model.eval()
+            with torch.no_grad():
+                for vcd, (vei, ved) in zip(val_cities_data, val_city_graphs):
+                    t_hat = infer_zero_shot(model, vcd, vei, ved, device=device)
+                    t_hat_np = t_hat.numpy()
+                    t_gt_np  = vcd.pair_trips.numpy()
+                    dist_km  = _np.expm1(vcd.pair_distance.numpy())
+                    o_np = vcd.pair_o_idx.numpy()
+                    d_np = vcd.pair_d_idx.numpy()
+                    inter = (o_np != d_np) & (dist_km > 0.0)
+                    if inter.sum() > 0:
+                        from src.training.evaluate import compute_cpc_pair
+                        val_cpcs.append(compute_cpc_pair(t_gt_np[inter], t_hat_np[inter]))
+            mean_val_cpc = float(_np.mean(val_cpcs)) if val_cpcs else 0.0
+            val_cpc_str = f" | ValCPC: {mean_val_cpc:.4f}"
+
+            # Best-model tracking
+            if mean_val_cpc > best_val_cpc + min_delta:
+                best_val_cpc = mean_val_cpc
+                best_state = copy.deepcopy(model.state_dict())
+                patience_counter = 0
+            else:
+                patience_counter += 1
+
         if verbose and (epoch % 5 == 0 or epoch == 1 or epoch == epochs):
             elapsed = time.time() - start_time
-            print(f"Epoch {epoch:02d}/{epochs:02d} | Loss ({loss_type}): {loss_val:.4f} | phi: {model.phi.item():.3f} | alpha: {model.gravity_prior.alpha.item():.3f} | {elapsed:.1f}s")
+            print(f"Epoch {epoch:02d}/{epochs:02d} | Loss ({loss_type}): {loss_val:.4f} | "
+                  f"phi: {model.phi.item():.3f} | alpha: {model.gravity_prior.alpha.item():.3f} | "
+                  f"{elapsed:.1f}s{val_cpc_str}")
+
+        # --- Early stopping ---
+        if use_early_stopping and patience_counter >= patience:
+            if verbose:
+                print(f"Early stopping at epoch {epoch} (patience={patience}).")
+            break
+
+    # Restore best checkpoint (if early stopping was used and improved)
+    if use_early_stopping and best_state is not None:
+        model.load_state_dict(best_state)
+        if verbose:
+            print(f"Restored best model (val CPC={best_val_cpc:.4f}).")
 
     model.eval()
     for p in model.parameters():
         p.requires_grad = False
 
     return model, scaler
+

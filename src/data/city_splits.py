@@ -70,10 +70,57 @@ def generate_5fold_splits(data_root: str = "data") -> Dict[int, Dict[str, List[s
     return splits
 
 
+def generate_35_5_10_splits(data_root: str = "data") -> Dict[int, Dict[str, List[str]]]:
+    """
+    Generates 5-fold splits with deterministic 35/5/10 train/val/test partition.
+
+    Within each fold's 40 non-test cities, the LAST 5 (alphabetically sorted)
+    become validation; the first 35 become training. Rule is deterministic and
+    does not inspect Y_D values.
+
+    Returns:
+        {
+            1: {"train": [...35...], "val": [...5...], "test": [...10...]},
+            ...
+        }
+    """
+    base_splits = generate_5fold_splits(data_root)
+    splits_35_5_10 = {}
+    for fold_id, split in base_splits.items():
+        train_40 = sorted(split["train"])    # 40 cities, sorted
+        val_cities   = train_40[-5:]         # last 5 alphabetically → validation
+        train_cities = train_40[:-5]         # first 35 → training
+        splits_35_5_10[fold_id] = {
+            "train": train_cities,           # 35 cities
+            "val":   val_cities,             # 5 cities
+            "test":  split["test"],          # 10 cities (unchanged)
+        }
+    return splits_35_5_10
+
+
+def get_donor_city(target_city: str, test_cities: List[str]) -> str:
+    """
+    Deterministic wrong-donor assignment for oracle placebo in E1.
+
+    Rule: next city alphabetically in fold test set (wrap-around).
+    Ensures donor != target and is deterministic without inspecting Y_D values.
+    """
+    test_sorted = sorted(test_cities)
+    idx = test_sorted.index(target_city)
+    return test_sorted[(idx + 1) % len(test_sorted)]
+
+
 if __name__ == "__main__":
     splits = generate_5fold_splits("data")
-    print(f"Generated {len(splits)} folds.")
+    print(f"Generated {len(splits)} folds (40+10).")
     for fold_id, split in splits.items():
         print(f"\nFold {fold_id}:")
         print(f"  Test ({len(split['test'])}): {split['test']}")
-        print(f"  Train ({len(split['train'])} cities)")
+
+    print("\n--- 35/5/10 splits ---")
+    splits2 = generate_35_5_10_splits("data")
+    for fold_id, split in splits2.items():
+        print(f"\nFold {fold_id}:")
+        print(f"  Train ({len(split['train'])}): {split['train'][:3]}...")
+        print(f"  Val   ({len(split['val'])}): {split['val']}")
+        print(f"  Test  ({len(split['test'])}): {split['test']}")
