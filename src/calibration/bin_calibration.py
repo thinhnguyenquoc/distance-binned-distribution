@@ -198,6 +198,126 @@ def calibrate_4bin_legacy_ablation(
     return t_cal
 
 
+# ---------------------------------------------------------------------------
+# E1: Dynamic K-bin calibration (numpy-based, for Oracle Existence Test)
+# ---------------------------------------------------------------------------
+
+def calibrate_kbins(
+    t0_np: np.ndarray,
+    dist_km: np.ndarray,
+    inter_mask: np.ndarray,
+    yd_target: np.ndarray,
+    bin_edges: np.ndarray,
+    q: float = 1.0,
+    tolerance: float = 1e-5,
+) -> np.ndarray:
+    r"""
+    Closed-form K-bin Moving-Bin calibration for E1.
+
+    Works on numpy arrays (CPU-only). Mirrors calibrate_moving_bins() semantics
+    but accepts dynamic bin_edges (K bins, not fixed 3-bin schema).
+
+    Mathematical formulation:
+        Y_D_cond_k = Y_D_k * active_k / sum_l(Y_D_l * active_l)
+        w_k(q)     = (Y_D_cond_k / Y_hat_k)^q
+        s_k        = w_k / sum_l(Y_hat_l * w_l)
+        T_cal_ij   = s_{b(ij)} * T0_ij   for (i,j) in Omega_c^+
+
+    Invariants:
+        1. Interzonal mass preservation: sum(T_cal[inter]) == sum(T0[inter]) within tolerance.
+        2. Intrazonal identity: T_cal[~inter] == T0[~inter] exactly.
+        3. At q=1: bin proportions of T_cal match Y_D_cond within tolerance for active bins.
+        4. GT-independence: output is a function of T0 and Y_D only, not T^GT.
+
+    Args:
+        t0_np:      (E,) zero-shot predicted flows (numpy float array).
+        dist_km:    (E,) pairwise distances in km.
+        inter_mask: (E,) boolean mask for Omega_c^+ (interzonal, D>0).
+        yd_target:  (K,) target distance distribution summing to 1.0.
+        bin_edges:  (K+1,) strictly increasing edges from compute_kbin_edges.
+        q:          soft calibration strength in [0, 1]. q=1 = exact match.
+        tolerance:  numerical precision for invariant checks.
+
+    Returns:
+        t_cal: (E,) calibrated flows; intrazonal unchanged, interzonal rescaled.
+    """
+    assert 0.0 <= q <= 1.0, f"q must be in [0, 1], got {q}"
+    K = len(bin_edges) - 1
+    assert len(yd_target) == K, f"yd_target length {len(yd_target)} != K={K}"
+
+    # Normalize input Y_D (defensive)
+    yd_sum = float(np.sum(yd_target))
+    yd_raw = yd_target / yd_sum if yd_sum > 0 else np.ones(K) / K
+
+    t_cal = t0_np.copy().astype(np.float64)
+    inter_T0 = t0_np[inter_mask].astype(np.float64)
+    N_hat = inter_T0.sum()
+
+    if N_hat <= 0:
+        return t_cal  # no interzonal flow to calibrate
+
+    inter_dist = dist_km[inter_mask]
+
+    # Compute implied distribution Y_hat from zero-shot
+    Y_hat = np.zeros(K, dtype=np.float64)
+    active = np.zeros(K, dtype=bool)
+    for k in range(K):
+        lo, hi = float(bin_edges[k]), float(bin_edges[k + 1])
+        in_bin = (inter_dist > lo) & (inter_dist <= hi)
+        Y_hat[k] = inter_T0[in_bin].sum() / N_hat
+        active[k] = bool(in_bin.any())
+
+    # Condition Y_D on active bins only
+    yd_active = yd_raw * active.astype(np.float64)
+    active_sum = yd_active.sum()
+    Y_D_cond = yd_active / active_sum if active_sum > 0 else Y_hat.copy()
+
+    # Soft weights: w_k = (Y_D_cond_k / Y_hat_k)^q
+    w = np.ones(K, dtype=np.float64)
+    for k in range(K):
+        if active[k] and Y_hat[k] > 0:
+            w[k] = (Y_D_cond[k] / Y_hat[k]) ** q
+
+    # Normalize: s_k = w_k / sum_l(Y_hat_l * w_l)
+    weighted_mass = float((Y_hat * w).sum())
+    s = w / weighted_mass if weighted_mass > 0 else np.ones(K)
+
+    # Apply per-bin scaling to interzonal pairs
+    idx = np.where(inter_mask)[0]
+    for k in range(K):
+        lo, hi = float(bin_edges[k]), float(bin_edges[k + 1])
+        in_bin = (inter_dist > lo) & (inter_dist <= hi)
+        t_cal[idx[in_bin]] = t0_np[idx[in_bin]] * s[k]
+
+    # --- Invariant 1: Interzonal mass preservation ---
+    cal_mass = float(t_cal[inter_mask].sum())
+    mass_err_rel = abs(cal_mass - N_hat) / max(N_hat, 1e-8)
+    if mass_err_rel > tolerance:
+        t_cal[inter_mask] = t_cal[inter_mask] * (N_hat / cal_mass)
+
+    # --- Invariant 2: Intrazonal identity ---
+    intra_mask = ~inter_mask
+    assert np.allclose(t_cal[intra_mask], t0_np[intra_mask], atol=1e-6), \
+        "calibrate_kbins: Intrazonal identity violated"
+
+    # --- Invariant 3: At q=1, bin proportions match Y_D_cond ---
+    if abs(q - 1.0) < 1e-4:
+        total_cal = float(t_cal[inter_mask].sum())
+        if total_cal > 0:
+            for k in range(K):
+                if active[k]:
+                    lo, hi = float(bin_edges[k]), float(bin_edges[k + 1])
+                    in_bin_cal = (inter_dist > lo) & (inter_dist <= hi)
+                    cal_prop = float(t_cal[inter_mask][in_bin_cal].sum()) / total_cal
+                    bin_err = abs(cal_prop - Y_D_cond[k])
+                    assert bin_err < tolerance, (
+                        f"calibrate_kbins bin {k}: target={Y_D_cond[k]:.6f}, "
+                        f"got={cal_prop:.6f}, err={bin_err:.6f}"
+                    )
+
+    return t_cal
+
+
 if __name__ == "__main__":
     t0 = torch.tensor([50.0, 100.0, 300.0, 600.0])  # pair 0 is intrazonal, 1,2,3 are interzonal
     bins = torch.tensor([0, 1, 2, 3])

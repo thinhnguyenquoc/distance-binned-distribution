@@ -221,12 +221,111 @@ def compute_distributional_overlap(p: np.ndarray, q: np.ndarray) -> float:
     return float(np.sum(np.minimum(p, q)))
 
 
+# ---------------------------------------------------------------------------
+# E1: Dynamic K-bin extraction for Oracle Existence Test
+# ---------------------------------------------------------------------------
+
+def compute_kbin_edges(
+    train_city_names: list,
+    K: int = 8,
+    data_root: str = "data",
+) -> tuple:
+    """
+    Compute K-bin pair-weighted quantile edges from training cities.
+    Intrazonal pairs (D_ij = 0) are excluded.
+
+    NOTE: Pair-weighted — large cities contribute more pairs than small cities.
+    This is intentional and documented; see E1.md.
+
+    Args:
+        train_city_names: List of training city names.
+        K: Number of moving-distance bins (Bin 0 intrazonal excluded).
+        data_root: Root directory of city data.
+
+    Returns:
+        (edges, K_active): edges is (K_active+1,) array strictly increasing,
+        K_active <= K (may be < K if quantile degeneration occurs).
+    """
+    from src.data.dataset import load_city
+
+    all_dist = []
+    for city_name in train_city_names:
+        cd = load_city(city_name, data_root=data_root)
+        dist_km = np.expm1(cd.pair_distance.numpy())
+        inter = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
+        all_dist.extend(dist_km[inter].tolist())
+
+    all_dist = np.array(all_dist)
+    assert len(all_dist) > K, f"Too few interzonal pairs ({len(all_dist)}) for K={K} bins"
+
+    # K-1 internal breakpoints → K bins; skip 0th and 100th percentile
+    quantile_pts = np.linspace(0, 100, K + 1)[1:-1]   # shape: (K-1,)
+    internal_edges = np.percentile(all_dist, quantile_pts)
+
+    # Deduplicate: remove duplicate edges (handles concentrated distributions)
+    internal_edges = np.unique(internal_edges)
+    edges = np.concatenate([[0.0], internal_edges, [np.inf]])
+
+    # INVARIANT: strictly increasing
+    assert np.all(np.diff(edges) > 0), f"Non-strict bin edges: {edges}"
+
+    K_active = len(edges) - 1
+    if K_active < K:
+        print(f"[WARNING] compute_kbin_edges: K_active={K_active} < K={K} due to quantile degeneration")
+
+    return edges, K_active
+
+
+def extract_yd_kbins(
+    dist_km: np.ndarray,
+    trips: np.ndarray,
+    bin_edges: np.ndarray,
+    inter_mask: np.ndarray,
+) -> np.ndarray:
+    """
+    Extract K-bin oracle trip-length distribution from ground-truth flows.
+
+    Aggregates GT flows by distance bin — NOT pair-level individual flows.
+    Adaptation receives only this K-dim histogram vector; it does NOT see T_ij.
+
+    NOTE: Uses GT trips to compute bin totals → oracle aggregate information.
+    This is intentional for E1 Oracle Existence Test; see E1.md.
+
+    Args:
+        dist_km:    (E,) pairwise distances in km.
+        trips:      (E,) ground-truth flow counts T_ij^GT.
+        bin_edges:  (K+1,) strictly increasing bin edges (from compute_kbin_edges).
+        inter_mask: (E,) boolean mask for interzonal pairs Omega_c^+.
+
+    Returns:
+        yd: (K,) normalized oracle distance distribution summing to 1.0.
+    """
+    K = len(bin_edges) - 1
+    yd = np.zeros(K, dtype=np.float64)
+
+    inter_trips = trips[inter_mask]
+    inter_dist = dist_km[inter_mask]
+
+    for k in range(K):
+        lo, hi = bin_edges[k], bin_edges[k + 1]
+        in_bin = (inter_dist > lo) & (inter_dist <= hi)
+        yd[k] = inter_trips[in_bin].sum()
+
+    total = yd.sum()
+    if total > 0:
+        yd = yd / total
+    else:
+        # Fallback: uniform over K bins
+        yd = np.ones(K, dtype=np.float64) / K
+
+    return yd   # shape: (K,) summing to 1.0
+
+
 if __name__ == "__main__":
     from src.data.dataset import load_city
 
     for city in ["Philadelphia", "Austin", "Raleigh", "Denver", "Seattle"]:
         cd = load_city(city, "data")
         o_3 = extract_yd_moving_oracle(cd.pair_trips, cd.bin_labels, cd.pair_o_idx, cd.pair_d_idx)
-        r_3 = extract_yd_moving_real(city, "meta_prior")
-        overlap = compute_distributional_overlap(o_3, r_3)
-        print(f"{city:<15}: Oracle_moving = {np.round(o_3, 4).tolist()} | Meta_moving = {np.round(r_3, 4).tolist()} | Overlap = {overlap*100:.2f}%")
+        print(f"{city:<15}: Oracle_moving = {np.round(o_3, 4).tolist()}")
+
