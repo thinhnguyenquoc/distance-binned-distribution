@@ -96,8 +96,9 @@ def infer_zero_shot(
 def train_zero_shot_model(
     train_city_names: List[str],
     data_root: str = "data",
-    epochs: int = 25,
-    lr: float = 1e-3,
+    epochs: int = 200,
+    lr: float = 2e-3,
+    weight_decay: float = 1e-4,
     hidden_dim: int = 64,
     num_gnn_layers: int = 2,
     graph_type: str = "radius",
@@ -108,13 +109,18 @@ def train_zero_shot_model(
     verbose: bool = True,
     # --- Validation / early stopping ---
     val_city_names: List[str] | None = None,
-    patience: int = 5,
+    patience: int = 15,
     min_delta: float = 1e-4,
+    lr_plateau_patience: int = 4,
+    lr_plateau_factor: float = 0.5,
+    lr_plateau_threshold: float = 1e-4,
+    threshold_mode: str = "abs",
+    min_lr: float = 1e-5,
     return_info: bool = False,
     seed: int | None = None,
 ) -> tuple:
     """
-    Train ZeroShotODModel with optional validation-based early stopping.
+    Train ZeroShotODModel with AdamW, ReduceLROnPlateau, and validation-based early stopping.
 
     Args:
         train_city_names: Cities to train on.
@@ -210,8 +216,19 @@ def train_zero_shot_model(
         decoder_hidden_dim=hidden_dim,
     ).to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+    optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    if val_city_names:
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="max",
+            factor=lr_plateau_factor,
+            patience=lr_plateau_patience,
+            threshold=lr_plateau_threshold,
+            threshold_mode=threshold_mode,
+            min_lr=min_lr,
+        )
+    else:
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     best_val_cpc = -float("inf")
     best_epoch = epochs
@@ -233,7 +250,6 @@ def train_zero_shot_model(
             device=device,
         )
         loss_history.append(loss_val)
-        scheduler.step()
 
         # --- Fast GPU-Vectorized Validation CPC (interzonal) ---
         val_cpc_str = ""
@@ -259,6 +275,9 @@ def train_zero_shot_model(
             val_history.append(mean_val_cpc)
             val_cpc_str = f" | ValCPC: {mean_val_cpc:.4f}"
 
+            # Step plateau scheduler on validation metric
+            scheduler.step(mean_val_cpc)
+
             # Best-model tracking
             if mean_val_cpc > best_val_cpc + min_delta:
                 best_val_cpc = mean_val_cpc
@@ -267,13 +286,16 @@ def train_zero_shot_model(
                 patience_counter = 0
             else:
                 patience_counter += 1
+        else:
+            scheduler.step()
 
         if verbose:
             elapsed = time.time() - start_time
             pat_str = f" | Patience: {patience_counter}/{patience}" if use_early_stopping else ""
+            curr_lr = optimizer.param_groups[0]["lr"]
             print(
                 f"    [Epoch {epoch:03d}/{epochs:03d}] Loss: {loss_val:.4f}{val_cpc_str}{pat_str} | "
-                f"phi: {model.phi.item():.3f} | {elapsed:.1f}s",
+                f"lr: {curr_lr:.1e} | phi: {model.phi.item():.3f} | {elapsed:.1f}s",
                 flush=True,
             )
 

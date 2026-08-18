@@ -47,6 +47,14 @@ import time
 import argparse
 import sys
 from pathlib import Path
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import numpy as np
 from scipy import stats
 import torch
@@ -110,7 +118,7 @@ def configure_cpu_threads(num_threads: int | None = None) -> int:
 # ---------------------------------------------------------------------------
 K_MOVE      = 8          # Number of moving-distance bins (Bin 0 intrazonal excluded)
 Q_CALIB     = 1.0        # Calibration strength (1.0 = exact within-tolerance distribution match)
-EPOCHS      = 100        # Maximum training epochs per fold (T_max for cosine annealing)
+EPOCHS      = 200        # Maximum training epochs per fold (with ReduceLROnPlateau & Early Stopping)
 PATIENCE    = 15         # Early stopping patience based on validation CPC
 MIN_DELTA   = 1e-4       # Minimum validation CPC improvement threshold
 DATA_ROOT   = "data"     # Dataset root folder containing 50 city directories
@@ -126,7 +134,13 @@ def log_msg(msg: str = "", print_to_console: bool = True):
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     formatted = f"[{timestamp}] {msg}" if msg else ""
     if print_to_console:
-        print(formatted if formatted else "", flush=True)
+        try:
+            print(formatted if formatted else "", flush=True)
+        except Exception:
+            try:
+                print(formatted.encode("ascii", errors="replace").decode("ascii") if formatted else "", flush=True)
+            except Exception:
+                pass
     try:
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         with open(LOG_FILE, "a", encoding="utf-8") as f:
@@ -840,7 +854,7 @@ def run_e1(
             d_target = res['delta_cpc_target']
             d_wrong  = res['delta_cpc_wrong']
             d_spec   = res['delta_cpc_specificity']
-            spec_marker = f"(ΔSpec={d_spec:+.4f})"
+            spec_marker = f"(dSpec={d_spec:+.4f})"
             log_msg(
                 f"    [Fold {fold_id} | City {i_city+1:02d}/{len(run_test):02d} (Total {city_counter:02d}/{total_test_cities:02d})] "
                 f"{city:<16} ({t_city_elapsed:.2f}s) | "
