@@ -1,27 +1,39 @@
 """
-Unit and Contract Tests for E1 Oracle Existence Test Implementation.
+Unit and Contract Tests for E1 Oracle Existence Test Implementation (Amended Protocol v2).
 
 Tests cover:
-  - T49: 35/5/10 fold split invariants (sizes, disjointness, coverage).
+  - T49: 35/5/10 fold split invariants & manifest v2 integrity + SHA-256 matching.
   - T50: compute_kbin_edges invariant (strictly increasing, bounds, deduplication).
   - T51: extract_yd_kbins invariant (proper sum to 1.0, support handling).
   - T52: calibrate_kbins mass preservation and intrazonal identity.
   - T53: calibrate_kbins q=1 exact bin distribution matching.
   - T54: calibrate_kbins GT permutation invariance.
-  - T55: get_donor_city distinctness and wrap-around.
+  - T55: wrong-donor helper distinctness, coverage (9 donors), and legacy single donor.
+  - T56: Confirmatory guard on incomplete subsets.
+  - T57: Size-stratified validation representation invariant across size strata and metadata logging.
+  - T58: Specificity estimand (Delta_target - Delta_wrong_avg9) & IQR calculation.
 """
 
 import numpy as np
 import pytest
 import torch
 
-from src.data.city_splits import generate_35_5_10_splits, get_donor_city
+from src.data.city_splits import (
+    get_all_cities_sorted_by_size,
+    generate_5fold_splits,
+    load_splits_manifest_v2,
+    generate_35_5_10_splits,
+    get_donor_city,
+    get_wrong_donors,
+    LOCKED_V1_TEST_FOLDS,
+)
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.calibration.bin_calibration import calibrate_kbins
+from src.experiment.run_e1 import compute_summary, compute_iqr
 
 
-def test_t49_splits_35_5_10_invariants():
-    splits = generate_35_5_10_splits("data")
+def test_t49_splits_35_5_10_invariants_and_v1_locking():
+    splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
     assert len(splits) == 5
 
     all_test = []
@@ -33,6 +45,9 @@ def test_t49_splits_35_5_10_invariants():
         assert len(s["train"]) == 35, f"Fold {f} train size {len(s['train'])} != 35"
         assert len(s["val"]) == 5, f"Fold {f} val size {len(s['val'])} != 5"
         assert len(s["test"]) == 10, f"Fold {f} test size {len(s['test'])} != 10"
+
+        # Strictly identical to locked E1-v1 test sets
+        assert s["test"] == sorted(LOCKED_V1_TEST_FOLDS[f]), f"Fold {f} test set does not match locked v1 test set"
 
         # Disjoint within fold
         assert len(train & val) == 0, f"Fold {f} train and val overlap!"
@@ -118,36 +133,42 @@ def test_t54_calibrate_kbins_gt_invariance():
     assert np.allclose(t_cal1, t_cal2)
 
 
-def test_t55_donor_city_deterministic_and_distinct():
-    test_cities = ["Austin", "Denver", "Portland", "Seattle"]
+def test_t55_donor_city_and_all_9_wrong_donors():
+    test_cities = ["Austin", "Denver", "Portland", "Seattle", "Chicago", "Boston", "Miami", "Dallas", "Atlanta", "Detroit"]
     for c in test_cities:
+        # Single donor
         donor = get_donor_city(c, test_cities)
         assert donor != c, f"Donor {donor} is identical to target {c}"
         assert donor in test_cities, f"Donor {donor} not in test set"
 
-    # Verify wrap-around
-    assert get_donor_city("Seattle", test_cities) == "Austin"
+        # 9 wrong donors
+        wrong_9 = get_wrong_donors(c, test_cities)
+        assert len(wrong_9) == 9, f"Expected 9 wrong donors, got {len(wrong_9)}"
+        assert c not in wrong_9, f"Target city {c} was included in wrong donors list"
+        assert set(wrong_9) == set(test_cities) - {c}
+
+    # Verify wrap-around for legacy single donor
+    assert get_donor_city(sorted(test_cities)[-1], test_cities) == sorted(test_cities)[0]
 
 
 def test_t56_confirmatory_guard_on_incomplete_subsets():
     """Verify that smoke / partial results are NOT reported as confirmatory."""
-    from src.experiment.run_e1 import compute_summary
-
-    # Dummy partial results (only 2 cities in Folds 4 and 5)
     dummy_results = [
         {
-            "city": "Portland", "fold": 4, "donor_city": "Denver", "n_inter_pairs": 1000,
-            "K_active": 8, "cpc_baseline": 0.40, "cpc_baseline_norm": 0.50,
+            "city": "Portland", "fold": 4, "donor_city": "all_9_fold_donors", "n_wrong_donors": 9,
+            "n_inter_pairs": 1000, "K_active": 8, "cpc_baseline": 0.40, "cpc_baseline_norm": 0.50,
             "cpc_target_yd": 0.43, "cpc_target_yd_norm": 0.53, "delta_cpc_target": 0.03,
             "cpc_wrong_yd": 0.39, "cpc_wrong_yd_norm": 0.49, "delta_cpc_wrong": -0.01,
-            "Y_D_target": [0.125]*8, "Y_D_wrong": [0.125]*8
+            "delta_cpc_specificity": 0.04,
+            "Y_D_target": [0.125]*8, "wrong_donor_breakdown": []
         },
         {
-            "city": "Denver", "fold": 5, "donor_city": "Portland", "n_inter_pairs": 1000,
-            "K_active": 8, "cpc_baseline": 0.42, "cpc_baseline_norm": 0.52,
+            "city": "Denver", "fold": 5, "donor_city": "all_9_fold_donors", "n_wrong_donors": 9,
+            "n_inter_pairs": 1000, "K_active": 8, "cpc_baseline": 0.42, "cpc_baseline_norm": 0.52,
             "cpc_target_yd": 0.45, "cpc_target_yd_norm": 0.55, "delta_cpc_target": 0.03,
             "cpc_wrong_yd": 0.41, "cpc_wrong_yd_norm": 0.51, "delta_cpc_wrong": -0.01,
-            "Y_D_target": [0.125]*8, "Y_D_wrong": [0.125]*8
+            "delta_cpc_specificity": 0.04,
+            "Y_D_target": [0.125]*8, "wrong_donor_breakdown": []
         }
     ]
 
@@ -156,3 +177,73 @@ def test_t56_confirmatory_guard_on_incomplete_subsets():
     assert not summary["is_full_50_complete"], "Partial 2-city run was falsely marked as full 50 complete!"
     assert summary["confirmatory_folds_2_5"]["status"] == "not_available", "Confirmatory status should be not_available!"
 
+
+def test_t57_stratified_validation_strata_coverage_and_metadata():
+    """Verify validation representation across size strata and candidates metadata presence."""
+    cities_info = get_all_cities_sorted_by_size("data")
+    city_dict = {c["city"]: c for c in cities_info}
+    splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
+
+    for fold_id, s in splits.items():
+        val_cities = set(s["val"])
+        test_cities = set(s["test"])
+        non_test_cities = [c["city"] for c in cities_info if c["city"] not in test_cities]
+        non_test_info = [city_dict[c] for c in non_test_cities]
+        ordered = sorted(non_test_info, key=lambda x: (x["n_tracts"], x["city"]))
+
+        # Stratum coverage check
+        strata = [ordered[i * 8 : (i + 1) * 8] for i in range(5)]
+        for s_idx, stratum in enumerate(strata):
+            stratum_cities = set(x["city"] for x in stratum)
+            overlap = val_cities & stratum_cities
+            assert len(overlap) == 1, (
+                f"Fold {fold_id} stratum {s_idx} must have exactly 1 validation city, got {overlap}"
+            )
+
+        # Candidates metadata check
+        cand_meta = s.get("validation_candidates_by_stratum", {})
+        assert len(cand_meta) == 5, f"Fold {fold_id} missing stratum candidate metadata"
+        for s_name, candidates in cand_meta.items():
+            assert len(candidates) == 8, f"Stratum {s_name} in Fold {fold_id} must list exactly 8 candidates"
+
+
+def test_t58_specificity_estimand_and_iqr():
+    """Verify that delta_specificity = delta_target - delta_wrong is computed on city level."""
+    test_results = []
+    for i in range(50):
+        f = (i % 5) + 1
+        dt = 0.05 + 0.01 * (i % 3)
+        dw = 0.01 + 0.005 * (i % 2)
+        test_results.append({
+            "city": f"City_{i}",
+            "fold": f,
+            "donor_city": "all_9_fold_donors",
+            "n_wrong_donors": 9,
+            "n_inter_pairs": 1000,
+            "K_active": 8,
+            "cpc_baseline": 0.40,
+            "cpc_baseline_norm": 0.50,
+            "cpc_target_yd": 0.40 + dt,
+            "cpc_target_yd_norm": 0.50 + dt,
+            "delta_cpc_target": dt,
+            "cpc_wrong_yd": 0.40 + dw,
+            "cpc_wrong_yd_norm": 0.50 + dw,
+            "delta_cpc_wrong": dw,
+            "delta_cpc_specificity": dt - dw,
+            "Y_D_target": [0.125]*8,
+            "wrong_donor_breakdown": [],
+        })
+
+    summary = compute_summary(test_results)
+    assert summary["is_full_50_complete"]
+    assert summary["is_confirmatory_complete"]
+    conf = summary["confirmatory_folds_2_5"]
+
+    # Invariant: Mean Specificity = Mean Target - Mean Wrong
+    expected_spec = conf["delta_cpc_target_mean"] - conf["delta_cpc_wrong_mean"]
+    assert np.isclose(conf["delta_specificity_mean"], expected_spec, atol=1e-6)
+
+    # Invariant: IQR is non-negative
+    assert conf["delta_specificity_iqr"] >= 0.0
+    assert conf["delta_cpc_target_iqr"] >= 0.0
+    assert conf["delta_cpc_wrong_iqr"] >= 0.0

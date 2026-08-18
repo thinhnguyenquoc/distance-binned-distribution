@@ -1,97 +1,77 @@
-# Implementation Plan (Final — Moving-Bin Framework Locked)
-## Quantifying the Marginal Value of Distance-Binned Mobility Information
+# Implementation Plan: E1-v2 City-Split & Wrong-Donor Improvements
+
+Refine the experimental protocol for E1 (Oracle Aggregated-Distance Existence Test) before running E1-v2:
+1. Preserve the 10 outer test cities per fold from E1-v1 with explicit `(n_tracts, city)` tie-breaking.
+2. Replace alphabetical validation selection with a 5-stratum size-stratified validation selection (1 city per stratum, seed `20260818 + fold_id`).
+3. Generate and lock `results/e1/splits_manifest_v2.json` with structural invariants and assertions.
+4. Upgrade the placebo condition in `run_e1.py` from a single alphabetical donor to the average across all 9 wrong donors in each test fold.
+5. Update unit/contract tests to enforce the v2 invariants.
 
 ---
 
-## Core Framing & Scope
+## User Review Required
 
-> **This study quantifies how much additional OD-relevant information a coarse target-city mobility observation contributes beyond zero-shot inference, evaluated over the candidate interzonal OD support $\Omega_c^+$ available for each held-out city.**
-
-- **Candidate Interzonal Support**: $\Omega_c^+ = \{(i,j) \in \Omega_c : i \neq j, D_{ij} > 0\}$.
-- **Intrazonal Handling**: Intrazonal predictions $\hat{T}_{ii}^{ZS}$ are preserved intact ($\hat{T}_{ii}^{\text{cal}} \equiv \hat{T}_{ii}^{ZS}$).
-- **Semantic Consistency**: Meta mobility data Bin 0 ("staying put at home / zero displacement") is excluded from calibration because it represents immobility rather than intrazonal travel. Calibration is strictly applied across actual displacement categories $\{1, 2, 3\}$:
-  - Bin 1: $(0, 10)\text{ km}$
-  - Bin 2: $[10, 100)\text{ km}$
-  - Bin 3: $100+\text{ km}$
-- **Legacy 4-Bin Ablation**: Evaluated to demonstrate the empirical penalty of conflating stay-at-home immobility with intrazonal travel.
+> [!IMPORTANT]
+> - **Manifest Pre-locking**: `results/e1/splits_manifest_v2.json` will be generated and saved on disk. `run_e1.py` will strictly read from this manifest file.
+> - **Wrong-Donor Aggregation**: For each target city $c$ in a 10-city test fold, all 9 remaining test cities $d \in \text{test} \setminus \{c\}$ are evaluated as wrong donors. The primary placebo metrics ($\Delta_c^{wrong}$ and $\text{CPC}_c^{wrong}$) will be the exact arithmetic mean over the 9 donors ($\frac{1}{9}\sum_{d \neq c}$), and the individual per-donor details will be recorded in the output artifacts for full transparency.
 
 ---
 
-## Architecture: Physics-Informed GNN with Pairwise Decoder
+## Proposed Changes
 
-$$\boxed{\text{Urban GNN} \rightarrow h_i \rightarrow \text{Pairwise OD Decoder} \rightarrow \mu_{NB, ij} \rightarrow \hat{T}^{ZS}_{ij} = E[T_{ij} \mid T_{ij} \ge 1]}$$
+### Data & Splits Layer
 
-### Information Regime
-Both zero-shot baseline $\hat{T}^{(0)}$ and calibrated model $\hat{T}^{(YD)}$ share the exact same underlying representation and frozen parameters:
-$$\hat{T}^{(0)} = f_{\theta^*}\left(X_{\text{urban}}^{26}, G_{\text{spatial}}, D_{ij}, P_i, P_j\right), \qquad \hat{T}^{(YD)} = \operatorname{Adjust}\left(\hat{T}^{(0)}, Y_D\right)$$
-
-### Three Distinct Distance Channels
-Geographic distance $D_{ij}$ enters the system through three dedicated functional pathways:
-$$D_{ij} \longrightarrow \begin{cases} G^{\text{urban}},\ \text{edge\_dist} & \text{Urban GNN (Local spatial graph \& message passing)} \\ \log(1 + D_{ij}) & \text{Pairwise Decoder (Direct OD pair interaction)} \\ -\alpha \log D_{ij} & \text{Gravity Prior (Global physics decay prior)} \end{cases}$$
-*Note on coordinates*: Coordinates (`lon_lat`) are not direct node features, but they determine the spatial graph ($G^{\text{urban}}$) and edge-distance attributes used by the Urban GNN.
-
-### Sub-module 1: Node Encoder (Urban GNN)
-$$h_i = \text{GNN}_\theta(X,\ G^{\text{urban}})$$
-- **Node features** $X_i$: 26 features spanning census (demographics, commute/vehicle proxies), POI, road densities.
-- **Graph** $G^{\text{urban}}$: Radius graph ($r = 5.0\text{ km}$ with 1-NN fallback) built strictly from spatial coordinates.
-- **Architecture**: 2-layer Message Passing GNN with edge distance modulation.
-- **StandardScaler**: fitted strictly on source training cities' node features ($X_{\text{train}}$); target city strictly transformed.
-
-> **Graph Radius ($r=5.0\text{ km}$) & GNN Depth ($L=2$) Methodological Framing**:
-> - **Radius ($r=5.0\text{ km}$)**: *"The 5-km radius was prespecified as an engineering choice and applied consistently across all folds. Its sensitivity is assessed separately; it is not claimed to be optimal."*
-> - **Depth ($L=2$ Layers / 2-Hop Receptive Field)**: *"We use two message-passing layers as a prespecified engineering choice to capture second-order spatial context while limiting model depth and over-smoothing. Depth sensitivity is evaluated separately."*
-> - **Methodological Policy**: Any depth/radius sensitivity tests on validation serve strictly as secondary robustness checks and do not alter the locked primary confirmatory E1 protocol. No optimality claims are made.
-
-### Sub-module 2: Gravity Prior
-$$\log T^{\text{grav}}_{ij} = G + \log P_i + \log P_j - \alpha \log D_{ij}$$
-Classical 2-parameter global gravity prior.
-
-> **Population Routing & Robustness Ablation**:
-> `total_population` is present in the 26 node features and directly in the gravity prior ($\log P_i + \log P_j$). This intentional feature reuse/multi-channel prior is subject to a secondary robustness ablation (A: GNN only; B: Gravity prior only; C: Both [default]), without altering the locked primary E1 protocol.
-
-### Sub-module 3: Pairwise OD Decoder (Single Base Magnitude Head)
-Edge representation: $e_{ij} = [h_i,\ h_j,\ \log(1 + D_{ij}),\ \log T^{\text{grav}}_{ij}]$.
-Single prediction head producing base Negative Binomial mean:
-$$\mu_{NB, ij} = \text{softplus}(f_\mu(e_{ij})) > 0$$
-
-- **Training**: minimizes exact Zero-Truncated Negative Binomial negative log-likelihood $\mathcal{L}_{\text{train}}$ on positive candidate observations $\Omega_c$.
-- **Inference**: evaluates exact conditional expectation on $\Omega_c$:
-$$\boxed{\hat{T}^{ZS}_{ij} = E[T_{ij} \mid T_{ij} \ge 1] = \frac{\mu_{NB, ij}}{1 - P_{NB}(0; \mu_{NB, ij}, \phi)} = \frac{\mu_{NB, ij}}{1 - \left(\frac{\phi}{\mu_{NB, ij} + \phi}\right)^\phi}}$$
-
-> **Zero-Shot Definition**: Defined strictly as *"Zero-shot without target-city OD flows or target-city distance-binned distribution"* (recognizing that census features inherently contain mobility proxies such as commute and vehicle ownership).
+#### [MODIFY] [`src/data/city_splits.py`](file:///d:/DBD/distance-binned-distribution/src/data/city_splits.py)
+- Update `get_all_cities_sorted_by_size` to sort by `(n_tracts, city)`.
+- Implement `select_stratified_validation(cities_info, fold_id, seed=20260818)`.
+- Implement `generate_splits_manifest_v2(data_root="data", seed=20260818, output_path="results/e1/splits_manifest_v2.json")`.
+- Implement `load_splits_manifest_v2(manifest_path="results/e1/splits_manifest_v2.json", data_root="data")` with strict verification assertions:
+  - `assert len(train) == 35`
+  - `assert len(val) == 5`
+  - `assert len(test) == 10`
+  - `assert set(train).isdisjoint(val)`
+  - `assert set(train).isdisjoint(test)`
+  - `assert set(val).isdisjoint(test)`
+  - `assert set(train) | set(val) | set(test) == set(all_cities)`
+  - Across all 5 folds: `assert all(test_count[city] == 1 for city in all_cities)`
+- Update `get_donor_cities_for_target(target_city, test_cities)` returning all 9 other test cities.
 
 ---
 
-## Moving-Bin Soft Calibration Formulation (KL Projection on $\Omega_c^+$)
+### Manifest File
 
-### Moving-Bin Target Distributions:
-$$Y_{c, k}^{\text{Meta}, +} = \frac{Y_{c, k}^{\text{Meta}}}{\sum_{\ell=1}^3 Y_{c, \ell}^{\text{Meta}}}, \qquad Y_{c, k}^{\text{oracle}, +} = \frac{\sum_{(i,j)\in\Omega_{c,k}^+} T_{ij}^{GT}}{\sum_{(i,j)\in\Omega_c^+} T_{ij}^{GT}} \quad (k \in \{1, 2, 3\})$$
-
-### Support-Conditioning & Soft Multipliers ($0 \le q \le 1$):
-$$\hat{N}^+ = \sum_{(i,j)\in\Omega_c^+} \hat{T}_{ij}^{ZS}, \qquad \hat{B}_k^+ = \sum_{(i,j)\in\Omega_{c,k}^+} \hat{T}_{ij}^{ZS}, \qquad \hat{Y}_k^{ZS, +} = \frac{\hat{B}_k^+}{\hat{N}^+}$$
-$$w_k(q) = \left( \frac{p_k^{\text{cond}, +}}{\hat{Y}_k^{ZS, +}} \right)^q, \qquad s_k = \frac{w_k(q)}{\sum_{\ell \text{ active}} \hat{Y}_\ell^{ZS, +} w_\ell(q)}$$
-$$\boxed{\hat{T}_{ij}^{\text{cal}} = s_{b(i,j)} \cdot \hat{T}_{ij}^{ZS} \quad \text{for } (i,j) \in \Omega_c^+}, \qquad \boxed{\hat{T}_{ii}^{\text{cal}} = \hat{T}_{ii}^{ZS} \quad \text{for intrazonal}}$$
-
-**Strict Invariants**:
-1. Exact interzonal mass preservation: $\sum_{\Omega^+} \hat{T}^{\text{cal}} \equiv \sum_{\Omega^+} \hat{T}^{ZS}$.
-2. Intrazonal identity: $\hat{T}_{ii}^{\text{cal}} \equiv \hat{T}_{ii}^{ZS}$.
-3. At $q=1.0$: implied moving-bin proportions match $p_k^{\text{cond}, +}$ within $10^{-5}$.
-4. At $q=0.0$: $\hat{T}^{\text{cal}} \equiv \hat{T}^{ZS}$ (pure zero-shot identity).
+#### [NEW] [`results/e1/splits_manifest_v2.json`](file:///d:/DBD/distance-binned-distribution/results/e1/splits_manifest_v2.json)
+- Store locked split configuration including metadata (`version: "e1-splits-v2"`, `seed: 20260818`, `outer_split_rule`, `validation_rule`, and per-fold train/val/test partitions).
 
 ---
 
-## Experimental Conditions & Evaluation
+### Experiment Runner
 
-| Condition | Domain | $Y_D$ Input | Role |
-|---|---|---|---|
-| **$M_0$** | $\Omega_c^+$ & $\Omega_c$ | None | Zero-shot baseline |
-| **$M_1^{\text{real}, +}$** | $\Omega_c^+$ | $Y_D^{\text{Meta}, +}$ (Bins 1,2,3, $q=1.0$) | **Primary Real Intervention** |
-| **$M_1^{\text{oracle}, +}$** | $\Omega_c^+$ | $Y_D^{\text{oracle}, +}$ (Bins 1,2,3, $q=1.0$) | **Oracle-Bin Reference** |
-| **$M_1^{\text{real, 4bin}}$** | $\Omega_c$ | Raw 4-bin Meta (with Bin 0) | **Ablation (Semantic Mismatch Penalty)** |
-| **$M_q^{\text{real}, +}$** | $\Omega_c^+$ | $Y_D^{\text{Meta}, +}$ ($q \in [0, 1]$) | Soft Calibration Response Curve |
-| **$M_m^+$** | $\Omega_c^+$ | $\tilde{Y}_D^{(m), +}$ ($S=20$ seeds per $m$) | Multinomial Trip Sampling Reference Curve |
+#### [MODIFY] [`src/experiment/run_e1.py`](file:///d:/DBD/distance-binned-distribution/src/experiment/run_e1.py)
+- Update Step 1 to load pre-locked `results/e1/splits_manifest_v2.json` via `load_splits_manifest_v2`.
+- Update `run_city`:
+  - Accept `test_cities: list[str]` instead of a single `donor: str`.
+  - Evaluate Condition C across all 9 wrong donors $d \in \text{test} \setminus \{c\}$.
+  - Compute $\overline{\Delta}_c^{wrong} = \frac{1}{9} \sum_{d \neq c} \Delta_{c,d}^{wrong}$ and $\overline{\text{CPC}}_c^{wrong} = \frac{1}{9} \sum_{d \neq c} \text{CPC}_{c,d}^{wrong}$.
+  - Store `delta_cpc_wrong`, `cpc_wrong_yd`, `wrong_donors_count: 9`, and `wrong_donor_breakdown: list[dict]`.
+- Update reporting & table generators to reflect the 9-donor placebo formulation.
 
-### Primary Evaluation Metric:
-- **Interzonal CPC ($\text{CPC}_{\text{inter}}$)** evaluated on $\Omega_c^+$.
-- **Distributional Overlap**: $\text{Overlap}(p, q) = \sum_k \min(p_k, q_k) = 1 - \frac{1}{2}\|p - q\|_1$.
-- **Secondary Metrics**: $\text{CPC}_{\text{inter, norm}}$ ($1 - \text{TVD}$), $\text{CPC}_{\text{full}}$, $\text{RMSE}_{\text{inter}}$, $\text{Pearson}_{\text{inter}}$.
+---
+
+### Contract Tests
+
+#### [MODIFY] [`od_plan_tester/tests/test_e1_contracts.py`](file:///d:/DBD/distance-binned-distribution/od_plan_tester/tests/test_e1_contracts.py)
+- Update test cases for `splits_manifest_v2` invariants, stratified validation selection across size strata, and 9-donor placebo mechanics.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Run `pytest od_plan_tester/tests/test_e1_contracts.py` to verify:
+  1. All 5 folds satisfy 35/5/10 partition invariants.
+  2. Outer test folds match the existing 10 test cities per fold.
+  3. Stratified validation selects exactly 1 city per stratum from 5 size strata across 40 non-test cities.
+  4. Manifest v2 file matches schema and loads cleanly with all assertions passing.
+  5. 9-donor wrong-donor evaluation returns correct average and distinct donors.
+- Run a smoke test `python src/experiment/run_e1.py --smoke` to verify the execution pipeline end-to-end with the new manifest and 9-donor evaluation.
