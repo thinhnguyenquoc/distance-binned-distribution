@@ -1,8 +1,10 @@
-# Tài Liệu Đặc Tả Phân Chia Fold, Validation và Dữ Liệu Kiểm Thử E1-v2
+# Đặc Tả Giao Thức Phân Chia Fold, Validation và Dữ Liệu Kiểm Thử E1-v2
 
 > **Giao thức**: E1-v2 (Oracle Aggregated-Distance Existence Test)  
+> **Trạng thái Phương pháp luận**: **Amended replication under a locked pre-specified protocol**  
 > **Phiên bản Manifest**: `e1-splits-v2` (`results/e1/splits_manifest_v2.json`)  
-> **Nguyên tắc cốt lõi**: Không rò rỉ dữ liệu (zero leakage), phân tầng kích thước chuẩn hóa (size-stratified), khóa cứng manifest trước khi chạy (manifest locking), và đối chứng đa donor (9-donor placebo).
+> **Mã băm toàn vẹn (SHA-256)**: `7f9afe02725c7798dab018b6a353ed99ceaf6c36a9f77316aa47ea21297ebd14`  
+> **Nguyên tắc cốt lõi**: Khóa cứng 100% outer test folds từ E1-v1 (zero test perturbation), phân tầng kích thước chuẩn hóa (5 size strata), khóa cứng manifest có hash, và đối chứng đa donor (9-donor placebo) với estimand tính đặc hiệu chính xác trên đơn vị đô thị.
 
 ---
 
@@ -20,81 +22,78 @@ Toàn bộ 50 đô thị tại Hoa Kỳ được phân bổ theo mô hình **5-F
 
 ---
 
-## 2. Quy Trình Tạo 5 Outer Test Folds (Snake Stratification)
+## 2. Quy Trình Khóa Cứng Outer Test Sets từ E1-v1
 
-### 2.1 Sắp xếp và Tie-Breaking
-1. Thu thập số lượng census tract ($n_{\text{tracts}}$) của tất cả 50 đô thị từ file `meta.csv` của từng thành phố.
-2. Sắp xếp 50 đô thị tăng dần theo cặp khóa:
-   $$\text{Key} = (n_{\text{tracts}}, \text{city\_name})$$
-   *Việc thêm tên thành phố làm tie-breaker đảm bảo thứ tự sắp xếp hoàn toàn xác định trên mọi hệ điều hành.*
+> [!IMPORTANT]
+> **Nguyên tắc bất biến Outer Test Sets**:  
+> Để loại bỏ hoàn toàn nguy cơ xáo trộn tập kiểm thử sau khi đã quan sát kết quả E1-v1 (post-hoc selection / tie-breaking shift), danh sách 10 test cities của mỗi fold được **sao chép trực tiếp và khóa bất biến từ manifest E1-v1**. Tuyệt đối không sinh lại outer test folds ngẫu nhiên.
 
-### 2.2 Phân bổ 10 Strata theo hình thức Snake (Ziczac)
-- 50 thành phố được chia thành 10 nhóm kích thước (strata), mỗi stratum có 5 thành phố:
-  - Stratum 0: 5 thành phố nhỏ nhất.
-  - ...
-  - Stratum 9: 5 thành phố lớn nhất.
-- Phân bổ vào 5 Fold theo nguyên tắc ziczac:
-  - Stratum chẵn ($0, 2, 4, 6, 8$): Gán theo chiều thuận (thành phố $i$ vào Fold $i+1$).
-  - Stratum lẻ ($1, 3, 5, 7, 9$): Đảo ngược danh sách trước khi gán (thành phố $i$ vào Fold $5 - i$).
-- **Kết quả**: Mỗi fold nhận đúng 10 test cities phân bố đều từ nhỏ đến lớn, giữ nguyên trọn vẹn 10 test cities của E1-v1 để phục vụ so sánh đối chuẩn.
+Danh sách 10 test cities cố định cho 5 folds:
+- **Fold 1**: `Arlington`, `Austin`, `El_Paso`, `Long_Beach`, `Memphis`, `Milwaukee`, `New_York`, `San_Diego`, `Seattle`, `Virginia_Beach`
+- **Fold 2**: `Atlanta`, `Boston`, `Fort_Worth`, `Indianapolis`, `Los_Angeles`, `Mesa`, `Oklahoma_City`, `Raleigh`, `Sacramento`, `San_Antonio`
+- **Fold 3**: `Baltimore`, `Chicago`, `Detroit`, `Fresno`, `Jacksonville`, `Las_Vegas`, `Louisville`, `Oakland`, `Tulsa`, `Washington_DC`
+- **Fold 4**: `Colorado_Springs`, `Columbus`, `Houston`, `Minneapolis`, `Nashville`, `Omaha`, `Phoenix`, `Portland`, `San_Francisco`, `Tampa`
+- **Fold 5**: `Albuquerque`, `Charlotte`, `Dallas`, `Denver`, `Kansas_City`, `Miami`, `Philadelphia`, `San_Jose`, `Tucson`, `Wichita`
 
 ---
 
-## 3. Quy Trình Tạo Validation Set theo Phân Tầng Kích Thước (Stratified Validation)
+## 3. Quy Trình Chọn Validation Set theo Phân Tầng Kích Thước (Stratified Validation)
 
-Khác với E1-v1 (chọn 5 thành phố validation cuối theo bảng chữ cái), E1-v2 áp dụng **Size Stratification**:
+Đối với $40$ đô thị non-test trong mỗi fold:
 
-### 3.1 Thuật toán chọn Validation
-Đối với 40 thành phố non-test của mỗi fold:
-1. Lấy danh sách 40 thành phố và sắp xếp theo $(n_{\text{tracts}}, \text{city})$.
-2. Chia 40 thành phố thành 5 strata kích thước, mỗi stratum có đúng 8 thành phố:
-   - **Stratum 1 (Nhỏ)**: `ordered[0:8]`
-   - **Stratum 2 (Nhỏ – Trung bình)**: `ordered[8:16]`
-   - **Stratum 3 (Trung bình)**: `ordered[16:24]`
-   - **Stratum 4 (Trung bình – Lớn)**: `ordered[24:32]`
-   - **Stratum 5 (Lớn)**: `ordered[32:40]`
-3. Khởi tạo bộ sinh số ngẫu nhiên độc lập với seed cố định:
+### 3.1 Thuật toán 5 Strata Kích thước
+1. Sắp xếp 40 đô thị non-test tăng dần theo $(n_{\text{tracts}}, \text{city})$.
+2. Chia thành 5 strata kích thước, mỗi stratum có đúng 8 đô thị:
+   - `stratum_0_small`: 8 đô thị nhỏ nhất.
+   - `stratum_1_small_med`: 8 đô thị nhỏ – trung bình.
+   - `stratum_2_med`: 8 đô thị trung bình.
+   - `stratum_3_med_large`: 8 đô thị trung bình – lớn.
+   - `stratum_4_large`: 8 đô thị lớn nhất.
+3. Khởi tạo bộ sinh số ngẫu nhiên với seed cố định định sẵn:
    $$\text{RNG} = \text{Random}(\text{seed} + \text{fold\_id}), \quad \text{với seed} = 20260818$$
-4. Chọn ngẫu nhiên đúng 1 thành phố từ mỗi stratum:
+4. Rút ngẫu nhiên đúng 1 đô thị từ mỗi stratum:
    $$\text{Val\_Cities} = [\text{RNG.choice}(\text{stratum}_k) \quad \forall k \in \{0, 1, 2, 3, 4\}]$$
-5. 35 thành phố còn lại được đưa vào tập **Train**.
+5. 35 đô thị còn lại tạo thành tập **Train**.
 
-> [!NOTE]
-> Quy trình này hoàn toàn độc lập với luồng di chuyển (OD trips), phân bố khoảng cách ($Y_D$), và CPC kết quả. Validation set luôn đại diện đầy đủ 5 phân khúc quy mô đô thị.
+### 3.2 Ghi nhận Danh Sách Ứng Viên (Candidate Audit Metadata)
+Manifest lưu toàn bộ 8 ứng viên của từng stratum kèm cờ `selected_for_val: true/false`, đảm bảo bất kỳ ai đọc manifest cũng thấy rõ tính đại diện quy mô đô thị của tập validation.
 
 ---
 
-## 4. Khóa Cứng Manifest (`results/e1/splits_manifest_v2.json`)
+## 4. Cấu Trúc Khóa Manifest v2 (`results/e1/splits_manifest_v2.json`)
 
-Toàn bộ cấu trúc phân chia được sinh trước một lần và lưu cố định tại `results/e1/splits_manifest_v2.json`. Mã thực nghiệm `run_e1.py` chỉ đọc manifest từ đĩa, tuyệt đối không tự sinh split động.
-
-### 4.1 Định dạng Manifest
 ```json
 {
   "version": "e1-splits-v2",
-  "outer_split_rule": "tract-count snake stratification",
-  "validation_rule": "five tract-count strata, fixed-seed selection",
-  "seed": 20260818,
+  "protocol_status": "amended replication under a locked protocol",
+  "outer_split_source": "locked from E1-v1 outer test sets (zero test perturbation)",
+  "validation_selection_rule": "five tract-count strata (8 cities each), fixed-seed selection (1 per stratum)",
+  "validation_seed": 20260818,
+  "manifest_sha256": "7f9afe02725c7798dab018b6a353ed99ceaf6c36a9f77316aa47ea21297ebd14",
   "folds": {
     "1": {
       "train": [ "Albuquerque", "Atlanta", "..." ],
       "val": [ "Chicago", "Portland", "Sacramento", "San_Francisco", "Tulsa" ],
-      "test": [ "Arlington", "Austin", "El_Paso", "Long_Beach", "Memphis", "Milwaukee", "New_York", "San_Diego", "Seattle", "Virginia_Beach" ]
-    },
-    ...
+      "test": [ "Arlington", "Austin", "El_Paso", "Long_Beach", "Memphis", "Milwaukee", "New_York", "San_Diego", "Seattle", "Virginia_Beach" ],
+      "validation_candidates_by_stratum": {
+        "stratum_0_small": [ ...8 cities... ],
+        "stratum_1_small_med": [ ...8 cities... ],
+        "stratum_2_med": [ ...8 cities... ],
+        "stratum_3_med_large": [ ...8 cities... ],
+        "stratum_4_large": [ ...8 cities... ]
+      }
+    }
   }
 }
 ```
 
-### 4.2 Các Ràng Buộc Bất Biến (Assertions)
-Khi nạp manifest, hệ thống kiểm tra bắt buộc:
-1. Kích thước tập: $|\text{Train}|=35$, $|\text{Val}|=5$, $|\text{Test}|=10$.
-2. Tính rời rạc:
-   $$\text{Train} \cap \text{Val} = \emptyset, \quad \text{Train} \cap \text{Test} = \emptyset, \quad \text{Val} \cap \text{Test} = \emptyset$$
-3. Phủ đầy đủ:
-   $$\text{Train} \cup \text{Val} \cup \text{Test} = \mathcal{C}_{\text{all}} \quad (|\mathcal{C}_{\text{all}}| = 50)$$
-4. Phân hoạch Test toàn cục: Mỗi đô thị trong 50 đô thị xuất hiện làm test đúng 1 lần duy nhất trong toàn bộ 5 fold:
-   $$\sum_{f=1}^5 \mathbb{I}(c \in \text{Test}_f) = 1 \quad \forall c \in \mathcal{C}_{\text{all}}$$
+### Các Bất Biến Kiểm Tra tại Runtime (Assertion Gates)
+- $|\text{Train}|=35, |\text{Val}|=5, |\text{Test}|=10$.
+- Không có phần tử trùng lặp trong bất kỳ tập hợp nào.
+- $\text{Train} \cap \text{Val} = \emptyset, \text{Train} \cap \text{Test} = \emptyset, \text{Val} \cap \text{Test} = \emptyset$.
+- $\text{Train} \cup \text{Val} \cup \text{Test} = \mathcal{C}_{50}$.
+- $\text{Test}_f$ khớp chính xác với `LOCKED_V1_TEST_FOLDS[f]`.
+- Mỗi đô thị được kiểm thử đúng 1 lần trên 5 folds: $\sum_{f=1}^5 \mathbb{I}(c \in \text{Test}_f) = 1$.
 
 ---
 
@@ -110,31 +109,23 @@ Khi nạp manifest, hệ thống kiểm tra bắt buộc:
 
 ---
 
-## 6. Xử Lý Test Data & Thiết Kế Thí Nghiệm Đối Chứng (9-Donor Placebo)
+## 6. Xử Lý Test Data, 9 Wrong Donors & Estimand Tính Đặc Hiệu
 
-Với mỗi đô thị $c$ trong tập Test của Fold ($\text{Test}_f$, $|\text{Test}_f| = 10$), thực nghiệm đánh giá 3 điều kiện:
+Với mỗi đô thị $c \in \text{Test}_f$:
 
-### Điều kiện A: Zero-Shot Baseline ($M_0$)
-- Nạp đặc trưng đô thị $(X_c, G_c^{\text{urban}}, D_c)$.
-- Chạy suy luận qua mô hình đóng băng $\Theta^*$:
-  $$\hat{T}_c^{(0)} = \mathbb{E}[T \mid T \ge 1]$$
-- Tính $\text{CPC}_0$ trên tập liên vùng $\Omega_c^+ = \{(i,j) \in \Omega_c : i \neq j, D_{ij} > 0\}$.
+### 6.1 Các Điều Kiện Thí Nghiệm
+1. **Condition A (Zero-Shot Baseline $M_0$)**: Suy luận $\hat{T}_c^{(0)} = \mathbb{E}[T \mid T \ge 1]$, tính $\text{CPC}_0$.
+2. **Condition B (Treatment $+Y_{D,c}^{\text{target}}$)**: Hiệu chuẩn $T_c^{(\text{YD})} = \text{calibrate\_kbins}(\hat{T}_c^{(0)}, D_c, Y_{D,c}^{\text{GT},+})$, tính $\Delta_c^{\text{target}} = \text{CPC}_c^{\text{target}} - \text{CPC}_0$.
+3. **Condition C (Multi-Donor Placebo)**: Hiệu chuẩn lần lượt với toàn bộ 9 wrong donors còn lại trong fold $\mathcal{D}_c^{\text{wrong}} = \text{Test}_f \setminus \{c\}$.
+   $$\overline{\Delta}_c^{\text{wrong}} = \frac{1}{9}\sum_{d \in \mathcal{D}_c^{\text{wrong}}} \Delta_{c,d}^{\text{wrong}}$$
 
-### Điều kiện B: Treatment ($+ Y_{D,c}^{\text{target}}$)
-- Trích xuất biểu đồ khoảng cách $K=8$ bins từ ground-truth của chính target city:
-  $$Y_{D,c}^{\text{GT},+} = \text{extract\_yd\_kbins}(D_c, T_c^{\text{GT}}, \text{bin\_edges}_f)$$
-- Hiệu chuẩn đóng kín (closed-form calibration với $q=1.0$):
-  $$T_c^{(\text{YD})} = \text{calibrate\_kbins}(\hat{T}_c^{(0)}, D_c, Y_{D,c}^{\text{GT},+}, \text{bin\_edges}_f)$$
-- Tính $\Delta_c^{\text{target}} = \text{CPC}(T_c^{(\text{YD})}, T_c^{\text{GT}}) - \text{CPC}_0$.
+### 6.2 Estimand Tính Đặc Hiệu (Specificity Estimand)
+$$\Delta_c^{\text{specificity}} = \Delta_c^{\text{target}} - \overline{\Delta}_c^{\text{wrong}}$$
 
-### Điều kiện C: Multi-Donor Placebo Control (Toàn bộ 9 Wrong Donors)
-- Thay vì lấy 1 donor tùy ý, giao thức E1-v2 duyệt qua **toàn bộ 9 đô thị kiểm thử còn lại** trong cùng fold:
-  $$\mathcal{D}_c^{\text{wrong}} = \text{Test}_f \setminus \{c\}, \quad |\mathcal{D}_c^{\text{wrong}}| = 9$$
-- Với mỗi wrong donor $d \in \mathcal{D}_c^{\text{wrong}}$:
-  - Trích xuất $Y_{D,d}^{\text{GT},+}$ từ đô thị $d$.
-  - Hiệu chuẩn dự báo của target city $c$ bằng $Y_{D,d}^{\text{GT},+}$ $\rightarrow T_{c,d}^{(\text{wrong})}$.
-  - Tính $\Delta_{c,d}^{\text{wrong}} = \text{CPC}(T_{c,d}^{(\text{wrong})}, T_c^{\text{GT}}) - \text{CPC}_0$.
-- Lấy giá trị trung bình cộng làm chỉ số Placebo chính thức của đô thị $c$:
-  $$\overline{\Delta}_c^{\text{wrong}} = \frac{1}{9} \sum_{d \in \mathcal{D}_c^{\text{wrong}}} \Delta_{c,d}^{\text{wrong}}$$
-  $$\overline{\text{CPC}}_c^{\text{wrong}} = \frac{1}{9} \sum_{d \in \mathcal{D}_c^{\text{wrong}}} \text{CPC}_{c,d}^{\text{wrong}}$$
-- Chi tiết kết quả của từng donor trong số 9 donors được ghi lại vào trường `wrong_donor_breakdown` của file kết quả `e1_per_city_results.json` để đảm bảo tính minh bạch và khả năng tái lập 100%.
+### 6.3 Nguyên Tắc Thống Kê
+- **Đơn vị phân tích**: Nghiêm ngặt là **Đô thị ($N=40$ Confirmatory, $N=50$ Full Coverage)**. Không xem 9 wrong donors là các mẫu quan sát độc lập để tránh lạm dụng bậc tự do (pseudoreplication).
+- **Chỉ số báo cáo chính**:
+  1. Mean, Median, IQR (Q3 - Q1), SD (ddof=1) cho $\Delta_c^{\text{target}}$, $\overline{\Delta}_c^{\text{wrong}}$, và $\Delta_c^{\text{specificity}}$.
+  2. 95% Fold-Stratified Bootstrap CI cho $\Delta_c^{\text{specificity}}$ và $\Delta_c^{\text{target}}$.
+  3. Paired Wilcoxon Signed-Rank Test trực tiếp trên vector $(\Delta_c^{\text{specificity}})$.
+  4. Specificity Win Rate: Tỷ lệ đô thị có $\Delta_c^{\text{specificity}} > 0$.

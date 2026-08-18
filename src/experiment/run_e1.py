@@ -471,10 +471,16 @@ def write_tables(results: list, summary: dict):
     lines = [
         f"# Table E1: Oracle Aggregated-Distance Existence Test ({run_type_str})",
         "",
-        "> **Methodological Grounding & Amendment Status**:",
-        "> 1. **Protocol Designation**: Amended replication under a locked pre-specified protocol (`e1-splits-v2`).",
-        "> 2. **Evaluation Split Role**: Folds 2–5 (n=40) serve as the confirmatory benchmark; Fold 1 (n=10) serves as exploratory; all 50 cities provide descriptive out-of-fold coverage.",
-        "> 3. **Statistical Unit & Specificity Estimand**: Unit of observation is strictly the city (n=40 / n=50). The primary specificity effect size is $\\Delta_c^{\\text{specificity}} = \\Delta_c^{\\text{target}} - \\bar{\\Delta}_c^{\\text{wrong}}$, where $\\bar{\\Delta}_c^{\\text{wrong}} = \\frac{1}{9}\\sum_{d \\neq c} \\Delta_{c,d}^{\\text{wrong}}$.",
+        "> **Methodological Framing & Amendment Context**:",
+        "> *\"We report the pooled five-fold out-of-fold benchmark across 50 cities as the primary cross-validated performance summary. Because Fold 1 contributed to protocol development, we additionally report the originally designated Folds 2–5 analysis as a confirmatory sensitivity analysis. Both analyses use five separately trained fold-specific models, and each city is evaluated exactly once when held out.\"*",
+        "",
+        "### Analysis Sets Hierarchy",
+        "",
+        "| Analysis set | n | Role |",
+        "|---|---:|---|",
+        "| All Folds 1–5 | 50 | Pooled out-of-fold benchmark |",
+        "| Excluding Fold 1 | 40 | Confirmatory sensitivity |",
+        "| Fold 1 | 10 | Development/exploratory diagnostic |",
         "",
         f"**Execution Status**: {len(results)}/50 test cities evaluated | is_confirmatory_complete={is_conf} | is_full_50_complete={is_full}",
         f"**Protocol**: 5-fold stratified city CV (35 train / 5 val / 10 test per fold, locked manifest v2)",
@@ -482,14 +488,34 @@ def write_tables(results: list, summary: dict):
         "",
     ]
 
-    # Section 1: Confirmatory Results on Folds 2-5 (strictly when complete)
+    # Section 1: Primary Pooled Benchmark (Full Out-of-Fold 50 Cities)
+    cov_label = "E1-A: Primary Pooled Out-of-Fold Benchmark (All Folds 1–5, n=50)" if is_full else f"E1-A: Primary Benchmark (Observed {n} Cities)"
+    lines.extend([
+        f"## {cov_label}",
+        "",
+        "| Condition / Estimand | Interzonal CPC (Mean ± SD) | Mean Δ | Median Δ | IQR | 95% Fold-Stratified Bootstrap CI | Win Rate | Wilcoxon p |",
+        "|---|---|---|---|---|---|---|---|",
+        f"| Zero-Shot Baseline (M₀) | {c0m:.4f} ± {c0s:.4f} | — | — | — | — | — | — |",
+        (f"| + Oracle Y_D (target) | {summary['cpc_target_yd_mean']:.4f} ± {summary['cpc_target_yd_std']:.4f} | "
+         f"+{summary['delta_cpc_target_mean']:.4f} | +{summary['delta_cpc_target_median']:.4f} | {summary['delta_cpc_target_iqr']:.4f} | "
+         f"[{tl:+.4f}, {th:+.4f}] | {summary['win_rate_target']} | {summary['p_wilcoxon_target']:.2e} |"),
+        (f"| + Oracle Y_D (wrong donors avg 9) | {summary['cpc_wrong_yd_mean']:.4f} ± {summary['cpc_wrong_yd_std']:.4f} | "
+         f"{summary['delta_cpc_wrong_mean']:+.4f} | {summary['delta_cpc_wrong_median']:+.4f} | {summary['delta_cpc_wrong_iqr']:.4f} | "
+         f"[{wl:+.4f}, {wh:+.4f}] | {summary['win_rate_wrong']} | {summary['p_wilcoxon_wrong']:.2e} |"),
+        (f"| **Specificity Gain (Target − Wrong)** | — | "
+         f"**+{summary['delta_specificity_mean']:.4f}** | **+{summary['delta_specificity_median']:.4f}** | {summary['delta_specificity_iqr']:.4f} | "
+         f"**[{sl:+.4f}, {sh:+.4f}]** | **{summary['win_rate_specificity']}** | **{summary['p_specificity']:.2e}** |"),
+        "",
+    ])
+
+    # Section 2: Confirmatory Sensitivity Analysis on Folds 2-5 (strictly when complete)
     conf = summary.get("confirmatory_folds_2_5")
     if is_conf and conf and conf.get("status") == "confirmatory_complete":
         c_tl, c_th = conf["delta_cpc_target_ci_l"], conf["delta_cpc_target_ci_h"]
         c_wl, c_wh = conf["delta_cpc_wrong_ci_l"], conf["delta_cpc_wrong_ci_h"]
         c_sl, c_sh = conf["delta_specificity_ci_l"], conf["delta_specificity_ci_h"]
         lines.extend([
-            "## E1-A: Confirmatory Test Set Outcomes (Amended Locked Protocol, Folds 2–5, n=40)",
+            "## E1-B: Confirmatory Sensitivity Analysis (Excluding Fold 1: Folds 2–5, n=40)",
             "",
             "| Condition / Estimand | Interzonal CPC (Mean ± SD) | Mean Δ | Median Δ | IQR | 95% Fold-Stratified Bootstrap CI | Win Rate | Wilcoxon p |",
             "|---|---|---|---|---|---|---|---|",
@@ -507,30 +533,13 @@ def write_tables(results: list, summary: dict):
         ])
     else:
         lines.extend([
-            "## E1-A: Confirmatory Test Set Outcomes (Folds 2–5, n=40)",
+            "## E1-B: Confirmatory Sensitivity Analysis (Excluding Fold 1: Folds 2–5, n=40)",
             "",
             f"> *Status: NOT AVAILABLE (Observed {len([r for r in results if r['fold']>=2])}/40 test cities; Confirmatory evaluation strictly requires complete 40 test cities across Folds 2–5, with 10 test cities per fold).* ",
             "",
         ])
 
-    # Section 2: Observed Subset / Full Out-of-Fold Outcomes
-    cov_label = "Full Out-of-Fold Descriptive Coverage (50 Cities, Folds 1–5)" if is_full else f"Observed Test Subset ({n} Cities)"
     lines.extend([
-        f"## E1-B: {cov_label}",
-        "",
-        "| Condition / Estimand | Interzonal CPC (Mean ± SD) | Mean Δ | Median Δ | IQR | 95% Fold-Stratified Bootstrap CI | Win Rate | Wilcoxon p |",
-        "|---|---|---|---|---|---|---|---|",
-        f"| Zero-Shot Baseline (M₀) | {c0m:.4f} ± {c0s:.4f} | — | — | — | — | — | — |",
-        (f"| + Oracle Y_D (target) | {summary['cpc_target_yd_mean']:.4f} ± {summary['cpc_target_yd_std']:.4f} | "
-         f"+{summary['delta_cpc_target_mean']:.4f} | +{summary['delta_cpc_target_median']:.4f} | {summary['delta_cpc_target_iqr']:.4f} | "
-         f"[{tl:+.4f}, {th:+.4f}] | {summary['win_rate_target']} | {summary['p_wilcoxon_target']:.2e} |"),
-        (f"| + Oracle Y_D (wrong donors avg 9) | {summary['cpc_wrong_yd_mean']:.4f} ± {summary['cpc_wrong_yd_std']:.4f} | "
-         f"{summary['delta_cpc_wrong_mean']:+.4f} | {summary['delta_cpc_wrong_median']:+.4f} | {summary['delta_cpc_wrong_iqr']:.4f} | "
-         f"[{wl:+.4f}, {wh:+.4f}] | {summary['win_rate_wrong']} | {summary['p_wilcoxon_wrong']:.2e} |"),
-        (f"| **Specificity Gain (Target − Wrong)** | — | "
-         f"**+{summary['delta_specificity_mean']:.4f}** | **+{summary['delta_specificity_median']:.4f}** | {summary['delta_specificity_iqr']:.4f} | "
-         f"**[{sl:+.4f}, {sh:+.4f}]** | **{summary['win_rate_specificity']}** | **{summary['p_specificity']:.2e}** |"),
-        "",
         "## E1-C: Per-Fold Independent Training & Evaluation Breakdown",
         "",
         "| Fold | Role | Test Cities | Best Epoch | Best Val CPC | Convergence Gate | M₀ CPC | +Target CPC | Mean ΔTarget | Mean ΔWrong (9 Avg) | Specificity Win Rate |",
