@@ -41,6 +41,8 @@ Artifacts Generated:
 """
 
 import json
+import os
+import platform
 import time
 import argparse
 import sys
@@ -60,6 +62,49 @@ from src.calibration.bin_calibration import calibrate_kbins
 from src.training.train import train_zero_shot_model, infer_zero_shot
 from src.training.evaluate import compute_cpc_pair, compute_cpc_norm_pair
 
+
+def get_runtime_metadata() -> dict:
+    """
+    Collect hardware, OS, and PyTorch runtime execution metadata.
+    Enables auditability of multi-core CPU and multi-threading configuration.
+    """
+    cpu_physical = None
+    cpu_logical = os.cpu_count()
+    try:
+        import psutil
+        cpu_physical = psutil.cpu_count(logical=False)
+    except Exception:
+        cpu_physical = None
+
+    return {
+        "platform": platform.platform(),
+        "processor": platform.processor(),
+        "python_version": platform.python_version(),
+        "torch_version": torch.__version__,
+        "cuda_available": torch.cuda.is_available(),
+        "cpu_count_logical": cpu_logical,
+        "cpu_count_physical": cpu_physical,
+        "torch_num_threads": torch.get_num_threads(),
+        "torch_num_interop_threads": torch.get_num_interop_threads(),
+        "omp_num_threads": os.environ.get("OMP_NUM_THREADS", "not_set"),
+        "mkl_num_threads": os.environ.get("MKL_NUM_THREADS", "not_set"),
+    }
+
+
+def configure_cpu_threads(num_threads: int | None = None) -> int:
+    """
+    Explicitly configure PyTorch CPU intra-op threads and OpenMP/MKL environment variables.
+    If num_threads is specified and > 0, sets torch.set_num_threads(num_threads)
+    and updates OMP_NUM_THREADS and MKL_NUM_THREADS.
+    Returns the active torch.get_num_threads().
+    """
+    if num_threads is not None and num_threads > 0:
+        os.environ["OMP_NUM_THREADS"] = str(num_threads)
+        os.environ["MKL_NUM_THREADS"] = str(num_threads)
+        torch.set_num_threads(num_threads)
+
+    return torch.get_num_threads()
+
 # ---------------------------------------------------------------------------
 # Global Experiment Parameters (Pre-specified, locked before evaluation)
 # ---------------------------------------------------------------------------
@@ -70,9 +115,24 @@ PATIENCE    = 15         # Early stopping patience based on validation CPC
 MIN_DELTA   = 1e-4       # Minimum validation CPC improvement threshold
 DATA_ROOT   = "data"     # Dataset root folder containing 50 city directories
 RESULTS_DIR = Path("results/e1")
+LOG_FILE    = RESULTS_DIR / "e1_execution.log"
 MANIFEST_PATH = RESULTS_DIR / "splits_manifest_v2.json"
 TOLERANCE   = 1e-5       # Floating-point tolerance for mass preservation & bin matching
 SEED        = 42         # Fixed random seed for deterministic training initialization
+
+
+def log_msg(msg: str = "", print_to_console: bool = True):
+    """Logs message with local timestamp to console (flush=True) and e1_execution.log."""
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    formatted = f"[{timestamp}] {msg}" if msg else ""
+    if print_to_console:
+        print(formatted if formatted else "", flush=True)
+    try:
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write((formatted if formatted else "") + "\n")
+    except Exception:
+        pass
 
 
 def build_inter_mask(cd, dist_km: np.ndarray) -> np.ndarray:
@@ -475,6 +535,8 @@ def compute_summary(results: list, fold_manifest: dict = None) -> dict:
         # Per-fold breakdown
         "per_fold": per_fold,
         "fold_validation_manifest": fold_manifest or {},
+        # Runtime Environment & Multi-core CPU metadata
+        "runtime_environment": get_runtime_metadata(),
     }
 
 
@@ -627,24 +689,38 @@ def write_tables(results: list, summary: dict):
     print(f"  [Artifact] Generated Markdown tables in {tdir}")
 
 
-def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cpu"):
+def run_e1(
+    smoke: bool = False,
+    smoke_cities: list = None,
+    device_str: str = "cpu",
+    num_threads: int | None = None,
+):
     """
     Main E1 execution loop with structured step-by-step logging.
     """
     t_global_start = time.time()
     device = torch.device(device_str)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    
+
+    # Configure CPU Threads
+    active_threads = configure_cpu_threads(num_threads)
+    runtime_meta = get_runtime_metadata()
+
     # -----------------------------------------------------------------------
     # STEP 1: Load Locked 5-Fold Splits Manifest v2 (35 Train / 5 Val / 10 Test)
     # -----------------------------------------------------------------------
-    print(f"\n{'='*75}")
-    print(f"E1 EXPERIMENT PIPELINE (v2): ORACLE AGGREGATED-DISTANCE EXISTENCE TEST")
-    print(f"{'='*75}")
-    print(f"[STEP 1/5] Loading locked splits manifest v2 from {MANIFEST_PATH}...")
+    log_msg("=" * 75)
+    log_msg("E1 EXPERIMENT PIPELINE (v2): ORACLE AGGREGATED-DISTANCE EXISTENCE TEST")
+    log_msg("=" * 75)
+    log_msg("  Runtime Environment & CPU Configuration:")
+    log_msg(f"    - Platform: {runtime_meta['platform']}")
+    log_msg(f"    - CPU Cores: {runtime_meta['cpu_count_logical']} logical / {runtime_meta['cpu_count_physical']} physical")
+    log_msg(f"    - PyTorch Threads: {runtime_meta['torch_num_threads']} (interop: {runtime_meta['torch_num_interop_threads']})")
+    log_msg(f"    - OpenMP / MKL Threads: OMP={runtime_meta['omp_num_threads']}, MKL={runtime_meta['mkl_num_threads']}")
+    log_msg(f"[STEP 1/5] Loading locked splits manifest v2 from {MANIFEST_PATH}...")
     splits = load_splits_manifest_v2(str(MANIFEST_PATH), data_root=DATA_ROOT)
     
-    print(f"  -> Preloading all city datasets & spatial graphs into global in-memory cache...")
+    log_msg("  -> Preloading all city datasets & spatial graphs into global in-memory cache...")
     preload_all_cities(data_root=DATA_ROOT, build_graphs=True, radius_km=5.0)
 
     all_results = []
@@ -659,31 +735,32 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
         test10  = sorted(split["test"])  # 10 test cities
 
         run_test = test10
-        if smoke:
-            run_test = [c for c in (smoke_cities or ["Portland", "Denver"]) if c in test10]
+        if smoke or smoke_cities:
+            target_filter = smoke_cities if smoke_cities else ["Portland", "Denver"]
+            run_test = [c for c in target_filter if c in test10]
             if not run_test:
                 continue
 
         fold_role = "Exploratory / Development" if fold_id == 1 else "Confirmatory Out-of-Fold"
-        print(f"\n{'-'*75}")
-        print(f">>> FOLD {fold_id}/5 [{fold_role}] | Train: {len(train35)} | Val: {len(val5)} | Test: {len(run_test)}/{len(test10)}")
-        print(f"{'-'*75}")
+        log_msg("-" * 75)
+        log_msg(f">>> [FOLD {fold_id}/5] {fold_role} | Train: {len(train35)} cities | Val: {len(val5)} cities | Test: {len(run_test)}/{len(test10)} cities")
+        log_msg("-" * 75)
 
         # -------------------------------------------------------------------
         # STEP 2: Compute Pair-Weighted Quantile Bin Edges from 35 Train Cities
         # -------------------------------------------------------------------
-        print(f"  [STEP 2/5: Fold {fold_id}] Computing K_move={K_MOVE} quantile bin edges from 35 train cities...")
+        log_msg(f"  [STEP 2/5: Fold {fold_id}] Computing K_move={K_MOVE} quantile bin edges from {len(train35)} train cities...")
         bin_edges, K_active = compute_kbin_edges(train35, K=K_MOVE, data_root=DATA_ROOT)
         
         # Enforce strict 8-bin invariant
         if K_active != K_MOVE:
             raise RuntimeError(f"E1 invariant violated: Expected exactly {K_MOVE} active bins, got {K_active}")
-        print(f"    -> Strict {K_MOVE}-bin verified. Internal cut points (km): {np.round(bin_edges[1:-1], 2).tolist()}")
+        log_msg(f"    -> Strict {K_MOVE}-bin verified. Cut points (km): {np.round(bin_edges[1:-1], 2).tolist()}")
 
         # -------------------------------------------------------------------
         # STEP 3: Train Zero-Shot Backbone & Select Best Validation Checkpoint
         # -------------------------------------------------------------------
-        print(f"  [STEP 3/5: Fold {fold_id}] Training backbone with validation model selection (max_epochs={EPOCHS}, patience={PATIENCE}, min_delta={MIN_DELTA})...")
+        log_msg(f"  [STEP 3/5: Fold {fold_id}] Training backbone model (max_epochs={EPOCHS}, patience={PATIENCE}, min_delta={MIN_DELTA})...")
         model, scaler, train_info = train_zero_shot_model(
             train_city_names=train35,
             data_root=DATA_ROOT,
@@ -717,12 +794,12 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
             "convergence_gate": conv_gate_status,
             "val_cpc_history": train_info["val_cpc_history"],
         }
-        print(f"    -> Backbone frozen at best epoch {train_info['best_epoch']}/{train_info['epochs_trained']} (Validation CPC = {train_info['best_val_cpc']:.4f}) | Convergence Gate: {conv_gate_status}.")
+        log_msg(f"    -> [Fold {fold_id}] Frozen at best epoch {train_info['best_epoch']}/{train_info['epochs_trained']} (Validation CPC = {train_info['best_val_cpc']:.4f}) | Gate: {conv_gate_status}.")
 
         # -------------------------------------------------------------------
         # STEP 4: Evaluate Held-Out Test Cities (Conditions A, B, C across all 9 donors)
         # -------------------------------------------------------------------
-        print(f"  [STEP 4/5: Fold {fold_id}] Precomputing test city structures & oracle Y_D for {len(test10)} test cities...")
+        log_msg(f"  [STEP 4/5: Fold {fold_id}] Precomputing test city structures & oracle Y_D for {len(test10)} test cities...")
         test_city_cache = {}
         for t_city in test10:
             cd_t = load_city(t_city, data_root=DATA_ROOT, feature_scaler=scaler)
@@ -741,9 +818,10 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
                 "Y_D": yd_t,
             }
 
-        print(f"  [STEP 4/5: Fold {fold_id}] Evaluating {len(run_test)} held-out test cities with 9-donor placebo...")
+        log_msg(f"  [STEP 4/5: Fold {fold_id}] Evaluating {len(run_test)} held-out test cities with 9-donor placebo...")
         for i_city, city in enumerate(run_test):
             city_counter += 1
+            t_city_start = time.time()
             
             res = run_city(
                 city=city,
@@ -757,31 +835,38 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
                 test_city_cache=test_city_cache,
             )
             all_results.append(res)
+            t_city_elapsed = time.time() - t_city_start
             
             d_target = res['delta_cpc_target']
             d_wrong  = res['delta_cpc_wrong']
             d_spec   = res['delta_cpc_specificity']
             spec_marker = f"(ΔSpec={d_spec:+.4f})"
-            print(
-                f"    [{city_counter:02d}/{total_test_cities:02d}] City: {city:<16} (9 Fold Donors) | "
+            log_msg(
+                f"    [Fold {fold_id} | City {i_city+1:02d}/{len(run_test):02d} (Total {city_counter:02d}/{total_test_cities:02d})] "
+                f"{city:<16} ({t_city_elapsed:.2f}s) | "
                 f"M0={res['cpc_baseline']:.4f} -> +Target={res['cpc_target_yd']:.4f} (dCPC={d_target:+.4f}) | "
                 f"+WrongAvg9={res['cpc_wrong_yd']:.4f} (dCPC={d_wrong:+.4f}) {spec_marker}"
             )
 
         t_fold_elapsed = time.time() - t_fold_start
-        print(f"  [Fold {fold_id} Complete] Elapsed time: {t_fold_elapsed:.1f}s")
+        log_msg(f"  [Fold {fold_id} Complete] Elapsed time: {t_fold_elapsed:.1f}s")
 
     # -----------------------------------------------------------------------
     # STEP 5: Statistical Aggregation, Verification, and Artifact Output
     # -----------------------------------------------------------------------
-    print(f"\n{'-'*75}")
-    print(f"[STEP 5/5] Synthesizing summary, fold-stratified bootstrap CI, and writing artifacts...")
+    log_msg("-" * 75)
+    log_msg("[STEP 5/5] Synthesizing summary, fold-stratified bootstrap CI, and writing artifacts...")
     
+    val_manifest_payload = {
+        "protocol_version": "e1-v2-amended",
+        "runtime_environment": get_runtime_metadata(),
+        "folds": fold_manifest,
+    }
     (RESULTS_DIR / "e1_per_city_results.json").write_text(json.dumps(all_results, indent=2), encoding="utf-8")
-    (RESULTS_DIR / "e1_validation_manifest.json").write_text(json.dumps(fold_manifest, indent=2), encoding="utf-8")
+    (RESULTS_DIR / "e1_validation_manifest.json").write_text(json.dumps(val_manifest_payload, indent=2), encoding="utf-8")
 
     if len(all_results) < 2:
-        print("Warning: Fewer than 2 cities evaluated; skipping statistical synthesis.")
+        log_msg("Warning: Fewer than 2 cities evaluated; skipping statistical synthesis.")
         return all_results, None
 
     summary = compute_summary(all_results, fold_manifest=fold_manifest)
@@ -793,30 +878,30 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
     is_full = summary.get("is_full_50_complete", False)
     conf = summary.get("confirmatory_folds_2_5", {})
 
-    print(f"\n{'='*75}")
-    print(f"E1 EXECUTION SUMMARY (Total Elapsed Time: {t_global_elapsed:.1f}s)")
-    print(f"{'='*75}")
-    print(f"  Cities Evaluated: {len(all_results)}/50 | Mode: {'Full 50-City Protocol' if is_full else 'Exploratory Subset'}")
-    print(f"  Target Effect (dCPC): mean = {summary['delta_cpc_target_mean']:+.4f} (median = {summary['delta_cpc_target_median']:+.4f}, IQR = {summary['delta_cpc_target_iqr']:.4f})")
-    print(f"  95% Fold-Stratified Bootstrap CI: [{summary['delta_cpc_target_ci_l']:+.4f}, {summary['delta_cpc_target_ci_h']:+.4f}]")
-    print(f"  Placebo (9 Wrong Donors Avg): mean = {summary['delta_cpc_wrong_mean']:+.4f} (median = {summary['delta_cpc_wrong_median']:+.4f}, IQR = {summary['delta_cpc_wrong_iqr']:.4f})")
-    print(f"  Specificity Effect (Target - Wrong_Avg9): mean = {summary['delta_specificity_mean']:+.4f} (median = {summary['delta_specificity_median']:+.4f}, IQR = {summary['delta_specificity_iqr']:.4f})")
-    print(f"  Specificity 95% Bootstrap CI: [{summary['delta_specificity_ci_l']:+.4f}, {summary['delta_specificity_ci_h']:+.4f}]")
-    print(f"  Specificity Win Rate: {summary['win_rate_specificity']} | Wilcoxon p = {summary['p_specificity']:.2e}")
+    log_msg("=" * 75)
+    log_msg(f"E1 EXECUTION SUMMARY (Total Elapsed Time: {t_global_elapsed:.1f}s)")
+    log_msg("=" * 75)
+    log_msg(f"  Cities Evaluated: {len(all_results)}/50 | Mode: {'Full 50-City Protocol' if is_full else 'Exploratory Subset'}")
+    log_msg(f"  Target Effect (dCPC): mean = {summary['delta_cpc_target_mean']:+.4f} (median = {summary['delta_cpc_target_median']:+.4f}, IQR = {summary['delta_cpc_target_iqr']:.4f})")
+    log_msg(f"  95% Fold-Stratified Bootstrap CI: [{summary['delta_cpc_target_ci_l']:+.4f}, {summary['delta_cpc_target_ci_h']:+.4f}]")
+    log_msg(f"  Placebo (9 Wrong Donors Avg): mean = {summary['delta_cpc_wrong_mean']:+.4f} (median = {summary['delta_cpc_wrong_median']:+.4f}, IQR = {summary['delta_cpc_wrong_iqr']:.4f})")
+    log_msg(f"  Specificity Effect (Target - Wrong_Avg9): mean = {summary['delta_specificity_mean']:+.4f} (median = {summary['delta_specificity_median']:+.4f}, IQR = {summary['delta_specificity_iqr']:.4f})")
+    log_msg(f"  Specificity 95% Bootstrap CI: [{summary['delta_specificity_ci_l']:+.4f}, {summary['delta_specificity_ci_h']:+.4f}]")
+    log_msg(f"  Specificity Win Rate: {summary['win_rate_specificity']} | Wilcoxon p = {summary['p_specificity']:.2e}")
 
     if is_conf and conf.get("status") == "confirmatory_complete":
         pass_ci = "PASS" if conf['ci_lower_bound_positive'] else "FAIL"
         pass_sci = "PASS" if conf['specificity_ci_lower_bound_positive'] else "FAIL"
         pass_tw = "PASS" if conf['target_beats_wrong'] else "FAIL"
-        print(f"\n  CONFIRMATORY HYPOTHESIS TEST OUTCOMES (Folds 2-5, n=40):")
-        print(f"    * Target 95% CI Lower Bound > 0      : {pass_ci} ([{conf['delta_cpc_target_ci_l']:+.4f}, {conf['delta_cpc_target_ci_h']:+.4f}])")
-        print(f"    * Specificity 95% CI Lower Bound > 0 : {pass_sci} ([{conf['delta_specificity_ci_l']:+.4f}, {conf['delta_specificity_ci_h']:+.4f}])")
-        print(f"    * Specificity Gain (Target > Wrong)  : {pass_tw} (+{conf['delta_specificity_mean']:+.4f} vs 0)")
-        print(f"    * Specificity Win Rate               : {conf['win_rate_specificity']} (Wilcoxon p = {conf['p_specificity']:.2e})")
+        log_msg("\n  CONFIRMATORY HYPOTHESIS TEST OUTCOMES (Folds 2-5, n=40):")
+        log_msg(f"    * Target 95% CI Lower Bound > 0      : {pass_ci} ([{conf['delta_cpc_target_ci_l']:+.4f}, {conf['delta_cpc_target_ci_h']:+.4f}])")
+        log_msg(f"    * Specificity 95% CI Lower Bound > 0 : {pass_sci} ([{conf['delta_specificity_ci_l']:+.4f}, {conf['delta_specificity_ci_h']:+.4f}])")
+        log_msg(f"    * Specificity Gain (Target > Wrong)  : {pass_tw} (+{conf['delta_specificity_mean']:+.4f} vs 0)")
+        log_msg(f"    * Specificity Win Rate               : {conf['win_rate_specificity']} (Wilcoxon p = {conf['p_specificity']:.2e})")
     else:
         conf_count = len([r for r in all_results if r['fold'] >= 2])
-        print(f"\n  CONFIRMATORY STATUS: NOT AVAILABLE (Observed {conf_count}/40 test cities; strictly requires complete 40 test cities across Folds 2-5, with 10 test cities per fold).")
-    print(f"{'='*75}\n")
+        log_msg(f"\n  CONFIRMATORY STATUS: NOT AVAILABLE (Observed {conf_count}/40 test cities; strictly requires complete 40 test cities across Folds 2-5, with 10 test cities per fold).")
+    log_msg("=" * 75)
 
     return all_results, summary
 
@@ -826,5 +911,6 @@ if __name__ == "__main__":
     parser.add_argument("--smoke",  action="store_true", help="Run smoke test on Portland (Fold 4) and Denver (Fold 5)")
     parser.add_argument("--cities", nargs="+", default=None, help="Custom list of test cities to run")
     parser.add_argument("--device", default="cpu", help="PyTorch device (cpu/cuda)")
+    parser.add_argument("--num-threads", "-t", type=int, default=None, help="Number of CPU intra-op threads for PyTorch/OpenMP")
     args = parser.parse_args()
-    run_e1(smoke=args.smoke, smoke_cities=args.cities, device_str=args.device)
+    run_e1(smoke=args.smoke, smoke_cities=args.cities, device_str=args.device, num_threads=args.num_threads)

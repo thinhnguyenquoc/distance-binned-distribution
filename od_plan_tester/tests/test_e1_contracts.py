@@ -29,7 +29,8 @@ from src.data.city_splits import (
 )
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.calibration.bin_calibration import calibrate_kbins
-from src.experiment.run_e1 import compute_summary, compute_iqr
+from src.data.dataset import get_scaler_fingerprint, load_city, load_cities, clear_city_cache
+from src.experiment.run_e1 import compute_summary, compute_iqr, get_runtime_metadata, configure_cpu_threads
 
 
 def test_t49_splits_35_5_10_invariants_and_v1_locking():
@@ -247,3 +248,107 @@ def test_t58_specificity_estimand_and_iqr():
     assert conf["delta_specificity_iqr"] >= 0.0
     assert conf["delta_cpc_target_iqr"] >= 0.0
     assert conf["delta_cpc_wrong_iqr"] >= 0.0
+
+
+def test_t59_runtime_metadata_and_cpu_thread_control():
+    """Verify runtime metadata collection, CPU thread configuration, and summary integration."""
+    meta = get_runtime_metadata()
+    required_keys = [
+        "platform",
+        "processor",
+        "python_version",
+        "torch_version",
+        "cuda_available",
+        "cpu_count_logical",
+        "cpu_count_physical",
+        "torch_num_threads",
+        "torch_num_interop_threads",
+        "omp_num_threads",
+        "mkl_num_threads",
+    ]
+    for key in required_keys:
+        assert key in meta, f"Missing required runtime metadata key: {key}"
+
+    assert meta["cpu_count_logical"] is not None and meta["cpu_count_logical"] > 0
+    assert meta["torch_num_threads"] > 0
+    assert meta["torch_num_interop_threads"] > 0
+
+    # Test thread configuration
+    orig_threads = torch.get_num_threads()
+    try:
+        set_threads = 4
+        active = configure_cpu_threads(set_threads)
+        assert active == set_threads
+        assert torch.get_num_threads() == set_threads
+        updated_meta = get_runtime_metadata()
+        assert updated_meta["torch_num_threads"] == set_threads
+        assert updated_meta["omp_num_threads"] == str(set_threads)
+        assert updated_meta["mkl_num_threads"] == str(set_threads)
+    finally:
+        configure_cpu_threads(orig_threads)
+
+    # Test compute_summary integration
+    mock_results = [{
+        "city": "Boston",
+        "fold": 1,
+        "donor_city": "all_9_fold_donors",
+        "n_wrong_donors": 9,
+        "n_inter_pairs": 500,
+        "K_active": 8,
+        "cpc_baseline": 0.50,
+        "cpc_baseline_norm": 0.60,
+        "cpc_target_yd": 0.55,
+        "cpc_target_yd_norm": 0.65,
+        "delta_cpc_target": 0.05,
+        "cpc_wrong_yd": 0.52,
+        "cpc_wrong_yd_norm": 0.62,
+        "delta_cpc_wrong": 0.02,
+        "delta_cpc_specificity": 0.03,
+        "Y_D_target": [0.125]*8,
+        "wrong_donor_breakdown": [],
+    }]
+    summary = compute_summary(mock_results)
+    assert "runtime_environment" in summary
+    assert summary["runtime_environment"]["torch_num_threads"] > 0
+
+
+def test_t60_scaler_fingerprint_and_cache_isolation():
+    """Verify deterministic content-based scaler hashing and cross-fold cache isolation."""
+    from sklearn.preprocessing import StandardScaler
+
+    # 1. Unfitted / None scaler handling
+    assert get_scaler_fingerprint(None) is None
+
+    s1 = StandardScaler()
+    s1.mean_ = np.ones(26, dtype=np.float64) * 1.0
+    s1.var_  = np.ones(26, dtype=np.float64) * 0.5
+    s1.scale_ = np.sqrt(s1.var_)
+
+    s2 = StandardScaler()
+    s2.mean_ = np.ones(26, dtype=np.float64) * 1.0
+    s2.var_  = np.ones(26, dtype=np.float64) * 0.5
+    s2.scale_ = np.sqrt(s2.var_)
+
+    s3 = StandardScaler()
+    s3.mean_ = np.ones(26, dtype=np.float64) * 2.0
+    s3.var_  = np.ones(26, dtype=np.float64) * 1.0
+    s3.scale_ = np.sqrt(s3.var_)
+
+    # Invariant: identical parameters -> identical fingerprint (even with different object IDs)
+    assert get_scaler_fingerprint(s1) == get_scaler_fingerprint(s2)
+    assert id(s1) != id(s2)
+
+    # Invariant: different parameters -> different fingerprint
+    assert get_scaler_fingerprint(s1) != get_scaler_fingerprint(s3)
+
+    # 2. In-memory cache isolation on load_city
+    clear_city_cache()
+    cd_s1 = load_city("Boston", data_root="data", feature_scaler=s1)
+    cd_s3 = load_city("Boston", data_root="data", feature_scaler=s3)
+
+    # Features must differ because s1 and s3 normalization parameters differ
+    assert not torch.allclose(cd_s1.node_features, cd_s3.node_features)
+    
+    # Reloading with s1 must hit cache and return exact same tensor values
+    cd_s1_cached = load_city("Boston", data_root="data", feature_scaler=s1)
+    assert torch.allclose(cd_s1.node_features, cd_s1_cached.node_features)
