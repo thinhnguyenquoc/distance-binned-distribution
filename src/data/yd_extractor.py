@@ -246,13 +246,13 @@ def compute_kbin_edges(
         (edges, K_active): edges is (K_active+1,) array strictly increasing,
         K_active <= K (may be < K if quantile degeneration occurs).
     """
-    from src.data.dataset import load_city
+    from src.data.dataset import load_raw_city
 
     all_dist = []
     for city_name in train_city_names:
-        cd = load_city(city_name, data_root=data_root)
-        dist_km = np.expm1(cd.pair_distance.numpy())
-        inter = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
+        raw = load_raw_city(city_name, data_root=data_root)
+        dist_km = raw.dist_km
+        inter = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0)
         all_dist.extend(dist_km[inter].tolist())
 
     all_dist = np.array(all_dist)

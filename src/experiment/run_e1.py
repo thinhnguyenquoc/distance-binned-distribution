@@ -53,7 +53,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.data.city_splits import load_splits_manifest_v2, get_wrong_donors
-from src.data.dataset import load_city
+from src.data.dataset import load_city, preload_all_cities
 from src.data.urban_graph import build_radius_graph
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.calibration.bin_calibration import calibrate_kbins
@@ -122,6 +122,8 @@ def run_city(
     test_cities: list[str],
     fold_id: int,
     device: torch.device,
+    test_city_cache: dict[str, dict] | None = None,
+    test_yd_cache: dict[str, np.ndarray] | None = None,
 ) -> dict:
     """
     Evaluates 3 experimental conditions on a single held-out test city.
@@ -140,25 +142,44 @@ def run_city(
         Operator: Moving-bin closed-form scaling for each donor d.
         Output: Delta_c^(wrong) = 1/9 sum_{d != c} Delta_{c,d}^(wrong).
     """
-    # 1. Load target city features normalized with training scaler
-    cd = load_city(city, data_root=DATA_ROOT, feature_scaler=scaler)
-    ei, ed = build_radius_graph(cd.lon_lat.numpy(), radius_km=5.0)
+    # 1. Retrieve precomputed test city structures if available, or load on-demand
+    if test_city_cache is not None and city in test_city_cache:
+        c_entry = test_city_cache[city]
+        cd = c_entry["city_data"]
+        ei = c_entry["edge_index"]
+        ed = c_entry["edge_dist"]
+        dist_km = c_entry["dist_km"]
+        inter = c_entry["inter_mask"]
+        t_gt = c_entry.get("t_gt", cd.pair_trips.numpy().astype(np.float64))
+        Y_D_tgt = c_entry.get("Y_D")
+    else:
+        cd = load_city(city, data_root=DATA_ROOT, feature_scaler=scaler)
+        ei, ed = build_radius_graph(cd.lon_lat, radius_km=5.0)
+        dist_km = np.expm1(cd.pair_distance.numpy())
+        inter = build_inter_mask(cd, dist_km)
+        t_gt = cd.pair_trips.numpy().astype(np.float64)
+        if test_yd_cache is not None and city in test_yd_cache:
+            Y_D_tgt = test_yd_cache[city]
+        else:
+            Y_D_tgt = extract_yd_kbins(dist_km, t_gt, bin_edges, inter)
 
     # 2. Condition A: Zero-Shot Forward Inference
     T0 = infer_zero_shot(model, cd, ei, ed, device=device)
     t0 = T0.numpy().astype(np.float64)
 
     # Compute interzonal mask and ground truth flows
-    dist_km = np.expm1(cd.pair_distance.numpy())
-    inter = build_inter_mask(cd, dist_km)
-    t_gt = cd.pair_trips.numpy().astype(np.float64)
     n_inter = int(inter.sum())
 
     cpc0      = compute_cpc_pair(t_gt[inter], t0[inter])
     cpc0_norm = compute_cpc_norm_pair(t_gt[inter], t0[inter])
 
     # 3. Condition B: Target Oracle Y_D Extraction & Calibration
-    Y_D_tgt = extract_yd_kbins(dist_km, t_gt, bin_edges, inter)
+    if Y_D_tgt is None:
+        if test_yd_cache is not None and city in test_yd_cache:
+            Y_D_tgt = test_yd_cache[city]
+        else:
+            Y_D_tgt = extract_yd_kbins(dist_km, t_gt, bin_edges, inter)
+
     T_yd    = calibrate_kbins(t0, dist_km, inter, Y_D_tgt, bin_edges, q=Q_CALIB, tolerance=TOLERANCE)
     cpc_yd      = compute_cpc_pair(t_gt[inter], T_yd[inter])
     cpc_yd_norm = compute_cpc_norm_pair(t_gt[inter], T_yd[inter])
@@ -174,11 +195,17 @@ def run_city(
     wrong_donor_details = []
 
     for donor in wrong_donors:
-        cd_d    = load_city(donor, data_root=DATA_ROOT, feature_scaler=scaler)
-        dist_d  = np.expm1(cd_d.pair_distance.numpy())
-        inter_d = build_inter_mask(cd_d, dist_d)
-        t_gt_d  = cd_d.pair_trips.numpy().astype(np.float64)
-        Y_D_wr  = extract_yd_kbins(dist_d, t_gt_d, bin_edges, inter_d)
+        if test_city_cache is not None and donor in test_city_cache:
+            Y_D_wr = test_city_cache[donor]["Y_D"]
+        elif test_yd_cache is not None and donor in test_yd_cache:
+            Y_D_wr = test_yd_cache[donor]
+        else:
+            cd_d    = load_city(donor, data_root=DATA_ROOT, feature_scaler=scaler)
+            dist_d  = np.expm1(cd_d.pair_distance.numpy())
+            inter_d = build_inter_mask(cd_d, dist_d)
+            t_gt_d  = cd_d.pair_trips.numpy().astype(np.float64)
+            Y_D_wr  = extract_yd_kbins(dist_d, t_gt_d, bin_edges, inter_d)
+
         T_wr    = calibrate_kbins(t0, dist_km, inter, Y_D_wr, bin_edges, q=Q_CALIB, tolerance=TOLERANCE)
         cpc_wr_d      = compute_cpc_pair(t_gt[inter], T_wr[inter])
         cpc_wr_norm_d = compute_cpc_norm_pair(t_gt[inter], T_wr[inter])
@@ -617,6 +644,9 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
     print(f"[STEP 1/5] Loading locked splits manifest v2 from {MANIFEST_PATH}...")
     splits = load_splits_manifest_v2(str(MANIFEST_PATH), data_root=DATA_ROOT)
     
+    print(f"  -> Preloading all city datasets & spatial graphs into global in-memory cache...")
+    preload_all_cities(data_root=DATA_ROOT, build_graphs=True, radius_km=5.0)
+
     all_results = []
     fold_manifest = {}
     total_test_cities = 50 if not smoke else len(smoke_cities or ["Portland", "Denver"])
@@ -692,6 +722,25 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
         # -------------------------------------------------------------------
         # STEP 4: Evaluate Held-Out Test Cities (Conditions A, B, C across all 9 donors)
         # -------------------------------------------------------------------
+        print(f"  [STEP 4/5: Fold {fold_id}] Precomputing test city structures & oracle Y_D for {len(test10)} test cities...")
+        test_city_cache = {}
+        for t_city in test10:
+            cd_t = load_city(t_city, data_root=DATA_ROOT, feature_scaler=scaler)
+            ei_t, ed_t = build_radius_graph(cd_t.lon_lat, radius_km=5.0)
+            dist_t = np.expm1(cd_t.pair_distance.numpy())
+            inter_t = build_inter_mask(cd_t, dist_t)
+            t_gt_t = cd_t.pair_trips.numpy().astype(np.float64)
+            yd_t = extract_yd_kbins(dist_t, t_gt_t, bin_edges, inter_t)
+            test_city_cache[t_city] = {
+                "city_data": cd_t,
+                "edge_index": ei_t,
+                "edge_dist": ed_t,
+                "dist_km": dist_t,
+                "inter_mask": inter_t,
+                "t_gt": t_gt_t,
+                "Y_D": yd_t,
+            }
+
         print(f"  [STEP 4/5: Fold {fold_id}] Evaluating {len(run_test)} held-out test cities with 9-donor placebo...")
         for i_city, city in enumerate(run_test):
             city_counter += 1
@@ -705,6 +754,7 @@ def run_e1(smoke: bool = False, smoke_cities: list = None, device_str: str = "cp
                 test_cities=test10,
                 fold_id=fold_id,
                 device=device,
+                test_city_cache=test_city_cache,
             )
             all_results.append(res)
             
