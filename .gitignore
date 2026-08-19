@@ -220,3 +220,5 @@ __marimo__/
 NeuroGravity/*
 data/*
 meta_prior/*
+data_gadm2/*
+gadm41_USA_shp/*
