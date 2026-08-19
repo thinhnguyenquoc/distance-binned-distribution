@@ -35,7 +35,7 @@ The experimental framework utilizes seeds across three independent levels:
 
 ---
 
-### Version 2.0 (Seed Sensitivity & Robustness Protocol — Active)
+### Version 2.0 (Seed Sensitivity & Robustness Protocol — Seed 2024)
 - **Date**: 2026-08-18
 - **Learning Rate**: $2.0 \times 10^{-3}$
 - **Architecture**: Residual-Gravity Zero-Shot Decoder + AdamW + ReduceLROnPlateau (`threshold=1e-4, mode='abs'`)
@@ -53,11 +53,28 @@ The experimental framework utilizes seeds across three independent levels:
   - Full 50-City Specificity Win Rate: **50/50 ($100.0\%$)**
   - Full 50-City Specificity Gain: **$+0.0410$** (95% Bootstrap CI: $[+0.0359, +0.0470]$, $p = 8.88 \times 10^{-16}$)
   - Gate Status: All 5 Folds PASSED.
-  - **Invariance Conclusion**: Performance, convergence, and 100% specificity win rate are perfectly replicated and invariant across different seeds.
+  - Backup Directory: `results/e1/backup_seed_2024/`
 
 ---
 
-### Version 2.1+ (Pre-Registered Multi-Seed Suite for Batch Sensitivity)
+### Version 3.0 (Seed Invariance Multi-Point Check — Seed 3000 — Active)
+- **Date**: 2026-08-19
+- **Learning Rate**: $2.0 \times 10^{-3}$
+- **Architecture**: Residual-Gravity Zero-Shot Decoder + AdamW + ReduceLROnPlateau (`threshold=1e-4, mode='abs'`)
+- **Seed Configuration**:
+  - `MODEL_TRAIN_SEED_BASE`: **`3000`**
+    - Fold 1: `3001`
+    - Fold 2: `3002`
+    - Fold 3: `3003`
+    - Fold 4: `3004`
+    - Fold 5: `3005`
+  - `BOOTSTRAP_SEED`: **`3000`**
+  - `VALIDATION_STRATA_SEED`: **`20260818`** (Locked in `results/e1/splits_manifest_v2.json`)
+- **Purpose**: Verify tripartite invariance across a 3rd distinct initialization scale (`3000`) for rigorous publication verification.
+
+---
+
+### Version 3.1+ (Pre-Registered Multi-Seed Suite for Batch Sensitivity)
 For multi-seed sensitivity loops and Monte Carlo verification:
 - **Suite A**: `SEED_BASE = 1337` (Folds: 1338, 1339, 1340, 1341, 1342) | `BOOTSTRAP_SEED = 1337`
 - **Suite B**: `SEED_BASE = 999` (Folds: 1000, 1001, 1002, 1003, 1004) | `BOOTSTRAP_SEED = 999`
