@@ -321,6 +321,47 @@ def extract_yd_kbins(
     return yd   # shape: (K,) summing to 1.0
 
 
+def extract_yd_kbins_grouped(
+    dist_km: np.ndarray,
+    trips: np.ndarray,
+    bin_edges: np.ndarray,
+    inter_mask: np.ndarray,
+    pair_group_idx: np.ndarray,
+) -> dict:
+    """
+    Extract K-bin oracle trip-length distribution per group (e.g., origin county).
+    
+    Args:
+        dist_km:        (E,) pairwise distances in km.
+        trips:          (E,) ground-truth flow counts T_ij^GT.
+        bin_edges:      (K+1,) strictly increasing bin edges.
+        inter_mask:     (E,) boolean mask for interzonal pairs Omega_c^+.
+        pair_group_idx: (E,) group ID for each pair.
+        
+    Returns:
+        dict: Mapping group_id -> (K,) normalized oracle distance distribution.
+    """
+    yd_dict = {}
+    unique_groups = np.unique(pair_group_idx)
+    
+    for g in unique_groups:
+        g_mask = (pair_group_idx == g)
+        inter_g_mask = inter_mask & g_mask
+        
+        if not inter_g_mask.any():
+            continue
+            
+        yd_g = extract_yd_kbins(
+            dist_km=dist_km[g_mask],
+            trips=trips[g_mask],
+            bin_edges=bin_edges,
+            inter_mask=inter_mask[g_mask]
+        )
+        yd_dict[g] = yd_g
+        
+    return yd_dict
+
+
 if __name__ == "__main__":
     from src.data.dataset import load_city
 

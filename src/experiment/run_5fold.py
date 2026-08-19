@@ -70,6 +70,8 @@ def run_5fold_experiment(
 
         # Stage A: Cross-city Training
         fold_start = time.time()
+        _ckpt_dir  = Path(output_dir) / "checkpoints"
+        _ckpt_path = _ckpt_dir / f"5fold_fold{fold_id}.pt"
         model, scaler = train_zero_shot_model(
             train_city_names=train_cities,
             data_root=data_root,
@@ -83,8 +85,12 @@ def run_5fold_experiment(
             loss_type=loss_type,
             device_str=device_str,
             verbose=True,
+            checkpoint_path=_ckpt_path,
+            run_tag=f"5fold_fold{fold_id}",
         )
         print(f"Fold {fold_id} model trained in {time.time() - fold_start:.1f}s.")
+        print(f"  -> Checkpoint: {_ckpt_path.resolve()}")
+
 
         # Stage B: Target City Evaluation
         fold_city_results = []

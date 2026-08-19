@@ -554,11 +554,11 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     }
 
 
-def write_tables(results: list, summary: dict):
+def write_tables(results: list, summary: dict, table_dir: Path | None = None):
     """
-    Generates paper-ready markdown tables for E1 results.
+    Generates GitHub Markdown Tables following the Nature/PNAS reporting standard.
     """
-    tdir = RESULTS_DIR / "tables"
+    tdir = table_dir or (RESULTS_DIR / "tables")
     tdir.mkdir(parents=True, exist_ok=True)
     n  = summary["n_cities"]
     tl, th = summary["delta_cpc_target_ci_l"], summary["delta_cpc_target_ci_h"]
@@ -776,6 +776,9 @@ def run_e1(
         # STEP 3: Train Zero-Shot Backbone & Select Best Validation Checkpoint
         # -------------------------------------------------------------------
         log_msg(f"  [STEP 3/5: Fold {fold_id}] Training backbone model (max_epochs={EPOCHS}, patience={PATIENCE}, min_delta={MIN_DELTA})...")
+        _ckpt_seed = seed + fold_id
+        _ckpt_dir  = RESULTS_DIR / "checkpoints"
+        _ckpt_path = _ckpt_dir / f"fold{fold_id}_seed{_ckpt_seed}.pt"
         model, scaler, train_info = train_zero_shot_model(
             train_city_names=train35,
             data_root=DATA_ROOT,
@@ -786,7 +789,9 @@ def run_e1(
             patience=PATIENCE,
             min_delta=MIN_DELTA,
             return_info=True,
-            seed=seed + fold_id,
+            seed=_ckpt_seed,
+            checkpoint_path=_ckpt_path,
+            run_tag=f"e1_fold{fold_id}_seed{_ckpt_seed}",
         )
 
         # Verify per-fold convergence gate
@@ -808,8 +813,12 @@ def run_e1(
             "stopped_early": train_info["stopped_early"],
             "convergence_gate": conv_gate_status,
             "val_cpc_history": train_info["val_cpc_history"],
+            "checkpoint_path": str(_ckpt_path.resolve()),
+            "checkpoint_seed": _ckpt_seed,
         }
         log_msg(f"    -> [Fold {fold_id}] Frozen at best epoch {train_info['best_epoch']}/{train_info['epochs_trained']} (Validation CPC = {train_info['best_val_cpc']:.4f}) | Gate: {conv_gate_status}.")
+        log_msg(f"    -> [Fold {fold_id}] Checkpoint: {_ckpt_path.resolve()}")
+
 
         # -------------------------------------------------------------------
         # STEP 4: Evaluate Held-Out Test Cities (Conditions A, B, C across all 9 donors)

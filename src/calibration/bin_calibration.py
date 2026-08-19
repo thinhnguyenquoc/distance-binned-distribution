@@ -318,6 +318,85 @@ def calibrate_kbins(
     return t_cal
 
 
+def calibrate_kbins_grouped(
+    t0_np: np.ndarray,
+    dist_km: np.ndarray,
+    inter_mask: np.ndarray,
+    yd_target_dict: dict,
+    bin_edges: np.ndarray,
+    pair_group_idx: np.ndarray,
+    q: float = 1.0,
+    tolerance: float = 1e-5,
+) -> np.ndarray:
+    """
+    Group-conditioned K-bin calibration (e.g., per-county).
+    
+    Applies the closed-form K-bin calibration independently for each group
+    defined by pair_group_idx (e.g., origin county ID of each pair),
+    while preserving the zero-shot predicted outflow of each group.
+    
+    Args:
+        t0_np:          (E,) zero-shot predicted flows.
+        dist_km:        (E,) pairwise distances in km.
+        inter_mask:     (E,) boolean mask for interzonal pairs Omega_c^+.
+        yd_target_dict: Dict mapping group_id -> (K,) target distance distribution.
+        bin_edges:      (K+1,) strictly increasing edges.
+        pair_group_idx: (E,) group ID for each pair (e.g., origin county ID).
+        q:              Soft calibration strength.
+        tolerance:      Numerical precision.
+        
+    Returns:
+        t_cal: (E,) calibrated flows.
+    """
+    t_cal = t0_np.copy().astype(np.float64)
+    
+    # Intrazonal pairs are not modified
+    # We calibrate interzonal pairs group by group
+    
+    unique_groups = np.unique(pair_group_idx)
+    
+    for g in unique_groups:
+        if g not in yd_target_dict:
+            continue
+            
+        yd_g = yd_target_dict[g]
+        
+        # Mask for interzonal pairs belonging to group g
+        g_mask = (pair_group_idx == g)
+        inter_g_mask = inter_mask & g_mask
+        
+        if not inter_g_mask.any():
+            continue
+            
+        # Extract slices for this group
+        t0_g = t0_np[g_mask]
+        dist_g = dist_km[g_mask]
+        
+        # We need a local inter_mask for the group slice
+        # inter_g_mask is length E. We need a mask of length len(t0_g)
+        # Since t0_g is selected by g_mask, the local inter_mask is simply
+        # inter_mask[g_mask]
+        local_inter_mask = inter_mask[g_mask]
+        
+        # Apply city-level calibration logic locally to the group
+        # calibrate_kbins requires full E-length arrays if we pass them, 
+        # but it works on any size. We pass the local slices.
+        t_cal_g = calibrate_kbins(
+            t0_np=t0_g,
+            dist_km=dist_g,
+            inter_mask=local_inter_mask,
+            yd_target=yd_g,
+            bin_edges=bin_edges,
+            q=q,
+            tolerance=tolerance
+        )
+        
+        # Assign back to the global array
+        t_cal[g_mask] = t_cal_g
+        
+    return t_cal
+
+
 if __name__ == "__main__":
     t0 = torch.tensor([50.0, 100.0, 300.0, 600.0])  # pair 0 is intrazonal, 1,2,3 are interzonal
     bins = torch.tensor([0, 1, 2, 3])
