@@ -13,20 +13,21 @@ from pathlib import Path
 # Ensure root directory is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.data.city_splits import generate_5fold_splits
+from src.data.city_splits import generate_35_5_10_splits
 from src.training.train import train_zero_shot_model
 from src.experiment.run_experiment import run_target_city_experiments
 from src.experiment.compute_delta_r import analyze_delta_r
 from src.experiment.compute_qstar import analyze_qstar
 from src.experiment.generate_tables import generate_tables
+from src.training.train import load_checkpoint
 
 
 def run_5fold_experiment(
     data_root: str = "data",
     meta_prior_dir: str = "meta_prior",
     output_dir: str = "results",
-    epochs_per_fold: int = 25,
-    lr: float = 2e-3,
+    epochs_per_fold: int = 200,
+    lr: float = 3.2e-3,
     hidden_dim: int = 64,
     num_gnn_layers: int = 2,
     graph_type: str = "radius",
@@ -38,7 +39,7 @@ def run_5fold_experiment(
     device_str: str | None = None,
 ):
     os.makedirs(output_dir, exist_ok=True)
-    splits = generate_5fold_splits(data_root=data_root)
+    splits = generate_35_5_10_splits(data_root=data_root)
 
     if device_str is None:
         device_str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -61,35 +62,49 @@ def run_5fold_experiment(
     for fold_id in folds_to_run:
         split = splits[fold_id]
         train_cities = split["train"]
+        val_cities = split["val"]
         test_cities = split["test"]
 
         print("\n" + "#" * 85)
         print(f"FOLD {fold_id}/5: Training on {len(train_cities)} cities -> Testing on {len(test_cities)} held-out cities")
+        print(f"Validation cities: {val_cities}")
         print(f"Held-out targets: {test_cities}")
         print("#" * 85)
 
-        # Stage A: Cross-city Training
         fold_start = time.time()
-        _ckpt_dir  = Path(output_dir) / "checkpoints"
-        _ckpt_path = _ckpt_dir / f"5fold_fold{fold_id}.pt"
-        model, scaler = train_zero_shot_model(
-            train_city_names=train_cities,
-            data_root=data_root,
-            epochs=epochs_per_fold,
-            lr=lr,
-            hidden_dim=hidden_dim,
-            num_gnn_layers=num_gnn_layers,
-            graph_type=graph_type,
-            radius_km=radius_km,
-            knn_k=knn_k,
-            loss_type=loss_type,
-            device_str=device_str,
-            verbose=True,
-            checkpoint_path=_ckpt_path,
-            run_tag=f"5fold_fold{fold_id}",
-        )
-        print(f"Fold {fold_id} model trained in {time.time() - fold_start:.1f}s.")
-        print(f"  -> Checkpoint: {_ckpt_path.resolve()}")
+        models = []
+        scalers = []
+        seeds = [42, 2024, 3000]
+        
+        for seed_idx, seed in enumerate(seeds):
+            _ckpt_dir  = Path(output_dir) / "checkpoints"
+            _ckpt_path = _ckpt_dir / f"5fold_fold{fold_id}_seed{seed}.pt"
+            print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) ---")
+            
+            model, scaler = train_zero_shot_model(
+                train_city_names=train_cities,
+                data_root=data_root,
+                epochs=epochs_per_fold,
+                lr=lr,
+                hidden_dim=hidden_dim,
+                num_gnn_layers=num_gnn_layers,
+                graph_type=graph_type,
+                radius_km=radius_km,
+                knn_k=knn_k,
+                loss_type=loss_type,
+                device_str=device_str,
+                verbose=True,
+                val_city_names=val_cities,
+                patience=12,
+                checkpoint_path=_ckpt_path,
+                run_tag=f"5fold_fold{fold_id}_seed{seed}",
+                seed=seed,
+            )
+            models.append(model)
+            scalers.append(scaler)
+        print(f"Fold {fold_id} models trained in {time.time() - fold_start:.1f}s.")
+
+
 
 
         # Stage B: Target City Evaluation
@@ -97,18 +112,38 @@ def run_5fold_experiment(
         for target_city in test_cities:
             print(f"  -> Evaluating: {target_city:<18}", end="", flush=True)
             t0 = time.time()
-            city_res = run_target_city_experiments(
-                model=model,
-                city_name=target_city,
-                scaler=scaler,
-                data_root=data_root,
-                meta_prior_dir=meta_prior_dir,
-                graph_type=graph_type,
-                radius_km=radius_km,
-                knn_k=knn_k,
-                num_trip_seeds=num_trip_seeds,
-                device_str=device_str,
-            )
+            
+            seed_results = []
+            for seed_idx, model in enumerate(models):
+                scaler = scalers[seed_idx]
+                res = run_target_city_experiments(
+                    model=model,
+                    city_name=target_city,
+                    scaler=scaler,
+                    data_root=data_root,
+                    meta_prior_dir=meta_prior_dir,
+                    graph_type=graph_type,
+                    radius_km=radius_km,
+                    knn_k=knn_k,
+                    num_trip_seeds=num_trip_seeds,
+                    device_str=device_str,
+                )
+                seed_results.append(res)
+                
+            # Average the results across 3 seeds
+            avg_res = seed_results[0].copy()
+            for key in ["M0", "M1_real_plus", "M1_oracle_plus", "M1_4bin_ablation"]:
+                if avg_res[key] is not None:
+                    avg_res[key] = avg_res[key].copy()
+                    for metric in ["cpc_inter", "cpc_full", "mae", "rmse", "spearman"]:
+                        if metric in avg_res[key]:
+                            avg_res[key][metric] = sum(r[key][metric] for r in seed_results) / len(seed_results)
+            
+            for key in ["delta_r_oracle_plus", "delta_r_real_plus", "realization_gap_plus", "delta_r_4bin_ablation", "distributional_overlap"]:
+                if avg_res[key] is not None:
+                    avg_res[key] = sum(r[key] for r in seed_results) / len(seed_results)
+            
+            city_res = avg_res
             fold_city_results.append(city_res)
             all_city_results.append(city_res)
 
@@ -189,7 +224,7 @@ def run_5fold_experiment(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=25)
+    parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4, 5])
     parser.add_argument("--seeds", type=int, default=20)
     parser.add_argument("--graph-type", type=str, default="radius", choices=["radius", "adaptive_radius", "knn"])
