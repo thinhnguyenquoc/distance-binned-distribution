@@ -1,0 +1,26 @@
+{
+  "architecture": "UrbanGNN + GravityPrior + ResidualPairwiseODDecoder (ZTNB)",
+  "learning_rate": 0.002,
+  "optimizer": "AdamW",
+  "weight_decay": 0.0001,
+  "scheduler": "ReduceLROnPlateau(mode=max, factor=0.5, patience=4, threshold=1e-4, mode=abs, min_lr=1e-5)",
+  "max_epochs": 200,
+  "early_stopping_patience": 15,
+  "early_stopping_min_delta": 0.0001,
+  "loss_type": "Zero-Truncated Negative Binomial (ZTNB)",
+  "cv_folds": 5,
+  "total_cities": 50,
+  "train_val_test_split": "35 train / 5 val / 10 test per fold",
+  "calibration_bins_K": 8,
+  "calibration_strength_q": 1.0,
+  "stratification_seed": 20260818,
+  "seed_base": 2024,
+  "fold_seeds": [
+    2025,
+    2026,
+    2027,
+    2028,
+    2029
+  ],
+  "bootstrap_seed": 2024
+}
