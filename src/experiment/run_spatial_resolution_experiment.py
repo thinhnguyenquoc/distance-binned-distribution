@@ -128,10 +128,11 @@ def run_spatial_resolution_city(
     inter_mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
     t_gt = cd.pair_trips.numpy().astype(np.float64)
     
-    # Extract county grouping from meta.csv
+    # Extract county grouping from meta.csv using GADM 4.1
+    from src.data.gadm_mapper import get_gadm_gid2_mapping
     meta_df = pd.read_csv(Path(DATA_ROOT) / city / "meta.csv")
-    meta_df["county_id"] = meta_df["state_fips"].astype(str).str.zfill(2) + meta_df["county_fips"].astype(str).str.zfill(3)
-    tract_to_county = dict(zip(meta_df["idx"], meta_df["county_id"]))
+    repo_root = str(PROJECT_ROOT)
+    tract_to_county = get_gadm_gid2_mapping(meta_df, repo_root)
     pair_county_idx = np.array([tract_to_county[i] for i in cd.pair_o_idx.numpy()])
     
     unique_counties = sorted(list(set(pair_county_idx)))

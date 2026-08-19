@@ -130,13 +130,21 @@ def run_target_city_experiments(
     total_inter_trips = float(t_true[inter_mask].sum())
     total_trips = float(t_true.sum())
 
-    # Extract county grouping
+    # Extract county grouping (GADM 4.1 level-2 point-in-polygon mapping)
     import pandas as pd
     from pathlib import Path
+    from src.data.gadm_mapper import get_gadm_gid2_mapping
+    
     meta_df = pd.read_csv(Path(data_root) / city_name / "meta.csv")
-    meta_df["county_id"] = meta_df["state_fips"].astype(str).str.zfill(2) + meta_df["county_fips"].astype(str).str.zfill(3)
-    tract_to_county = dict(zip(meta_df["idx"], meta_df["county_id"]))
+    assert meta_df["idx"].is_unique, "Mapping invariant failed: meta_df['idx'] has duplicates"
+    assert set(pair_o).issubset(set(meta_df["idx"])), "Mapping invariant failed: some pair_o indices are not in meta.csv"
+    
+    # Get mapping robustly relative to repository root
+    repo_root = str(Path(__file__).resolve().parents[2])
+    tract_to_county = get_gadm_gid2_mapping(meta_df, repo_root)
+    
     pair_county_idx = np.array([tract_to_county[i] for i in pair_o])
+    assert len(pair_county_idx) == len(pair_o), "Mapping invariant failed: length mismatch after county mapping"
 
     from src.data.yd_extractor import extract_yd_kbins, extract_yd_kbins_grouped
     from src.calibration.bin_calibration import calibrate_kbins, calibrate_kbins_grouped
@@ -147,7 +155,7 @@ def run_target_city_experiments(
     t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
     t_pred_zs = t_pred_zs_tensor.numpy().astype(np.float64)
     m0_metrics = evaluate_moving_and_full(
-        city_data.pair_trips, t_pred_zs_tensor, city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
+        city_data.pair_trips, t_pred_zs_tensor, city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
     )
 
     # -----------------------------------------------------------------------
@@ -156,7 +164,7 @@ def run_target_city_experiments(
     yd_city = extract_yd_kbins(pair_dist_km, t_true, bin_edges, inter_mask)
     t_pred_city = calibrate_kbins(t_pred_zs, pair_dist_km, inter_mask, yd_city, bin_edges, q=1.0)
     m1_city_metrics = evaluate_moving_and_full(
-        city_data.pair_trips, torch.tensor(t_pred_city), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
+        city_data.pair_trips, torch.tensor(t_pred_city), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
     )
 
     # -----------------------------------------------------------------------
@@ -165,7 +173,7 @@ def run_target_city_experiments(
     yd_county_dict = extract_yd_kbins_grouped(pair_dist_km, t_true, bin_edges, inter_mask, pair_county_idx)
     t_pred_county = calibrate_kbins_grouped(t_pred_zs, pair_dist_km, inter_mask, yd_county_dict, bin_edges, pair_county_idx, q=1.0)
     m1_county_metrics = evaluate_moving_and_full(
-        city_data.pair_trips, torch.tensor(t_pred_county), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
+        city_data.pair_trips, torch.tensor(t_pred_county), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
     )
 
     # -----------------------------------------------------------------------
@@ -174,10 +182,10 @@ def run_target_city_experiments(
     yd_subzone_dict = extract_yd_kbins_grouped(pair_dist_km, t_true, bin_edges, inter_mask, pair_o)
     t_pred_subzone = calibrate_kbins_grouped(t_pred_zs, pair_dist_km, inter_mask, yd_subzone_dict, bin_edges, pair_o, q=1.0)
     m1_subzone_metrics = evaluate_moving_and_full(
-        city_data.pair_trips, torch.tensor(t_pred_subzone), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
+        city_data.pair_trips, torch.tensor(t_pred_subzone), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
     )
 
-    rho_c = float(city_data.n_pairs) / (float(city_data.n_tracts) * float(city_data.n_tracts - 1)) if city_data.n_tracts > 1 else 0.0
+    rho_c = float(n_inter_pairs) / (float(city_data.n_tracts) * float(city_data.n_tracts - 1)) if city_data.n_tracts > 1 else 0.0
     average_flow = total_inter_trips / n_inter_pairs if n_inter_pairs > 0 else 0.0
     mean_distance = float(np.mean(pair_dist_km[inter_mask])) if n_inter_pairs > 0 else 0.0
     

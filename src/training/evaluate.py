@@ -92,7 +92,6 @@ def evaluate_moving_and_full(
     pair_d_idx: torch.Tensor,
     bin_labels: torch.Tensor,
     pair_distance: torch.Tensor | None = None,
-    n_nodes: int = 0,
 ) -> dict[str, float]:
     """
     Computes all locked metrics partitioned by Interzonal Omega_c^+ as per partial_od.md.
@@ -126,7 +125,7 @@ def evaluate_moving_and_full(
     rel_error = float(abs(total_flow_pred - total_flow_true) / max(total_flow_true, 1e-9))
     
     # Inflow/Outflow CPC on observed support
-    max_node = max(np.max(o_np), np.max(d_np)) + 1 if len(o_np) > 0 else n_nodes
+    max_node = max(np.max(o_np), np.max(d_np)) + 1 if len(o_np) > 0 else 0
     cpc_inflow, cpc_outflow = compute_inflow_outflow_cpc(t_t_inter, t_p_inter, o_np[inter_mask], d_np[inter_mask], max_node)
     
     # CPC by distance bin

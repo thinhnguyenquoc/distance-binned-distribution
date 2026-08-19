@@ -63,8 +63,9 @@ def run_resolution_analysis(
     t_gt = cd.pair_trips.numpy().astype(np.float64)
     
     meta_df = pd.read_csv(Path(data_root) / city / "meta.csv")
-    meta_df["county_id"] = meta_df["state_fips"].astype(str).str.zfill(2) + meta_df["county_fips"].astype(str).str.zfill(3)
-    tract_to_county = dict(zip(meta_df["idx"], meta_df["county_id"]))
+    from src.data.gadm_mapper import get_gadm_gid2_mapping
+    repo_root = str(Path(__file__).resolve().parents[2])
+    tract_to_county = get_gadm_gid2_mapping(meta_df, repo_root)
     o_idx_np = cd.pair_o_idx.numpy()
     pair_county_idx = np.array([tract_to_county[i] for i in o_idx_np])
     

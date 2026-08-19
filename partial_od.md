@@ -321,7 +321,7 @@ Run max 200 epoc
 12 epoc not improve stop early
 learning rate from: 3.2e^-3
 
-
+GADM 4.1
 
 Chay Y_D cho city level, county level va subzone level
 

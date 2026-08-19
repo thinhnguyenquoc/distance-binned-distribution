@@ -201,7 +201,8 @@ def run_5fold_experiment(
     for scale in ["city", "county", "subzone"]:
         if scale in delta_r_analysis:
             s_data = delta_r_analysis[scale]
-            print(f"\n[{scale.upper()}-LEVEL CALIBRATION]")
+            scale_label = "GADM 4.1 LEVEL-2 COUNTY" if scale == "county" else f"{scale.upper()}"
+            print(f"\n[{scale_label}-LEVEL CALIBRATION]")
             print(f"  M0 Interzonal CPC (Mean):                       {s_data['m0_cpc_inter']['mean']:.4f}")
             print(f"  M1 Interzonal CPC (Mean):                       {s_data['m1_cpc_inter']['mean']:.4f}")
             print(f"  Delta Mean +- Std:                              {s_data['delta_cpc_inter']['mean']:+.4f} +- {s_data['delta_cpc_inter']['std']:.4f}")
