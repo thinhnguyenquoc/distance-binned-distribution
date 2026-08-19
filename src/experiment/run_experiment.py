@@ -141,7 +141,7 @@ def run_target_city_experiments(
     
     # Get mapping robustly relative to repository root
     repo_root = str(Path(__file__).resolve().parents[2])
-    tract_to_county = get_gadm_gid2_mapping(meta_df, repo_root)
+    tract_to_county, mapping_stats = get_gadm_gid2_mapping(meta_df, repo_root)
     
     pair_county_idx = np.array([tract_to_county[i] for i in pair_o])
     assert len(pair_county_idx) == len(pair_o), "Mapping invariant failed: length mismatch after county mapping"
@@ -189,9 +189,8 @@ def run_target_city_experiments(
     average_flow = total_inter_trips / n_inter_pairs if n_inter_pairs > 0 else 0.0
     mean_distance = float(np.mean(pair_dist_km[inter_mask])) if n_inter_pairs > 0 else 0.0
     
-    # Short/Long distance pair ratio (based on original bin_labels if available, else standard)
-    n_short = int(np.sum(city_data.bin_labels.numpy()[inter_mask] == 1))
-    n_long = int(np.sum(city_data.bin_labels.numpy()[inter_mask] == 3))
+    n_short = np.sum((pair_dist_km[inter_mask] > 0) & (pair_dist_km[inter_mask] < 10.0))
+    n_long = np.sum(pair_dist_km[inter_mask] >= 100.0)
     short_long_ratio = float(n_short) / float(n_long) if n_long > 0 else 0.0
 
     return {
@@ -209,4 +208,5 @@ def run_target_city_experiments(
         "M1_city_oracle_obs": m1_city_metrics,
         "M1_county_oracle_obs": m1_county_metrics,
         "M1_subzone_oracle_obs": m1_subzone_metrics,
+        "mapping_stats": mapping_stats,
     }

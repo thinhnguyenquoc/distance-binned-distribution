@@ -132,7 +132,7 @@ def run_spatial_resolution_city(
     from src.data.gadm_mapper import get_gadm_gid2_mapping
     meta_df = pd.read_csv(Path(DATA_ROOT) / city / "meta.csv")
     repo_root = str(PROJECT_ROOT)
-    tract_to_county = get_gadm_gid2_mapping(meta_df, repo_root)
+    tract_to_county, mapping_stats = get_gadm_gid2_mapping(meta_df, repo_root)
     pair_county_idx = np.array([tract_to_county[i] for i in cd.pair_o_idx.numpy()])
     
     unique_counties = sorted(list(set(pair_county_idx)))
@@ -208,6 +208,7 @@ def run_spatial_resolution_city(
         "delta_cpc_spec_city": float(cpc_city - cpc_wrong),
         "delta_cpc_spec_county": float(cpc_county - cpc_wrong),
         "elapsed_sec": float(elapsed),
+        "mapping_stats": mapping_stats,
     }
 
 

@@ -65,7 +65,7 @@ def run_resolution_analysis(
     meta_df = pd.read_csv(Path(data_root) / city / "meta.csv")
     from src.data.gadm_mapper import get_gadm_gid2_mapping
     repo_root = str(Path(__file__).resolve().parents[2])
-    tract_to_county = get_gadm_gid2_mapping(meta_df, repo_root)
+    tract_to_county, mapping_stats = get_gadm_gid2_mapping(meta_df, repo_root)
     o_idx_np = cd.pair_o_idx.numpy()
     pair_county_idx = np.array([tract_to_county[i] for i in o_idx_np])
     
@@ -113,7 +113,8 @@ def run_resolution_analysis(
         "cpc_0": cpc_0,
         "cpc_city": cpc_city,
         "cpc_county": cpc_county,
-        "delta_county_city": cpc_county - cpc_city
+        "delta_county_city": cpc_county - cpc_city,
+        "mapping_stats": mapping_stats
     }
 
 if __name__ == "__main__":
