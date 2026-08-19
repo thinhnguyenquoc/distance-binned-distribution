@@ -126,7 +126,7 @@ RESULTS_DIR = Path("results/e1")
 LOG_FILE    = RESULTS_DIR / "e1_execution.log"
 MANIFEST_PATH = RESULTS_DIR / "splits_manifest_v2.json"
 TOLERANCE   = 1e-5       # Floating-point tolerance for mass preservation & bin matching
-SEED        = 2024       # Fixed random seed (Version 2.0) for deterministic training initialization
+SEED        = 3000       # Fixed random seed (Version 3.0) for deterministic training initialization
 
 
 def log_msg(msg: str = "", print_to_console: bool = True):
