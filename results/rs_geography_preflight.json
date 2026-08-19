@@ -1,0 +1,522 @@
+[
+  {
+    "city": "Albuquerque",
+    "n_counties": 1,
+    "county_fips": [
+      "35001"
+    ],
+    "tracts_per_county": {
+      "35001": 115
+    }
+  },
+  {
+    "city": "Arlington",
+    "n_counties": 1,
+    "county_fips": [
+      "48439"
+    ],
+    "tracts_per_county": {
+      "48439": 68
+    }
+  },
+  {
+    "city": "Atlanta",
+    "n_counties": 2,
+    "county_fips": [
+      "13121",
+      "13089"
+    ],
+    "tracts_per_county": {
+      "13121": 116,
+      "13089": 10
+    }
+  },
+  {
+    "city": "Austin",
+    "n_counties": 1,
+    "county_fips": [
+      "4848453"
+    ],
+    "tracts_per_county": {
+      "4848453": 169
+    }
+  },
+  {
+    "city": "Baltimore",
+    "n_counties": 1,
+    "county_fips": [
+      "24510"
+    ],
+    "tracts_per_county": {
+      "24510": 200
+    }
+  },
+  {
+    "city": "Boston",
+    "n_counties": 1,
+    "county_fips": [
+      "2525025"
+    ],
+    "tracts_per_county": {
+      "2525025": 178
+    }
+  },
+  {
+    "city": "Charlotte",
+    "n_counties": 1,
+    "county_fips": [
+      "3737119"
+    ],
+    "tracts_per_county": {
+      "3737119": 185
+    }
+  },
+  {
+    "city": "Chicago",
+    "n_counties": 1,
+    "county_fips": [
+      "1717031"
+    ],
+    "tracts_per_county": {
+      "1717031": 780
+    }
+  },
+  {
+    "city": "Colorado_Springs",
+    "n_counties": 1,
+    "county_fips": [
+      "08041"
+    ],
+    "tracts_per_county": {
+      "08041": 92
+    }
+  },
+  {
+    "city": "Columbus",
+    "n_counties": 1,
+    "county_fips": [
+      "3939049"
+    ],
+    "tracts_per_county": {
+      "3939049": 183
+    }
+  },
+  {
+    "city": "Dallas",
+    "n_counties": 3,
+    "county_fips": [
+      "4848113",
+      "4848439",
+      "4848085"
+    ],
+    "tracts_per_county": {
+      "4848113": 278,
+      "4848439": 141,
+      "4848085": 15
+    }
+  },
+  {
+    "city": "Denver",
+    "n_counties": 1,
+    "county_fips": [
+      "088031"
+    ],
+    "tracts_per_county": {
+      "088031": 144
+    }
+  },
+  {
+    "city": "Detroit",
+    "n_counties": 1,
+    "county_fips": [
+      "2626163"
+    ],
+    "tracts_per_county": {
+      "2626163": 297
+    }
+  },
+  {
+    "city": "El_Paso",
+    "n_counties": 1,
+    "county_fips": [
+      "48141"
+    ],
+    "tracts_per_county": {
+      "48141": 128
+    }
+  },
+  {
+    "city": "Fort_Worth",
+    "n_counties": 1,
+    "county_fips": [
+      "48439"
+    ],
+    "tracts_per_county": {
+      "48439": 139
+    }
+  },
+  {
+    "city": "Fresno",
+    "n_counties": 1,
+    "county_fips": [
+      "06019"
+    ],
+    "tracts_per_county": {
+      "06019": 100
+    }
+  },
+  {
+    "city": "Houston",
+    "n_counties": 1,
+    "county_fips": [
+      "4848201"
+    ],
+    "tracts_per_county": {
+      "4848201": 463
+    }
+  },
+  {
+    "city": "Indianapolis",
+    "n_counties": 1,
+    "county_fips": [
+      "1818097"
+    ],
+    "tracts_per_county": {
+      "1818097": 203
+    }
+  },
+  {
+    "city": "Jacksonville",
+    "n_counties": 1,
+    "county_fips": [
+      "1212031"
+    ],
+    "tracts_per_county": {
+      "1212031": 163
+    }
+  },
+  {
+    "city": "Kansas_City",
+    "n_counties": 3,
+    "county_fips": [
+      "29095",
+      "29047",
+      "29165"
+    ],
+    "tracts_per_county": {
+      "29095": 114,
+      "29047": 21,
+      "29165": 9
+    }
+  },
+  {
+    "city": "Las_Vegas",
+    "n_counties": 1,
+    "county_fips": [
+      "3232003"
+    ],
+    "tracts_per_county": {
+      "3232003": 140
+    }
+  },
+  {
+    "city": "Long_Beach",
+    "n_counties": 1,
+    "county_fips": [
+      "06037"
+    ],
+    "tracts_per_county": {
+      "06037": 103
+    }
+  },
+  {
+    "city": "Los_Angeles",
+    "n_counties": 1,
+    "county_fips": [
+      "066037"
+    ],
+    "tracts_per_county": {
+      "066037": 993
+    }
+  },
+  {
+    "city": "Louisville",
+    "n_counties": 1,
+    "county_fips": [
+      "21111"
+    ],
+    "tracts_per_county": {
+      "21111": 75
+    }
+  },
+  {
+    "city": "Memphis",
+    "n_counties": 1,
+    "county_fips": [
+      "4747157"
+    ],
+    "tracts_per_county": {
+      "4747157": 173
+    }
+  },
+  {
+    "city": "Mesa",
+    "n_counties": 1,
+    "county_fips": [
+      "04013"
+    ],
+    "tracts_per_county": {
+      "04013": 105
+    }
+  },
+  {
+    "city": "Miami",
+    "n_counties": 1,
+    "county_fips": [
+      "12086"
+    ],
+    "tracts_per_county": {
+      "12086": 97
+    }
+  },
+  {
+    "city": "Milwaukee",
+    "n_counties": 1,
+    "county_fips": [
+      "55079"
+    ],
+    "tracts_per_county": {
+      "55079": 207
+    }
+  },
+  {
+    "city": "Minneapolis",
+    "n_counties": 1,
+    "county_fips": [
+      "27053"
+    ],
+    "tracts_per_county": {
+      "27053": 114
+    }
+  },
+  {
+    "city": "Nashville",
+    "n_counties": 1,
+    "county_fips": [
+      "4747037"
+    ],
+    "tracts_per_county": {
+      "4747037": 152
+    }
+  },
+  {
+    "city": "New_York",
+    "n_counties": 5,
+    "county_fips": [
+      "3636047",
+      "3636081",
+      "3636005",
+      "3636061",
+      "3636085"
+    ],
+    "tracts_per_county": {
+      "3636047": 737,
+      "3636081": 655,
+      "3636005": 315,
+      "3636061": 272,
+      "3636085": 109
+    }
+  },
+  {
+    "city": "Oakland",
+    "n_counties": 1,
+    "county_fips": [
+      "06001"
+    ],
+    "tracts_per_county": {
+      "06001": 113
+    }
+  },
+  {
+    "city": "Oklahoma_City",
+    "n_counties": 1,
+    "county_fips": [
+      "4040109"
+    ],
+    "tracts_per_county": {
+      "4040109": 166
+    }
+  },
+  {
+    "city": "Omaha",
+    "n_counties": 1,
+    "county_fips": [
+      "31055"
+    ],
+    "tracts_per_county": {
+      "31055": 119
+    }
+  },
+  {
+    "city": "Philadelphia",
+    "n_counties": 1,
+    "county_fips": [
+      "4242101"
+    ],
+    "tracts_per_county": {
+      "4242101": 384
+    }
+  },
+  {
+    "city": "Phoenix",
+    "n_counties": 1,
+    "county_fips": [
+      "044013"
+    ],
+    "tracts_per_county": {
+      "044013": 348
+    }
+  },
+  {
+    "city": "Portland",
+    "n_counties": 1,
+    "county_fips": [
+      "4141051"
+    ],
+    "tracts_per_county": {
+      "4141051": 141
+    }
+  },
+  {
+    "city": "Raleigh",
+    "n_counties": 1,
+    "county_fips": [
+      "37183"
+    ],
+    "tracts_per_county": {
+      "37183": 73
+    }
+  },
+  {
+    "city": "Sacramento",
+    "n_counties": 1,
+    "county_fips": [
+      "06067"
+    ],
+    "tracts_per_county": {
+      "06067": 100
+    }
+  },
+  {
+    "city": "San_Antonio",
+    "n_counties": 1,
+    "county_fips": [
+      "4848029"
+    ],
+    "tracts_per_county": {
+      "4848029": 280
+    }
+  },
+  {
+    "city": "San_Diego",
+    "n_counties": 1,
+    "county_fips": [
+      "066073"
+    ],
+    "tracts_per_county": {
+      "066073": 277
+    }
+  },
+  {
+    "city": "San_Francisco",
+    "n_counties": 1,
+    "county_fips": [
+      "066075"
+    ],
+    "tracts_per_county": {
+      "066075": 193
+    }
+  },
+  {
+    "city": "San_Jose",
+    "n_counties": 1,
+    "county_fips": [
+      "066085"
+    ],
+    "tracts_per_county": {
+      "066085": 183
+    }
+  },
+  {
+    "city": "Seattle",
+    "n_counties": 1,
+    "county_fips": [
+      "5353033"
+    ],
+    "tracts_per_county": {
+      "5353033": 132
+    }
+  },
+  {
+    "city": "Tampa",
+    "n_counties": 1,
+    "county_fips": [
+      "12057"
+    ],
+    "tracts_per_county": {
+      "12057": 97
+    }
+  },
+  {
+    "city": "Tucson",
+    "n_counties": 1,
+    "county_fips": [
+      "04019"
+    ],
+    "tracts_per_county": {
+      "04019": 117
+    }
+  },
+  {
+    "city": "Tulsa",
+    "n_counties": 2,
+    "county_fips": [
+      "40143",
+      "40145"
+    ],
+    "tracts_per_county": {
+      "40143": 120,
+      "40145": 1
+    }
+  },
+  {
+    "city": "Virginia_Beach",
+    "n_counties": 1,
+    "county_fips": [
+      "51810"
+    ],
+    "tracts_per_county": {
+      "51810": 100
+    }
+  },
+  {
+    "city": "Washington_DC",
+    "n_counties": 1,
+    "county_fips": [
+      "11001"
+    ],
+    "tracts_per_county": {
+      "11001": 179
+    }
+  },
+  {
+    "city": "Wichita",
+    "n_counties": 1,
+    "county_fips": [
+      "20173"
+    ],
+    "tracts_per_county": {
+      "20173": 96
+    }
+  }
+]

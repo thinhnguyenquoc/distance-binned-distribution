@@ -48,7 +48,12 @@ The experimental framework utilizes seeds across three independent levels:
     - Fold 5: `2029`
   - `BOOTSTRAP_SEED`: **`2024`**
   - `VALIDATION_STRATA_SEED`: **`20260818`** (Locked in `results/e1/splits_manifest_v2.json`)
-- **Purpose**: Verify that model convergence and $\Delta_{\text{spec}} > 0$ superiority hold invariant under a completely disjoint seed initialization while maintaining standard learning rate ($2.0 \times 10^{-3}$).
+- **Outcome & Verification**:
+  - Confirmatory Specificity Gain: **$+0.0425$** ($p = 9.09 \times 10^{-13}$)
+  - Full 50-City Specificity Win Rate: **50/50 ($100.0\%$)**
+  - Full 50-City Specificity Gain: **$+0.0410$** (95% Bootstrap CI: $[+0.0359, +0.0470]$, $p = 8.88 \times 10^{-16}$)
+  - Gate Status: All 5 Folds PASSED.
+  - **Invariance Conclusion**: Performance, convergence, and 100% specificity win rate are perfectly replicated and invariant across different seeds.
 
 ---
 

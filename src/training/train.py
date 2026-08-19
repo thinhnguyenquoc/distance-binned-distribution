@@ -11,16 +11,144 @@ Stage B: Zero-Shot Transfer Evaluation
         (X^{c*}, G^{urban, c*}, D^{c*}) -> \hat{T}^{ZS} = E[T | T >= 1].
 """
 
+import copy
 import time
+import datetime
+from pathlib import Path
+from typing import List, Dict, Optional, Union
+
 import torch
 import torch.optim as optim
-from typing import List, Dict
 
 from src.data.dataset import CityData, load_cities, load_city
 from src.data.urban_graph import build_radius_graph, build_knn_graph
 from src.models.zero_shot_model import ZeroShotODModel
 from src.loss.ztnb import ztnb_nll, nb_nll
 from src.training.evaluate import evaluate_all
+
+
+# ---------------------------------------------------------------------------
+# Checkpoint utilities
+# ---------------------------------------------------------------------------
+
+def save_checkpoint(
+    path: Union[str, Path],
+    model: "ZeroShotODModel",
+    scaler: object,
+    train_info: dict,
+    hyperparams: dict,
+    seed: Optional[int] = None,
+    run_tag: Optional[str] = None,
+) -> Path:
+    """
+    Persists a trained ZeroShotODModel checkpoint to disk.
+
+    Saved bundle contains:
+        - model_state_dict   : weights (best validation checkpoint)
+        - scaler_*           : StandardScaler statistics for feature normalization
+        - train_info         : best_epoch, best_val_cpc, epochs_trained, histories
+        - hyperparams        : architecture + training config needed to reconstruct model
+        - seed               : random seed used for this run (None if not set)
+        - run_tag            : human-readable label, e.g. "e1_fold1"
+        - saved_at           : ISO-8601 UTC timestamp
+
+    Args:
+        path:        Full file path to write (created with parents if needed).
+        model:       Trained (and eval-mode) ZeroShotODModel instance.
+        scaler:      Fitted sklearn StandardScaler from load_cities().
+        train_info:  Dict returned by train_zero_shot_model() when return_info=True.
+        hyperparams: Dict of architecture / training hyper-parameters.
+        seed:        Random seed (optional).
+        run_tag:     Short label for this run (optional).
+
+    Returns:
+        Resolved Path of the saved file.
+    """
+    import numpy as _np
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    scaler_data: dict = {}
+    if scaler is not None and hasattr(scaler, "mean_") and scaler.mean_ is not None:
+        scaler_data = {
+            "scaler_mean_":  _np.asarray(scaler.mean_,  dtype=_np.float64),
+            "scaler_scale_": _np.asarray(scaler.scale_, dtype=_np.float64),
+            "scaler_var_":   _np.asarray(scaler.var_,   dtype=_np.float64),
+        }
+
+    bundle = {
+        "model_state_dict": model.state_dict(),
+        **scaler_data,
+        "train_info":   train_info,
+        "hyperparams":  hyperparams,
+        "seed":         seed,
+        "run_tag":      run_tag,
+        "saved_at":     datetime.datetime.utcnow().isoformat() + "Z",
+    }
+
+    torch.save(bundle, path)
+    return path.resolve()
+
+
+def load_checkpoint(
+    path: Union[str, Path],
+    device_str: str = "cpu",
+) -> tuple:
+    """
+    Loads a checkpoint saved by save_checkpoint() and reconstructs the model and scaler.
+
+    Args:
+        path:       Path to the .pt checkpoint file.
+        device_str: Device to map model weights onto ("cpu" or "cuda").
+
+    Returns:
+        (model, scaler, metadata) where:
+            model    — ZeroShotODModel in eval mode with frozen weights
+            scaler   — Reconstructed sklearn StandardScaler (or None if not saved)
+            metadata — Full checkpoint dict (train_info, hyperparams, seed, run_tag, saved_at)
+    """
+    import numpy as _np
+
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"Checkpoint not found: {path}")
+
+    bundle = torch.load(path, map_location=torch.device(device_str), weights_only=False)
+
+    # --- Reconstruct model ---
+    hp = bundle["hyperparams"]
+    model = ZeroShotODModel(
+        node_in_dim       = hp["node_in_dim"],
+        node_hidden_dim   = hp["hidden_dim"],
+        node_out_dim      = hp["hidden_dim"],
+        num_gnn_layers    = hp["num_gnn_layers"],
+        decoder_hidden_dim= hp["hidden_dim"],
+    ).to(torch.device(device_str))
+    model.load_state_dict(bundle["model_state_dict"])
+    model.eval()
+    for p in model.parameters():
+        p.requires_grad = False
+
+    # --- Reconstruct scaler ---
+    scaler = None
+    if "scaler_mean_" in bundle:
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        scaler.mean_  = bundle["scaler_mean_"]
+        scaler.scale_ = bundle["scaler_scale_"]
+        scaler.var_   = bundle["scaler_var_"]
+        scaler.n_features_in_ = len(scaler.mean_)
+
+    metadata = {
+        "train_info":  bundle.get("train_info"),
+        "hyperparams": bundle.get("hyperparams"),
+        "seed":        bundle.get("seed"),
+        "run_tag":     bundle.get("run_tag"),
+        "saved_at":    bundle.get("saved_at"),
+    }
+
+    return model, scaler, metadata
 
 
 def train_epoch(
@@ -118,7 +246,11 @@ def train_zero_shot_model(
     min_lr: float = 1e-5,
     return_info: bool = False,
     seed: int | None = None,
+    # --- Checkpoint ---
+    checkpoint_path: Optional[Union[str, Path]] = None,
+    run_tag: Optional[str] = None,
 ) -> tuple:
+
     """
     Train ZeroShotODModel with AdamW, ReduceLROnPlateau, and validation-based early stopping.
 
@@ -130,6 +262,9 @@ def train_zero_shot_model(
         min_delta:        Minimum improvement to count as improvement.
         return_info:      If True, returns (model, scaler, train_info_dict).
         seed:             Optional random seed for reproducible weight initialization.
+        checkpoint_path:  If provided, saves the trained model to this path as a .pt file.
+                          Parent directories are created automatically.
+        run_tag:          Short label embedded in the checkpoint (e.g. "e1_fold1_seed2025").
 
     Returns:
         (best_model, scaler) or (best_model, scaler, info)
@@ -324,8 +459,32 @@ def train_zero_shot_model(
         "train_loss_history": loss_history,
     }
 
+    # --- Persist checkpoint to disk if requested ---
+    if checkpoint_path is not None:
+        hp = {
+            "node_in_dim":    train_cities[0].node_features.shape[1],
+            "hidden_dim":     hidden_dim,
+            "num_gnn_layers": num_gnn_layers,
+            "graph_type":     graph_type,
+            "radius_km":      radius_km,
+            "knn_k":          knn_k,
+            "loss_type":      loss_type,
+            "epochs":         epochs,
+            "lr":             lr,
+            "weight_decay":   weight_decay,
+        }
+        saved_path = save_checkpoint(
+            path=checkpoint_path,
+            model=model,
+            scaler=scaler,
+            train_info=info,
+            hyperparams=hp,
+            seed=seed,
+            run_tag=run_tag,
+        )
+        if verbose:
+            print(f"    -> Checkpoint saved: {saved_path}", flush=True)
+
     if return_info:
         return model, scaler, info
     return model, scaler
-
-
