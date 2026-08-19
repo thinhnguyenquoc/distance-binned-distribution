@@ -65,6 +65,26 @@ def compute_spearman_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
     return float(rho) if not np.isnan(rho) else 0.0
 
 
+def compute_mae_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes Mean Absolute Error."""
+    return float(np.mean(np.abs(t_true - t_pred)))
+
+def compute_inflow_outflow_cpc(t_true: np.ndarray, t_pred: np.ndarray, o_idx: np.ndarray, d_idx: np.ndarray, n_nodes: int) -> tuple[float, float]:
+    """Computes CPC for tract-level inflows and outflows on observed support."""
+    outflow_t = np.zeros(n_nodes, dtype=np.float64)
+    outflow_p = np.zeros(n_nodes, dtype=np.float64)
+    inflow_t = np.zeros(n_nodes, dtype=np.float64)
+    inflow_p = np.zeros(n_nodes, dtype=np.float64)
+    
+    np.add.at(outflow_t, o_idx, t_true)
+    np.add.at(outflow_p, o_idx, t_pred)
+    np.add.at(inflow_t, d_idx, t_true)
+    np.add.at(inflow_p, d_idx, t_pred)
+    
+    cpc_out = compute_cpc_pair(outflow_t, outflow_p)
+    cpc_in = compute_cpc_pair(inflow_t, inflow_p)
+    return cpc_in, cpc_out
+
 def evaluate_moving_and_full(
     t_true: torch.Tensor,
     t_pred: torch.Tensor,
@@ -72,9 +92,11 @@ def evaluate_moving_and_full(
     pair_d_idx: torch.Tensor,
     bin_labels: torch.Tensor,
     pair_distance: torch.Tensor | None = None,
+    n_nodes: int = 0,
 ) -> dict[str, float]:
     """
-    Computes all locked metrics partitioned by Interzonal Omega_c^+ and Full Support Omega_c.
+    Computes all locked metrics partitioned by Interzonal Omega_c^+ as per partial_od.md.
+    No full-matrix CPC or missing pair performance is reported.
     """
     t_t = t_true.detach().cpu().numpy().astype(np.float64)
     t_p = t_pred.detach().cpu().numpy().astype(np.float64)
@@ -89,39 +111,45 @@ def evaluate_moving_and_full(
     else:
         inter_mask = (o_np != d_np) & (b_np > 0)
 
-    # 1. Interzonal Domain Omega_c^+ (Primary)
+    # All evaluations only on observed pairs!
+    # Primary: Interzonal Domain Omega_c^+
     t_t_inter = t_t[inter_mask]
     t_p_inter = t_p[inter_mask]
 
     cpc_inter = compute_cpc_pair(t_t_inter, t_p_inter)
-    cpc_inter_norm = compute_cpc_norm_pair(t_t_inter, t_p_inter)
     rmse_inter = compute_rmse_log1p_pair(t_t_inter, t_p_inter)
-    pearson_inter = compute_pearson_pair(t_t_inter, t_p_inter)
+    mae_inter = compute_mae_pair(t_t_inter, t_p_inter)
     spearman_inter = compute_spearman_pair(t_t_inter, t_p_inter)
+    
+    total_flow_true = np.sum(t_t_inter)
+    total_flow_pred = np.sum(t_p_inter)
+    rel_error = float(abs(total_flow_pred - total_flow_true) / max(total_flow_true, 1e-9))
+    
+    # Inflow/Outflow CPC on observed support
+    max_node = max(np.max(o_np), np.max(d_np)) + 1 if len(o_np) > 0 else n_nodes
+    cpc_inflow, cpc_outflow = compute_inflow_outflow_cpc(t_t_inter, t_p_inter, o_np[inter_mask], d_np[inter_mask], max_node)
+    
+    # CPC by distance bin
+    cpc_bins = {}
+    for b in range(1, 4):
+        bin_mask = (b_np[inter_mask] == b)
+        if np.any(bin_mask):
+            cpc_bins[f"cpc_bin_{b}"] = compute_cpc_pair(t_t_inter[bin_mask], t_p_inter[bin_mask])
+        else:
+            cpc_bins[f"cpc_bin_{b}"] = 0.0
 
-    # 2. Full Matrix Domain Omega_c (Secondary)
-    cpc_full = compute_cpc_pair(t_t, t_p)
-    cpc_full_norm = compute_cpc_norm_pair(t_t, t_p)
-    rmse_full = compute_rmse_log1p_pair(t_t, t_p)
-    pearson_full = compute_pearson_pair(t_t, t_p)
-    spearman_full = compute_spearman_pair(t_t, t_p)
-
-    return {
-        # Primary interzonal metrics
+    result = {
         "cpc": cpc_inter,                     # primary shorthand
         "cpc_inter": cpc_inter,
-        "cpc_inter_norm": cpc_inter_norm,
         "rmse_inter": rmse_inter,
-        "pearson_inter": pearson_inter,
+        "mae_inter": mae_inter,
         "spearman_inter": spearman_inter,
-        # Secondary full-matrix metrics
-        "cpc_full": cpc_full,
-        "cpc_full_norm": cpc_full_norm,
-        "rmse_full": rmse_full,
-        "pearson_full": pearson_full,
-        "spearman_full": spearman_full,
+        "rel_error_total": rel_error,
+        "cpc_inflow": cpc_inflow,
+        "cpc_outflow": cpc_outflow,
     }
-
+    result.update(cpc_bins)
+    return result
 
 def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]:
     """Compatibility helper for raw full-pair evaluation."""
@@ -129,7 +157,6 @@ def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]
     t_p = t_pred.detach().cpu().numpy().astype(np.float64)
     return {
         "cpc": compute_cpc_pair(t_t, t_p),
-        "cpc_norm": compute_cpc_norm_pair(t_t, t_p),
         "rmse_log1p": compute_rmse_log1p_pair(t_t, t_p),
         "pearson_r": compute_pearson_pair(t_t, t_p),
     }

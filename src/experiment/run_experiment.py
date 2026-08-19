@@ -102,8 +102,10 @@ def run_target_city_experiments(
     num_trip_seeds: int = 20,
     m_grid: List[int | float] = M_GRID,
     device_str: str = "cpu",
+    bin_edges: np.ndarray = None,
 ) -> Dict[str, Any]:
     assert scaler is not None, "StandardScaler must be pre-fitted on source cities."
+    assert bin_edges is not None, "bin_edges must be provided for K=8 unified calibration."
 
     device = torch.device(device_str)
     city_data = load_city(city_name, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
@@ -116,185 +118,87 @@ def run_target_city_experiments(
     else:
         edge_index, edge_dist = build_knn_graph(coords, k=knn_k)
 
-    t_true = city_data.pair_trips
-    bin_labels = city_data.bin_labels
-    pair_o = city_data.pair_o_idx
-    pair_d = city_data.pair_d_idx
-    pair_dist = city_data.pair_distance
-    pair_dist_km = torch.expm1(pair_dist)
+    t_true = city_data.pair_trips.numpy().astype(np.float64)
+    pair_o = city_data.pair_o_idx.numpy()
+    pair_d = city_data.pair_d_idx.numpy()
+    pair_dist = city_data.pair_distance.numpy()
+    pair_dist_km = np.expm1(pair_dist)
+    bin_labels = city_data.bin_labels # Not used for K=8, but kept for evaluation if needed
 
     inter_mask = (pair_o != pair_d) & (pair_dist_km > 0.0)
-    n_inter_pairs = int(inter_mask.sum().item())
-    total_inter_trips = float(t_true[inter_mask].sum().item())
-    total_trips = float(t_true.sum().item())
+    n_inter_pairs = int(inter_mask.sum())
+    total_inter_trips = float(t_true[inter_mask].sum())
+    total_trips = float(t_true.sum())
+
+    # Extract county grouping
+    import pandas as pd
+    from pathlib import Path
+    meta_df = pd.read_csv(Path(data_root) / city_name / "meta.csv")
+    meta_df["county_id"] = meta_df["state_fips"].astype(str).str.zfill(2) + meta_df["county_fips"].astype(str).str.zfill(3)
+    tract_to_county = dict(zip(meta_df["idx"], meta_df["county_id"]))
+    pair_county_idx = np.array([tract_to_county[i] for i in pair_o])
+
+    from src.data.yd_extractor import extract_yd_kbins, extract_yd_kbins_grouped
+    from src.calibration.bin_calibration import calibrate_kbins, calibrate_kbins_grouped
 
     # -----------------------------------------------------------------------
     # Condition M0: Pure Zero-Shot Inference
     # -----------------------------------------------------------------------
-    t_pred_zs = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
-    m0_metrics = evaluate_moving_and_full(t_true, t_pred_zs, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-
-    # -----------------------------------------------------------------------
-    # Moving-Bin Target Distributions (Oracle & Real)
-    # -----------------------------------------------------------------------
-    yd_moving_oracle = extract_yd_moving_oracle(t_true, bin_labels, pair_o, pair_d, pair_distance=pair_dist)
-    yd_moving_real = extract_yd_moving_real(city_name, meta_prior_dir=meta_prior_dir)
-
-    # Distributional Overlap on Moving Bins
-    if yd_moving_real is not None:
-        dist_overlap = compute_distributional_overlap(yd_moving_oracle, yd_moving_real)
-    else:
-        dist_overlap = None
-
-    # -----------------------------------------------------------------------
-    # Condition M1^{oracle, +}: Oracle Moving-Bin Reference (q=1.0)
-    # -----------------------------------------------------------------------
-    t_pred_oracle_plus = calibrate_moving_bins(
-        t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_oracle, q=1.0, pair_distance=pair_dist
+    t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
+    t_pred_zs = t_pred_zs_tensor.numpy().astype(np.float64)
+    m0_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, t_pred_zs_tensor, city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
     )
-    m1_oracle_plus_metrics = evaluate_moving_and_full(t_true, t_pred_oracle_plus, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
 
     # -----------------------------------------------------------------------
-    # Condition M1^{real, +}: Primary Meta Moving-Bin Calibration (q=1.0)
+    # Condition M1_city: City-Level Oracle Y_D
     # -----------------------------------------------------------------------
-    if yd_moving_real is not None:
-        t_pred_real_plus = calibrate_moving_bins(
-            t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=1.0, pair_distance=pair_dist
-        )
-        m1_real_plus_metrics = evaluate_moving_and_full(t_true, t_pred_real_plus, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-    else:
-        m1_real_plus_metrics = None
-
-    # -----------------------------------------------------------------------
-    # Condition M1^{real, 4bin}: Ablation Retaining Bin 0 Semantic Mismatch
-    # -----------------------------------------------------------------------
-    yd_4bin_real = extract_yd_4bin_real(city_name, meta_prior_dir=meta_prior_dir)
-    if yd_4bin_real is not None:
-        t_pred_4bin_ablation = calibrate_4bin_legacy_ablation(t_pred_zs, bin_labels, yd_4bin_real)
-        m1_4bin_ablation_metrics = evaluate_moving_and_full(t_true, t_pred_4bin_ablation, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-    else:
-        m1_4bin_ablation_metrics = None
-
-    # -----------------------------------------------------------------------
-    # Condition M_q^{real, +}: Soft Calibration Curve over q in [0, 1]
-    # -----------------------------------------------------------------------
-    q_curve = {}
-    if yd_moving_real is not None:
-        for q_val in [0.0, 0.25, 0.5, 0.75, 1.0]:
-            t_pred_q = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=q_val, pair_distance=pair_dist)
-            q_metrics = evaluate_moving_and_full(t_true, t_pred_q, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-            q_curve[f"q_{q_val:.2f}"] = {
-                "q": q_val,
-                "cpc_inter": q_metrics["cpc_inter"],
-                "cpc_full": q_metrics["cpc_full"],
-            }
-
-    # -----------------------------------------------------------------------
-    # Condition M_m^+: Multinomial Sampling on Interzonal Pairs Omega_c^+
-    # -----------------------------------------------------------------------
-    mq_results = {}
-    m_finite_values = []
-    mean_cpcs_inter = []
-
-    # Filter GT trips for interzonal sampling
-    inter_trips = t_true[inter_mask]
-    inter_bins = bin_labels[inter_mask]
-
-    for m in m_grid:
-        seed_cpcs = []
-        for seed in range(num_trip_seeds):
-            # Sample m interzonal trips
-            yd_m_4 = sample_multinomial_yd(inter_trips, inter_bins, m=m, seed=seed)
-            # moving bins {1, 2, 3}
-            yd_m_moving = yd_m_4[1:]
-            total_m_moving = np.sum(yd_m_moving)
-            if total_m_moving > 0:
-                yd_m_moving = yd_m_moving / total_m_moving
-            else:
-                yd_m_moving = np.array([0.5, 0.4, 0.1])
-
-            t_pred_m = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_m_moving, q=1.0, pair_distance=pair_dist)
-            metrics_m = evaluate_moving_and_full(t_true, t_pred_m, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-            seed_cpcs.append(metrics_m["cpc_inter"])
-
-        m_key = "inf" if np.isinf(m) else str(int(m))
-        cpc_arr = np.array(seed_cpcs)
-
-        mq_results[m_key] = {
-            "m": m,
-            "num_seeds": len(cpc_arr),
-            "std_ddof": 1,
-            "per_seed_cpcs": [float(x) for x in cpc_arr],
-            "cpc_inter_mean": float(np.mean(cpc_arr)),
-            "cpc_inter_std": float(np.std(cpc_arr, ddof=1)) if len(cpc_arr) > 1 else 0.0,
-            "cpc_inter_median": float(np.median(cpc_arr)),
-            "cpc_inter_p25": float(np.percentile(cpc_arr, 25)),
-            "cpc_inter_p75": float(np.percentile(cpc_arr, 75)),
-        }
-
-        if not np.isinf(m):
-            m_finite_values.append(float(m))
-            mean_cpcs_inter.append(float(np.mean(cpc_arr)))
-
-    # -----------------------------------------------------------------------
-    # Primary Delta R Calculations on Interzonal Domain Omega_c^+
-    # -----------------------------------------------------------------------
-    delta_r_oracle_plus = m1_oracle_plus_metrics["cpc_inter"] - m0_metrics["cpc_inter"]
-    delta_r_real_plus = (m1_real_plus_metrics["cpc_inter"] - m0_metrics["cpc_inter"]) if m1_real_plus_metrics else None
-    realization_gap_plus = (m1_oracle_plus_metrics["cpc_inter"] - m1_real_plus_metrics["cpc_inter"]) if m1_real_plus_metrics else None
-
-    # Ablation Delta R (4-bin)
-    delta_r_4bin_ablation = (m1_4bin_ablation_metrics["cpc_inter"] - m0_metrics["cpc_inter"]) if m1_4bin_ablation_metrics else None
-
-    # -----------------------------------------------------------------------
-    # RQ2: Isotonic Interpolation for m* and q* on Interzonal Trips
-    # -----------------------------------------------------------------------
-    m_star_oracle, oracle_status = _interpolate_m_star(
-        m1_oracle_plus_metrics["cpc_inter"],
-        m_finite_values,
-        mean_cpcs_inter,
-        m1_oracle_plus_metrics["cpc_inter"],
-        total_inter_trips,
+    yd_city = extract_yd_kbins(pair_dist_km, t_true, bin_edges, inter_mask)
+    t_pred_city = calibrate_kbins(t_pred_zs, pair_dist_km, inter_mask, yd_city, bin_edges, q=1.0)
+    m1_city_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, torch.tensor(t_pred_city), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
     )
-    q_star_oracle = m_star_oracle / total_inter_trips if total_inter_trips > 0 else 0.0
 
-    if m1_real_plus_metrics is not None:
-        m_star_real, real_status = _interpolate_m_star(
-            m1_real_plus_metrics["cpc_inter"],
-            m_finite_values,
-            mean_cpcs_inter,
-            m1_oracle_plus_metrics["cpc_inter"],
-            total_inter_trips,
-        )
-        q_star_real = m_star_real / total_inter_trips if total_inter_trips > 0 else 0.0
-    else:
-        m_star_real = None
-        q_star_real = None
-        real_status = "no_meta_data"
+    # -----------------------------------------------------------------------
+    # Condition M1_county: County-Level Oracle Y_D
+    # -----------------------------------------------------------------------
+    yd_county_dict = extract_yd_kbins_grouped(pair_dist_km, t_true, bin_edges, inter_mask, pair_county_idx)
+    t_pred_county = calibrate_kbins_grouped(t_pred_zs, pair_dist_km, inter_mask, yd_county_dict, bin_edges, pair_county_idx, q=1.0)
+    m1_county_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, torch.tensor(t_pred_county), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
+    )
+
+    # -----------------------------------------------------------------------
+    # Condition M1_subzone: Tract-Level (Subzone) Oracle Y_D
+    # -----------------------------------------------------------------------
+    yd_subzone_dict = extract_yd_kbins_grouped(pair_dist_km, t_true, bin_edges, inter_mask, pair_o)
+    t_pred_subzone = calibrate_kbins_grouped(t_pred_zs, pair_dist_km, inter_mask, yd_subzone_dict, bin_edges, pair_o, q=1.0)
+    m1_subzone_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, torch.tensor(t_pred_subzone), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance, n_nodes=city_data.n_tracts
+    )
+
+    rho_c = float(city_data.n_pairs) / (float(city_data.n_tracts) * float(city_data.n_tracts - 1)) if city_data.n_tracts > 1 else 0.0
+    average_flow = total_inter_trips / n_inter_pairs if n_inter_pairs > 0 else 0.0
+    mean_distance = float(np.mean(pair_dist_km[inter_mask])) if n_inter_pairs > 0 else 0.0
+    
+    # Short/Long distance pair ratio (based on original bin_labels if available, else standard)
+    n_short = int(np.sum(city_data.bin_labels.numpy()[inter_mask] == 1))
+    n_long = int(np.sum(city_data.bin_labels.numpy()[inter_mask] == 3))
+    short_long_ratio = float(n_short) / float(n_long) if n_long > 0 else 0.0
 
     return {
         "city": city_name,
         "n_tracts": city_data.n_tracts,
         "n_pairs": city_data.n_pairs,
+        "rho_c": rho_c,
+        "average_flow": average_flow,
+        "mean_distance": mean_distance,
+        "short_long_ratio": short_long_ratio,
         "n_inter_pairs": n_inter_pairs,
         "total_trips": total_trips,
         "total_inter_trips": total_inter_trips,
-        "distributional_overlap": dist_overlap,
         "M0": m0_metrics,
-        "M1_real_plus": m1_real_plus_metrics,
-        "M1_oracle_plus": m1_oracle_plus_metrics,
-        "M1_4bin_ablation": m1_4bin_ablation_metrics,
-        "Mq_soft_curve": q_curve,
-        "Mm_sampling_curve": mq_results,
-        "delta_r_oracle_plus": delta_r_oracle_plus,
-        "delta_r_real_plus": delta_r_real_plus,
-        "realization_gap_plus": realization_gap_plus,
-        "delta_r_4bin_ablation": delta_r_4bin_ablation,
-        "m_star_real": m_star_real,
-        "q_star_real": q_star_real,
-        "m_star_real_status": real_status,
-        "m_star_oracle": m_star_oracle,
-        "q_star_oracle": q_star_oracle,
-        "yd_moving_oracle": yd_moving_oracle.tolist(),
-        "yd_moving_real": yd_moving_real.tolist() if yd_moving_real is not None else None,
+        "M1_city_oracle_obs": m1_city_metrics,
+        "M1_county_oracle_obs": m1_county_metrics,
+        "M1_subzone_oracle_obs": m1_subzone_metrics,
     }

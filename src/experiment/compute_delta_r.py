@@ -24,108 +24,78 @@ def _compute_stats(arr: np.ndarray, ddof: int = 1) -> Dict[str, Any]:
     }
 
 
+def _fold_stratified_bootstrap(city_results: List[Dict[str, Any]], key: str, n_boot: int = 10000) -> tuple[float, float]:
+    """Fold-stratified bootstrap 95% CI for the mean of a given metric."""
+    folds = {}
+    for r in city_results:
+        f = r.get("fold", -1)
+        if f not in folds:
+            folds[f] = []
+        folds[f].append(r[key])
+    
+    if len(folds) == 0 or sum(len(v) for v in folds.values()) < 2:
+        return 0.0, 0.0
+        
+    rng = np.random.default_rng(42)
+    boot_means = []
+    for _ in range(n_boot):
+        samp = []
+        for f, vals in folds.items():
+            if len(vals) > 0:
+                samp.extend(rng.choice(vals, size=len(vals), replace=True))
+        boot_means.append(np.mean(samp))
+    
+    return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
+
+
 def analyze_delta_r(city_results: List[Dict[str, Any]]) -> Dict[str, Any]:
     n_cities = len(city_results)
 
     # Primary: Interzonal CPC on Omega_c^+
     m0_inter = np.array([r["M0"]["cpc_inter"] for r in city_results])
-    m1_o_inter = np.array([r["M1_oracle_plus"]["cpc_inter"] for r in city_results])
-    delta_o_inter = m1_o_inter - m0_inter
-
-    m0_full = np.array([r["M0"]["cpc_full"] for r in city_results])
-    m1_o_full = np.array([r["M1_oracle_plus"]["cpc_full"] for r in city_results])
-    delta_o_full = m1_o_full - m0_full
-
+    
     analysis = {
         "n_cities_evaluated": n_cities,
         "std_definition": "sample_sd_ddof_1",
-        "oracle_plus": {
-            "m0_cpc_inter": _compute_stats(m0_inter),
-            "m1_oracle_cpc_inter": _compute_stats(m1_o_inter),
-            "delta_r_inter": _compute_stats(delta_o_inter),
-            "p_improved": float(np.mean(delta_o_inter > 0)),
-            "m0_cpc_full": _compute_stats(m0_full),
-            "m1_oracle_cpc_full": _compute_stats(m1_o_full),
-            "delta_r_full": _compute_stats(delta_o_full),
-        },
+        "missingness_correlations": {}
     }
 
-    if len(delta_o_inter) >= 5:
-        _, w_p_one = stats.wilcoxon(m1_o_inter, m0_inter, alternative="greater")
-        _, w_p_two = stats.wilcoxon(m1_o_inter, m0_inter, alternative="two-sided")
-        analysis["oracle_plus"]["wilcoxon_one_sided_p"] = float(w_p_one)
-        analysis["oracle_plus"]["wilcoxon_two_sided_p"] = float(w_p_two)
+    scales = [
+        ("city", "M1_city_oracle_obs"),
+        ("county", "M1_county_oracle_obs"),
+        ("subzone", "M1_subzone_oracle_obs")
+    ]
 
-    # Primary Real Moving-Bin Analysis (M1^{real, +})
-    real_results = [r for r in city_results if r["M1_real_plus"] is not None]
-    if real_results:
-        m0_r_inter = np.array([r["M0"]["cpc_inter"] for r in real_results])
-        m1_r_inter = np.array([r["M1_real_plus"]["cpc_inter"] for r in real_results])
-        delta_r_inter = m1_r_inter - m0_r_inter
+    for scale_name, scale_key in scales:
+        m1_inter = np.array([r[scale_key]["cpc_inter"] for r in city_results])
+        delta_inter = m1_inter - m0_inter
+        
+        # Fold-stratified bootstrap
+        for i, r in enumerate(city_results):
+            r[f"_temp_delta_{scale_name}"] = delta_inter[i]
+        
+        ci_low, ci_high = _fold_stratified_bootstrap(city_results, f"_temp_delta_{scale_name}")
+        
+        # Missingness Correlations
+        missingness = {}
+        for feature in ["rho_c", "n_tracts", "mean_distance", "average_flow", "short_long_ratio"]:
+            feature_vals = np.array([r.get(feature, 0.0) for r in city_results])
+            if np.std(feature_vals) > 0:
+                rho, _ = stats.pearsonr(feature_vals, delta_inter)
+                missingness[f"corr_with_{feature}"] = float(rho)
+        analysis["missingness_correlations"][scale_name] = missingness
 
-        m0_r_full = np.array([r["M0"]["cpc_full"] for r in real_results])
-        m1_r_full = np.array([r["M1_real_plus"]["cpc_full"] for r in real_results])
-        delta_r_full = m1_r_full - m0_r_full
-
-        gaps_inter = np.array([r["realization_gap_plus"] for r in real_results])
-        overlaps = np.array([r["distributional_overlap"] for r in real_results if r["distributional_overlap"] is not None])
-
-        analysis["real_plus"] = {
-            "n_cities": len(real_results),
-            "m1_real_cpc_inter": _compute_stats(m1_r_inter),
-            "delta_r_inter": _compute_stats(delta_r_inter),
-            "p_improved": float(np.mean(delta_r_inter > 0)),
-            "m1_real_cpc_full": _compute_stats(m1_r_full),
-            "delta_r_full": _compute_stats(delta_r_full),
-            "distributional_overlap": _compute_stats(overlaps) if len(overlaps) > 0 else None,
-            "realization_gap": {
-                "mean": float(np.mean(gaps_inter)),
-                "std": float(np.std(gaps_inter, ddof=1)) if len(gaps_inter) > 1 else 0.0,
-                "median": float(np.median(gaps_inter)),
-                "mae": float(np.mean(np.abs(gaps_inter))),
-                "min": float(np.min(gaps_inter)),
-                "max": float(np.max(gaps_inter)),
-            },
+        analysis[scale_name] = {
+            "m0_cpc_inter": _compute_stats(m0_inter),
+            "m1_cpc_inter": _compute_stats(m1_inter),
+            "delta_cpc_inter": {**_compute_stats(delta_inter), "ci_95_lower": ci_low, "ci_95_upper": ci_high},
+            "p_improved": float(np.mean(delta_inter > 0)),
         }
 
-        if len(delta_r_inter) >= 5:
-            _, w_p_one = stats.wilcoxon(m1_r_inter, m0_r_inter, alternative="greater")
-            _, w_p_two = stats.wilcoxon(m1_r_inter, m0_r_inter, alternative="two-sided")
-            analysis["real_plus"]["wilcoxon_one_sided_p"] = float(w_p_one)
-            analysis["real_plus"]["wilcoxon_two_sided_p"] = float(w_p_two)
-
-    # 4-Bin Legacy Ablation Analysis
-    ablation_results = [r for r in city_results if r.get("M1_4bin_ablation") is not None and r.get("M1_real_plus") is not None]
-    if ablation_results:
-        m1_ab_inter = np.array([r["M1_4bin_ablation"]["cpc_inter"] for r in ablation_results])
-        m0_ab_inter = np.array([r["M0"]["cpc_inter"] for r in ablation_results])
-        delta_ab_inter = m1_ab_inter - m0_ab_inter
-
-        m1_r_inter = np.array([r["M1_real_plus"]["cpc_inter"] for r in ablation_results])
-        delta_r_inter = m1_r_inter - m0_ab_inter
-
-        # Ablation Penalty = Delta R_real+ - Delta R_4bin
-        ablation_penalty = delta_r_inter - delta_ab_inter
-
-        m1_ab_full = np.array([r["M1_4bin_ablation"]["cpc_full"] for r in ablation_results])
-        m0_ab_full = np.array([r["M0"]["cpc_full"] for r in ablation_results])
-        delta_ab_full = m1_ab_full - m0_ab_full
-
-        analysis["4bin_ablation"] = {
-            "n_cities": len(ablation_results),
-            "m1_4bin_cpc_inter": _compute_stats(m1_ab_inter),
-            "delta_r_inter": _compute_stats(delta_ab_inter),
-            "p_improved_inter": float(np.mean(delta_ab_inter > 0)),
-            "ablation_penalty_inter": _compute_stats(ablation_penalty),
-            "m1_4bin_cpc_full": _compute_stats(m1_ab_full),
-            "delta_r_full": _compute_stats(delta_ab_full),
-            "p_improved_full": float(np.mean(delta_ab_full > 0)),
-        }
-
-        if len(delta_ab_inter) >= 5:
-            _, w_p_one = stats.wilcoxon(m1_ab_inter, m0_ab_inter, alternative="greater")
-            _, w_p_two = stats.wilcoxon(m1_ab_inter, m0_ab_inter, alternative="two-sided")
-            analysis["4bin_ablation"]["wilcoxon_one_sided_p_inter"] = float(w_p_one)
-            analysis["4bin_ablation"]["wilcoxon_two_sided_p_inter"] = float(w_p_two)
+        if len(delta_inter) >= 5:
+            _, w_p_one = stats.wilcoxon(m1_inter, m0_inter, alternative="greater")
+            _, w_p_two = stats.wilcoxon(m1_inter, m0_inter, alternative="two-sided")
+            analysis[scale_name]["wilcoxon_one_sided_p"] = float(w_p_one)
+            analysis[scale_name]["wilcoxon_two_sided_p"] = float(w_p_two)
 
     return analysis

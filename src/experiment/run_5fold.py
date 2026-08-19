@@ -14,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.data.city_splits import generate_35_5_10_splits
+from src.data.yd_extractor import compute_kbin_edges
 from src.training.train import train_zero_shot_model
 from src.experiment.run_experiment import run_target_city_experiments
 from src.experiment.compute_delta_r import analyze_delta_r
@@ -107,6 +108,9 @@ def run_5fold_experiment(
 
 
 
+        # Compute Bin Edges from 35 train cities (K=8)
+        bin_edges, K_active = compute_kbin_edges(train_cities, K=8, data_root=data_root)
+
         # Stage B: Target City Evaluation
         fold_city_results = []
         for target_city in test_cities:
@@ -127,45 +131,47 @@ def run_5fold_experiment(
                     knn_k=knn_k,
                     num_trip_seeds=num_trip_seeds,
                     device_str=device_str,
+                    bin_edges=bin_edges,
                 )
                 seed_results.append(res)
                 
             # Average the results across 3 seeds
             avg_res = seed_results[0].copy()
-            for key in ["M0", "M1_real_plus", "M1_oracle_plus", "M1_4bin_ablation"]:
+            for key in ["M0", "M1_city_oracle_obs", "M1_county_oracle_obs", "M1_subzone_oracle_obs"]:
                 if avg_res[key] is not None:
                     avg_res[key] = avg_res[key].copy()
-                    for metric in ["cpc_inter", "cpc_full", "mae", "rmse", "spearman"]:
+                    for metric in ["cpc_inter", "mae_inter", "rmse_inter", "spearman_inter", "rel_error_total", "cpc_inflow", "cpc_outflow", "cpc_bin_1", "cpc_bin_2", "cpc_bin_3"]:
                         if metric in avg_res[key]:
                             avg_res[key][metric] = sum(r[key][metric] for r in seed_results) / len(seed_results)
             
-            for key in ["delta_r_oracle_plus", "delta_r_real_plus", "realization_gap_plus", "delta_r_4bin_ablation", "distributional_overlap"]:
-                if avg_res[key] is not None:
+            for key in ["rho_c", "average_flow", "mean_distance", "short_long_ratio"]:
+                if key in avg_res and avg_res[key] is not None:
                     avg_res[key] = sum(r[key] for r in seed_results) / len(seed_results)
             
+            # Compute Deltas (Primary Estimands)
+            avg_res["delta_city"] = avg_res["M1_city_oracle_obs"]["cpc_inter"] - avg_res["M0"]["cpc_inter"]
+            avg_res["delta_county"] = avg_res["M1_county_oracle_obs"]["cpc_inter"] - avg_res["M0"]["cpc_inter"]
+            avg_res["delta_subzone"] = avg_res["M1_subzone_oracle_obs"]["cpc_inter"] - avg_res["M0"]["cpc_inter"]
+            
             city_res = avg_res
+            city_res["fold"] = fold_id
             fold_city_results.append(city_res)
             all_city_results.append(city_res)
 
             m0_c = city_res['M0']['cpc_inter']
-            m1_r = city_res['M1_real_plus']['cpc_inter'] if city_res['M1_real_plus'] else None
-            m1_o = city_res['M1_oracle_plus']['cpc_inter']
-            delta_r = city_res['delta_r_real_plus']
-            overlap = city_res['distributional_overlap']
+            m1_city = city_res['M1_city_oracle_obs']['cpc_inter']
+            m1_county = city_res['M1_county_oracle_obs']['cpc_inter']
+            m1_sub = city_res['M1_subzone_oracle_obs']['cpc_inter']
 
-            r_str = f"{m1_r:.4f}" if m1_r is not None else "N/A"
-            d_str = f"{delta_r:+.4f}" if delta_r is not None else "N/A"
-            ov_str = f"{overlap*100:.1f}%" if overlap is not None else "N/A"
-            print(f" | M0: {m0_c:.4f} | M1_real+: {r_str} (Delta: {d_str}, Overlap: {ov_str}) | M1_oracle+: {m1_o:.4f} | {time.time() - t0:.1f}s")
+            print(f" | M0: {m0_c:.4f} | M1_city: {m1_city:.4f} (d={avg_res['delta_city']:+.4f}) | M1_county: {m1_county:.4f} (d={avg_res['delta_county']:+.4f}) | M1_subzone: {m1_sub:.4f} (d={avg_res['delta_subzone']:+.4f}) | {time.time() - t0:.1f}s")
 
         fold_summaries[f"fold_{fold_id}"] = {
             "test_cities": test_cities,
-            "mean_delta_r_inter": float(sum(r["delta_r_real_plus"] for r in fold_city_results if r["delta_r_real_plus"] is not None) / max(1, len([r for r in fold_city_results if r["delta_r_real_plus"] is not None]))),
+            "mean_delta_city": float(sum(r["delta_city"] for r in fold_city_results) / max(1, len(fold_city_results))),
         }
 
     # Cross-city Statistical Aggregation
     delta_r_analysis = analyze_delta_r(all_city_results)
-    qstar_analysis = analyze_qstar(all_city_results)
 
     final_results = {
         "experiment_config": {
@@ -176,12 +182,10 @@ def run_5fold_experiment(
             "radius_km": radius_km,
             "knn_k": knn_k,
             "loss_type": loss_type,
-            "num_trip_seeds": num_trip_seeds,
             "total_cities_evaluated": len(all_city_results),
             "total_runtime_sec": time.time() - start_total_time,
         },
         "rq1_delta_r": delta_r_analysis,
-        "rq2_qstar": qstar_analysis,
         "city_level_results": all_city_results,
     }
 
@@ -190,34 +194,23 @@ def run_5fold_experiment(
         json.dump(final_results, f, indent=2)
 
     print("\n" + "=" * 85)
-    print("FINAL SUMMARY: MOVING-BIN CALIBRATION ON OMEGA_c^+")
+    print("FINAL SUMMARY: UNIFIED RESOLUTION CALIBRATION (CITY / COUNTY / SUBZONE)")
     print("=" * 85)
     print(f"Total cities evaluated: {len(all_city_results)}/50")
 
-    if "real_plus" in delta_r_analysis:
-        rp = delta_r_analysis["real_plus"]
-        print(f"\n[RQ1: Primary Moving-Bin Meta Calibration (M1^real, + on Omega_c^+)]")
-        print(f"  Distributional Overlap with Meta (Mean +- Std): {rp['distributional_overlap']['mean']*100:.2f}% +- {rp['distributional_overlap']['std']*100:.2f}%")
-        print(f"  M1 Real+ Interzonal CPC (Mean +- Std):          {rp['m1_real_cpc_inter']['mean']:.4f} +- {rp['m1_real_cpc_inter']['std']:.4f}")
-        print(f"  Delta R^real+ Mean +- Std:                      {rp['delta_r_inter']['mean']:+.4f} +- {rp['delta_r_inter']['std']:.4f}")
-        print(f"  Delta R^real+ Median (IQR):                     {rp['delta_r_inter']['median']:+.4f} ({rp['delta_r_inter']['iqr']:.4f})")
-        print(f"  P(Delta R^real+ > 0):                           {rp['p_improved'] * 100:.1f}%")
-        if "wilcoxon_one_sided_p" in rp:
-            print(f"  Wilcoxon One-Sided p-value (H1: Delta > 0):     {rp['wilcoxon_one_sided_p']:.4e}")
-            print(f"  Wilcoxon Two-Sided p-value:                     {rp['wilcoxon_two_sided_p']:.4e}")
-        rg = rp["realization_gap"]
-        print(f"  Realization Gap (Oracle+ - Real+):              Mean = {rg['mean']:+.4f} | Median = {rg['median']:+.4f} | MAE = {rg['mae']:.4f}")
-
-    if "4bin_ablation" in delta_r_analysis:
-        ab = delta_r_analysis["4bin_ablation"]
-        print(f"\n[Ablation: Legacy 4-Bin Calibration (M1^real, 4bin — keeping Bin 0 mismatch)]")
-        p_imp_inter = ab.get('p_improved_inter', ab.get('p_improved', 0.0)) * 100
-        print(f"  P(Delta R (4-bin) > 0 on Interzonal):           {p_imp_inter:.1f}%")
+    for scale in ["city", "county", "subzone"]:
+        if scale in delta_r_analysis:
+            s_data = delta_r_analysis[scale]
+            print(f"\n[{scale.upper()}-LEVEL CALIBRATION]")
+            print(f"  M0 Interzonal CPC (Mean):                       {s_data['m0_cpc_inter']['mean']:.4f}")
+            print(f"  M1 Interzonal CPC (Mean):                       {s_data['m1_cpc_inter']['mean']:.4f}")
+            print(f"  Delta Mean +- Std:                              {s_data['delta_cpc_inter']['mean']:+.4f} +- {s_data['delta_cpc_inter']['std']:.4f}")
+            print(f"  Delta 95% CI (Fold-Stratified Bootstrap):       [{s_data['delta_cpc_inter']['ci_95_lower']:+.4f}, {s_data['delta_cpc_inter']['ci_95_upper']:+.4f}]")
+            print(f"  P(Delta > 0):                                   {s_data['p_improved'] * 100:.1f}%")
+            if "wilcoxon_one_sided_p" in s_data:
+                print(f"  Wilcoxon One-Sided p-value (H1: Delta > 0):     {s_data['wilcoxon_one_sided_p']:.4e}")
 
     print(f"\nSaved full results to: {out_file.resolve()}")
-    tables_dir = Path(output_dir) / "tables"
-    generate_tables(str(out_file), output_dir=str(tables_dir))
-    print(f"Saved summary tables and ablation breakdown to: {tables_dir.resolve()}")
     print("=" * 85)
     return final_results
 
