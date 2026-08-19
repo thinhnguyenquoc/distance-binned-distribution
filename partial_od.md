@@ -318,9 +318,9 @@ Không xem (3\times40=120) là 120 quan sát độc lập. Với mỗi city, l�
 
 Sau đó bootstrap và kiểm định trên 40 giá trị (\bar\Delta_c)
 Run max 200 epoc
-12 epoc not improve stop early
+16 epoc not improve stop early
 learning rate from: 3.2e^-3
-
+seed 1,10,100
 GADM 4.1
 
 Chay Y_D cho city level, county level va subzone level

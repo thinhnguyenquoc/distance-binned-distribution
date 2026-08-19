@@ -75,7 +75,7 @@ def run_5fold_experiment(
         fold_start = time.time()
         models = []
         scalers = []
-        seeds = [42, 2024, 3000]
+        seeds = [1, 10, 100]
         
         for seed_idx, seed in enumerate(seeds):
             _ckpt_dir  = Path(output_dir) / "checkpoints"
@@ -96,7 +96,7 @@ def run_5fold_experiment(
                 device_str=device_str,
                 verbose=True,
                 val_city_names=val_cities,
-                patience=12,
+                patience=16,
                 checkpoint_path=_ckpt_path,
                 run_tag=f"5fold_fold{fold_id}_seed{seed}",
                 seed=seed,
@@ -169,8 +169,29 @@ def run_5fold_experiment(
             "test_cities": test_cities,
             "mean_delta_city": float(sum(r["delta_city"] for r in fold_city_results) / max(1, len(fold_city_results))),
         }
+        
+        # Intermediate Save
+        out_file = Path(output_dir) / "5fold_results.json"
+        temp_delta_r = analyze_delta_r(all_city_results)
+        temp_results = {
+            "experiment_config": {
+                "device": device_str,
+                "epochs_per_fold": epochs_per_fold,
+                "hidden_dim": hidden_dim,
+                "graph_type": graph_type,
+                "radius_km": radius_km,
+                "knn_k": knn_k,
+                "loss_type": loss_type,
+                "total_cities_evaluated": len(all_city_results),
+                "total_runtime_sec": time.time() - start_total_time,
+            },
+            "rq1_delta_r": temp_delta_r,
+            "city_level_results": all_city_results,
+        }
+        with open(out_file, "w") as f:
+            json.dump(temp_results, f, indent=2)
 
-    # Cross-city Statistical Aggregation
+    # Cross-city Statistical Aggregation (Final)
     delta_r_analysis = analyze_delta_r(all_city_results)
 
     final_results = {
