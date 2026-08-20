@@ -320,7 +320,7 @@ Sau đó bootstrap và kiểm định trên 40 giá trị (\bar\Delta_c)
 Run max 200 epoc
 16 epoc not improve stop early
 learning rate from: 3.2e^-3
-seed 1,10,100
+seed 1111,5555,9999
 GADM 4.1
 
 Chay Y_D cho city level, county level va subzone level
