@@ -75,7 +75,7 @@ def run_5fold_experiment(
         fold_start = time.time()
         models = []
         scalers = []
-        seeds = [1111, 5555, 9999]
+        seeds = [1, 10, 100]
         
         for seed_idx, seed in enumerate(seeds):
             _ckpt_dir  = Path(output_dir) / "checkpoints"

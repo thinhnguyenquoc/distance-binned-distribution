@@ -81,6 +81,6 @@ The experimental framework utilizes seeds across three independent levels:
 
 ### Version 3.1+ (Pre-Registered Multi-Seed Suite for Batch Sensitivity)
 For multi-seed sensitivity loops and Monte Carlo verification:
-- **Suite A**: `SEED_BASE = 1111` (Folds: 1112, 1113, 1114, 1115, 1116) | `BOOTSTRAP_SEED = 1111`
-- **Suite B**: `SEED_BASE = 5555` (Folds: 5556, 5557, 5558, 5559, 5560) | `BOOTSTRAP_SEED = 5555`
-- **Suite C**: `SEED_BASE = 9999` (Folds: 10000, 10001, 10002, 10003, 10004) | `BOOTSTRAP_SEED = 9999`
+- **Suite A**: `SEED_BASE = 1` (Folds: 2, 3, 4, 5, 6) | `BOOTSTRAP_SEED = 1`
+- **Suite B**: `SEED_BASE = 10` (Folds: 11, 12, 13, 14, 15) | `BOOTSTRAP_SEED = 10`
+- **Suite C**: `SEED_BASE = 100` (Folds: 101, 102, 103, 104, 105) | `BOOTSTRAP_SEED = 100`
