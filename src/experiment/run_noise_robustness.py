@@ -5,6 +5,8 @@ import hashlib
 import argparse
 import datetime
 from pathlib import Path
+from typing import Dict, Tuple, List, Optional, Any
+
 import numpy as np
 import pandas as pd
 import torch
@@ -16,11 +18,11 @@ from scipy.optimize import bisect
 from scipy.stats import spearmanr, wilcoxon
 from scipy.spatial.distance import jensenshannon
 
-def holm_correction(p_vals):
+def holm_correction(p_vals: List[float]) -> np.ndarray:
     n = len(p_vals)
     sorted_indices = np.argsort(p_vals)
     adj_p = np.zeros(n)
-    running_max = 0
+    running_max = 0.0
     for i, idx in enumerate(sorted_indices):
         p_adj = p_vals[idx] * (n - i)
         running_max = max(running_max, p_adj)
@@ -32,20 +34,21 @@ from src.data.dataset import load_city, load_raw_city
 from src.data.urban_graph import build_radius_graph
 from src.training.train import load_checkpoint
 from src.training.evaluate import compute_cpc_pair
-def evaluate_cpc(t_true_inter, t_pred_inter):
-    return compute_cpc_pair(t_true_inter, t_pred_inter)
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.experiment.run_5fold import generate_35_5_10_splits
 from src.experiment.run_experiment import infer_zero_shot
 
-def get_active_bins(yd, eps=1e-8):
+def evaluate_cpc(t_true_inter: np.ndarray, t_pred_inter: np.ndarray) -> float:
+    return compute_cpc_pair(t_true_inter, t_pred_inter)
+
+def get_active_bins(yd: np.ndarray, eps: float = 1e-8) -> np.ndarray:
     return yd > eps
 
-def get_stable_seed(noise_seed, fold, city, replicate_id):
+def get_stable_seed(noise_seed: int, fold: int, city: str, replicate_id: int) -> int:
     s = f"{noise_seed}_{fold}_{city}_{replicate_id}"
     return int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16) % (2**32)
 
-def generate_nested_noisy_yd(p_active, epsilons, base_seed):
+def generate_nested_noisy_yd(p_active: np.ndarray, epsilons: List[float], base_seed: int) -> Dict[float, np.ndarray]:
     K_act = len(p_active)
     if K_act == 1:
         return {eps: p_active.copy() for eps in epsilons}
@@ -56,27 +59,27 @@ def generate_nested_noisy_yd(p_active, epsilons, base_seed):
         z = rng.randn(K_act)
         z = z - np.mean(z)
         
-        def get_p_sigma(sigma):
+        def get_p_sigma(sigma: float) -> np.ndarray:
             log_p = np.log(p_active) + sigma * z
             max_log = np.max(log_p)
             p_sigma = np.exp(log_p - max_log)
             p_sigma = p_sigma / np.sum(p_sigma)
             return p_sigma
             
-        def tv_diff(sigma, eps):
+        def tv_diff(sigma: float, eps: float) -> float:
             p_sigma = get_p_sigma(sigma)
-            return 0.5 * np.sum(np.abs(p_sigma - p_active)) - eps
+            return float(0.5 * np.sum(np.abs(p_sigma - p_active)) - eps)
             
-        max_idx = np.argmax(z)
+        max_idx = int(np.argmax(z))
         p_inf = np.zeros_like(p_active)
         p_inf[max_idx] = 1.0
-        max_tv = 0.5 * np.sum(np.abs(p_inf - p_active))
+        max_tv = float(0.5 * np.sum(np.abs(p_inf - p_active)))
         
         if max_tv <= max(epsilons) + 1e-6:
             continue
             
         try:
-            results = {}
+            results: Dict[float, np.ndarray] = {}
             for eps in epsilons:
                 if eps == 0.0:
                     results[eps] = p_active.copy()
@@ -89,9 +92,9 @@ def generate_nested_noisy_yd(p_active, epsilons, base_seed):
                         raise ValueError("Upper bound too large")
                         
                 sigma_opt = bisect(tv_diff, 0, upper, args=(eps,), xtol=1e-12, maxiter=1000)
-                p_opt = get_p_sigma(sigma_opt)
+                p_opt = get_p_sigma(float(sigma_opt))
                 
-                achieved_tv = 0.5 * np.sum(np.abs(p_opt - p_active))
+                achieved_tv = float(0.5 * np.sum(np.abs(p_opt - p_active)))
                 assert np.all(p_opt >= 0), "p_opt has negative values"
                 assert np.abs(np.sum(p_opt) - 1.0) < 1e-8, "p_opt does not sum to 1"
                 assert np.abs(achieved_tv - eps) < 1e-8, f"Achieved TV {achieved_tv} != requested {eps}"
@@ -104,10 +107,10 @@ def generate_nested_noisy_yd(p_active, epsilons, base_seed):
     raise RuntimeError("Failed to generate valid noise direction after 10000 attempts.")
 
 
-def fold_stratified_bootstrap(city_df, metric_col, eps, confirmatory_folds, n_boot=10000, seed=42):
+def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, eps: float, confirmatory_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
     rng = np.random.RandomState(seed)
     
-    vals = {}
+    vals: Dict[int, np.ndarray] = {}
     for f in confirmatory_folds:
         mask = (city_df.fold == f) & (city_df.epsilon == eps)
         vals[f] = city_df[mask][metric_col].values
@@ -121,10 +124,24 @@ def fold_stratified_bootstrap(city_df, metric_col, eps, confirmatory_folds, n_bo
             b_samples.append(rng.choice(v, size=len(v), replace=True))
         boot_means[i] = np.concatenate(b_samples).mean()
         
-    return np.percentile(boot_means, 2.5), np.percentile(boot_means, 97.5)
+    return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
 
 
-def fast_cal_metrics(yd_tgt, eps_req, compute_spearman, N_hat, K, active, Y_hat, t0_inter, bin_masks, t_true_inter, cpc_m0, yd_target):
+def fast_cal_metrics(
+    yd_tgt: np.ndarray, 
+    eps_req: float, 
+    compute_spearman: bool, 
+    N_hat: float, 
+    K: int, 
+    active: np.ndarray, 
+    Y_hat: np.ndarray, 
+    t0_inter: np.ndarray, 
+    bin_masks: List[np.ndarray], 
+    t_true_inter: np.ndarray, 
+    cpc_m0: float, 
+    yd_target: np.ndarray
+) -> Tuple[float, float, float, float, float, float, Dict[str, float]]:
+    
     if N_hat <= 0:
         return cpc_m0, 0.0, 0.0, 0.0, eps_req, 0.0, {}
     
@@ -153,7 +170,8 @@ def fast_cal_metrics(yd_tgt, eps_req, compute_spearman, N_hat, K, active, Y_hat,
     cpc = evaluate_cpc(t_true_inter, t_cal_inter)
     mae = float(np.mean(np.abs(t_true_inter - t_cal_inter)))
     rmse = float(np.sqrt(np.mean((t_true_inter - t_cal_inter)**2)))
-    spearman = float(spearmanr(t_true_inter, t_cal_inter)[0]) if compute_spearman else np.nan
+    
+    spearman_val = float(spearmanr(t_true_inter, t_cal_inter)[0]) if compute_spearman else float('nan')
     
     active_w = w[active]
     w_gt_2 = float(np.mean(active_w > 2)) if len(active_w) > 0 else 0.0
@@ -168,13 +186,13 @@ def fast_cal_metrics(yd_tgt, eps_req, compute_spearman, N_hat, K, active, Y_hat,
         "w_gt_2": w_gt_2, "w_gt_5": w_gt_5, "w_gt_10": w_gt_10
     }
     
-    tv_ach = 0.5 * np.sum(np.abs(yd_tgt - yd_target))
+    tv_ach = float(0.5 * np.sum(np.abs(yd_tgt - yd_target)))
     js_div = float(jensenshannon(yd_tgt, yd_target))
     
-    return cpc, mae, rmse, spearman, tv_ach, js_div, stats
+    return cpc, mae, rmse, spearman_val, tv_ach, js_div, stats
 
 
-def run_noise_robustness(args):
+def run_noise_robustness(args: argparse.Namespace) -> None:
     data_root = "data"
     output_dir = "results/noise_robustness_v1"
     os.makedirs(output_dir, exist_ok=True)
@@ -185,35 +203,29 @@ def run_noise_robustness(args):
     logger = logging.getLogger(__name__)
     
     noise_seed = 20260822
-    model_seeds = [1, 10, 100]
     epsilons = [0.0, 0.05, 0.10, 0.20]
     nonzero_epsilons = [e for e in epsilons if e > 0]
     
-    B_noise = args.b
-    folds_to_run = [2] if args.smoke else [1, 2, 3, 4, 5]
-    if args.smoke:
-        B_noise = 20
-        model_seeds = model_seeds[:2]
+    # Safely define parameters without mutating globals
+    model_seeds_to_use = [1, 10, 100] if not args.smoke else [1, 10]
+    B_noise = args.b if not args.smoke else 20
+    folds_to_run = [1, 2, 3, 4, 5] if not args.smoke else [2]
         
     splits = generate_35_5_10_splits(data_root=data_root)
-    raw_results = []
-    device = torch.device("cpu")
+    raw_results: List[Dict[str, Any]] = []
     
     for fold_id in folds_to_run:
         split = splits[fold_id]
         train_cities = split["train"]
-        test_cities = split["test"]
-        
-        if args.smoke:
-            test_cities = test_cities[:1]
+        test_cities_to_use = split["test"] if not args.smoke else split["test"][:1]
             
         logger.info(f"\n=== Processing Fold {fold_id} ===")
         
         bin_edges, _ = compute_kbin_edges(train_cities, K=8, data_root=data_root)
         K = len(bin_edges) - 1
         
-        for c_idx, tc in enumerate(test_cities):
-            logger.info(f"  Target City: {tc} ({c_idx+1}/{len(test_cities)})")
+        for c_idx, tc in enumerate(test_cities_to_use):
+            logger.info(f"  Target City: {tc} ({c_idx+1}/{len(test_cities_to_use)})")
             raw = load_raw_city(tc, data_root=data_root)
             dist_km = raw.dist_km
             inter_mask = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0)
@@ -226,11 +238,11 @@ def run_noise_robustness(args):
             p_active_orig = p_active_orig / p_active_orig.sum()
             
             logger.info("    Generating noise nested directions...")
-            city_noise_sets = []
+            city_noise_sets: List[Dict[float, np.ndarray]] = []
             for b in range(B_noise):
                 seed_b = get_stable_seed(noise_seed, fold_id, tc, b+1)
                 noisy_dict = generate_nested_noisy_yd(p_active_orig, epsilons, seed_b)
-                full_dict = {}
+                full_dict: Dict[float, np.ndarray] = {}
                 for eps, p_act in noisy_dict.items():
                     full_yd = np.zeros(K)
                     full_yd[active_mask] = p_act
@@ -241,7 +253,7 @@ def run_noise_robustness(args):
                 lon_lat=raw.lon_lat, radius_km=5.0, include_self_loop=True, cache_key=f"{tc}_tracts"
             )
             
-            for m_seed in model_seeds:
+            for m_seed in model_seeds_to_use:
                 logger.info(f"    Evaluating seed {m_seed}...")
                 ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
                 if not ckpt_path.exists():
@@ -260,11 +272,11 @@ def run_noise_robustness(args):
                 
                 t0_inter = t_pred_zs[inter_mask]
                 dist_inter = dist_km[inter_mask]
-                N_hat = t0_inter.sum()
+                N_hat = float(t0_inter.sum())
                 
-                cpc_m0 = evaluate_cpc(t_true_inter, t0_inter)
+                cpc_m0 = float(evaluate_cpc(t_true_inter, t0_inter))
                 
-                bin_masks = []
+                bin_masks: List[np.ndarray] = []
                 Y_hat = np.zeros(K, dtype=np.float64)
                 active = np.zeros(K, dtype=bool)
                 if N_hat > 0:
@@ -283,11 +295,11 @@ def run_noise_robustness(args):
                 if args.smoke:
                     assert o_tv < 1e-8, "Oracle TV is not 0"
                     
-                def build_row(eps, rep_id, cpc_val, mae, rmse, spr, tv_ach, js_div, st):
+                def build_row(eps_val: float, rep_id: int, cpc_val: float, mae: float, rmse: float, spr: float, tv_ach: float, js_div: float, st: Dict[str, float]) -> Dict[str, Any]:
                     row = {
-                        "fold": int(fold_id), "target_city": tc, "model_seed": int(m_seed),
-                        "epsilon": float(eps), "replicate_id": int(rep_id),
-                        "cpc_m0_inter": float(cpc_m0), "cpc_m1_inter": float(cpc_val),
+                        "fold": fold_id, "target_city": tc, "model_seed": m_seed,
+                        "epsilon": eps_val, "replicate_id": rep_id,
+                        "cpc_m0_inter": cpc_m0, "cpc_m1_inter": cpc_val,
                         "delta_cpc_inter": float(cpc_val - cpc_m0),
                         "degradation": float(oracle_cpc - cpc_val),
                         "mae": mae, "rmse": rmse, "spearman": spr,
@@ -309,9 +321,11 @@ def run_noise_robustness(args):
                             assert np.abs(n_tv - eps) < 1e-8, f"TV mismatch in loop for eps {eps}"
                         raw_results.append(build_row(eps, b+1, n_cpc, n_mae, n_rmse, n_spr, n_tv, n_js, n_stats))
                 
-    # Save raw
     df = pd.DataFrame(raw_results)
     if not df.empty:
+        # Enforce explicit typing for consistency
+        df['spearman'] = df['spearman'].astype(float)
+        
         df.to_csv(f"{output_dir}/noise_raw.csv", index=False)
         df.to_json(f"{output_dir}/noise_raw.jsonl", orient="records", lines=True)
         logger.info(f"Raw results saved with {len(df)} rows.")
@@ -323,7 +337,7 @@ def run_noise_robustness(args):
             w_max=("w_max", "mean"),
             w_gt_2=("w_gt_2", "mean"),
             cpc_m1_inter=("cpc_m1_inter", "mean"),
-            prob_positive=("delta_cpc_inter", lambda x: np.mean(x > 0))
+            prob_positive=("delta_cpc_inter", lambda x: float(np.mean(x > 0)))
         ).reset_index()
         
         df_seed_csv = df_mean_b.copy()
@@ -346,41 +360,41 @@ def run_noise_robustness(args):
         logger.warning("No results were generated. Check checkpoints.")
         
 
-def generate_summary(city_df, output_dir, epsilons, nonzero_epsilons):
+def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[float], nonzero_epsilons: List[float]) -> None:
     confirmatory_folds = sorted([f for f in city_df.fold.unique() if f != 1])
     conf_df = city_df[city_df.fold.isin(confirmatory_folds)]
     
     if conf_df.empty:
         return
         
-    results = {}
-    p_onesided = []
+    results: Dict[float, Dict[str, Any]] = {}
+    p_onesided: List[float] = []
     
     for eps in epsilons:
         c_eps = conf_df[conf_df.epsilon == eps]
         vals = c_eps.delta_cpc_mean.values
         
-        mean_cpc1 = c_eps.cpc_m1_inter.mean()
-        mean_val = np.mean(vals)
-        sd_val = np.std(vals, ddof=1) if len(vals) > 1 else 0.0
-        median = np.median(vals)
-        p25 = np.percentile(vals, 25)
-        p75 = np.percentile(vals, 75)
-        pos_cities = np.sum(vals > 0)
-        harm_rate = np.sum(vals < 0) / len(vals)
+        mean_cpc1 = float(c_eps.cpc_m1_inter.mean())
+        mean_val = float(np.mean(vals))
+        sd_val = float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0
+        median = float(np.median(vals))
+        p25 = float(np.percentile(vals, 25))
+        p75 = float(np.percentile(vals, 75))
+        pos_cities = int(np.sum(vals > 0))
+        harm_rate = float(np.sum(vals < 0) / len(vals))
         
         ci_lower, ci_upper = fold_stratified_bootstrap(conf_df, "delta_cpc_mean", eps, confirmatory_folds)
         
         _, p_1 = wilcoxon(vals, alternative='greater')
         _, p_2 = wilcoxon(vals, alternative='two-sided')
         if eps > 0.0:
-            p_onesided.append(p_1)
+            p_onesided.append(float(p_1))
         
         results[eps] = {
-            "mean_cpc1": float(mean_cpc1),
-            "mean_delta_cpc": float(mean_val), "sd": float(sd_val), "median": float(median),
-            "p25": float(p25), "p75": float(p75), "ci_lower": float(ci_lower), "ci_upper": float(ci_upper),
-            "pos_cities": int(pos_cities), "harm_rate": float(harm_rate),
+            "mean_cpc1": mean_cpc1,
+            "mean_delta_cpc": mean_val, "sd": sd_val, "median": median,
+            "p25": p25, "p75": p75, "ci_lower": ci_lower, "ci_upper": ci_upper,
+            "pos_cities": pos_cities, "harm_rate": harm_rate,
             "wilcoxon_one_sided_raw": float(p_1), "wilcoxon_two_sided": float(p_2)
         }
         
@@ -388,7 +402,7 @@ def generate_summary(city_df, output_dir, epsilons, nonzero_epsilons):
     for i, e in enumerate(nonzero_epsilons):
         results[e]["wilcoxon_one_sided_holm"] = float(p_adj[i])
         
-    oracle_gain = results[0.0]["mean_delta_cpc"]
+    oracle_gain = float(results[0.0]["mean_delta_cpc"])
     for e in epsilons:
         if oracle_gain > 0:
             results[e]["benefit_retention"] = float(results[e]["mean_delta_cpc"] / oracle_gain)
@@ -423,7 +437,7 @@ def generate_summary(city_df, output_dir, epsilons, nonzero_epsilons):
         ci = f"[{d['ci_lower']:.5f}, {d['ci_upper']:.5f}]"
         
         holm_val = d.get('wilcoxon_one_sided_holm')
-        if isinstance(holm_val, float):
+        if isinstance(holm_val, (float, np.floating)):
             holm = f"{holm_val:.2e}"
         else:
             holm = "N/A"

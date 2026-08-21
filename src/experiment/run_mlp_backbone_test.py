@@ -228,5 +228,22 @@ def run_mlp_backbone_test(
         f_gammas = [r["gamma"] for r in paired_results if r["fold"] == fold_id]
         print(f"Fold {fold_id} (n={len(f_gammas)}): Mean Gamma = {np.mean(f_gammas):+.4f}")
 
+    print("\n[Interpretation]")
+    gnn_robust = gnn_sum['mean'] > 0 and gnn_w_p < 0.05
+    mlp_robust = mlp_sum['mean'] > 0 and mlp_w_p < 0.05
+    
+    if gnn_robust and mlp_robust:
+        print("=> Cả GNN và MLP đều cải thiện: Lợi ích của (Y_D) là **robust across the two tested backbones**.")
+    elif gnn_robust and not mlp_robust:
+        print("=> Chỉ GNN cải thiện: Đóng góp của (Y_D) phụ thuộc kiến trúc.")
+    elif not gnn_robust and mlp_robust:
+        print("=> Chỉ MLP cải thiện (Unexpected).")
+    else:
+        print("=> Cả GNN và MLP đều không cho thấy sự cải thiện đáng kể.")
+        
+    print("=> Lưu ý: Nếu MLP có \Delta CPC lớn hơn GNN, điều này chưa chắc có nghĩa MLP 'tốt hơn'. "
+          "MLP có thể có baseline M0 thấp hơn, do đó có nhiều 'room for improvement' hơn.")
+    print("=> Không được gọi là 'architecture-independent', chỉ được kết luận là 'robust across the two tested backbones'.")
+
 if __name__ == "__main__":
     run_mlp_backbone_test()
