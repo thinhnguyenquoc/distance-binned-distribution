@@ -8,8 +8,8 @@ import itertools
 import numpy as np
 import pandas as pd
 import torch
+import math
 from pathlib import Path
-from tqdm import tqdm
 from scipy.stats import wilcoxon
 
 # Ensure root directory is in sys.path
@@ -43,21 +43,27 @@ def mask_and_renormalize(donor_yd, active_mask):
 def get_permutations(yd, active_mask, max_perms=1000, seed=42):
     active_indices = np.where(active_mask)[0]
     active_vals = yd[active_indices]
-    
     num_active = len(active_indices)
-    import math
     
-    perms = []
-    if math.factorial(num_active) <= max_perms:
-        all_perms = list(itertools.permutations(active_vals))
-        # Exclude the identity permutation (which equals original active_vals)
-        perms = [p for p in all_perms if not np.allclose(p, active_vals)]
+    # If the total number of permutations is small enough (<= 8!), generate all and sample
+    if math.factorial(num_active) <= 40320:
+        all_perms = set(itertools.permutations(active_vals))
+        valid_perms = [p for p in all_perms if not np.allclose(p, active_vals)]
+        if len(valid_perms) > max_perms:
+            rng = np.random.RandomState(seed)
+            indices = rng.choice(len(valid_perms), size=max_perms, replace=False)
+            perms = [valid_perms[i] for i in indices]
+        else:
+            perms = valid_perms
     else:
+        # For large K, randomly sample to avoid memory overflow and infinite loops
         rng = np.random.RandomState(seed)
         perms_set = set()
-        while len(perms_set) < max_perms:
+        tries = 0
+        max_tries = max_perms * 10
+        while len(perms_set) < max_perms and tries < max_tries:
+            tries += 1
             p = tuple(rng.permutation(active_vals))
-            # Wait, since there could be duplicate values, tuple(p) handles uniqueness
             if not np.allclose(p, active_vals):
                 perms_set.add(p)
         perms = list(perms_set)
@@ -176,14 +182,15 @@ def run_placebo_experiment(args):
                 cache_key=f"{tc}_tracts"
             )
             
+            seeds_run = 0
             for seed in model_seeds:
                 ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{seed}.pt")
                 if not ckpt_path.exists():
-                    print(f"    Missing ckpt {ckpt_path}, skipping.")
-                    continue
+                    raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}. Placebo test requires all seeds to be present.")
                     
                 model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
                 model.eval()
+                seeds_run += 1
                 
                 # Zero-shot inference
                 city_data = load_city(tc, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
@@ -248,6 +255,8 @@ def run_placebo_experiment(args):
                         "specificity_gain": float(delta_cpc_target - d_cpc)
                     })
 
+            assert seeds_run == len(model_seeds), f"Expected to run {len(model_seeds)} seeds, but ran {seeds_run}"
+
     df = pd.DataFrame(raw_results)
     df.to_csv(f"{output_dir}/placebo_raw.csv", index=False)
     with open(f"{output_dir}/placebo_raw.json", "w") as f:
@@ -300,17 +309,18 @@ def run_placebo_experiment(args):
         wrong_delta_mean = wrong_df["delta_cpc_inter"].mean()
         wrong_delta_p2_5 = wrong_df["delta_cpc_inter"].quantile(0.025)
         wrong_delta_p97_5 = wrong_df["delta_cpc_inter"].quantile(0.975)
-        wrong_permutation_p = (1 + (wrong_df["delta_cpc_inter"] >= target_val).sum()) / (1 + len(wrong_df))
+        pseudo_p_wrong = (1 + (wrong_df["delta_cpc_inter"] >= target_val).sum()) / (1 + len(wrong_df))
         specificity_wrong_mean = target_val - wrong_delta_mean
         
         perm_df = c_df[c_df.condition == "permuted"]
+        n_permutations = len(perm_df)
         if len(perm_df) > 0:
             permuted_delta_mean = perm_df["delta_cpc_inter"].mean()
-            permuted_permutation_p = (1 + (perm_df["delta_cpc_inter"] >= target_val).sum()) / (1 + len(perm_df))
+            pseudo_p_perm = (1 + (perm_df["delta_cpc_inter"] >= target_val).sum()) / (1 + len(perm_df))
             specificity_permuted_mean = target_val - permuted_delta_mean
         else:
             permuted_delta_mean = np.nan
-            permuted_permutation_p = np.nan
+            pseudo_p_perm = np.nan
             specificity_permuted_mean = np.nan
             
         city_stats.append({
@@ -321,15 +331,16 @@ def run_placebo_experiment(args):
             "wrong_delta_mean": wrong_delta_mean,
             "wrong_delta_p2_5": wrong_delta_p2_5,
             "wrong_delta_p97_5": wrong_delta_p97_5,
-            "wrong_permutation_p": wrong_permutation_p,
+            "pseudo_p_wrong": pseudo_p_wrong,
             "permuted_delta_mean": permuted_delta_mean,
-            "permuted_permutation_p": permuted_permutation_p,
+            "pseudo_p_perm": pseudo_p_perm,
             "specificity_wrong_mean": specificity_wrong_mean,
             "specificity_trainmean_mean": target_val - trainmean_val,
             "specificity_permuted_mean": specificity_permuted_mean,
             "target_beats_wrong": int(target_val > wrong_delta_mean),
             "target_beats_trainmean": int(target_val > trainmean_val),
-            "target_beats_permuted": int(target_val > permuted_delta_mean) if len(perm_df) > 0 else 1
+            "target_beats_permuted": int(target_val > permuted_delta_mean) if len(perm_df) > 0 else 1,
+            "n_permutations": n_permutations
         })
         
     city_df = pd.DataFrame(city_stats)
