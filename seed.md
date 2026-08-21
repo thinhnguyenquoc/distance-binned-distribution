@@ -31,3 +31,19 @@ All experiments report metrics averaged over these 3 seeds.
 - **Placebo Random Seed**: `20260821` (Fixed for donor sampling and permutation generation to ensure all model seeds face the same placebo assignments)
 - **Bootstrap Resampling Seed**: `42` (Fixed for 95% CI calculation with 10,000 resamples)
 
+---
+
+## 3. Environment & Hardware Controls
+
+To ensure numerical exactness down to floating-point precision ($< 10^{-6}$), the following environment factors are locked. Without these, macro-level conclusions (e.g., p-values, effect sizes) will remain robust, but byte-for-byte exactness may experience minor non-associative drift.
+
+### 3.1. Package Versions
+The official reference experiments were executed using:
+- **PyTorch**: `2.12.0+cpu`
+- **NumPy**: `2.4.6`
+- **Pandas**: `3.0.3`
+- **SciPy**: `1.17.1`
+
+### 3.2. Hardware Execution
+All inference passes (M0) for testing and calibration steps are strictly mandated to run on **CPU** (`device="cpu"`). This bypasses non-deterministic execution paths often encountered in CUDA kernels during graph aggregations.
+
