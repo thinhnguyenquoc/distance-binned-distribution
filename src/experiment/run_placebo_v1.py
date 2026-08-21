@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import torch
 import math
+import logging
 from pathlib import Path
 from scipy.stats import wilcoxon
 
@@ -92,6 +93,18 @@ def run_placebo_experiment(args):
     output_dir = "results/placebo_v1"
     os.makedirs(output_dir, exist_ok=True)
     
+    # Setup logging
+    log_file = f"{output_dir}/run.log"
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
+    
     # Load 5-fold splits
     splits = generate_35_5_10_splits(data_root=data_root)
     
@@ -102,7 +115,7 @@ def run_placebo_experiment(args):
             ref_data = json.load(f)
         ref_city_res = {item["city"]: item for item in ref_data.get("city_level_results", [])}
     else:
-        print("Warning: 5fold_results.json not found, skipping M0 validation.")
+        logger.warning("Warning: 5fold_results.json not found, skipping M0 validation.")
         ref_city_res = {}
 
     placebo_seed = 20260821
@@ -123,13 +136,13 @@ def run_placebo_experiment(args):
         if args.smoke:
             test_cities = [test_cities[0]] # Just one city
             
-        print(f"\nProcessing Fold {fold_id}...")
+        logger.info(f"\nProcessing Fold {fold_id}...")
         
         # Load train Y_Ds for donor selection and train mean
         bin_edges, _ = compute_kbin_edges(train_cities, K=8, data_root=data_root)
         train_yd_dict = {}
         
-        print("  Extracting donor Y_Ds...")
+        logger.info("  Extracting donor Y_Ds...")
         for city_name in train_cities:
             raw = load_raw_city(city_name, data_root=data_root)
             dist_km = raw.dist_km
@@ -147,8 +160,8 @@ def run_placebo_experiment(args):
             
         model_seeds = [1, 10, 100]
         
-        for tc in test_cities:
-            print(f"  Target City: {tc}")
+        for c_idx, tc in enumerate(test_cities):
+            logger.info(f"  Target City: {tc} ({c_idx+1}/{len(test_cities)})")
             raw = load_raw_city(tc, data_root=data_root)
             dist_km = raw.dist_km
             inter_mask = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0)
@@ -184,6 +197,7 @@ def run_placebo_experiment(args):
             
             seeds_run = 0
             for seed in model_seeds:
+                logger.info(f"    Evaluating seed {seed}...")
                 ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{seed}.pt")
                 if not ckpt_path.exists():
                     raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}. Placebo test requires all seeds to be present.")
@@ -213,7 +227,7 @@ def run_placebo_experiment(args):
                 raw_results.append({
                     "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "target",
                     "replicate_id": 0, "donor_city": tc, "placebo_seed": int(placebo_seed),
-                    "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": 8, "active_bins": int(active_mask.sum()),
+                    "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
                     "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_target_inter),
                     "delta_cpc_inter": float(delta_cpc_target), "target_delta_cpc_inter": float(delta_cpc_target), "specificity_gain": 0.0
                 })
@@ -221,21 +235,67 @@ def run_placebo_experiment(args):
                 raw_results.append({
                     "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "trainmean",
                     "replicate_id": 0, "donor_city": "TRAIN_MEAN", "placebo_seed": int(placebo_seed),
-                    "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": 8, "active_bins": int(active_mask.sum()),
+                    "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
                     "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_trainmean_inter),
                     "delta_cpc_inter": float(delta_cpc_trainmean), "target_delta_cpc_inter": float(delta_cpc_target), 
                     "specificity_gain": float(delta_cpc_target - delta_cpc_trainmean)
                 })
                 
+                # Precompute bin masks and Y_hat for fast calibration
+                t0_inter = t_pred_zs[inter_mask]
+                dist_inter = dist_km[inter_mask]
+                N_hat = t0_inter.sum()
+                
+                K = len(bin_edges) - 1
+                bin_masks = []
+                Y_hat = np.zeros(K, dtype=np.float64)
+                active = np.zeros(K, dtype=bool)
+                if N_hat > 0:
+                    for k in range(K):
+                        lo, hi = float(bin_edges[k]), float(bin_edges[k+1])
+                        in_bin = (dist_inter > lo) & (dist_inter <= hi)
+                        bin_masks.append(in_bin)
+                        Y_hat[k] = t0_inter[in_bin].sum() / N_hat
+                        active[k] = bool(in_bin.any())
+                
+                def fast_cal_cpc(yd_tgt):
+                    if N_hat <= 0:
+                        return cpc_m0_inter
+                    
+                    yd_raw = yd_tgt / yd_tgt.sum() if yd_tgt.sum() > 0 else np.ones(K)/K
+                    yd_active = yd_raw * active.astype(np.float64)
+                    active_sum = yd_active.sum()
+                    Y_D_cond = yd_active / active_sum if active_sum > 0 else Y_hat.copy()
+                    
+                    w = np.ones(K, dtype=np.float64)
+                    for k in range(K):
+                        if active[k] and Y_hat[k] > 0:
+                            w[k] = Y_D_cond[k] / Y_hat[k]  # q=1.0
+                            
+                    weighted_mass = float((Y_hat * w).sum())
+                    s = w / weighted_mass if weighted_mass > 0 else np.ones(K)
+                    
+                    # We only need CPC on interzonal pairs, so we calibrate t0_inter directly
+                    t_cal_inter = t0_inter.copy()
+                    for k in range(K):
+                        if active[k]:
+                            t_cal_inter[bin_masks[k]] *= s[k]
+                            
+                    cal_mass = t_cal_inter.sum()
+                    if cal_mass > 0:
+                        t_cal_inter *= (N_hat / cal_mass)
+                        
+                    # Compute CPC
+                    return evaluate_cpc(t_true_inter, t_cal_inter)
+                
                 # Wrong-city
                 for b_idx, (d_name, d_yd_masked) in enumerate(donor_yds):
-                    t_pred_wrong = calibrate_kbins(t_pred_zs, dist_km, inter_mask, d_yd_masked, bin_edges, q=1.0)
-                    cpc_wrong = evaluate_cpc(t_true_inter, t_pred_wrong[inter_mask])
+                    cpc_wrong = fast_cal_cpc(d_yd_masked)
                     d_cpc = cpc_wrong - cpc_m0_inter
                     raw_results.append({
                         "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "wrong_city",
                         "replicate_id": int(b_idx), "donor_city": d_name, "placebo_seed": int(placebo_seed),
-                        "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": 8, "active_bins": int(active_mask.sum()),
+                        "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
                         "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_wrong),
                         "delta_cpc_inter": float(d_cpc), "target_delta_cpc_inter": float(delta_cpc_target), 
                         "specificity_gain": float(delta_cpc_target - d_cpc)
@@ -243,13 +303,12 @@ def run_placebo_experiment(args):
                     
                 # Permuted
                 for p_idx, p_yd in enumerate(permuted_yds):
-                    t_pred_perm = calibrate_kbins(t_pred_zs, dist_km, inter_mask, p_yd, bin_edges, q=1.0)
-                    cpc_perm = evaluate_cpc(t_true_inter, t_pred_perm[inter_mask])
+                    cpc_perm = fast_cal_cpc(p_yd)
                     d_cpc = cpc_perm - cpc_m0_inter
                     raw_results.append({
                         "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "permuted",
                         "replicate_id": int(p_idx), "donor_city": "PERMUTED", "placebo_seed": int(placebo_seed),
-                        "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": 8, "active_bins": int(active_mask.sum()),
+                        "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
                         "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_perm),
                         "delta_cpc_inter": float(d_cpc), "target_delta_cpc_inter": float(delta_cpc_target), 
                         "specificity_gain": float(delta_cpc_target - d_cpc)
@@ -262,7 +321,7 @@ def run_placebo_experiment(args):
     with open(f"{output_dir}/placebo_raw.json", "w") as f:
         json.dump(raw_results, f, indent=2)
         
-    print(f"Raw results saved to {output_dir}")
+    logger.info(f"Raw results saved to {output_dir}")
     
     # Process Seed-Aggregated
     agg_df = df.groupby(["fold", "target_city", "condition", "replicate_id"]).agg({
@@ -280,17 +339,17 @@ def run_placebo_experiment(args):
             ref_m0 = ref_city_res[tc]["M0"]["cpc_inter"]
             tc_m0 = agg_df[(agg_df.target_city == tc) & (agg_df.condition == "target")]["cpc_m0_inter"].values[0]
             if abs(ref_m0 - tc_m0) > 1e-6:
-                print(f"M0 mismatch for {tc}: ref={ref_m0}, new={tc_m0}")
+                logger.error(f"M0 mismatch for {tc}: ref={ref_m0}, new={tc_m0}")
                 m0_check_failed = True
             
             ref_delta = ref_city_res[tc]["delta_city"]
             tc_delta = agg_df[(agg_df.target_city == tc) & (agg_df.condition == "target")]["delta_cpc_inter"].values[0]
             if abs(ref_delta - tc_delta) > 1e-6:
-                print(f"Delta mismatch for {tc}: ref={ref_delta}, new={tc_delta}")
+                logger.error(f"Delta mismatch for {tc}: ref={ref_delta}, new={tc_delta}")
                 m0_check_failed = True
 
     if m0_check_failed and not args.smoke:
-        print("Preflight checks failed! M0 or Delta CPC does not match 5fold_results.json.")
+        logger.warning("Preflight checks failed! M0 or Delta CPC does not match 5fold_results.json.")
         
     city_stats = []
     
@@ -369,9 +428,12 @@ def generate_summary(city_df, raw_df):
     sd_s_wrong = float(np.std(s_wrong, ddof=1))
     ci_lower, ci_upper = bootstrap_ci(s_wrong)
     
-    # Wilcoxon
-    _, p_val_one = wilcoxon(s_wrong, alternative="greater")
-    _, p_val_two = wilcoxon(s_wrong, alternative="two-sided")
+    # Wilcoxon guards for zero-variance or identical samples
+    try:
+        _, p_val_one = wilcoxon(s_wrong, alternative="greater")
+        _, p_val_two = wilcoxon(s_wrong, alternative="two-sided")
+    except ValueError:
+        p_val_one, p_val_two = 1.0, 1.0
     
     summary["primary_test"] = {
         "mean_specificity_wrong": mean_s_wrong,
@@ -387,13 +449,20 @@ def generate_summary(city_df, raw_df):
     # Train mean test
     s_trainmean = confirmatory_df["specificity_trainmean_mean"].values
     mean_s_trainmean = float(np.mean(s_trainmean))
-    _, p_val_trainmean = wilcoxon(s_trainmean, alternative="greater")
+    try:
+        _, p_val_trainmean = wilcoxon(s_trainmean, alternative="greater")
+    except ValueError:
+        p_val_trainmean = 1.0
     
     # Permuted test
     s_perm = confirmatory_df["specificity_permuted_mean"].dropna().values
-    mean_s_perm = float(np.mean(s_perm))
+    mean_s_perm = float(np.mean(s_perm)) if len(s_perm) > 0 else np.nan
+    
     if len(s_perm) > 0:
-        _, p_val_perm = wilcoxon(s_perm, alternative="greater")
+        try:
+            _, p_val_perm = wilcoxon(s_perm, alternative="greater")
+        except ValueError:
+            p_val_perm = 1.0
     else:
         p_val_perm = 1.0
         
