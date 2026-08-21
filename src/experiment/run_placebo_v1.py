@@ -140,6 +140,7 @@ def run_placebo_experiment(args):
         
         # Load train Y_Ds for donor selection and train mean
         bin_edges, _ = compute_kbin_edges(train_cities, K=8, data_root=data_root)
+        K = len(bin_edges) - 1
         train_yd_dict = {}
         
         logger.info("  Extracting donor Y_Ds...")
@@ -246,7 +247,6 @@ def run_placebo_experiment(args):
                 dist_inter = dist_km[inter_mask]
                 N_hat = t0_inter.sum()
                 
-                K = len(bin_edges) - 1
                 bin_masks = []
                 Y_hat = np.zeros(K, dtype=np.float64)
                 active = np.zeros(K, dtype=bool)
