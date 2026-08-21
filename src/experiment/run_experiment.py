@@ -189,10 +189,6 @@ def run_target_city_experiments(
     average_flow = total_inter_trips / n_inter_pairs if n_inter_pairs > 0 else 0.0
     mean_distance = float(np.mean(pair_dist_km[inter_mask])) if n_inter_pairs > 0 else 0.0
     
-    n_short = np.sum((pair_dist_km[inter_mask] > 0) & (pair_dist_km[inter_mask] < 10.0))
-    n_long = np.sum(pair_dist_km[inter_mask] >= 100.0)
-    short_long_ratio = float(n_short) / float(n_long) if n_long > 0 else 0.0
-
     return {
         "city": city_name,
         "n_tracts": city_data.n_tracts,
@@ -200,7 +196,6 @@ def run_target_city_experiments(
         "rho_c": rho_c,
         "average_flow": average_flow,
         "mean_distance": mean_distance,
-        "short_long_ratio": short_long_ratio,
         "n_inter_pairs": n_inter_pairs,
         "total_trips": total_trips,
         "total_inter_trips": total_inter_trips,

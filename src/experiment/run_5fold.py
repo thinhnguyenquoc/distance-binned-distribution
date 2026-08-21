@@ -140,11 +140,11 @@ def run_5fold_experiment(
             for key in ["M0", "M1_city_oracle_obs", "M1_county_oracle_obs", "M1_subzone_oracle_obs"]:
                 if avg_res[key] is not None:
                     avg_res[key] = avg_res[key].copy()
-                    for metric in ["cpc_inter", "mae_inter", "rmse_inter", "spearman_inter", "rel_error_total", "cpc_inflow", "cpc_outflow", "cpc_bin_1", "cpc_bin_2", "cpc_bin_3"]:
+                    for metric in ["cpc_inter", "mae_inter", "rmse_inter", "spearman_inter", "rel_error_total", "cpc_inflow", "cpc_outflow"]:
                         if metric in avg_res[key]:
                             avg_res[key][metric] = sum(r[key][metric] for r in seed_results) / len(seed_results)
             
-            for key in ["rho_c", "average_flow", "mean_distance", "short_long_ratio"]:
+            for key in ["rho_c", "average_flow", "mean_distance"]:
                 if key in avg_res and avg_res[key] is not None:
                     avg_res[key] = sum(r[key] for r in seed_results) / len(seed_results)
             

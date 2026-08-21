@@ -128,15 +128,6 @@ def evaluate_moving_and_full(
     max_node = max(np.max(o_np), np.max(d_np)) + 1 if len(o_np) > 0 else 0
     cpc_inflow, cpc_outflow = compute_inflow_outflow_cpc(t_t_inter, t_p_inter, o_np[inter_mask], d_np[inter_mask], max_node)
     
-    # CPC by distance bin
-    cpc_bins = {}
-    for b in range(1, 4):
-        bin_mask = (b_np[inter_mask] == b)
-        if np.any(bin_mask):
-            cpc_bins[f"cpc_bin_{b}"] = compute_cpc_pair(t_t_inter[bin_mask], t_p_inter[bin_mask])
-        else:
-            cpc_bins[f"cpc_bin_{b}"] = 0.0
-
     result = {
         "cpc": cpc_inter,                     # primary shorthand
         "cpc_inter": cpc_inter,
@@ -147,7 +138,6 @@ def evaluate_moving_and_full(
         "cpc_inflow": cpc_inflow,
         "cpc_outflow": cpc_outflow,
     }
-    result.update(cpc_bins)
     return result
 
 def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]:
