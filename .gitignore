@@ -223,3 +223,6 @@ meta_prior/*
 data_gadm2/*
 gadm41_USA_shp/*
 results/e1_rs/yd_oracles/*
+results/placebo_matched_v2/matched_placebo_raw.json
+results/placebo_matched_v2/matched_placebo_raw.csv
+results/
