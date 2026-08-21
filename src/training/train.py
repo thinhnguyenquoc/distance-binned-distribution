@@ -118,13 +118,27 @@ def load_checkpoint(
 
     # --- Reconstruct model ---
     hp = bundle["hyperparams"]
-    model = ZeroShotODModel(
-        node_in_dim       = hp["node_in_dim"],
-        node_hidden_dim   = hp["hidden_dim"],
-        node_out_dim      = hp["hidden_dim"],
-        num_gnn_layers    = hp["num_gnn_layers"],
-        decoder_hidden_dim= hp["hidden_dim"],
-    ).to(torch.device(device_str))
+    backbone = hp.get("backbone", "gnn")
+    
+    from src.models.zero_shot_model import ZeroShotODModel, ZeroShotMLPModel
+    
+    if backbone == "mlp":
+        model = ZeroShotMLPModel(
+            node_in_dim       = hp["node_in_dim"],
+            node_hidden_dim   = hp["hidden_dim"],
+            node_out_dim      = hp["hidden_dim"],
+            num_gnn_layers    = hp["num_gnn_layers"],
+            decoder_hidden_dim= hp["hidden_dim"],
+        ).to(torch.device(device_str))
+    else:
+        model = ZeroShotODModel(
+            node_in_dim       = hp["node_in_dim"],
+            node_hidden_dim   = hp["hidden_dim"],
+            node_out_dim      = hp["hidden_dim"],
+            num_gnn_layers    = hp["num_gnn_layers"],
+            decoder_hidden_dim= hp["hidden_dim"],
+        ).to(torch.device(device_str))
+        
     model.load_state_dict(bundle["model_state_dict"])
     model.eval()
     for p in model.parameters():
@@ -233,6 +247,7 @@ def train_zero_shot_model(
     radius_km: float = 5.0,
     knn_k: int = 10,
     loss_type: str = "ztnb",
+    backbone: str = "gnn",
     device_str: str = "cuda" if torch.cuda.is_available() else "cpu",
     verbose: bool = True,
     # --- Validation / early stopping ---
@@ -343,13 +358,24 @@ def train_zero_shot_model(
                 "has_inter": bool(inter_cpu.sum() > 0),
             })
 
-    model = ZeroShotODModel(
-        node_in_dim=train_cities[0].node_features.shape[1],
-        node_hidden_dim=hidden_dim,
-        node_out_dim=hidden_dim,
-        num_gnn_layers=num_gnn_layers,
-        decoder_hidden_dim=hidden_dim,
-    ).to(device)
+    from src.models.zero_shot_model import ZeroShotODModel, ZeroShotMLPModel
+
+    if backbone == "mlp":
+        model = ZeroShotMLPModel(
+            node_in_dim=train_cities[0].node_features.shape[1],
+            node_hidden_dim=hidden_dim,
+            node_out_dim=hidden_dim,
+            num_gnn_layers=num_gnn_layers,
+            decoder_hidden_dim=hidden_dim,
+        ).to(device)
+    else:
+        model = ZeroShotODModel(
+            node_in_dim=train_cities[0].node_features.shape[1],
+            node_hidden_dim=hidden_dim,
+            node_out_dim=hidden_dim,
+            num_gnn_layers=num_gnn_layers,
+            decoder_hidden_dim=hidden_dim,
+        ).to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     if val_city_names:
@@ -472,6 +498,7 @@ def train_zero_shot_model(
             "epochs":         epochs,
             "lr":             lr,
             "weight_decay":   weight_decay,
+            "backbone":       backbone,
         }
         saved_path = save_checkpoint(
             path=checkpoint_path,

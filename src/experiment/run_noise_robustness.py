@@ -5,7 +5,6 @@ import hashlib
 import argparse
 import datetime
 from pathlib import Path
-from itertools import product
 import numpy as np
 import pandas as pd
 import torch
@@ -16,6 +15,7 @@ import logging
 from scipy.optimize import bisect
 from scipy.stats import spearmanr, wilcoxon
 from scipy.spatial.distance import jensenshannon
+
 def holm_correction(p_vals):
     n = len(p_vals)
     sorted_indices = np.argsort(p_vals)
@@ -104,12 +104,11 @@ def generate_nested_noisy_yd(p_active, epsilons, base_seed):
     raise RuntimeError("Failed to generate valid noise direction after 10000 attempts.")
 
 
-def fold_stratified_bootstrap(city_df, metric_col, eps, n_boot=10000, seed=42):
+def fold_stratified_bootstrap(city_df, metric_col, eps, confirmatory_folds, n_boot=10000, seed=42):
     rng = np.random.RandomState(seed)
     
-    folds = [2, 3, 4, 5]
     vals = {}
-    for f in folds:
+    for f in confirmatory_folds:
         mask = (city_df.fold == f) & (city_df.epsilon == eps)
         vals[f] = city_df[mask][metric_col].values
         assert len(vals[f]) == 10, f"Expected 10 cities for fold {f}, got {len(vals[f])}"
@@ -117,12 +116,62 @@ def fold_stratified_bootstrap(city_df, metric_col, eps, n_boot=10000, seed=42):
     boot_means = np.zeros(n_boot)
     for i in range(n_boot):
         b_samples = []
-        for f in folds:
+        for f in confirmatory_folds:
             v = vals[f]
             b_samples.append(rng.choice(v, size=len(v), replace=True))
         boot_means[i] = np.concatenate(b_samples).mean()
         
     return np.percentile(boot_means, 2.5), np.percentile(boot_means, 97.5)
+
+
+def fast_cal_metrics(yd_tgt, eps_req, compute_spearman, N_hat, K, active, Y_hat, t0_inter, bin_masks, t_true_inter, cpc_m0, yd_target):
+    if N_hat <= 0:
+        return cpc_m0, 0.0, 0.0, 0.0, eps_req, 0.0, {}
+    
+    yd_raw = yd_tgt / yd_tgt.sum() if yd_tgt.sum() > 0 else np.ones(K)/K
+    yd_active = yd_raw * active.astype(np.float64)
+    active_sum = yd_active.sum()
+    Y_D_cond = yd_active / active_sum if active_sum > 0 else Y_hat.copy()
+    
+    w = np.ones(K, dtype=np.float64)
+    for k in range(K):
+        if active[k] and Y_hat[k] > 0:
+            w[k] = Y_D_cond[k] / Y_hat[k]
+            
+    weighted_mass = float((Y_hat * w).sum())
+    s = w / weighted_mass if weighted_mass > 0 else np.ones(K)
+    
+    t_cal_inter = t0_inter.copy()
+    for k in range(K):
+        if active[k]:
+            t_cal_inter[bin_masks[k]] *= s[k]
+            
+    cal_mass = t_cal_inter.sum()
+    if cal_mass > 0:
+        t_cal_inter *= (N_hat / cal_mass)
+        
+    cpc = evaluate_cpc(t_true_inter, t_cal_inter)
+    mae = float(np.mean(np.abs(t_true_inter - t_cal_inter)))
+    rmse = float(np.sqrt(np.mean((t_true_inter - t_cal_inter)**2)))
+    spearman = float(spearmanr(t_true_inter, t_cal_inter)[0]) if compute_spearman else np.nan
+    
+    active_w = w[active]
+    w_gt_2 = float(np.mean(active_w > 2)) if len(active_w) > 0 else 0.0
+    w_gt_5 = float(np.mean(active_w > 5)) if len(active_w) > 0 else 0.0
+    w_gt_10 = float(np.mean(active_w > 10)) if len(active_w) > 0 else 0.0
+    
+    stats = {
+        "w_min": float(active_w.min()) if len(active_w) > 0 else 1.0,
+        "w_median": float(np.median(active_w)) if len(active_w) > 0 else 1.0,
+        "w_p95": float(np.percentile(active_w, 95)) if len(active_w) > 0 else 1.0,
+        "w_max": float(active_w.max()) if len(active_w) > 0 else 1.0,
+        "w_gt_2": w_gt_2, "w_gt_5": w_gt_5, "w_gt_10": w_gt_10
+    }
+    
+    tv_ach = 0.5 * np.sum(np.abs(yd_tgt - yd_target))
+    js_div = float(jensenshannon(yd_tgt, yd_target))
+    
+    return cpc, mae, rmse, spearman, tv_ach, js_div, stats
 
 
 def run_noise_robustness(args):
@@ -136,19 +185,18 @@ def run_noise_robustness(args):
     logger = logging.getLogger(__name__)
     
     noise_seed = 20260822
-    bootstrap_seed = 42
     model_seeds = [1, 10, 100]
     epsilons = [0.0, 0.05, 0.10, 0.20]
+    nonzero_epsilons = [e for e in epsilons if e > 0]
     
     B_noise = args.b
     folds_to_run = [2] if args.smoke else [1, 2, 3, 4, 5]
     if args.smoke:
         B_noise = 20
+        model_seeds = model_seeds[:2]
         
     splits = generate_35_5_10_splits(data_root=data_root)
-    
     raw_results = []
-    
     device = torch.device("cpu")
     
     for fold_id in folds_to_run:
@@ -157,8 +205,7 @@ def run_noise_robustness(args):
         test_cities = split["test"]
         
         if args.smoke:
-            test_cities = [test_cities[0]] # 1 city for smoke test as per prompt
-            model_seeds = [1, 10]
+            test_cities = test_cities[:1]
             
         logger.info(f"\n=== Processing Fold {fold_id} ===")
         
@@ -197,8 +244,15 @@ def run_noise_robustness(args):
             for m_seed in model_seeds:
                 logger.info(f"    Evaluating seed {m_seed}...")
                 ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
-                model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
-                model.eval()
+                if not ckpt_path.exists():
+                    logger.warning(f"    Checkpoint {ckpt_path} not found. Skipping.")
+                    continue
+                try:
+                    model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
+                    model.eval()
+                except Exception as e:
+                    logger.error(f"    Failed to load checkpoint {ckpt_path}: {e}")
+                    continue
                 
                 city_data = load_city(tc, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
                 t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device="cpu")
@@ -221,58 +275,10 @@ def run_noise_robustness(args):
                         Y_hat[k] = t0_inter[in_bin].sum() / N_hat
                         active[k] = bool(in_bin.any())
                 
-                def fast_cal_metrics(yd_tgt, eps_req):
-                    if N_hat <= 0:
-                        return cpc_m0, 0.0, 0.0, 0.0, eps_req, 0.0, {}
-                    
-                    yd_raw = yd_tgt / yd_tgt.sum() if yd_tgt.sum() > 0 else np.ones(K)/K
-                    yd_active = yd_raw * active.astype(np.float64)
-                    active_sum = yd_active.sum()
-                    Y_D_cond = yd_active / active_sum if active_sum > 0 else Y_hat.copy()
-                    
-                    w = np.ones(K, dtype=np.float64)
-                    for k in range(K):
-                        if active[k] and Y_hat[k] > 0:
-                            w[k] = Y_D_cond[k] / Y_hat[k]
-                            
-                    weighted_mass = float((Y_hat * w).sum())
-                    s = w / weighted_mass if weighted_mass > 0 else np.ones(K)
-                    
-                    t_cal_inter = t0_inter.copy()
-                    for k in range(K):
-                        if active[k]:
-                            t_cal_inter[bin_masks[k]] *= s[k]
-                            
-                    cal_mass = t_cal_inter.sum()
-                    if cal_mass > 0:
-                        t_cal_inter *= (N_hat / cal_mass)
-                        
-                    cpc = evaluate_cpc(t_true_inter, t_cal_inter)
-                    mae = float(np.mean(np.abs(t_true_inter - t_cal_inter)))
-                    rmse = float(np.sqrt(np.mean((t_true_inter - t_cal_inter)**2)))
-                    spearman = float(spearmanr(t_true_inter, t_cal_inter)[0])
-                    
-                    active_w = w[active]
-                    w_gt_2 = float(np.mean(active_w > 2)) if len(active_w) > 0 else 0.0
-                    w_gt_5 = float(np.mean(active_w > 5)) if len(active_w) > 0 else 0.0
-                    w_gt_10 = float(np.mean(active_w > 10)) if len(active_w) > 0 else 0.0
-                    
-                    stats = {
-                        "w_min": float(active_w.min()) if len(active_w) > 0 else 1.0,
-                        "w_median": float(np.median(active_w)) if len(active_w) > 0 else 1.0,
-                        "w_p95": float(np.percentile(active_w, 95)) if len(active_w) > 0 else 1.0,
-                        "w_max": float(active_w.max()) if len(active_w) > 0 else 1.0,
-                        "w_gt_2": w_gt_2, "w_gt_5": w_gt_5, "w_gt_10": w_gt_10
-                    }
-                    
-                    tv_ach = 0.5 * np.sum(np.abs(yd_tgt - yd_target))
-                    js_div = float(jensenshannon(yd_tgt, yd_target))
-                    
-                    return cpc, mae, rmse, spearman, tv_ach, js_div, stats
-
                 # 1. Oracle (eps=0)
-                # For eps=0 we just use replicate_id = 0
-                oracle_cpc, o_mae, o_rmse, o_spr, o_tv, o_js, o_stats = fast_cal_metrics(yd_target, 0.0)
+                oracle_cpc, o_mae, o_rmse, o_spr, o_tv, o_js, o_stats = fast_cal_metrics(
+                    yd_target, 0.0, True, N_hat, K, active, Y_hat, t0_inter, bin_masks, t_true_inter, cpc_m0, yd_target
+                )
                 
                 if args.smoke:
                     assert o_tv < 1e-8, "Oracle TV is not 0"
@@ -295,50 +301,58 @@ def run_noise_robustness(args):
                 
                 # 2. Noise replicates
                 for b, noisy_dict in enumerate(city_noise_sets):
-                    for eps in [0.05, 0.10, 0.20]:
-                        n_cpc, n_mae, n_rmse, n_spr, n_tv, n_js, n_stats = fast_cal_metrics(noisy_dict[eps], eps)
+                    for eps in nonzero_epsilons:
+                        n_cpc, n_mae, n_rmse, n_spr, n_tv, n_js, n_stats = fast_cal_metrics(
+                            noisy_dict[eps], eps, False, N_hat, K, active, Y_hat, t0_inter, bin_masks, t_true_inter, cpc_m0, yd_target
+                        )
                         if args.smoke:
                             assert np.abs(n_tv - eps) < 1e-8, f"TV mismatch in loop for eps {eps}"
                         raw_results.append(build_row(eps, b+1, n_cpc, n_mae, n_rmse, n_spr, n_tv, n_js, n_stats))
                 
     # Save raw
     df = pd.DataFrame(raw_results)
-    df.to_csv(f"{output_dir}/noise_raw.csv", index=False)
-    df.to_json(f"{output_dir}/noise_raw.jsonl", orient="records", lines=True)
-    logger.info(f"Raw results saved with {len(df)} rows.")
-    
-    # Aggregation Step 1 & 2
-    df_mean_b = df.groupby(["fold", "target_city", "model_seed", "epsilon"]).agg(
-        delta_cpc_inter=("delta_cpc_inter", "mean"),
-        degradation=("degradation", "mean"),
-        w_max=("w_max", "mean"),
-        w_gt_2=("w_gt_2", "mean"),
-        cpc_m1_inter=("cpc_m1_inter", "mean"),
-        prob_positive=("delta_cpc_inter", lambda x: np.mean(x > 0))
-    ).reset_index()
-    
-    df_seed_csv = df_mean_b.copy()
-    df_seed_csv.to_csv(f"{output_dir}/noise_per_seed.csv", index=False)
-    
-    city_df = df_mean_b.groupby(["fold", "target_city", "epsilon"]).agg(
-        delta_cpc_mean=("delta_cpc_inter", "mean"),
-        degradation_mean=("degradation", "mean"),
-        prob_positive=("prob_positive", "mean"),
-        cpc_m1_inter=("cpc_m1_inter", "mean"),
-        w_max=("w_max", "mean"),
-        w_gt_2=("w_gt_2", "mean")
-    ).reset_index()
-    
-    city_df.to_csv(f"{output_dir}/noise_per_city.csv", index=False)
-    
-    if not args.smoke:
-        generate_summary(city_df, df_mean_b, df, output_dir)
+    if not df.empty:
+        df.to_csv(f"{output_dir}/noise_raw.csv", index=False)
+        df.to_json(f"{output_dir}/noise_raw.jsonl", orient="records", lines=True)
+        logger.info(f"Raw results saved with {len(df)} rows.")
+        
+        # Aggregation Step 1 & 2
+        df_mean_b = df.groupby(["fold", "target_city", "model_seed", "epsilon"]).agg(
+            delta_cpc_inter=("delta_cpc_inter", "mean"),
+            degradation=("degradation", "mean"),
+            w_max=("w_max", "mean"),
+            w_gt_2=("w_gt_2", "mean"),
+            cpc_m1_inter=("cpc_m1_inter", "mean"),
+            prob_positive=("delta_cpc_inter", lambda x: np.mean(x > 0))
+        ).reset_index()
+        
+        df_seed_csv = df_mean_b.copy()
+        df_seed_csv.to_csv(f"{output_dir}/noise_per_seed.csv", index=False)
+        
+        city_df = df_mean_b.groupby(["fold", "target_city", "epsilon"]).agg(
+            delta_cpc_mean=("delta_cpc_inter", "mean"),
+            degradation_mean=("degradation", "mean"),
+            prob_positive=("prob_positive", "mean"),
+            cpc_m1_inter=("cpc_m1_inter", "mean"),
+            w_max=("w_max", "mean"),
+            w_gt_2=("w_gt_2", "mean")
+        ).reset_index()
+        
+        city_df.to_csv(f"{output_dir}/noise_per_city.csv", index=False)
+        
+        if not args.smoke:
+            generate_summary(city_df, output_dir, epsilons, nonzero_epsilons)
+    else:
+        logger.warning("No results were generated. Check checkpoints.")
         
 
-def generate_summary(city_df, df_seed, raw_df, output_dir):
-    conf_df = city_df[city_df.fold.isin([2, 3, 4, 5])]
-    epsilons = [0.0, 0.05, 0.10, 0.20]
+def generate_summary(city_df, output_dir, epsilons, nonzero_epsilons):
+    confirmatory_folds = sorted([f for f in city_df.fold.unique() if f != 1])
+    conf_df = city_df[city_df.fold.isin(confirmatory_folds)]
     
+    if conf_df.empty:
+        return
+        
     results = {}
     p_onesided = []
     
@@ -355,7 +369,7 @@ def generate_summary(city_df, df_seed, raw_df, output_dir):
         pos_cities = np.sum(vals > 0)
         harm_rate = np.sum(vals < 0) / len(vals)
         
-        ci_lower, ci_upper = fold_stratified_bootstrap(conf_df, "delta_cpc_mean", eps)
+        ci_lower, ci_upper = fold_stratified_bootstrap(conf_df, "delta_cpc_mean", eps, confirmatory_folds)
         
         _, p_1 = wilcoxon(vals, alternative='greater')
         _, p_2 = wilcoxon(vals, alternative='two-sided')
@@ -370,11 +384,8 @@ def generate_summary(city_df, df_seed, raw_df, output_dir):
             "wilcoxon_one_sided_raw": float(p_1), "wilcoxon_two_sided": float(p_2)
         }
         
-    # Holm correction for non-zero epsilons
-    p_non_zero = [results[e]["wilcoxon_one_sided_raw"] for e in [0.05, 0.10, 0.20]]
-    p_adj = holm_correction(p_non_zero)
-    
-    for i, e in enumerate([0.05, 0.10, 0.20]):
+    p_adj = holm_correction(p_onesided)
+    for i, e in enumerate(nonzero_epsilons):
         results[e]["wilcoxon_one_sided_holm"] = float(p_adj[i])
         
     oracle_gain = results[0.0]["mean_delta_cpc"]
@@ -385,7 +396,7 @@ def generate_summary(city_df, df_seed, raw_df, output_dir):
             results[e]["benefit_retention"] = None
             
     eps_star = 0.0
-    for i, eps in enumerate([0.05, 0.10, 0.20]):
+    for i, eps in enumerate(nonzero_epsilons):
         cond1 = results[eps]["mean_delta_cpc"] > 0
         cond2 = results[eps]["ci_lower"] > 0
         cond3 = results[eps]["wilcoxon_one_sided_holm"] < 0.05
@@ -410,10 +421,15 @@ def generate_summary(city_df, df_seed, raw_df, output_dir):
     for e in epsilons:
         d = results[e]
         ci = f"[{d['ci_lower']:.5f}, {d['ci_upper']:.5f}]"
-        holm = f"{d.get('wilcoxon_one_sided_holm', 'N/A')}"
-        if type(d.get('wilcoxon_one_sided_holm')) == float: holm = f"{d['wilcoxon_one_sided_holm']:.2e}"
+        
+        holm_val = d.get('wilcoxon_one_sided_holm')
+        if isinstance(holm_val, float):
+            holm = f"{holm_val:.2e}"
+        else:
+            holm = "N/A"
+            
         ret = f"{d['benefit_retention']:.1%}" if d['benefit_retention'] is not None else "N/A"
-        md += f"| {e} | {d['mean_cpc1']:.5f} | {d['mean_delta_cpc']:.5f} | {ci} | {d['pos_cities']}/40 | {d['harm_rate']:.1%} | {ret} | {holm} |\n"
+        md += f"| {e} | {d['mean_cpc1']:.5f} | {d['mean_delta_cpc']:.5f} | {ci} | {d['pos_cities']}/{int(len(conf_df)//len(epsilons))} | {d['harm_rate']:.1%} | {ret} | {holm} |\n"
         
     with open(f"{output_dir}/noise_summary.md", "w") as f:
         f.write(md)

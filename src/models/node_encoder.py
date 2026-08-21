@@ -111,6 +111,57 @@ class UrbanGNN(nn.Module):
         h = self.output_fc(h)
         return h
 
+class NodeMLP(nn.Module):
+    """
+    MLP Node Encoder that produces node embeddings h_i in R^d without message passing.
+    Architecture matches UrbanGNN but removes the GraphConv aggregation.
+    """
+    def __init__(
+        self,
+        in_dim: int = 26,
+        hidden_dim: int = 64,
+        out_dim: int = 64,
+        num_layers: int = 2,
+        dropout: float = 0.1,
+    ):
+        super().__init__()
+        self.input_fc = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+        )
+        
+        # We replace the GraphConvLayer with a simple Linear block that matches the self_linear part.
+        # To strictly keep equivalent depth/parameters, we can use nn.Linear(hidden_dim, hidden_dim)
+        self.layers = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(hidden_dim, hidden_dim),
+                nn.LayerNorm(hidden_dim),
+                nn.ReLU()
+            ) for _ in range(num_layers)
+        ])
+        
+        self.output_fc = nn.Linear(hidden_dim, out_dim)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor, edge_index: torch.Tensor, edge_dist: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+            x: (N, in_dim) normalized node features.
+            edge_index: Ignored (kept for signature compatibility).
+            edge_dist: Ignored.
+        Returns:
+            h: (N, out_dim) node embeddings.
+        """
+        h = self.input_fc(x)
+        for layer in self.layers:
+            h_new = layer(h)
+            h = h + self.dropout(h_new)
+        h = self.output_fc(h)
+        return h
+
+
 
 if __name__ == "__main__":
     gnn = UrbanGNN(in_dim=26, hidden_dim=32, out_dim=32, num_layers=2)

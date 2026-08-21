@@ -19,7 +19,71 @@ from src.models.node_encoder import UrbanGNN
 from src.models.gravity import GravityPrior
 from src.models.decoder import PairwiseODDecoder
 from src.loss.ztnb import compute_conditional_mean
+from src.models.node_encoder import NodeMLP
 
+class ZeroShotMLPModel(nn.Module):
+    def __init__(
+        self,
+        node_in_dim: int = 26,
+        node_hidden_dim: int = 64,
+        node_out_dim: int = 64,
+        num_gnn_layers: int = 2,
+        decoder_hidden_dim: int = 64,
+        dropout: float = 0.1,
+        init_log_phi: float = 0.0,
+    ):
+        super().__init__()
+        # 1. Urban MLP (no message passing)
+        self.node_encoder = NodeMLP(
+            in_dim=node_in_dim,
+            hidden_dim=node_hidden_dim,
+            out_dim=node_out_dim,
+            num_layers=num_gnn_layers,
+            dropout=dropout,
+        )
+
+        # 2. Gravity Prior
+        self.gravity_prior = GravityPrior()
+
+        # 3. Pairwise Decoder
+        self.decoder = PairwiseODDecoder(
+            node_dim=node_out_dim,
+            hidden_dim=decoder_hidden_dim,
+            dropout=dropout,
+        )
+
+        # 4. Global trainable dispersion parameter phi
+        self.log_phi = nn.Parameter(torch.tensor(init_log_phi, dtype=torch.float32))
+
+    @property
+    def phi(self) -> torch.Tensor:
+        return torch.exp(self.log_phi)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        spatial_edge_index: torch.Tensor,
+        spatial_edge_dist: torch.Tensor,
+        pair_o_idx: torch.Tensor,
+        pair_d_idx: torch.Tensor,
+        pair_distance_log1p: torch.Tensor,
+        population: torch.Tensor,
+        return_conditional_mean: bool = False,
+    ) -> torch.Tensor:
+        h = self.node_encoder(x, spatial_edge_index, spatial_edge_dist)
+        h_o = h[pair_o_idx]
+        h_d = h[pair_d_idx]
+
+        dist_km = torch.expm1(pair_distance_log1p)
+        pop_o = population[pair_o_idx]
+        pop_d = population[pair_d_idx]
+        log_t_grav = self.gravity_prior(pop_o, pop_d, dist_km)
+
+        mu_nb = self.decoder(h_o, h_d, pair_distance_log1p, log_t_grav)
+
+        if return_conditional_mean:
+            return compute_conditional_mean(mu_nb, self.log_phi)
+        return mu_nb
 
 class ZeroShotODModel(nn.Module):
     def __init__(
