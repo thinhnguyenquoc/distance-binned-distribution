@@ -91,7 +91,7 @@ def _interpolate_m_star(
 
 
 def run_target_city_experiments(
-    model: ZeroShotODModel,
+    model: torch.nn.Module,
     city_name: str,
     scaler: object,
     data_root: str = "data",

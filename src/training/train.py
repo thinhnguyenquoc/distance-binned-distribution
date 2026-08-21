@@ -166,7 +166,7 @@ def load_checkpoint(
 
 
 def train_epoch(
-    model: ZeroShotODModel,
+    model: torch.nn.Module,
     train_cities: List[CityData],
     city_graphs: List[tuple[torch.Tensor, torch.Tensor]],
     optimizer: optim.Optimizer,
@@ -214,7 +214,7 @@ def train_epoch(
 
 @torch.no_grad()
 def infer_zero_shot(
-    model: ZeroShotODModel,
+    model: torch.nn.Module,
     city_data: CityData,
     edge_index: torch.Tensor,
     edge_dist: torch.Tensor,

@@ -111,6 +111,28 @@ class UrbanGNN(nn.Module):
         h = self.output_fc(h)
         return h
 
+class MLPLayer(nn.Module):
+    """
+    A dense layer designed to have the exact same parameter count as GraphConvLayer 
+    to ensure a fair capacity comparison between GNN and MLP backbones.
+    """
+    def __init__(self, in_dim: int, out_dim: int):
+        super().__init__()
+        # GraphConvLayer has msg_linear (in_dim + 1 -> out_dim) and self_linear (in_dim -> out_dim).
+        # We replicate this exactly here.
+        self.msg_equivalent = nn.Linear(in_dim + 1, out_dim)
+        self.self_linear = nn.Linear(in_dim, out_dim)
+        self.norm = nn.LayerNorm(out_dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # Pad with zeros to match the log(1+d) feature concatenated in GNN message passing
+        dummy_dist = torch.zeros(x.size(0), 1, device=x.device, dtype=x.dtype)
+        msg_input = torch.cat([x, dummy_dist], dim=-1)
+        
+        out = self.msg_equivalent(msg_input) + self.self_linear(x)
+        return self.norm(F.relu(out))
+
+
 class NodeMLP(nn.Module):
     """
     MLP Node Encoder that produces node embeddings h_i in R^d without message passing.
@@ -132,14 +154,9 @@ class NodeMLP(nn.Module):
             nn.Dropout(dropout),
         )
         
-        # We replace the GraphConvLayer with a simple Linear block that matches the self_linear part.
-        # To strictly keep equivalent depth/parameters, we can use nn.Linear(hidden_dim, hidden_dim)
+        # Use MLPLayer to strictly maintain parameter parity with GraphConvLayer
         self.layers = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(hidden_dim, hidden_dim),
-                nn.LayerNorm(hidden_dim),
-                nn.ReLU()
-            ) for _ in range(num_layers)
+            MLPLayer(hidden_dim, hidden_dim) for _ in range(num_layers)
         ])
         
         self.output_fc = nn.Linear(hidden_dim, out_dim)
@@ -149,8 +166,10 @@ class NodeMLP(nn.Module):
         """
         Args:
             x: (N, in_dim) normalized node features.
-            edge_index: Ignored (kept for signature compatibility).
-            edge_dist: Ignored.
+            edge_index: Ignored. Kept for signature compatibility with UrbanGNN so that 
+                        both models can be dropped into the same training/inference loop 
+                        without modifying the call signature.
+            edge_dist: Ignored. See above.
         Returns:
             h: (N, out_dim) node embeddings.
         """

@@ -35,6 +35,7 @@ def run_5fold_experiment(
     radius_km: float = 5.0,
     knn_k: int = 10,
     loss_type: str = "ztnb",
+    backbone: str = "gnn",
     num_trip_seeds: int = 20,
     folds_to_run: list[int] | None = None,
     device_str: str | None = None,
@@ -79,8 +80,8 @@ def run_5fold_experiment(
         
         for seed_idx, seed in enumerate(seeds):
             _ckpt_dir  = Path(output_dir) / "checkpoints"
-            _ckpt_path = _ckpt_dir / f"5fold_fold{fold_id}_seed{seed}.pt"
-            print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) ---")
+            _ckpt_path = _ckpt_dir / f"5fold_{backbone}_fold{fold_id}_seed{seed}.pt"
+            print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) [Backbone: {backbone.upper()}] ---")
             
             model, scaler = train_zero_shot_model(
                 train_city_names=train_cities,
@@ -93,12 +94,13 @@ def run_5fold_experiment(
                 radius_km=radius_km,
                 knn_k=knn_k,
                 loss_type=loss_type,
+                backbone=backbone,
                 device_str=device_str,
                 verbose=True,
                 val_city_names=val_cities,
                 patience=16,
                 checkpoint_path=_ckpt_path,
-                run_tag=f"5fold_fold{fold_id}_seed{seed}",
+                run_tag=f"5fold_{backbone}_fold{fold_id}_seed{seed}",
                 seed=seed,
             )
             models.append(model)
@@ -171,7 +173,8 @@ def run_5fold_experiment(
         }
         
         # Intermediate Save
-        out_file = Path(output_dir) / "5fold_results.json"
+        out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
+        out_file = Path(output_dir) / out_file_name
         temp_delta_r = analyze_delta_r(all_city_results)
         temp_results = {
             "experiment_config": {
@@ -210,7 +213,8 @@ def run_5fold_experiment(
         "city_level_results": all_city_results,
     }
 
-    out_file = Path(output_dir) / "5fold_results.json"
+    out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
+    out_file = Path(output_dir) / out_file_name
     with open(out_file, "w") as f:
         json.dump(final_results, f, indent=2)
 
@@ -245,6 +249,7 @@ if __name__ == "__main__":
     parser.add_argument("--graph-type", type=str, default="radius", choices=["radius", "adaptive_radius", "knn"])
     parser.add_argument("--radius", type=float, default=5.0)
     parser.add_argument("--knn-k", type=int, default=10)
+    parser.add_argument("--backbone", type=str, default="gnn", choices=["gnn", "mlp"])
     parser.add_argument("--device", type=str, default=None)
     args = parser.parse_args()
     run_5fold_experiment(
@@ -254,5 +259,7 @@ if __name__ == "__main__":
         graph_type=args.graph_type,
         radius_km=args.radius,
         knn_k=args.knn_k,
+        loss_type="ztnb",
+        backbone=args.backbone,
         device_str=args.device,
     )
