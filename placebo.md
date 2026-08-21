@@ -31,10 +31,10 @@ For each target city $c$ and each model seed $s \in \{1, 10, 100\}$, the zero-sh
 - Metric: $\Delta \text{CPC}_{\text{wrong}, b}$ for $b \in \{1 \dots 1000\}$.
 - Expected Gain: $E_b[\Delta \text{CPC}_{\text{wrong}, b}]$.
 
-### 4. Permuted-Bin Placebo Condition
+### 4. Permuted-Bin Placebo Condition (Stress-Test)
 - The true target $Y_D$ is taken, but the probability mass among its **active bins** (bins with $p > 10^{-8}$) is randomly shuffled/permuted.
 - Replicates: Up to $B = 1000$ unique permutations.
-- Purpose: Tests whether the precise distance decay structure matters, or if any arbitrary permutation of the same entropy/mass yields the same gain.
+- Purpose: Acts as a **stress-test specificity under mass-preserving bin permutations**. Due to the lack of weight clipping, random permutations often create highly unrealistic target distributions (e.g., massive probability mass assigned to a bin where the model predicts near-zero mass). While our code guards against literal $w_k = \infty$ division-by-zero, such permutations still create hugely inflated calibration multipliers $w_k \gg 1$. Therefore, the massive CPC gap here should NOT be used to conclude the absolute real-world value of $Y_D$, but merely proves the sequence is sensitive.
 
 ---
 

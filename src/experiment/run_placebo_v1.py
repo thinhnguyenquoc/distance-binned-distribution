@@ -214,34 +214,6 @@ def run_placebo_experiment(args):
                 
                 cpc_m0_inter = evaluate_cpc(t_true_inter, t_pred_zs[inter_mask])
                 
-                # Correct target condition
-                t_pred_target = calibrate_kbins(t_pred_zs, dist_km, inter_mask, yd_target, bin_edges, q=1.0)
-                cpc_target_inter = evaluate_cpc(t_true_inter, t_pred_target[inter_mask])
-                delta_cpc_target = cpc_target_inter - cpc_m0_inter
-                
-                # Train mean condition
-                t_pred_trainmean = calibrate_kbins(t_pred_zs, dist_km, inter_mask, train_mean_yd_masked, bin_edges, q=1.0)
-                cpc_trainmean_inter = evaluate_cpc(t_true_inter, t_pred_trainmean[inter_mask])
-                delta_cpc_trainmean = cpc_trainmean_inter - cpc_m0_inter
-                
-                # Record Target and Trainmean
-                raw_results.append({
-                    "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "target",
-                    "replicate_id": 0, "donor_city": tc, "placebo_seed": int(placebo_seed),
-                    "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
-                    "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_target_inter),
-                    "delta_cpc_inter": float(delta_cpc_target), "target_delta_cpc_inter": float(delta_cpc_target), "specificity_gain": 0.0
-                })
-                
-                raw_results.append({
-                    "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "trainmean",
-                    "replicate_id": 0, "donor_city": "TRAIN_MEAN", "placebo_seed": int(placebo_seed),
-                    "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
-                    "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_trainmean_inter),
-                    "delta_cpc_inter": float(delta_cpc_trainmean), "target_delta_cpc_inter": float(delta_cpc_target), 
-                    "specificity_gain": float(delta_cpc_target - delta_cpc_trainmean)
-                })
-                
                 # Precompute bin masks and Y_hat for fast calibration
                 t0_inter = t_pred_zs[inter_mask]
                 dist_inter = dist_km[inter_mask]
@@ -259,8 +231,14 @@ def run_placebo_experiment(args):
                         active[k] = bool(in_bin.any())
                 
                 def fast_cal_cpc(yd_tgt):
+                    default_stats = {
+                        "w_max": 1.0, "w_median": 1.0,
+                        "s_min": 1.0, "s_max": 1.0, "s_median": 1.0, "s_p95": 1.0,
+                        "s_gt_2": 0, "s_gt_5": 0, "s_gt_10": 0, 
+                        "model_compat": 1.0, "donor_compat": 1.0
+                    }
                     if N_hat <= 0:
-                        return cpc_m0_inter
+                        return cpc_m0_inter, default_stats
                     
                     yd_raw = yd_tgt / yd_tgt.sum() if yd_tgt.sum() > 0 else np.ones(K)/K
                     yd_active = yd_raw * active.astype(np.float64)
@@ -284,35 +262,80 @@ def run_placebo_experiment(args):
                     cal_mass = t_cal_inter.sum()
                     if cal_mass > 0:
                         t_cal_inter *= (N_hat / cal_mass)
+                        s_final = s * (N_hat / cal_mass)
+                    else:
+                        s_final = s
                         
-                    # Compute CPC
-                    return evaluate_cpc(t_true_inter, t_cal_inter)
+                    cpc = evaluate_cpc(t_true_inter, t_cal_inter)
+                    
+                    active_s = s_final[active]
+                    active_w = w[active]
+                    if len(active_s) > 0:
+                        stats = {
+                            "w_max": float(active_w.max()),
+                            "w_median": float(np.median(active_w)),
+                            "s_min": float(active_s.min()),
+                            "s_max": float(active_s.max()),
+                            "s_median": float(np.median(active_s)),
+                            "s_p95": float(np.percentile(active_s, 95)),
+                            "s_gt_2": int((active_s > 2.0).sum()),
+                            "s_gt_5": int((active_s > 5.0).sum()),
+                            "s_gt_10": int((active_s > 10.0).sum()),
+                        }
+                    else:
+                        stats = default_stats.copy()
+                        stats["w_max"] = 1.0
+                        stats["w_median"] = 1.0
+                        
+                    # Model compatibility: fraction of calibration-target active bins that model predicted > 0
+                    target_active_bins = yd_tgt > 0
+                    model_active_bins = Y_hat > 0
+                    stats["model_compat"] = float(np.sum(target_active_bins & model_active_bins) / np.sum(target_active_bins)) if np.sum(target_active_bins) > 0 else 1.0
+                    
+                    return cpc, stats
+                
+                # Correct target condition
+                cpc_target_inter, stats_tgt = fast_cal_cpc(yd_target)
+                delta_cpc_target = cpc_target_inter - cpc_m0_inter
+                
+                # Train mean condition
+                cpc_trainmean_inter, stats_tm = fast_cal_cpc(train_mean_yd_masked)
+                delta_cpc_trainmean = cpc_trainmean_inter - cpc_m0_inter
+                
+                # Helper to build dict
+                def build_row(cond, rep_id, d_name, cpc_val, stats, d_compat):
+                    d_cpc = cpc_val - cpc_m0_inter
+                    row = {
+                        "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": cond,
+                        "replicate_id": int(rep_id), "donor_city": d_name, "placebo_seed": int(placebo_seed),
+                        "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
+                        "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_val),
+                        "delta_cpc_inter": float(d_cpc), "target_delta_cpc_inter": float(delta_cpc_target), 
+                        "specificity_gain": float(delta_cpc_target - d_cpc),
+                        "donor_compat": float(d_compat)
+                    }
+                    row.update(stats)
+                    return row
+
+                # Record Target and Trainmean
+                raw_results.append(build_row("target", 0, tc, cpc_target_inter, stats_tgt, 1.0))
+                # donor_compat for trainmean is the mass of trainmean that falls into the target's active bins
+                tm_compat = train_mean_yd[active_mask].sum()
+                raw_results.append(build_row("trainmean", 0, "TRAIN_MEAN", cpc_trainmean_inter, stats_tm, tm_compat))
                 
                 # Wrong-city
                 for b_idx, (d_name, d_yd_masked) in enumerate(donor_yds):
-                    cpc_wrong = fast_cal_cpc(d_yd_masked)
-                    d_cpc = cpc_wrong - cpc_m0_inter
-                    raw_results.append({
-                        "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "wrong_city",
-                        "replicate_id": int(b_idx), "donor_city": d_name, "placebo_seed": int(placebo_seed),
-                        "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
-                        "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_wrong),
-                        "delta_cpc_inter": float(d_cpc), "target_delta_cpc_inter": float(delta_cpc_target), 
-                        "specificity_gain": float(delta_cpc_target - d_cpc)
-                    })
+                    cpc_wrong, stats_wrong = fast_cal_cpc(d_yd_masked)
+                    # For wrong city, we need the original donor Y_D to compute compat.
+                    # Since we only stored masked donor Y_Ds in donor_yds, let's fetch it from train_yd_dict
+                    orig_d_yd = train_yd_dict[d_name]
+                    d_compat = orig_d_yd[active_mask].sum()
+                    raw_results.append(build_row("wrong_city", b_idx, d_name, cpc_wrong, stats_wrong, d_compat))
                     
                 # Permuted
                 for p_idx, p_yd in enumerate(permuted_yds):
-                    cpc_perm = fast_cal_cpc(p_yd)
-                    d_cpc = cpc_perm - cpc_m0_inter
-                    raw_results.append({
-                        "fold": int(fold_id), "model_seed": int(seed), "target_city": tc, "condition": "permuted",
-                        "replicate_id": int(p_idx), "donor_city": "PERMUTED", "placebo_seed": int(placebo_seed),
-                        "n_tracts": int(raw.n_tracts), "n_inter_pairs": int(inter_mask.sum()), "K": int(K), "active_bins": int(active_mask.sum()),
-                        "q": 1.0, "cpc_m0_inter": float(cpc_m0_inter), "cpc_m1_inter": float(cpc_perm),
-                        "delta_cpc_inter": float(d_cpc), "target_delta_cpc_inter": float(delta_cpc_target), 
-                        "specificity_gain": float(delta_cpc_target - d_cpc)
-                    })
+                    cpc_perm, stats_perm = fast_cal_cpc(p_yd)
+                    raw_results.append(build_row("permuted", p_idx, "PERMUTED", cpc_perm, stats_perm, 1.0))
 
             assert seeds_run == len(model_seeds), f"Expected to run {len(model_seeds)} seeds, but ran {seeds_run}"
 
@@ -329,7 +352,11 @@ def run_placebo_experiment(args):
         "target_delta_cpc_inter": "mean",
         "specificity_gain": "mean",
         "cpc_m0_inter": "mean",
-        "cpc_m1_inter": "mean"
+        "cpc_m1_inter": "mean",
+        "w_max": "mean",
+        "s_max": "mean",
+        "model_compat": "mean",
+        "donor_compat": "mean"
     }).reset_index()
     
     # M0 Verification
@@ -382,6 +409,8 @@ def run_placebo_experiment(args):
             pseudo_p_perm = np.nan
             specificity_permuted_mean = np.nan
             
+        target_df = c_df[c_df.condition == "target"]
+            
         city_stats.append({
             "fold": fold_val, "city": tc,
             "target_delta_mean": target_val,
@@ -399,7 +428,15 @@ def run_placebo_experiment(args):
             "target_beats_wrong": int(target_val > wrong_delta_mean),
             "target_beats_trainmean": int(target_val > trainmean_val),
             "target_beats_permuted": int(target_val > permuted_delta_mean) if len(perm_df) > 0 else 1,
-            "n_permutations": n_permutations
+            "n_permutations": n_permutations,
+            "target_w_max": target_df["w_max"].mean() if len(target_df) > 0 else np.nan,
+            "target_model_compat": target_df["model_compat"].mean() if len(target_df) > 0 else np.nan,
+            "wrong_w_max": wrong_df["w_max"].mean() if len(wrong_df) > 0 else np.nan,
+            "wrong_s_max": wrong_df["s_max"].mean() if len(wrong_df) > 0 else np.nan,
+            "wrong_donor_compat": wrong_df["donor_compat"].mean() if len(wrong_df) > 0 else np.nan,
+            "perm_w_max": perm_df["w_max"].mean() if len(perm_df) > 0 else np.nan,
+            "perm_s_max": perm_df["s_max"].mean() if len(perm_df) > 0 else np.nan,
+            "perm_donor_compat": perm_df["donor_compat"].mean() if len(perm_df) > 0 else np.nan
         })
         
     city_df = pd.DataFrame(city_stats)
