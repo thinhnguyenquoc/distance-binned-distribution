@@ -21,7 +21,7 @@ import torch
 import matplotlib.pyplot as plt
 import logging
 
-from scipy.stats import spearmanr, wilcoxon
+from scipy.stats import spearmanr, wilcoxon, multivariate_hypergeom
 from scipy.spatial.distance import jensenshannon
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -53,15 +53,24 @@ def get_stable_seed(base_seed: int, fold: int, city: str, m_val: Any, replicate_
     return int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16) % (2**32)
 
 
-def sample_empirical_yd(yd_full: np.ndarray, m: float, seed: int) -> np.ndarray:
-    """Draws m trips from categorical distribution over distance bins."""
-    if np.isinf(m) or m is None:
-        return yd_full.copy()
+def sample_hypergeometric_yd(bin_counts: np.ndarray, m: float, size: int, base_seed: int) -> List[np.ndarray]:
+    """
+    Subsamples m trips without replacement from actual population bin counts
+    using the Multivariate Hypergeometric distribution.
+    """
+    total_trips = int(bin_counts.sum())
+    if np.isinf(m) or m >= total_trips:
+        yd_exact = bin_counts.astype(np.float64) / float(total_trips) if total_trips > 0 else np.ones_like(bin_counts)/len(bin_counts)
+        return [yd_exact.copy() for _ in range(size)]
+        
     m_int = int(m)
-    rng = np.random.default_rng(seed)
-    counts = rng.multinomial(m_int, yd_full)
-    yd_m = counts.astype(np.float64) / float(m_int)
-    return yd_m
+    rng = np.random.RandomState(base_seed)
+    
+    # Multivariate hypergeometric draw
+    draws = multivariate_hypergeom.rvs(m=bin_counts, n=m_int, size=size, random_state=rng)
+    if size == 1:
+        draws = draws.reshape(1, -1)
+    return [draws[i].astype(np.float64) / float(m_int) for i in range(size)]
 
 
 def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, m_val: float, confirmatory_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
@@ -195,29 +204,25 @@ def run_sampling_robustness(args: argparse.Namespace) -> None:
             
             yd_target = extract_yd_kbins(dist_km, raw.pair_trips.numpy(), bin_edges, inter_mask)
             
-            # Pre-generate empirical sampled Y_D sets for all m and replicates
-            logger.info("    Drawing empirical multinomial samples...")
-            city_sample_sets: Dict[float, List[np.ndarray]] = {}
-            for m in m_grid:
-                if np.isinf(m):
-                    city_sample_sets[m] = [yd_target.copy()]
-                else:
-                    samples_m = []
-                    for b in range(B_sample):
-                        seed_b = get_stable_seed(sampling_base_seed, fold_id, tc, int(m), b + 1)
-                        yd_s = sample_empirical_yd(yd_target, m, seed_b)
-                        samples_m.append(yd_s)
-                    city_sample_sets[m] = samples_m
-                    
-            edge_index, edge_dist = build_radius_graph(
-                lon_lat=raw.lon_lat, radius_km=5.0, include_self_loop=True, cache_key=f"{tc}_tracts"
-            )
-            
             dist_inter = dist_km[inter_mask]
             bin_idx = np.clip(np.digitize(dist_inter, bin_edges[1:-1], right=True), 0, K - 1).astype(np.int32)
             n_inter_pairs = len(dist_inter)
             inv_N = 1.0 / n_inter_pairs if n_inter_pairs > 0 else 0.0
             sum_t_true = float(t_true_inter.sum())
+            
+            inter_trips_int = t_true_inter.astype(np.int64)
+            bin_counts = np.bincount(bin_idx, weights=inter_trips_int, minlength=K).astype(np.int64)
+            
+            # Pre-generate empirical subsampled Y_D sets without replacement (Multivariate Hypergeometric)
+            logger.info("    Drawing empirical multivariate hypergeometric samples without replacement...")
+            city_sample_sets: Dict[float, List[np.ndarray]] = {}
+            for m in m_grid:
+                seed_m = get_stable_seed(sampling_base_seed, fold_id, tc, int(m) if not np.isinf(m) else 0, 0)
+                city_sample_sets[m] = sample_hypergeometric_yd(bin_counts, m, B_sample, seed_m)
+                    
+            edge_index, edge_dist = build_radius_graph(
+                lon_lat=raw.lon_lat, radius_km=5.0, include_self_loop=True, cache_key=f"{tc}_tracts"
+            )
             
             t_cal_buf = np.empty(n_inter_pairs, dtype=np.float64)
             diff_buf = np.empty(n_inter_pairs, dtype=np.float64)
@@ -443,12 +448,12 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
     with open(f"{output_dir}/sampling_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
         
-    md = "# Empirical Y_D Sampling Robustness Summary\n\n"
+    md = "# Empirical Y_D Sampling Robustness Summary (Subsampling Without Replacement)\n\n"
     md += f"## Confirmatory Table (Folds 2-5, {int(len(conf_df)//len(m_grid))} Cities)\n\n"
-    if m_cross is not None:
-        md += f"**Minimum Sample Size for Positive Benefit ($m_{{\\text{{cross}}}}$):** `{m_cross:,}` trips\n\n"
     if m_star is not None:
-        md += f"**Statistically Significant Benefit Sample Size ($m^*$):** `{m_star:,}` trips ($p < 0.05$ Holm)\n\n"
+        md += f"**Primary Finding — Confirmatory Benefit Threshold ($m^*$):** `{m_star:,}` observed trips ($p < 0.05$ Holm, $95\\%\\text{{ CI}}_{{\\text{{lower}}}} > 0$)\n\n"
+    if m_cross is not None:
+        md += f"*Note on Crossover:* Smallest tested sample size with positive mean $\\Delta\\text{{CPC}}$ is `{m_cross:,}` trips (mean $\\Delta\\text{{CPC}} > 0$, but not statistically significant, $p = {results.get(str(m_cross), {}).get('wilcoxon_benefit_holm', 1.0):.4f}$).\n\n"
         
     md += "| Sample Size (m) | Mean Empirical TV | Mean M1 CPC | Mean dCPC | 95% CI | Pos Cities | Harm Rate | Rel Effect vs Clean (%) | Benefit p-val (vs M0) | Degrad p-val (vs Clean) |\n"
     md += "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
