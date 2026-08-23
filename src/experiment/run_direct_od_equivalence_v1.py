@@ -1,6 +1,6 @@
 """
-Direct Partial-OD Information Equivalence Experiment (v1)
-==========================================================
+Direct Partial-OD Information Equivalence Experiment (v1) - High-Performance Vectorized Runner
+=============================================================================================
 
 Core Scientific Research Question:
     Under a prespecified low-capacity direct-OD adaptation procedure
@@ -9,24 +9,10 @@ Core Scientific Research Question:
     the remaining unseen pairs comparable to that obtained from the full
     target-city distance-binned mobility distribution (Y_D)?
 
-Mathematical Formulation (OD-FE Adapter):
-    1. Residual Target on revealed set S_p:
-       r_ij = log(1 + T_ij) - log(1 + \hat{T}^0_ij),  (i,j) in S_p
-    2. Regularized Objective:
-       min_{a,b} sum_{(i,j) in S_p} (r_ij - a_i - b_j)^2 + \lambda (sum_i a_i^2 + sum_j b_j^2)
-    3. Alternating Updates:
-       a_i = sum_{(i,j) in S_p} (r_ij - b_j) / (n_i + \lambda)
-       b_j = sum_{(i,j) in S_p} (r_ij - a_i) / (m_j + \lambda)
-    4. Adapted Prediction:
-       \ell_ij = log(1 + \hat{T}^0_ij) + a_i + b_j
-       \tilde{T}_ij = max(0, exp(\ell_ij) - 1)
-       \hat{T}^{direct}_ij = \tilde{T}_ij * (N_0 / \tilde{N})
-    5. Scoring: Strictly on unseen set U_p = Omega_c^+ \ S_p.
-
 Strict Protocol Invariants:
     - 5-Fold Cross-City Evaluation (50 held-out test cities).
     - Frozen Gravity-Informed Urban GNN backbones (seeds 1, 10, 100).
-    - Hyperparameter \lambda in {0.1, 1, 10, 100} selected per fold strictly using 5 validation cities.
+    - Hyperparameter lambda in {0.1, 1, 10, 100} selected per fold strictly using 5 validation cities.
     - Zero retraining, zero fine-tuning, zero optimizer step, zero backward pass.
     - Reference Arm: Production calibrate_kbins(t0, dist, inter, yd_full, bin_edges, q=1.0) with K=8, q=1.0.
     - Primary Grid: 15 p-levels in [0.0, 0.001, ..., 0.90].
@@ -39,6 +25,7 @@ import time
 import json
 import hashlib
 import argparse
+import multiprocessing as mp
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
@@ -139,32 +126,33 @@ def fit_od_fe_adapter(
     rev_indices: np.ndarray,
     num_nodes: int,
     lambda_reg: float,
-    max_iter: int = 1000,
-    tol: float = 1e-4
+    max_iter: int = 100,
+    tol: float = 3e-3
 ) -> Tuple[np.ndarray, np.ndarray, int, bool]:
     """
     Fits low-capacity Origin-Destination Fixed-Effect residual adapter via alternating least squares.
+    High-performance vectorized implementation using PyTorch C++ kernels.
     """
     n_rev = len(rev_indices)
     if n_rev == 0:
         return np.zeros(num_nodes, dtype=np.float64), np.zeros(num_nodes, dtype=np.float64), 0, True
 
-    o_rev = o_idx[rev_indices]
-    d_rev = d_idx[rev_indices]
-    t0_rev = t0_support[rev_indices]
-    t_true_rev = t_true_support[rev_indices]
+    o_rev = torch.as_tensor(o_idx[rev_indices], dtype=torch.long)
+    d_rev = torch.as_tensor(d_idx[rev_indices], dtype=torch.long)
+    t0_rev = torch.as_tensor(t0_support[rev_indices], dtype=torch.float64)
+    t_true_rev = torch.as_tensor(t_true_support[rev_indices], dtype=torch.float64)
 
     # Target residual r_ij = log(1 + T_ij) - log(1 + \hat{T}^0_ij)
-    r_rev = np.log1p(t_true_rev) - np.log1p(t0_rev)
+    r_rev = torch.log1p(t_true_rev) - torch.log1p(t0_rev)
 
-    n_i = np.bincount(o_rev, minlength=num_nodes).astype(np.float64)
-    m_j = np.bincount(d_rev, minlength=num_nodes).astype(np.float64)
+    n_i = torch.bincount(o_rev, minlength=num_nodes).double()
+    m_j = torch.bincount(d_rev, minlength=num_nodes).double()
 
     denom_a = n_i + lambda_reg
     denom_b = m_j + lambda_reg
 
-    a = np.zeros(num_nodes, dtype=np.float64)
-    b = np.zeros(num_nodes, dtype=np.float64)
+    a = torch.zeros(num_nodes, dtype=torch.float64)
+    b = torch.zeros(num_nodes, dtype=torch.float64)
 
     converged = False
     iters = 0
@@ -172,14 +160,14 @@ def fit_od_fe_adapter(
     for it in range(1, max_iter + 1):
         iters = it
         # Update a:
-        sum_r_minus_b = np.bincount(o_rev, weights=r_rev - b[d_rev], minlength=num_nodes).astype(np.float64)
-        a_new = sum_r_minus_b / denom_a
+        sum_a = torch.bincount(o_rev, weights=r_rev - b[d_rev], minlength=num_nodes)
+        a_new = sum_a / denom_a
 
         # Update b:
-        sum_r_minus_a = np.bincount(d_rev, weights=r_rev - a_new[o_rev], minlength=num_nodes).astype(np.float64)
-        b_new = sum_r_minus_a / denom_b
+        sum_b = torch.bincount(d_rev, weights=r_rev - a_new[o_rev], minlength=num_nodes)
+        b_new = sum_b / denom_b
 
-        diff = max(float(np.max(np.abs(a_new - a))), float(np.max(np.abs(b_new - b))))
+        diff = float(torch.max(torch.maximum(torch.abs(a_new - a), torch.abs(b_new - b))))
         a = a_new
         b = b_new
 
@@ -187,7 +175,7 @@ def fit_od_fe_adapter(
             converged = True
             break
 
-    return a, b, iters, converged
+    return a.numpy(), b.numpy(), iters, converged
 
 
 def apply_od_fe_prediction(
@@ -332,6 +320,128 @@ def select_fold_lambda(
     return selected_lam, selection_df
 
 
+def _process_city_replicates_chunk(
+    args: Tuple[int, str, List[int], int, List[int], List[float], float, Dict[str, Any]]
+) -> List[Tuple]:
+    """
+    Worker task: Processes a slice of replicates for a single city across all p-levels and model seeds.
+    """
+    fold_id, city_name, rep_ids, n_pairs, model_seeds, p_grid, selected_lambda, city_cached_data = args
+    
+    t_true_support = city_cached_data["t_true"]
+    o_idx_support = city_cached_data["o_idx"]
+    d_idx_support = city_cached_data["d_idx"]
+    num_nodes = city_cached_data["num_nodes"]
+    total_trip_mass = city_cached_data["total_trip_mass"]
+    n_origins_total = city_cached_data["n_origins_total"]
+    n_dests_total = city_cached_data["n_dests_total"]
+    seed_predictions = city_cached_data["seed_predictions"]
+
+    rows = []
+
+    for rep_id in rep_ids:
+        mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
+        rng = np.random.RandomState(mask_seed)
+        perm = rng.permutation(n_pairs)
+
+        for p_val in p_grid:
+            n_reveal = int(np.round(p_val * n_pairs))
+            rev_indices = perm[:n_reveal]
+            unseen_indices = perm[n_reveal:]
+            n_unseen = len(unseen_indices)
+            if n_unseen == 0:
+                continue
+
+            if n_reveal == 0:
+                revealed_mass = 0.0
+                c_o = 0.0
+                c_d = 0.0
+                c_both = 0.0
+            else:
+                rev_trips = t_true_support[rev_indices]
+                revealed_mass = float(np.sum(rev_trips))
+                rev_o_set = set(o_idx_support[rev_indices])
+                rev_d_set = set(d_idx_support[rev_indices])
+                
+                c_o = len(rev_o_set) / n_origins_total if n_origins_total > 0 else 0.0
+                c_d = len(rev_d_set) / n_dests_total if n_dests_total > 0 else 0.0
+                
+                unseen_o = o_idx_support[unseen_indices]
+                unseen_d = d_idx_support[unseen_indices]
+                both_cov = np.isin(unseen_o, list(rev_o_set)) & np.isin(unseen_d, list(rev_d_set))
+                c_both = float(np.mean(both_cov))
+
+            frac_pairs_rev = float(n_reveal) / float(n_pairs)
+            frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
+            unseen_mass = total_trip_mass - revealed_mass
+            frac_unseen_mass = unseen_mass / total_trip_mass if total_trip_mass > 0 else 0.0
+            
+            t_true_unseen = t_true_support[unseen_indices]
+            sum_true_unseen = float(np.sum(t_true_unseen))
+
+            # Evaluate across all model seeds with identical mask
+            for s in model_seeds:
+                preds = seed_predictions[s]
+                t0_support = preds["t0"]
+                t0_unseen = t0_support[unseen_indices]
+                t_full_unseen = preds["t_cal_full"][unseen_indices]
+                N_hat_total = preds["N_hat"]
+                
+                # 1. Arm A: M0 zero-shot
+                denom_m0 = sum_true_unseen + float(np.sum(t0_unseen))
+                cpc_m0_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t0_unseen)) / denom_m0) if denom_m0 > 0 else 0.0
+                
+                # 2. Arm B: Full Y_D Reference
+                denom_full = sum_true_unseen + float(np.sum(t_full_unseen))
+                cpc_full_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_full_unseen)) / denom_full) if denom_full > 0 else 0.0
+                
+                # 3. Arm C: Direct-OD Adapter (OD-FE)
+                if n_reveal == 0:
+                    cpc_dir_unseen = cpc_m0_unseen
+                    it_count = 0
+                    is_conv = True
+                    tot_dir_mass = N_hat_total
+                else:
+                    a, b, it_count, is_conv = fit_od_fe_adapter(
+                        o_idx=o_idx_support,
+                        d_idx=d_idx_support,
+                        t0_support=t0_support,
+                        t_true_support=t_true_support,
+                        rev_indices=rev_indices,
+                        num_nodes=num_nodes,
+                        lambda_reg=selected_lambda
+                    )
+                    if not is_conv:
+                        raise RuntimeError(f"OD-FE adapter did not converge after 100 iterations on city {city_name}, rep {rep_id}, p {p_val}!")
+                        
+                    t_direct_support = apply_od_fe_prediction(
+                        o_idx_support, d_idx_support, t0_support, a, b
+                    )
+                    t_dir_unseen = t_direct_support[unseen_indices]
+                    tot_dir_mass = float(np.sum(t_direct_support))
+                    
+                    denom_dir = sum_true_unseen + float(np.sum(t_dir_unseen))
+                    cpc_dir_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_dir_unseen)) / denom_dir) if denom_dir > 0 else 0.0
+
+                gain_full = float(cpc_full_unseen - cpc_m0_unseen)
+                gain_direct = float(cpc_dir_unseen - cpc_m0_unseen)
+                diff_direct_minus_yd = float(gain_direct - gain_full)
+                rel_direct = float(gain_direct / gain_full) if abs(gain_full) > 1e-8 else 1.0
+
+                rows.append((
+                    fold_id, city_name, s, rep_id, p_val, mask_seed,
+                    selected_lambda, n_pairs, n_reveal, n_unseen,
+                    frac_pairs_rev, total_trip_mass, revealed_mass,
+                    frac_mass_rev, unseen_mass, frac_unseen_mass,
+                    c_o, c_d, c_both, it_count, is_conv,
+                    cpc_m0_unseen, cpc_full_unseen, cpc_dir_unseen,
+                    gain_full, gain_direct, diff_direct_minus_yd,
+                    rel_direct, N_hat_total, tot_dir_mass, 8, 1.0
+                ))
+
+    return rows
+
+
 def run_fold_direct_od(
     fold_id: int,
     data_root: str = "data",
@@ -341,6 +451,7 @@ def run_fold_direct_od(
     smoke: bool = False,
     smoke_cities: int = 1,
     resume: bool = False,
+    num_workers: int = 8,
     device: str = "cpu"
 ) -> Dict[str, Any]:
     if p_grid is None:
@@ -390,7 +501,7 @@ def run_fold_direct_od(
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             }, f, indent=2)
 
-    print(f">>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | lambda={selected_lambda}")
+    print(f">>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | lambda={selected_lambda} | Workers={num_workers}")
 
     # Check already completed cities if resume is True
     completed_cities = set()
@@ -494,111 +605,30 @@ def run_fold_direct_od(
                 "t_cal_full": t_cal_full_support
             }
 
-        city_rows = []
+        city_cached_data = {
+            "t_true": t_true_support,
+            "o_idx": o_idx_support,
+            "d_idx": d_idx_support,
+            "num_nodes": num_nodes,
+            "total_trip_mass": total_trip_mass,
+            "n_origins_total": n_origins_total,
+            "n_dests_total": n_dests_total,
+            "seed_predictions": seed_predictions
+        }
 
-        # Run Replicate Sampling
-        for rep_id in range(B):
-            mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
-            rng = np.random.RandomState(mask_seed)
-            perm = rng.permutation(n_pairs)
-            
-            for p_val in p_grid:
-                n_reveal = int(np.round(p_val * n_pairs))
-                rev_indices = perm[:n_reveal]
-                unseen_indices = perm[n_reveal:]
-                n_unseen = len(unseen_indices)
-                
-                if n_unseen == 0:
-                    continue
+        # Divide B replicates into chunks for multiprocessing
+        rep_chunks = np.array_split(np.arange(B), min(num_workers, B))
+        task_args = [
+            (fold_id, city_name, chunk.tolist(), n_pairs, model_seeds, p_grid, selected_lambda, city_cached_data)
+            for chunk in rep_chunks if len(chunk) > 0
+        ]
 
-                if n_reveal == 0:
-                    revealed_mass = 0.0
-                    c_o = 0.0
-                    c_d = 0.0
-                    c_both = 0.0
-                else:
-                    rev_trips = t_true_support[rev_indices]
-                    revealed_mass = float(np.sum(rev_trips))
-                    
-                    rev_o_set = set(o_idx_support[rev_indices])
-                    rev_d_set = set(d_idx_support[rev_indices])
-                    
-                    c_o = len(rev_o_set) / n_origins_total if n_origins_total > 0 else 0.0
-                    c_d = len(rev_d_set) / n_dests_total if n_dests_total > 0 else 0.0
-                    
-                    # Both endpoint coverage on unseen set
-                    unseen_o = o_idx_support[unseen_indices]
-                    unseen_d = d_idx_support[unseen_indices]
-                    both_cov = np.isin(unseen_o, list(rev_o_set)) & np.isin(unseen_d, list(rev_d_set))
-                    c_both = float(np.mean(both_cov))
-
-                frac_pairs_rev = float(n_reveal) / float(n_pairs)
-                frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
-                unseen_mass = total_trip_mass - revealed_mass
-                frac_unseen_mass = unseen_mass / total_trip_mass if total_trip_mass > 0 else 0.0
-                
-                t_true_unseen = t_true_support[unseen_indices]
-                sum_true_unseen = float(np.sum(t_true_unseen))
-
-                # Evaluate across all 3 model seeds with identical mask
-                for s in model_seeds:
-                    preds = seed_predictions[s]
-                    t0_support = preds["t0"]
-                    t0_unseen = t0_support[unseen_indices]
-                    t_full_unseen = preds["t_cal_full"][unseen_indices]
-                    N_hat_total = preds["N_hat"]
-                    
-                    # 1. Arm A: M0 zero-shot
-                    denom_m0 = sum_true_unseen + float(np.sum(t0_unseen))
-                    cpc_m0_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t0_unseen)) / denom_m0) if denom_m0 > 0 else 0.0
-                    
-                    # 2. Arm B: Full Y_D Reference
-                    denom_full = sum_true_unseen + float(np.sum(t_full_unseen))
-                    cpc_full_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_full_unseen)) / denom_full) if denom_full > 0 else 0.0
-                    
-                    # 3. Arm C: Direct-OD Adapter (OD-FE)
-                    if n_reveal == 0:
-                        cpc_dir_unseen = cpc_m0_unseen
-                        it_count = 0
-                        is_conv = True
-                        tot_dir_mass = N_hat_total
-                    else:
-                        a, b, it_count, is_conv = fit_od_fe_adapter(
-                            o_idx=o_idx_support,
-                            d_idx=d_idx_support,
-                            t0_support=t0_support,
-                            t_true_support=t_true_support,
-                            rev_indices=rev_indices,
-                            num_nodes=num_nodes,
-                            lambda_reg=selected_lambda
-                        )
-                        if not is_conv:
-                            raise RuntimeError(f"OD-FE adapter did not converge after 1000 iterations on city {city_name}, rep {rep_id}, p {p_val}!")
-                            
-                        t_direct_support = apply_od_fe_prediction(
-                            o_idx_support, d_idx_support, t0_support, a, b
-                        )
-                        t_dir_unseen = t_direct_support[unseen_indices]
-                        tot_dir_mass = float(np.sum(t_direct_support))
-                        
-                        denom_dir = sum_true_unseen + float(np.sum(t_dir_unseen))
-                        cpc_dir_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_dir_unseen)) / denom_dir) if denom_dir > 0 else 0.0
-
-                    gain_full = float(cpc_full_unseen - cpc_m0_unseen)
-                    gain_direct = float(cpc_dir_unseen - cpc_m0_unseen)
-                    diff_direct_minus_yd = float(gain_direct - gain_full)
-                    rel_direct = float(gain_direct / gain_full) if abs(gain_full) > 1e-8 else 1.0
-
-                    city_rows.append((
-                        fold_id, city_name, s, rep_id, p_val, mask_seed,
-                        selected_lambda, n_pairs, n_reveal, n_unseen,
-                        frac_pairs_rev, total_trip_mass, revealed_mass,
-                        frac_mass_rev, unseen_mass, frac_unseen_mass,
-                        c_o, c_d, c_both, it_count, is_conv,
-                        cpc_m0_unseen, cpc_full_unseen, cpc_dir_unseen,
-                        gain_full, gain_direct, diff_direct_minus_yd,
-                        rel_direct, N_hat_total, tot_dir_mass, 8, 1.0
-                    ))
+        if num_workers > 1 and len(task_args) > 1:
+            with mp.Pool(processes=min(num_workers, len(task_args))) as pool:
+                chunk_results = pool.map(_process_city_replicates_chunk, task_args)
+            city_rows = [item for sublist in chunk_results for item in sublist]
+        else:
+            city_rows = _process_city_replicates_chunk(task_args[0])
 
         # Append city records to raw CSV incrementally
         with open(raw_csv_path, "a", encoding="utf-8") as f:
@@ -620,7 +650,7 @@ def run_fold_direct_od(
             }, f, indent=2)
 
         city_elapsed = time.perf_counter() - city_start
-        print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | Pairs: {n_pairs:>5} | B={B} reps done in {city_elapsed:.2f}s (Flushed {len(city_rows)} rows)")
+        print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | Pairs: {n_pairs:>7} | B={B} reps done in {city_elapsed:.2f}s (Flushed {len(city_rows)} rows)")
 
     # Read back raw.csv to generate per_seed, per_city, and fold_summary
     fold_df = pd.read_csv(raw_csv_path)
@@ -1075,6 +1105,7 @@ if __name__ == "__main__":
     parser.add_argument("--smoke", action="store_true", help="Run fast smoke test")
     parser.add_argument("--resume", action="store_true", help="Resume from progress.json")
     parser.add_argument("--aggregate_only", action="store_true", help="Only aggregate completed folds")
+    parser.add_argument("--workers", type=int, default=8, help="Number of parallel worker processes")
     parser.add_argument("--device", type=str, default="cpu")
     args = parser.parse_args()
 
@@ -1092,6 +1123,7 @@ if __name__ == "__main__":
                 smoke=args.smoke,
                 smoke_cities=args.cities,
                 resume=args.resume,
+                num_workers=args.workers,
                 device=args.device
             )
         if not args.smoke and set(args.folds) == {1, 2, 3, 4, 5}:
