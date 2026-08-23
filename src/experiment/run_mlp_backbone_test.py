@@ -84,6 +84,15 @@ def run_mlp_backbone_test(args: argparse.Namespace) -> None:
         patience = args.patience
 
     all_mlp_results = []
+    mlp_json_path = Path(output_dir) / "mlp_backbone_results.json"
+    if mlp_json_path.exists():
+        try:
+            with open(mlp_json_path, "r") as f:
+                prev_data = json.load(f)
+                all_mlp_results = prev_data.get("city_level_results", prev_data) if isinstance(prev_data, dict) else prev_data
+                logger.info(f"Loaded {len(all_mlp_results)} existing MLP city records from {mlp_json_path}")
+        except Exception:
+            all_mlp_results = []
     
     logger.info("=" * 85)
     logger.info("STARTING PAIRWISE MLP BACKBONE TRAINING & EVALUATION")
@@ -96,34 +105,43 @@ def run_mlp_backbone_test(args: argparse.Namespace) -> None:
         val_cities = split["val"]
         test_cities = split["test"] if not args.smoke else split["test"][:2]
 
+        # Remove previous records for this fold to allow clean overwrite
+        all_mlp_results = [r for r in all_mlp_results if r.get("fold") != fold_id]
+
         logger.info(f"\n# FOLD {fold_id}/5 (Train: {len(train_cities)}, Val: {len(val_cities)}, Test: {len(test_cities)})")
         models = []
         scalers = []
         
         for seed_idx, seed in enumerate(seeds):
-            logger.info(f"--- Training MLP Seed {seed} (Fold {fold_id}) ---")
             _ckpt_path = Path(output_dir) / "checkpoints" / f"mlp_fold{fold_id}_seed{seed}.pt"
             
-            model, scaler = train_zero_shot_model(
-                train_city_names=train_cities,
-                data_root=data_root,
-                epochs=epochs_per_fold,
-                lr=args.lr,
-                hidden_dim=args.hidden_dim,
-                num_gnn_layers=args.num_gnn_layers,
-                graph_type=args.graph_type,
-                radius_km=args.radius_km,
-                knn_k=args.knn_k,
-                loss_type=args.loss_type,
-                backbone="mlp",  # <--- Pairwise Spatial MLP Backbone (No message passing)
-                device_str=args.device,
-                verbose=False,
-                val_city_names=val_cities,
-                patience=patience,
-                checkpoint_path=_ckpt_path,
-                run_tag=f"mlp_fold{fold_id}_seed{seed}",
-                seed=seed,
-            )
+            if _ckpt_path.exists():
+                logger.info(f"--- Found existing MLP checkpoint {_ckpt_path}. Loading... ---")
+                from src.training.train import load_checkpoint
+                model, scaler, _ = load_checkpoint(_ckpt_path, device_str=args.device)
+                model.eval()
+            else:
+                logger.info(f"--- Training MLP Seed {seed} (Fold {fold_id}) ---")
+                model, scaler = train_zero_shot_model(
+                    train_city_names=train_cities,
+                    data_root=data_root,
+                    epochs=epochs_per_fold,
+                    lr=args.lr,
+                    hidden_dim=args.hidden_dim,
+                    num_gnn_layers=args.num_gnn_layers,
+                    graph_type=args.graph_type,
+                    radius_km=args.radius_km,
+                    knn_k=args.knn_k,
+                    loss_type=args.loss_type,
+                    backbone="mlp",  # <--- Pairwise Spatial MLP Backbone (No message passing)
+                    device_str=args.device,
+                    verbose=False,
+                    val_city_names=val_cities,
+                    patience=patience,
+                    checkpoint_path=_ckpt_path,
+                    run_tag=f"mlp_fold{fold_id}_seed{seed}",
+                    seed=seed,
+                )
             models.append(model)
             scalers.append(scaler)
             
@@ -167,11 +185,10 @@ def run_mlp_backbone_test(args: argparse.Namespace) -> None:
             all_mlp_results.append(city_res)
             logger.info(f"  {target_city:15s} | M0: {m0_cpc_inter:.4f} | M1: {m1_cpc_inter:.4f} | d={delta_cpc:+.4f}")
             
-    # Save MLP results
-    mlp_json_path = Path(output_dir) / "mlp_backbone_results.json"
-    with open(mlp_json_path, "w") as f:
-        json.dump(all_mlp_results, f, indent=2)
-
+            # Intermediate Save
+            with open(mlp_json_path, "w") as f:
+                json.dump(all_mlp_results, f, indent=2)
+            
     logger.info(f"\nSaved {len(all_mlp_results)} MLP backbone city results to {mlp_json_path}")
     logger.info("Run `python src/experiment/compare_backbones.py` to compare MLP with Urban GNN.")
 

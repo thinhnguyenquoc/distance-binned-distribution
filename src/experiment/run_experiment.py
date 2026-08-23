@@ -105,7 +105,9 @@ def run_target_city_experiments(
     bin_edges: np.ndarray = None,
 ) -> Dict[str, Any]:
     assert scaler is not None, "StandardScaler must be pre-fitted on source cities."
-    assert bin_edges is not None, "bin_edges must be provided for K=8 unified calibration."
+    if bin_edges is None:
+        from src.data.yd_extractor import compute_kbin_edges
+        bin_edges, _ = compute_kbin_edges([city_name], K=8, data_root=data_root)
 
     device = torch.device(device_str)
     city_data = load_city(city_name, data_root=data_root, feature_scaler=scaler, fit_scaler=False)

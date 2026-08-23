@@ -379,10 +379,10 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
         
 
 def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[float], nonzero_epsilons: List[float]) -> None:
-    confirmatory_folds = sorted([f for f in city_df.fold.unique() if f != 1])
-    conf_df = city_df[city_df.fold.isin(confirmatory_folds)]
+    evaluation_folds = sorted(city_df.fold.unique().tolist())
+    eval_df = city_df[city_df.fold.isin(evaluation_folds)]
     
-    if conf_df.empty:
+    if eval_df.empty:
         return
         
     results: Dict[float, Dict[str, Any]] = {}
@@ -391,12 +391,12 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
     
     # Get oracle delta_cpc per city for degradation paired test
     clean_vals_by_city: Dict[Tuple[int, str], float] = {}
-    c_clean = conf_df[conf_df.epsilon == 0.0]
+    c_clean = eval_df[eval_df.epsilon == 0.0]
     for _, row in c_clean.iterrows():
         clean_vals_by_city[(row["fold"], row["target_city"])] = row["delta_cpc_mean"]
     
     for eps in epsilons:
-        c_eps = conf_df[conf_df.epsilon == eps]
+        c_eps = eval_df[eval_df.epsilon == eps]
         vals = c_eps.delta_cpc_mean.values
         
         mean_cpc1 = float(c_eps.cpc_m1_inter.mean())
@@ -408,7 +408,7 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
         pos_cities = int(np.sum(vals > 0))
         harm_rate = float(np.sum(vals < 0) / len(vals))
         
-        ci_lower, ci_upper = fold_stratified_bootstrap(conf_df, "delta_cpc_mean", eps, confirmatory_folds)
+        ci_lower, ci_upper = fold_stratified_bootstrap(eval_df, "delta_cpc_mean", eps, evaluation_folds)
         
         # 1. Benefit Test (H1: delta_cpc > 0 vs M0)
         try:
@@ -484,7 +484,7 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
             break
             
     summary = {
-        "confirmatory_n_cities": int(len(conf_df) // len(epsilons)),
+        "n_evaluation_cities": int(len(eval_df) // len(epsilons)),
         "eps_cross_zero_dCPC": eps_cross,
         "eps_star_significant_benefit": float(eps_star),
         "results_by_eps": results
@@ -494,7 +494,7 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
         json.dump(summary, f, indent=2)
         
     md = "# 5-Fold Noise Robustness Summary\n\n"
-    md += f"## Confirmatory Table (Folds 2-5, {int(len(conf_df)//len(epsilons))} Cities)\n\n"
+    md += f"## Five-Fold Cross-City Evaluation Table (All 5 Folds, {int(len(eval_df)//len(epsilons))} Held-Out Test Cities)\n\n"
     if eps_cross is not None:
         md += f"**Crossover Threshold ($\\epsilon_{{\\text{{cross}}}}$, $\\Delta\\text{{CPC}}=0$):** `{eps_cross:.4f}` (TV $\\approx {eps_cross*100:.2f}\\%$)\n\n"
     md += "| Noise (eps) | Mean M1 CPC | Mean dCPC | 95% CI | Pos Cities | Harm Rate | Rel Effect vs Clean (%) | Benefit p-val (vs M0) | Degrad p-val (vs Clean) |\n"
@@ -516,7 +516,7 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
             deg_str = "—"
             
         rel_eff = f"{d['relative_effect_pct']:+.1f}%" if d['relative_effect_pct'] is not None else "N/A"
-        md += f"| {e} | {d['mean_cpc1']:.5f} | {d['mean_delta_cpc']:+.5f} | {ci} | {d['pos_cities']}/{int(len(conf_df)//len(epsilons))} | {d['harm_rate']:.1%} | {rel_eff} | {ben_str} | {deg_str} |\n"
+        md += f"| {e} | {d['mean_cpc1']:.5f} | {d['mean_delta_cpc']:+.5f} | {ci} | {d['pos_cities']}/{int(len(eval_df)//len(epsilons))} | {d['harm_rate']:.1%} | {rel_eff} | {ben_str} | {deg_str} |\n"
         
     with open(f"{output_dir}/noise_summary.md", "w") as f:
         f.write(md)

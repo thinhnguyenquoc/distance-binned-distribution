@@ -331,10 +331,10 @@ def run_sampling_robustness(args: argparse.Namespace) -> None:
 
 
 def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: List[float]) -> None:
-    confirmatory_folds = sorted([f for f in city_df.fold.unique() if f != 1])
-    conf_df = city_df[city_df.fold.isin(confirmatory_folds)]
+    evaluation_folds = sorted(city_df.fold.unique().tolist())
+    eval_df = city_df[city_df.fold.isin(evaluation_folds)]
     
-    if conf_df.empty:
+    if eval_df.empty:
         return
         
     sorted_m = sorted(m_grid, key=lambda x: (np.isinf(x), x))
@@ -346,13 +346,13 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
     
     # Get oracle delta_cpc per city for degradation paired test
     clean_vals_by_city: Dict[Tuple[int, str], float] = {}
-    c_clean = conf_df[conf_df.sample_m.isin([float('inf')])]
+    c_clean = eval_df[eval_df.sample_m.isin([float('inf')])]
     for _, row in c_clean.iterrows():
         clean_vals_by_city[(row["fold"], row["target_city"])] = row["delta_cpc_mean"]
         
     for m in sorted_m:
         m_str = "inf" if np.isinf(m) else str(int(m))
-        c_m = conf_df[conf_df.sample_m == m]
+        c_m = eval_df[eval_df.sample_m == m]
         vals = c_m.delta_cpc_mean.values
         tv_vals = c_m.empirical_tv_mean.values
         
@@ -366,8 +366,8 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
         harm_rate = float(np.sum(vals < 0) / len(vals))
         
         mean_tv = float(np.mean(tv_vals))
-        tv_ci_lo, tv_ci_hi = fold_stratified_bootstrap(conf_df, "empirical_tv_mean", m, confirmatory_folds)
-        ci_lower, ci_upper = fold_stratified_bootstrap(conf_df, "delta_cpc_mean", m, confirmatory_folds)
+        tv_ci_lo, tv_ci_hi = fold_stratified_bootstrap(eval_df, "empirical_tv_mean", m, evaluation_folds)
+        ci_lower, ci_upper = fold_stratified_bootstrap(eval_df, "delta_cpc_mean", m, evaluation_folds)
         
         # 1. Benefit Test (H1: delta_cpc > 0 vs M0)
         try:
@@ -439,7 +439,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
             break
             
     summary = {
-        "confirmatory_n_cities": int(len(conf_df) // len(m_grid)),
+        "n_evaluation_cities": int(len(eval_df) // len(m_grid)),
         "m_cross_positive_dCPC": m_cross,
         "m_star_significant_benefit": m_star,
         "results_by_m": results
@@ -449,7 +449,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
         json.dump(summary, f, indent=2)
         
     md = "# Empirical Y_D Sampling Robustness Summary (Subsampling Without Replacement)\n\n"
-    md += f"## Confirmatory Table (Folds 2-5, {int(len(conf_df)//len(m_grid))} Cities)\n\n"
+    md += f"## Five-Fold Cross-City Evaluation Table (All 5 Folds, {int(len(eval_df)//len(m_grid))} Held-Out Test Cities)\n\n"
     if m_star is not None:
         md += f"**Primary Finding — Confirmatory Benefit Threshold ($m^*$):** `{m_star:,}` observed trips ($p < 0.05$ Holm, $95\\%\\text{{ CI}}_{{\\text{{lower}}}} > 0$)\n\n"
     if m_cross is not None:
@@ -478,7 +478,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
             deg_str = "—"
             
         rel_eff = f"{d['relative_effect_pct']:+.1f}%" if d['relative_effect_pct'] is not None else "N/A"
-        md += f"| {m_label} | {tv_label} | {d['mean_cpc1']:.5f} | {d['mean_delta_cpc']:+.5f} | {ci} | {d['pos_cities']}/{int(len(conf_df)//len(m_grid))} | {d['harm_rate']:.1%} | {rel_eff} | {ben_str} | {deg_str} |\n"
+        md += f"| {m_label} | {tv_label} | {d['mean_cpc1']:.5f} | {d['mean_delta_cpc']:+.5f} | {ci} | {d['pos_cities']}/{int(len(eval_df)//len(m_grid))} | {d['harm_rate']:.1%} | {rel_eff} | {ben_str} | {deg_str} |\n"
         
     with open(f"{output_dir}/sampling_summary.md", "w") as f:
         f.write(md)

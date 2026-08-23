@@ -146,6 +146,7 @@ def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]
     t_p = t_pred.detach().cpu().numpy().astype(np.float64)
     return {
         "cpc": compute_cpc_pair(t_t, t_p),
+        "cpc_norm": compute_cpc_norm_pair(t_t, t_p),
         "rmse_log1p": compute_rmse_log1p_pair(t_t, t_p),
         "pearson_r": compute_pearson_pair(t_t, t_p),
     }
