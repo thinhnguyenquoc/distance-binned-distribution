@@ -1,16 +1,18 @@
 """
 Compare Urban GNN and Pairwise MLP backbones on Folds 2-5.
-Reads results from `5fold_results.json` and `mlp_backbone_results.json`.
+Reads results from `results/5fold_results.json` and `results/mlp_backbone_results.json`.
 """
 
+import os
 import json
+import argparse
 import numpy as np
 from pathlib import Path
 from scipy import stats
 
-def run_comparison(output_dir="results"):
+def run_comparison(output_dir: str = "results", export_md: bool = True):
     print("\n" + "=" * 85)
-    print("COMPARISON: GNN vs MLP (Backbone Robustness)")
+    print("COMPARISON: Urban GNN vs Pairwise MLP (Backbone Robustness)")
     print("=" * 85)
 
     gnn_results_path = Path(output_dir) / "5fold_results.json"
@@ -44,7 +46,7 @@ def run_comparison(output_dir="results"):
     for r in gnn_data:
         if r.get("fold") in folds_to_run:
             m0_data = r.get("M0")
-            m1_data = r.get("M1_city_oracle_obs")
+            m1_data = r.get("M1_city_oracle_obs", r.get("M1_real_plus"))
             if m0_data and m1_data:
                 gnn_map[r["city"]] = {
                     "m0_cpc_inter": m0_data.get("cpc_inter", 0.0),
@@ -57,11 +59,9 @@ def run_comparison(output_dir="results"):
     for m in all_mlp_results:
         c = m.get("city")
         if not c or c not in gnn_map:
-            print(f"Warning: City {c} in MLP results but not in GNN results. Skipping comparison for this city.")
             continue
         g = gnn_map[c]
         
-        # Support both old flat format and new run_5fold.py format
         if "M0" in m and "M1_city_oracle_obs" in m:
             mlp_m0 = m["M0"].get("cpc_inter", 0.0)
             mlp_m1 = m["M1_city_oracle_obs"].get("cpc_inter", 0.0)
@@ -88,8 +88,9 @@ def run_comparison(output_dir="results"):
         return
 
     def summarize(vals, label):
-        mean_v = np.mean(vals)
-        median_v = np.median(vals)
+        mean_v = float(np.mean(vals))
+        median_v = float(np.median(vals))
+        sd_v = float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0
 
         delta_by_fold = {f: [] for f in folds_to_run}
         for v, r in zip(vals, paired_results):
@@ -108,8 +109,9 @@ def run_comparison(output_dir="results"):
 
         return {
             "mean": mean_v,
+            "std": sd_v,
             "median": median_v,
-            "ci_95": (ci_l, ci_h)
+            "ci_95": (float(ci_l), float(ci_h))
         }
 
     gnn_deltas = np.array([r["gnn_delta"] for r in paired_results])
@@ -128,47 +130,52 @@ def run_comparison(output_dir="results"):
     print(f"\n[Urban GNN Backbone] (n={len(paired_results)})")
     print(f"Mean M0: {np.mean([r['gnn_m0'] for r in paired_results]):.4f}")
     print(f"Mean M1: {np.mean([r['gnn_m1'] for r in paired_results]):.4f}")
-    print(f"Mean Delta: {gnn_sum['mean']:+.4f} | Median: {gnn_sum['median']:+.4f}")
+    print(f"Mean Delta: {gnn_sum['mean']:+.4f} +- {gnn_sum['std']:.4f} | Median: {gnn_sum['median']:+.4f}")
     print(f"95% CI: [{gnn_sum['ci_95'][0]:+.4f}, {gnn_sum['ci_95'][1]:+.4f}]")
     print(f"Cities Improved: {np.sum(gnn_deltas > 0)}/{len(paired_results)} ({np.mean(gnn_deltas > 0)*100:.1f}%)")
     print(f"Wilcoxon (Delta > 0): p = {gnn_w_p:.4e}")
 
-    print(f"\n[Pairwise MLP Backbone] (n={len(paired_results)})")
+    print(f"\n[Pairwise Spatial MLP Backbone] (n={len(paired_results)})")
     print(f"Mean M0: {np.mean([r['mlp_m0'] for r in paired_results]):.4f}")
     print(f"Mean M1: {np.mean([r['mlp_m1'] for r in paired_results]):.4f}")
-    print(f"Mean Delta: {mlp_sum['mean']:+.4f} | Median: {mlp_sum['median']:+.4f}")
+    print(f"Mean Delta: {mlp_sum['mean']:+.4f} +- {mlp_sum['std']:.4f} | Median: {mlp_sum['median']:+.4f}")
     print(f"95% CI: [{mlp_sum['ci_95'][0]:+.4f}, {mlp_sum['ci_95'][1]:+.4f}]")
     print(f"Cities Improved: {np.sum(mlp_deltas > 0)}/{len(paired_results)} ({np.mean(mlp_deltas > 0)*100:.1f}%)")
     print(f"Wilcoxon (Delta > 0): p = {mlp_w_p:.4e}")
 
-    print("\n[Backbone Dependence Gamma]")
-    print(f"Mean Gamma: {gamma_sum['mean']:+.4f} | Median: {gamma_sum['median']:+.4f}")
+    print("\n[Backbone Dependence Gamma = Delta_GNN - Delta_MLP]")
+    print(f"Mean Gamma: {gamma_sum['mean']:+.4f} +- {gamma_sum['std']:.4f} | Median: {gamma_sum['median']:+.4f}")
     print(f"95% CI: [{gamma_sum['ci_95'][0]:+.4f}, {gamma_sum['ci_95'][1]:+.4f}]")
     print(f"Wilcoxon (Two-Sided): p = {gamma_w_p:.4e}")
-
-    # Results by fold
-    print("\n[Results by Fold]")
-    for fold_id in folds_to_run:
-        f_gammas = [r["gamma"] for r in paired_results if r["fold"] == fold_id]
-        if f_gammas:
-            print(f"Fold {fold_id} (n={len(f_gammas)}): Mean Gamma = {np.mean(f_gammas):+.4f}")
 
     print("\n[Interpretation]")
     gnn_robust = gnn_sum['mean'] > 0 and gnn_w_p < 0.05
     mlp_robust = mlp_sum['mean'] > 0 and mlp_w_p < 0.05
 
     if gnn_robust and mlp_robust:
-        print("=> Cả GNN và MLP đều cải thiện: Lợi ích của (Y_D) là **robust across the two tested backbones**.")
+        print(r"=> Cả GNN và MLP đều cải thiện: Lợi ích của Y_D là robust across the two tested neural backbones.")
     elif gnn_robust and not mlp_robust:
-        print("=> Chỉ GNN cải thiện: Đóng góp của (Y_D) phụ thuộc kiến trúc.")
+        print(r"=> Chỉ GNN cải thiện: Đóng góp của Y_D phụ thuộc vào kiến trúc đồ thị.")
     elif not gnn_robust and mlp_robust:
-        print("=> Chỉ MLP cải thiện (Unexpected).")
+        print(r"=> Chỉ MLP cải thiện.")
     else:
-        print("=> Cả GNN và MLP đều không cho thấy sự cải thiện đáng kể.")
+        print(r"=> Cả GNN và MLP đều không cho thấy sự cải thiện đáng kể.")
 
-    print("=> Lưu ý: Nếu MLP có \Delta CPC lớn hơn GNN, điều này chưa chắc có nghĩa MLP 'tốt hơn'. "
-          "MLP có thể có baseline M0 thấp hơn, do đó có nhiều 'room for improvement' hơn.")
-    print("=> Không được gọi là 'architecture-independent', chỉ được kết luận là 'robust across the two tested backbones'.")
+    if export_md:
+        table_path = Path(output_dir) / "tables" / "table_gnn_vs_mlp_comparison.md"
+        table_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(table_path, "w", encoding="utf-8") as f:
+            f.write("# Neural Backbone Comparison: Urban GNN vs Pairwise MLP\n\n")
+            f.write("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta\\text{CPC}$ | 95% Bootstrap CI | Improved Cities | Wilcoxon $p$ |\n")
+            f.write("|---|---|---|---|---|---|---|\n")
+            f.write(f"| **Gravity-Informed Urban GNN** | {np.mean([r['gnn_m0'] for r in paired_results]):.4f} | **{np.mean([r['gnn_m1'] for r in paired_results]):.4f}** | **{gnn_sum['mean']:+.4f} +- {gnn_sum['std']:.4f}** | [{gnn_sum['ci_95'][0]:+.4f}, {gnn_sum['ci_95'][1]:+.4f}] | {np.sum(gnn_deltas > 0)}/{len(paired_results)} ({np.mean(gnn_deltas > 0)*100:.1f}%) | p = {gnn_w_p:.4e} |\n")
+            f.write(f"| **Pairwise Spatial MLP** | {np.mean([r['mlp_m0'] for r in paired_results]):.4f} | **{np.mean([r['mlp_m1'] for r in paired_results]):.4f}** | **{mlp_sum['mean']:+.4f} +- {mlp_sum['std']:.4f}** | [{mlp_sum['ci_95'][0]:+.4f}, {mlp_sum['ci_95'][1]:+.4f}] | {np.sum(mlp_deltas > 0)}/{len(paired_results)} ({np.mean(mlp_deltas > 0)*100:.1f}%) | p = {mlp_w_p:.4e} |\n")
+            f.write(f"| **Difference ($\\Gamma$)** | — | — | **{gamma_sum['mean']:+.4f} +- {gamma_sum['std']:.4f}** | [{gamma_sum['ci_95'][0]:+.4f}, {gamma_sum['ci_95'][1]:+.4f}] | — | p = {gamma_w_p:.4e} |\n")
+        print(f"Comparison table exported to {table_path}")
+
 
 if __name__ == "__main__":
-    run_comparison()
+    parser = argparse.ArgumentParser(description="Compare Urban GNN and Pairwise MLP backbones")
+    parser.add_argument("--output_dir", type=str, default="results")
+    args = parser.parse_args()
+    run_comparison(output_dir=args.output_dir)

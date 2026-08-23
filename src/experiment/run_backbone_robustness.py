@@ -1,18 +1,18 @@
 """
 Backbone Robustness Evaluation Experiment.
-Evaluates the Moving-Bin Calibration Operator across multiple zero-shot backbones:
+Evaluates the Calibration Operator across multiple zero-shot backbones:
     1. Classical 2-Parameter Gravity Baseline: T_ij^grav = exp(G) * P_i * P_j * D_ij^(-alpha)
     2. Proposed Gravity-Informed Urban GNN: f_theta(X_i, X_j, D_ij, T_ij^grav)
-    3. Spatial Urban MLP (Non-GNN Baseline): MLP(X_i, X_j, log(1+D_ij))
 
 For each backbone b, computes:
     - Delta R_b (CPC_inter)
-    - Delta RMSE_log1p
+    - Delta RMSE
     - Delta Spearman rho_s
-Across untouched Confirmatory Fold 2-5 (n=40) and Full Out-of-fold benchmark (N=50).
+Across untouched Confirmatory Folds 2-5 (n=40) and Full Out-of-fold benchmark (N=50).
 """
 
 import os
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 import sys
 import json
 import torch
@@ -25,10 +25,10 @@ from typing import Dict, Any, List
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.data.city_splits import generate_5fold_splits
-from src.data.dataset import load_city
-from src.models.zero_shot_model import ZeroShotODModel
-from src.calibration.bin_calibration import calibrate_moving_bins
-from src.training.evaluate import evaluate_moving_and_full, compute_spearman_pair
+from src.data.dataset import load_city, load_raw_city
+from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
+from src.calibration.bin_calibration import calibrate_kbins
+from src.training.evaluate import compute_cpc_pair, compute_spearman_pair
 
 
 def fit_gravity_parameters(train_cities: List[str], data_root: str = "data") -> tuple[float, float]:
@@ -38,16 +38,16 @@ def fit_gravity_parameters(train_cities: List[str], data_root: str = "data") -> 
     log_flow = []
 
     for c in train_cities:
-        cd = load_city(c, data_root=data_root)
-        dist_km = np.expm1(cd.pair_distance.numpy())
-        mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0) & (cd.pair_trips.numpy() > 0)
+        raw = load_raw_city(c, data_root=data_root)
+        dist_km = raw.dist_km
+        mask = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0) & (raw.pair_trips.numpy() > 0)
         if np.sum(mask) == 0:
             continue
-        p = cd.population.numpy()
-        p_i = np.clip(p[cd.pair_o_idx.numpy()[mask]], 1.0, None)
-        p_j = np.clip(p[cd.pair_d_idx.numpy()[mask]], 1.0, None)
+        p = raw.population.numpy()
+        p_i = np.clip(p[raw.pair_o_idx.numpy()[mask]], 1.0, None)
+        p_j = np.clip(p[raw.pair_d_idx.numpy()[mask]], 1.0, None)
         d = np.clip(dist_km[mask], 0.1, None)
-        f = cd.pair_trips.numpy()[mask]
+        f = raw.pair_trips.numpy()[mask]
 
         log_pi_pj.extend(np.log(p_i) + np.log(p_j))
         log_dist.extend(np.log(d))
@@ -69,12 +69,16 @@ def run_backbone_robustness(
     os.makedirs(output_dir, exist_ok=True)
     splits = generate_5fold_splits(data_root=data_root)
 
-    with open("results/5fold_results.json", "r") as f:
+    results_file = Path("results/5fold_results.json")
+    if not results_file.exists():
+        raise FileNotFoundError(f"Missing {results_file}. Run 5-fold experiment first.")
+
+    with open(results_file, "r") as f:
         full_res = json.load(f)
 
     city_map = {r["city"]: r for r in full_res["city_level_results"]}
 
-    results_by_backbone = {
+    results_by_backbone: Dict[str, List[Dict[str, Any]]] = {
         "classical_gravity": [],
         "urban_gnn": [],
     }
@@ -89,64 +93,82 @@ def run_backbone_robustness(
         G_fit, alpha_fit = fit_gravity_parameters(train_cities, data_root=data_root)
         print(f"Fold {fold_id} Classical Gravity: G={G_fit:.3f}, alpha={alpha_fit:.3f}")
 
+        # Compute K=8 bin edges from training cities
+        bin_edges, _ = compute_kbin_edges(train_cities, K=8, data_root=data_root)
+
         for city_name in test_cities:
-            cd = load_city(city_name, data_root=data_root)
+            raw = load_raw_city(city_name, data_root=data_root)
             existing_r = city_map.get(city_name)
             if existing_r is None:
                 continue
 
+            dist_km = raw.dist_km
+            inter_mask = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0)
+            t_true_inter = raw.pair_trips.numpy()[inter_mask]
+
+            # Extract Oracle Target Y_D
+            yd_target = extract_yd_kbins(dist_km, raw.pair_trips.numpy(), bin_edges, inter_mask)
+
             # --- Backbone 1: Classical Gravity ---
-            p = cd.population.numpy()
-            p_i = np.clip(p[cd.pair_o_idx.numpy()], 1.0, None)
-            p_j = np.clip(p[cd.pair_d_idx.numpy()], 1.0, None)
-            dist_km = np.expm1(cd.pair_distance.numpy())
+            p = raw.population.numpy()
+            p_i = np.clip(p[raw.pair_o_idx.numpy()], 1.0, None)
+            p_j = np.clip(p[raw.pair_d_idx.numpy()], 1.0, None)
             d = np.clip(dist_km, 0.1, None)
             t_grav = np.exp(G_fit) * p_i * p_j * (d ** (-alpha_fit))
-            t_grav_tensor = torch.tensor(t_grav, dtype=torch.float32)
+            t_grav_inter = t_grav[inter_mask]
 
             # Evaluate M0_grav
-            m0_grav_eval = evaluate_moving_and_full(
-                cd.pair_trips, t_grav_tensor, cd.pair_o_idx, cd.pair_d_idx, cd.bin_labels, cd.pair_distance
-            )
+            m0_cpc_grav = float(compute_cpc_pair(t_true_inter, t_grav_inter))
+            m0_rmse_grav = float(np.sqrt(np.mean((t_true_inter - t_grav_inter) ** 2)))
+            m0_spr_grav = float(compute_spearman_pair(t_true_inter, t_grav_inter))
 
-            # Apply Moving-Bin on Gravity
-            yd_real_tensor = torch.tensor(existing_r["yd_moving_real"], dtype=torch.float32)
-            t_grav_cal = calibrate_moving_bins(
-                t_grav_tensor, cd.bin_labels, cd.pair_o_idx, cd.pair_d_idx, yd_real_tensor, q=1.0, pair_distance=cd.pair_distance
-            )
-            m1_grav_eval = evaluate_moving_and_full(
-                cd.pair_trips, t_grav_cal, cd.pair_o_idx, cd.pair_d_idx, cd.bin_labels, cd.pair_distance
-            )
+            # Apply K=8 calibration on Gravity
+            t_grav_cal = calibrate_kbins(t_grav, dist_km, inter_mask, yd_target, bin_edges, q=1.0)
+            t_grav_cal_inter = t_grav_cal[inter_mask]
+
+            m1_cpc_grav = float(compute_cpc_pair(t_true_inter, t_grav_cal_inter))
+            m1_rmse_grav = float(np.sqrt(np.mean((t_true_inter - t_grav_cal_inter) ** 2)))
+            m1_spr_grav = float(compute_spearman_pair(t_true_inter, t_grav_cal_inter))
 
             results_by_backbone["classical_gravity"].append({
                 "city": city_name,
                 "fold": fold_id,
-                "m0_cpc_inter": m0_grav_eval["cpc_inter"],
-                "m1_cpc_inter": m1_grav_eval["cpc_inter"],
-                "delta_r": m1_grav_eval["cpc_inter"] - m0_grav_eval["cpc_inter"],
-                "m0_rmse_inter": m0_grav_eval["rmse_inter"],
-                "m1_rmse_inter": m1_grav_eval["rmse_inter"],
-                "delta_rmse": m1_grav_eval["rmse_inter"] - m0_grav_eval["rmse_inter"],
-                "m0_spearman_inter": m0_grav_eval["spearman_inter"],
-                "m1_spearman_inter": m1_grav_eval["spearman_inter"],
-                "delta_spearman": m1_grav_eval["spearman_inter"] - m0_grav_eval["spearman_inter"],
+                "m0_cpc_inter": m0_cpc_grav,
+                "m1_cpc_inter": m1_cpc_grav,
+                "delta_r": m1_cpc_grav - m0_cpc_grav,
+                "m0_rmse_inter": m0_rmse_grav,
+                "m1_rmse_inter": m1_rmse_grav,
+                "delta_rmse": m1_rmse_grav - m0_rmse_grav,
+                "m0_spearman_inter": m0_spr_grav,
+                "m1_spearman_inter": m1_spr_grav,
+                "delta_spearman": m1_spr_grav - m0_spr_grav,
             })
 
             # --- Backbone 2: Gravity-Informed Urban GNN (Main) ---
             m0_gnn = existing_r["M0"]
-            m1_gnn = existing_r["M1_real_plus"]
+            m1_gnn = existing_r.get("M1_city_oracle_obs", existing_r.get("M1_real_plus", {}))
+            
+            m0_cpc_gnn = m0_gnn["cpc_inter"]
+            m1_cpc_gnn = m1_gnn["cpc_inter"]
+            delta_gnn = m1_cpc_gnn - m0_cpc_gnn
+
+            m0_rmse_gnn = m0_gnn.get("rmse_inter", 0.0)
+            m1_rmse_gnn = m1_gnn.get("rmse_inter", 0.0)
+            m0_spr_gnn = m0_gnn.get("spearman_inter", 0.0)
+            m1_spr_gnn = m1_gnn.get("spearman_inter", 0.0)
+
             results_by_backbone["urban_gnn"].append({
                 "city": city_name,
                 "fold": fold_id,
-                "m0_cpc_inter": m0_gnn["cpc_inter"],
-                "m1_cpc_inter": m1_gnn["cpc_inter"],
-                "delta_r": existing_r["delta_r_real_plus"],
-                "m0_rmse_inter": m0_gnn.get("rmse_inter", 0.0),
-                "m1_rmse_inter": m1_gnn.get("rmse_inter", 0.0),
-                "delta_rmse": m1_gnn.get("rmse_inter", 0.0) - m0_gnn.get("rmse_inter", 0.0),
-                "m0_spearman_inter": m0_gnn.get("spearman_inter", 0.0),
-                "m1_spearman_inter": m1_gnn.get("spearman_inter", 0.0),
-                "delta_spearman": m1_gnn.get("spearman_inter", 0.0) - m0_gnn.get("spearman_inter", 0.0),
+                "m0_cpc_inter": m0_cpc_gnn,
+                "m1_cpc_inter": m1_cpc_gnn,
+                "delta_r": delta_gnn,
+                "m0_rmse_inter": m0_rmse_gnn,
+                "m1_rmse_inter": m1_rmse_gnn,
+                "delta_rmse": m1_rmse_gnn - m0_rmse_gnn,
+                "m0_spearman_inter": m0_spr_gnn,
+                "m1_spearman_inter": m1_spr_gnn,
+                "delta_spearman": m1_spr_gnn - m0_spr_gnn,
             })
 
     # Summarize across Confirmatory Fold 2-5 (n=40) and Full (n=50)
@@ -208,14 +230,14 @@ def run_backbone_robustness(
         "urban_gnn": summarize_backbone(results_by_backbone["urban_gnn"], "Gravity-Informed Urban GNN"),
     }
 
-    # Generate Markdown Table 7
+    # Generate Markdown Table
     t7_md = []
-    t7_md.append("### Table 7: Backbone Robustness — Marginal Value of Moving-Bin Calibration Across Model Architectures")
+    t7_md.append("# Backbone Robustness — Marginal Value of Calibration Across Model Architectures")
     t7_md.append("")
-    t7_md.append("> **Evaluation Scope**: Assesses whether coarse mobility information ($Y_D^{\\text{Meta},+}$) improves interzonal reconstruction across different zero-shot model families, distinguishing general operator value from model-specific error correction.")
+    t7_md.append("> **Evaluation Scope**: Assesses whether distance-binned aggregate information ($Y_D^{\\text{target}}$) improves interzonal reconstruction across different zero-shot model families.")
     t7_md.append("")
-    t7_md.append("#### Part A: Confirmatory Evaluation Set (Folds 2–5, $n=40$ Untouched Cities)")
-    t7_md.append("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1^{\\text{real},+}$ CPC | Marginal Gain $\\Delta R$ | 95% Fold-Stratified Bootstrap CI | $P(\\Delta R > 0)$ | Wilcoxon $p_1$ | $\\Delta \\text{RMSE}_{\\log1p}$ |")
+    t7_md.append("## Part A: Confirmatory Evaluation Set (Folds 2–5, $n=40$ Cities)")
+    t7_md.append("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta R$ | 95% Fold-Stratified Bootstrap CI | $P(\\Delta R > 0)$ | Wilcoxon $p$ | $\\Delta \\text{RMSE}$ |")
     t7_md.append("|---|---|---|---|---|---|---|---|")
 
     for k, v in summary.items():
@@ -231,8 +253,8 @@ def run_backbone_robustness(
         t7_md.append(f"| **{b_name}** | {m0_str} | {m1_str} | {dr_str} | {ci_str} | {p_imp} | p = {w_p} | {rmse_str} |")
 
     t7_md.append("")
-    t7_md.append("#### Part B: Full Out-of-Fold Descriptive Set ($N=50$ Cities)")
-    t7_md.append("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1^{\\text{real},+}$ CPC | Marginal Gain $\\Delta R$ | 95% Fold-Stratified Bootstrap CI | $P(\\Delta R > 0)$ | Wilcoxon $p_1$ |")
+    t7_md.append("## Part B: Full Descriptive Set ($N=50$ Cities)")
+    t7_md.append("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta R$ | 95% Fold-Stratified Bootstrap CI | $P(\\Delta R > 0)$ | Wilcoxon $p$ |")
     t7_md.append("|---|---|---|---|---|---|---|")
 
     for k, v in summary.items():
@@ -253,7 +275,7 @@ def run_backbone_robustness(
     with open("results/backbone_robustness_results.json", "w", encoding="utf-8") as f:
         json.dump({"summary": summary, "per_city_records": results_by_backbone}, f, indent=2)
 
-    print("Backbone robustness table generated at results/tables/table7_backbone_robustness.md")
+    print(f"Backbone robustness table generated at {output_dir}/table7_backbone_robustness.md")
     return summary
 
 
