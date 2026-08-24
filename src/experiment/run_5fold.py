@@ -164,7 +164,7 @@ def run_5fold_experiment(
             for key in ["M0", "M1_city_oracle_obs", "M1_county_oracle_obs", "M1_subzone_oracle_obs"]:
                 if avg_res[key] is not None:
                     avg_res[key] = avg_res[key].copy()
-                    for metric in ["cpc_inter", "mae_inter", "rmse_inter", "spearman_inter", "rel_error_total", "cpc_inflow", "cpc_outflow"]:
+                    for metric in ["cpc_inter", "mae_inter", "rmse_inter", "nrmse_inter", "rmse_log1p_inter", "spearman_inter", "rel_error_total", "cpc_inflow", "cpc_outflow"]:
                         if metric in avg_res[key]:
                             avg_res[key][metric] = sum(r[key][metric] for r in seed_results) / len(seed_results)
             
