@@ -8,7 +8,7 @@ import torch
 import numpy as np
 from od_plan_tester.project_adapter import (
     extract_yd_moving_oracle,
-    extract_yd_moving_real,
+    extract_M1_city_oracle_obs,
     compute_distributional_overlap,
     sample_multinomial_yd,
 )
@@ -32,11 +32,11 @@ def test_yd_moving_oracle_assignment():
 
 
 @pytest.mark.contract
-def test_yd_moving_real_meta_sum():
-    """T23: extract_yd_moving_real from Meta mobility data produces shape (3,) and sums strictly to 1.0."""
+def test_M1_city_oracle_obs_meta_sum():
+    """T23: extract_M1_city_oracle_obs from Meta mobility data produces shape (3,) and sums strictly to 1.0."""
     sample_cities = ["Philadelphia", "Denver", "Raleigh"]
     for c_name in sample_cities:
-        yd_real = extract_yd_moving_real(c_name, meta_prior_dir="meta_prior")
+        yd_real = extract_M1_city_oracle_obs(c_name, meta_prior_dir="meta_prior")
         assert yd_real is not None, f"Missing moving Meta Y_D for {c_name}"
         assert yd_real.shape == (3,)
         assert pytest.approx(1.0, rel=1e-5) == float(np.sum(yd_real))

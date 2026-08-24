@@ -20,7 +20,7 @@ from src.training.train import train_zero_shot_model
 from src.experiment.run_experiment import run_target_city_experiments
 from src.experiment.compute_delta_r import analyze_delta_r
 from src.experiment.compute_qstar import analyze_qstar
-from src.experiment.generate_tables import generate_tables
+
 from src.training.train import load_checkpoint
 
 

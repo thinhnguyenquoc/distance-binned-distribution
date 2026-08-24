@@ -43,7 +43,7 @@ from src.data.yd_extractor import (
     extract_yd_4bin_oracle,
     extract_yd_4bin_real,
     extract_yd_moving_oracle,
-    extract_yd_moving_real,
+    extract_M1_city_oracle_obs,
     compute_distributional_overlap,
     CITY_FIPS_GADM,
 )
@@ -113,7 +113,7 @@ __all__ = [
     "generate_5fold_splits",
     "get_all_cities_sorted_by_size",
     "extract_yd_moving_oracle",
-    "extract_yd_moving_real",
+    "extract_M1_city_oracle_obs",
     "extract_yd_4bin_oracle",
     "extract_yd_4bin_real",
     "compute_distributional_overlap",

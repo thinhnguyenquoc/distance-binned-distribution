@@ -130,10 +130,6 @@ def run_all_tests():
                 call_with_fixtures(fn)
                 file_passed += 1
             except Exception as e:
-                # Handle legacy tests that expect old files
-                if "results/manifest_rq1_v1.json" in str(e) or "Missing moving Meta Y_D" in str(e):
-                    file_passed += 1
-                    continue
                 file_failed += 1
                 failed_details.append((tf.name, fn.__name__, str(e)))
                 
