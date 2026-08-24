@@ -1,0 +1,42 @@
+{
+  "split_seed": 20260818,
+  "model_seeds": [
+    1,
+    10,
+    100
+  ],
+  "bootstrap_seed": 42,
+  "folds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "evaluated_folds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "K_values": [
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20
+  ],
+  "primary_K": 8,
+  "binning_method": "pair-weighted quantile",
+  "q_policy": "q=1.0 fixed",
+  "noise_level": 0.0,
+  "checkpoint_hashes": {},
+  "code_hash_version": "d431a9ddd475514787e56c1705282cf4bb193806313de501ed6dece8a6608de0",
+  "run_timestamp": "2026-08-24T16:11:09.211520"
+}

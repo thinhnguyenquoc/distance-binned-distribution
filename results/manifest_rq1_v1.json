@@ -1,0 +1,31 @@
+{
+    "protocol_version": "1.0",
+    "timestamp": "2026-08-24T12:00:00Z",
+    "contract_conditions": {
+        "total_cities": 50,
+        "unique_cities": 50,
+        "folds": 5,
+        "cities_per_fold": 10,
+        "primary_k_bins": 8,
+        "model_seeds": [
+            1,
+            10,
+            100
+        ],
+        "primary_treatment": "M1_city_oracle_obs",
+        "ceiling_treatment": "M1_subzone_oracle_obs",
+        "primary_metric": "cpc_inter",
+        "support_domain": "Omega_c_plus"
+    },
+    "locked_results": {
+        "M0_mean_cpc": 0.7136,
+        "M1_city_mean_cpc": 0.7172,
+        "mean_delta_cpc": 0.00357,
+        "win_rate_percent": 94.0,
+        "wilcoxon_two_sided_p": 4.7923e-10,
+        "matched_pairs_rank_biserial": 0.8918
+    },
+    "file_hashes": {
+        "5fold_results.json": "b20ed401f81e4c8910726b6e1c58714bd7ad5183b86cc98dda4970982be1ccc3"
+    }
+}

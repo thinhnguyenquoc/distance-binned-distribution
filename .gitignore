@@ -225,7 +225,15 @@ gadm41_USA_shp/*
 results/e1_rs/yd_oracles/*
 results/placebo_matched_v2/matched_placebo_raw.json
 results/placebo_matched_v2/matched_placebo_raw.csv
-results/
-results/
+# results/
+!results/*.json
+# results/
+!results/*.json
 results.zip
-results_archive/
+results_archive/!results/**/*.json
+
+# Ignore large result files > 100MB
+results/**/*.csv
+results/**/*.jsonl
+results_archive/**/*.csv
+results_archive/**/*.jsonl
