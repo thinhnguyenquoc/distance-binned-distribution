@@ -127,10 +127,10 @@ def run_comparison(output_dir: str = "results", export_md: bool = True):
                 "delta_cpc": m1_data.get("cpc_inter", 0.0) - m0_data.get("cpc_inter", 0.0)
             }
 
-    part_a = analyze_subset(gnn_map, all_mlp_results, [2, 3, 4, 5], "Part A: Confirmatory Evaluation Set (Folds 2–5, n=40 Cities)")
-    part_b = analyze_subset(gnn_map, all_mlp_results, [1, 2, 3, 4, 5], "Part B: Five-Fold Cross-City Evaluation Set (All 5 Folds, N=50 Cities)")
+    # part_a = analyze_subset(gnn_map, all_mlp_results, [2, 3, 4, 5], "Part A: Confirmatory Evaluation Set (Folds 2–5, n=40 Cities)")
+    part_b = analyze_subset(gnn_map, all_mlp_results, [1, 2, 3, 4, 5], "Five-Fold Cross-City Evaluation Set (All 5 Folds, N=50 Cities)")
 
-    for res in [part_a, part_b]:
+    for res in [part_b]:
         if not res:
             continue
         print(f"\n### {res['label']} (N={res['n']} Cities)")
@@ -145,7 +145,7 @@ def run_comparison(output_dir: str = "results", export_md: bool = True):
             f.write("# Neural Backbone Comparison: Gravity-Informed Urban GNN vs Pairwise Spatial MLP\n\n")
             f.write("> **Evaluation Goal**: Assesses whether distance-binned aggregate distribution calibration ($Y_D^{\\text{target}}$) provides consistent reconstruction gain across distinct neural architectures (Spatial Graph Convolution vs Local Feature MLP).\n\n")
             
-            for res in [part_a, part_b]:
+            for res in [part_b]:
                 if not res:
                     continue
                 f.write(f"## {res['label']}\n\n")
