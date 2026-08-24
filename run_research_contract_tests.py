@@ -106,28 +106,33 @@ def test_gate_2_data_leakage():
     
     # 3. Mutation / Permutation Invariance on M0:
     # M0 forward pass must be 100% invariant to any changes/mutations in target Y_D
-    ckpt_path = Path("results/checkpoints/5fold_fold1_seed1.pt")
-    model, _, _ = load_checkpoint(ckpt_path, device_str="cpu")
-    model.eval()
-    
     city_data = load_city(test_city, data_root="data", feature_scaler=scaler, fit_scaler=False)
     coords = city_data.lon_lat.numpy()
     ei, ed = build_radius_graph(coords, radius_km=5.0)
     
-    with torch.no_grad():
-        m0_clean = infer_zero_shot(model, city_data, ei, ed, device="cpu").numpy()
-        
-    # Test with 5 random/mutated Y_D distributions
-    rng = np.random.RandomState(42)
-    for _ in range(5):
-        mutated_yd = rng.dirichlet(np.ones(8))
-        # Run M0 prediction again (it should not take or be influenced by mutated_yd)
+    for seed in [1, 10, 100]:
+        ckpt_path = Path(f"results/checkpoints/5fold_fold1_seed{seed}.pt")
+        model, _, metadata = load_checkpoint(ckpt_path, device_str="cpu")
+        assert metadata.get("seed") == seed, (
+            f"{ckpt_path.name} metadata seed mismatch: "
+            f"expected {seed}, got {metadata.get('seed')}"
+        )
+        model.eval()
+
         with torch.no_grad():
-            m0_mutated = infer_zero_shot(model, city_data, ei, ed, device="cpu").numpy()
-        diff = np.max(np.abs(m0_clean - m0_mutated))
-        assert diff == 0.0, f"M0 output mutated! Max diff: {diff}"
+            m0_clean = infer_zero_shot(model, city_data, ei, ed, device="cpu").numpy()
+
+        # Test with 5 random/mutated Y_D distributions for each model seed.
+        rng = np.random.RandomState(42)
+        for _ in range(5):
+            mutated_yd = rng.dirichlet(np.ones(8))
+            # Run M0 prediction again (it should not take or be influenced by mutated_yd)
+            with torch.no_grad():
+                m0_mutated = infer_zero_shot(model, city_data, ei, ed, device="cpu").numpy()
+            diff = np.max(np.abs(m0_clean - m0_mutated))
+            assert diff == 0.0, f"M0 output mutated for seed {seed}! Max diff: {diff}"
         
-    return True, "Scaler guarded (train-only), M0 bitwise identical under Y_D mutations"
+    return True, "Scaler guarded (train-only), M0 bitwise identical under Y_D mutations for seeds 1, 10, 100"
 
 
 # -----------------------------------------------------------------------------
