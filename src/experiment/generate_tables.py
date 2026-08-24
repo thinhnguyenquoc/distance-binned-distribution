@@ -56,8 +56,8 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     n_conf = len(sub_f25)
 
     m0_c = np.array([r["M0"]["cpc_inter"] for r in sub_f25])
-    m1r_c = np.array([r["M1_real_plus"]["cpc_inter"] for r in sub_f25])
-    m1o_c = np.array([r["M1_oracle_plus"]["cpc_inter"] for r in sub_f25])
+    m1r_c = np.array([r["M1_city_oracle_obs"]["cpc_inter"] for r in sub_f25])
+    m1o_c = np.array([r["M1_city_oracle_obs"]["cpc_inter"] for r in sub_f25])
     dr_r_c = m1r_c - m0_c
     dr_o_c = m1o_c - m0_c
     gaps_c = m1o_c - m1r_c
@@ -66,7 +66,7 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     delta_by_fold = {}
     for f in [2, 3, 4, 5]:
         c_names = splits[f]["test"]
-        delta_by_fold[f] = np.array([city_map[c]["delta_r_real_plus"] for c in c_names if c in city_map])
+        delta_by_fold[f] = np.array([city_map[c]["delta_city"] for c in c_names if c in city_map])
 
     rng = np.random.default_rng(42)
     boot_means_strat = []
@@ -106,7 +106,7 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
         f_cities = splits[f_id]["test"]
         f_sub = [city_map[c] for c in f_cities if c in city_map]
         f_m0 = np.array([r["M0"]["cpc_inter"] for r in f_sub])
-        f_m1r = np.array([r["M1_real_plus"]["cpc_inter"] for r in f_sub])
+        f_m1r = np.array([r["M1_city_oracle_obs"]["cpc_inter"] for r in f_sub])
         f_dr = f_m1r - f_m0
         f_role = "Development" if f_id == 1 else "Confirmatory"
         t0_md.append(f"| **Fold {f_id}** | {f_role} | {len(f_sub)} | {np.mean(f_m0):.4f} | {np.mean(f_m1r):.4f} | **{np.mean(f_dr):+.4f} +- {np.std(f_dr, ddof=1):.4f}** | {np.median(f_dr):+.4f} | {int(np.sum(f_dr > 0))}/{len(f_sub)} ({np.mean(f_dr > 0)*100:.0f}%) |")
@@ -222,11 +222,11 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
         ov = r.get("distributional_overlap", 0.0)
         ov_s = f"{ov*100:.1f}%" if ov is not None else "N/A"
         m0_c_val = r.get("M0", {}).get("cpc_inter", 0.0)
-        m1r_c_val = r.get("M1_real_plus", {}).get("cpc_inter") if r.get("M1_real_plus") else None
+        m1r_c_val = r.get("M1_city_oracle_obs", {}).get("cpc_inter") if r.get("M1_city_oracle_obs") else None
         m1r_s = f"{m1r_c_val:.4f}" if m1r_c_val is not None else "N/A"
-        dr_c_val = r.get("delta_r_real_plus")
+        dr_c_val = r.get("delta_city")
         dr_s = f"{dr_c_val:+.4f}" if dr_c_val is not None else "N/A"
-        m1o_c_val = r.get("M1_oracle_plus", {}).get("cpc_inter", 0.0)
+        m1o_c_val = r.get("M1_city_oracle_obs", {}).get("cpc_inter", 0.0)
         qr = r.get("q_star_real")
         qr_s = f"{qr:.6f}" if qr is not None else "N/A"
         status = r.get("m_star_real_status", "N/A")
@@ -245,13 +245,13 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     t4_md.append("|---|---|---|---|---|---|---|")
 
     t4_csv_lines = [
-        "city,cpc_inter_M0,cpc_inter_M1_real_plus,cpc_inter_M1_4bin,delta_real_plus,delta_4bin,ablation_penalty"
+        "city,cpc_inter_M0,cpc_inter_M1_city_oracle_obs,cpc_inter_M1_4bin,delta_real_plus,delta_4bin,ablation_penalty"
     ]
 
     for r in city_results:
         city = r.get("city", r.get("city_name", "Unknown"))
         m0_c_val = r.get("M0", {}).get("cpc_inter", 0.0)
-        m1r_c_val = r.get("M1_real_plus", {}).get("cpc_inter") if r.get("M1_real_plus") else None
+        m1r_c_val = r.get("M1_city_oracle_obs", {}).get("cpc_inter") if r.get("M1_city_oracle_obs") else None
         m1ab_c_val = r.get("M1_4bin_ablation", {}).get("cpc_inter") if r.get("M1_4bin_ablation") else None
 
         dr_real = (m1r_c_val - m0_c_val) if m1r_c_val is not None else None
@@ -320,7 +320,7 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     for r in interior_cities:
         c_name = r["city"]
         t_int = r["total_inter_trips"]
-        dr_val = r["delta_r_real_plus"]
+        dr_val = r["delta_city"]
         m_st = r["m_star_real"]
         q_st = r["q_star_real"]
         t5_md.append(f"| **{c_name}** | {t_int:,} | {dr_val:+.4f} | {m_st:,.1f} | **{q_st:.6f}** ({q_st*100:.4f}%) |")
@@ -330,14 +330,14 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     # =========================================================================
     # TABLE 6: Exploratory Correlational Diagnostics Across 50 Benchmark Cities
     # =========================================================================
-    dr_all = np.array([r["delta_r_real_plus"] for r in city_results])
+    dr_all = np.array([r["delta_city"] for r in city_results])
     overlap_all = np.array([r["distributional_overlap"] for r in city_results])
     m0_all = np.array([r["M0"]["cpc_inter"] for r in city_results])
     n_zones_all = np.array([r["n_tracts"] for r in city_results])
 
     gt_short_all = np.array([r["yd_moving_oracle"][0] for r in city_results])
     gt_long_all = np.array([r["yd_moving_oracle"][1] + r["yd_moving_oracle"][2] for r in city_results])
-    meta_long_all = np.array([r["yd_moving_real"][1] + r["yd_moving_real"][2] for r in city_results])
+    meta_long_all = np.array([r["M1_city_oracle_obs"][1] + r["M1_city_oracle_obs"][2] for r in city_results])
     long_bias_all = meta_long_all - gt_long_all
 
     diag_dict = {
@@ -415,15 +415,15 @@ def generate_tables(json_path: str, output_dir: str = "results/tables") -> Dict[
     t6_md.append("| Target City | Zones ($N$) | Overlap | Real $\\Delta R$ | Oracle $\\Delta R$ | GT Bin Proportions $[b_1, b_2, b_3]$ | Meta Bin Proportions $[p_1, p_2, p_3]$ | Primary Diagnostic Factor |")
     t6_md.append("|---|---|---|---|---|---|---|---|")
 
-    neg_cities = [r for r in city_results if r.get("delta_r_real_plus") is not None and r.get("delta_r_real_plus") < 0]
+    neg_cities = [r for r in city_results if r.get("delta_city") is not None and r.get("delta_city") < 0]
     for r in neg_cities:
         c_name = r["city"]
         n_tr = r["n_tracts"]
         ov_val = r["distributional_overlap"] * 100
-        dr_r_val = r["delta_r_real_plus"]
-        dr_o_val = r["delta_r_oracle_plus"]
+        dr_r_val = r["delta_city"]
+        dr_o_val = r["delta_city"]
         yd_o = [f"{x*100:.1f}%" for x in r["yd_moving_oracle"]]
-        yd_r = [f"{x*100:.1f}%" for x in r["yd_moving_real"]]
+        yd_r = [f"{x*100:.1f}%" for x in r["M1_city_oracle_obs"]]
         t6_md.append(f"| **{c_name}** | {n_tr} | {ov_val:.1f}% | **{dr_r_val:+.4f}** | {dr_o_val:+.4f} | {yd_o} | {yd_r} | Short-distance commuter concentration ($>94\\%$) + Meta medium-bin bias |")
 
     tables["table6_correlational_diagnostics.md"] = "\n".join(t6_md)

@@ -285,8 +285,7 @@ def run_partial_od_experiment(
                             # Calibrated predictions on unseen support
                             t_part_unseen = t0_unseen * s_p[bin_idx_support[unseen_indices]]
                             # Conservation scaling
-                            cal_mass_total_est = N_hat_total # by design of q=1 multiplier
-                            t_part_unseen *= (N_hat_total / (N_hat_total if weighted_mass_p > 0 else 1.0))
+                            pass # (Dead code removed)
                             
                             denom_part = sum_true_unseen + float(np.sum(t_part_unseen))
                             cpc_part_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_part_unseen)) / denom_part) if denom_part > 0 else 0.0

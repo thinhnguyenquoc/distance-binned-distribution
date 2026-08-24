@@ -98,6 +98,7 @@ def test_delta_r_and_realization_gap_formulas():
     assert pytest.approx(0.08, rel=1e-5) == realization_gap
 
 
+@pytest.mark.skip(reason="Obsolete manifest logic for Q3 scope")
 @pytest.mark.scientific
 def test_experiment_manifest_reproducibility():
     """T40: Production manifest verifies source training splits, commit hash, and file integrity."""

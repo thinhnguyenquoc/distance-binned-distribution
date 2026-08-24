@@ -146,7 +146,7 @@ def run_backbone_robustness(
 
             # --- Backbone 2: Gravity-Informed Urban GNN (Main) ---
             m0_gnn = existing_r["M0"]
-            m1_gnn = existing_r.get("M1_city_oracle_obs", existing_r.get("M1_real_plus", {}))
+            m1_gnn = existing_r.get("M1_city_oracle_obs", existing_r.get("M1_city_oracle_obs", {}))
             
             m0_cpc_gnn = m0_gnn["cpc_inter"]
             m1_cpc_gnn = m1_gnn["cpc_inter"]

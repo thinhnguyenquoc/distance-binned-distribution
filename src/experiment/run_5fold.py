@@ -149,11 +149,9 @@ def run_5fold_experiment(
                     city_name=target_city,
                     scaler=scaler,
                     data_root=data_root,
-                    meta_prior_dir=meta_prior_dir,
                     graph_type=graph_type,
                     radius_km=radius_km,
                     knn_k=knn_k,
-                    num_trip_seeds=num_trip_seeds,
                     device_str=device_str,
                     bin_edges=bin_edges,
                 )

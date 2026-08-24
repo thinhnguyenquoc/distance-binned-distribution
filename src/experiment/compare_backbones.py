@@ -119,7 +119,7 @@ def run_comparison(output_dir: str = "results", export_md: bool = True):
     gnn_map = {}
     for r in gnn_data:
         m0_data = r.get("M0")
-        m1_data = r.get("M1_city_oracle_obs", r.get("M1_real_plus"))
+        m1_data = r.get("M1_city_oracle_obs", r.get("M1_city_oracle_obs"))
         if m0_data and m1_data:
             gnn_map[r["city"]] = {
                 "m0_cpc_inter": m0_data.get("cpc_inter", 0.0),

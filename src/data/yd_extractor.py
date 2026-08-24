@@ -149,7 +149,7 @@ def extract_yd_4bin_real(city_name: str, meta_prior_dir: str = "meta_prior") -> 
     return mean_yd / total if total > 0 else None
 
 
-def extract_yd_moving_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
+def extract_M1_city_oracle_obs(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
     """
     Primary Meta extractor: extracts the 3 moving bins {1, 2, 3} normalized to sum to 1.0.
     Excludes stay-at-home / immobility Bin 0.

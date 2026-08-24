@@ -3,11 +3,9 @@ Experiment Runner for Moving-Bin Calibration Framework.
 
 Experimental Conditions per Target City:
     1. M_0:                 Zero-shot baseline (pure spatial transfer)
-    2. M_1^{real, +}:       Primary moving-bin Meta calibration on Omega_c^+ (q=1.0)
-    3. M_1^{oracle, +}:     Oracle moving-bin reference on Omega_c^+ (q=1.0)
-    4. M_1^{real, 4bin}:    Ablation deliberately retaining Bin 0 semantic mismatch
-    5. M_q^{real, +}:       Soft-calibration curve across q in {0.0, 0.25, 0.5, 0.75, 1.0}
-    6. M_m^+:               Multinomial trip sampling curve on Omega_c^+ (S=20 seeds per m)
+    2. M_1^{city}:          Primary moving-bin Meta calibration on Omega_c^+ (q=1.0)
+    3. M_1^{county}:        County-level calibration
+    4. M_1^{subzone}:       Subzone-level calibration
 
 Primary Metric:
     Interzonal CPC (CPC_inter) on Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}
@@ -16,78 +14,17 @@ Primary Metric:
 import numpy as np
 import torch
 from typing import Dict, Any, List
-from sklearn.isotonic import IsotonicRegression
 
 from src.data.dataset import CityData, load_city
 from src.data.urban_graph import build_radius_graph, build_adaptive_radius_graph, build_knn_graph
 from src.data.yd_extractor import (
-    extract_yd_moving_real,
-    extract_yd_moving_oracle,
-    extract_yd_4bin_real,
-    extract_yd_4bin_oracle,
-    compute_distributional_overlap,
+    extract_M1_city_oracle_obs,
 )
-from src.data.trip_sampler import sample_multinomial_yd, M_GRID
-from src.calibration.bin_calibration import calibrate_moving_bins, calibrate_4bin_legacy_ablation
+from src.data.trip_sampler import M_GRID
 from src.training.evaluate import evaluate_moving_and_full
-from src.training.train import infer_zero_shot, ZeroShotODModel
+from src.training.train import infer_zero_shot
 
 
-def _interpolate_m_star(
-    target_cpc: float,
-    m_finite_values: List[float],
-    mean_cpcs: List[float],
-    oracle_cpc: float,
-    total_trips: float,
-) -> tuple[float, str]:
-    """
-    Isotonic monotonic regression inversion to find m* matching target_cpc.
-    Guarantees m* <= total_trips so that q* = m* / total_trips <= 1.0 strictly.
-    """
-    if total_trips <= 0:
-        return 0.0, "zero_total_trips"
-
-    # Filter finite values strictly below total_trips
-    all_m = []
-    all_cpc = []
-    for m, cpc in zip(m_finite_values, mean_cpcs):
-        if m < total_trips:
-            all_m.append(float(m))
-            all_cpc.append(float(cpc))
-
-    # Always append total_trips with oracle_cpc as the finite population oracle reference
-    all_m.append(float(total_trips))
-    all_cpc.append(float(oracle_cpc))
-
-    iso = IsotonicRegression(increasing=True, out_of_bounds="clip")
-    cpc_curve_monotonic = iso.fit_transform(all_m, all_cpc)
-
-    if target_cpc <= cpc_curve_monotonic[0]:
-        m_star = float(all_m[0])
-        status = "below_min_grid"
-    elif target_cpc >= cpc_curve_monotonic[-1]:
-        m_star = float(all_m[-1])
-        status = "at_oracle_reference"
-    else:
-        # Leftmost crossing rule for isotonic inversion
-        idx = int(np.searchsorted(cpc_curve_monotonic, target_cpc, side="left"))
-        if abs(cpc_curve_monotonic[idx] - target_cpc) < 1e-9:
-            m_star = float(all_m[idx])
-        else:
-            prev_cpc = cpc_curve_monotonic[idx - 1]
-            next_cpc = cpc_curve_monotonic[idx]
-            prev_m = all_m[idx - 1]
-            next_m = all_m[idx]
-            if next_cpc > prev_cpc:
-                frac = (target_cpc - prev_cpc) / (next_cpc - prev_cpc)
-                m_star = float(prev_m + frac * (next_m - prev_m))
-            else:
-                m_star = float(prev_m)
-        status = "interpolated" if m_star < total_trips else "at_oracle_reference"
-
-    # Clip to total_trips to strictly enforce q* <= 1.0
-    m_star = min(m_star, float(total_trips))
-    return m_star, status
 
 
 def run_target_city_experiments(
@@ -95,19 +32,15 @@ def run_target_city_experiments(
     city_name: str,
     scaler: object,
     data_root: str = "data",
-    meta_prior_dir: str = "meta_prior",
     graph_type: str = "radius",
     radius_km: float = 5.0,
     knn_k: int = 10,
-    num_trip_seeds: int = 20,
-    m_grid: List[int | float] = M_GRID,
     device_str: str = "cpu",
     bin_edges: np.ndarray = None,
 ) -> Dict[str, Any]:
     assert scaler is not None, "StandardScaler must be pre-fitted on source cities."
     if bin_edges is None:
-        from src.data.yd_extractor import compute_kbin_edges
-        bin_edges, _ = compute_kbin_edges([city_name], K=8, data_root=data_root)
+        raise ValueError("bin_edges must be provided from training cities to avoid data leakage.")
 
     device = torch.device(device_str)
     city_data = load_city(city_name, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
@@ -125,8 +58,6 @@ def run_target_city_experiments(
     pair_d = city_data.pair_d_idx.numpy()
     pair_dist = city_data.pair_distance.numpy()
     pair_dist_km = np.expm1(pair_dist)
-    bin_labels = city_data.bin_labels # Not used for K=8, but kept for evaluation if needed
-
     inter_mask = (pair_o != pair_d) & (pair_dist_km > 0.0)
     n_inter_pairs = int(inter_mask.sum())
     total_inter_trips = float(t_true[inter_mask].sum())
