@@ -107,16 +107,16 @@ def generate_nested_noisy_yd(p_active: np.ndarray, epsilons: List[float], base_s
     raise RuntimeError("Failed to generate valid noise direction after 10000 attempts.")
 
 
-def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, eps: float, confirmatory_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
+def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, eps: float, evaluated_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
     rng = np.random.RandomState(seed)
     
     vals: Dict[int, np.ndarray] = {}
-    for f in confirmatory_folds:
+    for f in evaluated_folds:
         mask = (city_df.fold == f) & (city_df.epsilon == eps)
         vals[f] = city_df[mask][metric_col].values
         assert len(vals[f]) == 10, f"Expected 10 cities for fold {f}, got {len(vals[f])}"
         
-    f_samples = [vals[f][rng.randint(0, 10, size=(n_boot, 10))] for f in confirmatory_folds]
+    f_samples = [vals[f][rng.randint(0, 10, size=(n_boot, 10))] for f in evaluated_folds]
     all_samples = np.hstack(f_samples)
     boot_means = np.mean(all_samples, axis=1)
         
@@ -529,7 +529,7 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
     yerr_lower = [m - cl for m, cl in zip(means, ci_lowers)]
     yerr_upper = [cu - m for m, cu in zip(means, ci_uppers)]
     
-    plt.errorbar(epsilons, means, yerr=[yerr_lower, yerr_upper], fmt='-o', color='royalblue', ecolor='gray', capsize=5, label='Confirmatory Mean (95% CI)')
+    plt.errorbar(epsilons, means, yerr=[yerr_lower, yerr_upper], fmt='-o', color='royalblue', ecolor='gray', capsize=5, label='Full 5-fold Mean (95% CI)')
     plt.axhline(0, color="red", linestyle="--", alpha=0.7, label='Zero-Shot M0 Baseline')
     if eps_cross is not None:
         plt.axvline(eps_cross, color="darkorange", linestyle=":", label=f'Crossover $\\epsilon_{{cross}} = {eps_cross:.3f}$')

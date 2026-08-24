@@ -73,16 +73,16 @@ def sample_hypergeometric_yd(bin_counts: np.ndarray, m: float, size: int, base_s
     return [draws[i].astype(np.float64) / float(m_int) for i in range(size)]
 
 
-def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, m_val: float, confirmatory_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
+def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, m_val: float, evaluated_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
     rng = np.random.RandomState(seed)
     
     vals: Dict[int, np.ndarray] = {}
-    for f in confirmatory_folds:
+    for f in evaluated_folds:
         mask = (city_df.fold == f) & (city_df.sample_m == m_val)
         vals[f] = city_df[mask][metric_col].values
         assert len(vals[f]) == 10, f"Expected 10 cities for fold {f}, got {len(vals[f])}"
         
-    f_samples = [vals[f][rng.randint(0, 10, size=(n_boot, 10))] for f in confirmatory_folds]
+    f_samples = [vals[f][rng.randint(0, 10, size=(n_boot, 10))] for f in evaluated_folds]
     all_samples = np.hstack(f_samples)
     boot_means = np.mean(all_samples, axis=1)
         
@@ -451,7 +451,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
     md = "# Empirical Y_D Sampling Robustness Summary (Subsampling Without Replacement)\n\n"
     md += f"## Five-Fold Cross-City Evaluation Table (All 5 Folds, {int(len(eval_df)//len(m_grid))} Held-Out Test Cities)\n\n"
     if m_star is not None:
-        md += f"**Primary Finding — Confirmatory Benefit Threshold ($m^*$):** `{m_star:,}` observed trips ($p < 0.05$ Holm, $95\\%\\text{{ CI}}_{{\\text{{lower}}}} > 0$)\n\n"
+        md += f"**Primary Finding — Full 5-fold Benefit Threshold ($m^*$):** `{m_star:,}` observed trips ($p < 0.05$ Holm, $95\\%\\text{{ CI}}_{{\\text{{lower}}}} > 0$)\n\n"
     if m_cross is not None:
         md += f"*Note on Crossover:* Smallest tested sample size with positive mean $\\Delta\\text{{CPC}}$ is `{m_cross:,}` trips (mean $\\Delta\\text{{CPC}} > 0$, but not statistically significant, $p = {results.get(str(m_cross), {}).get('wilcoxon_benefit_holm', 1.0):.4f}$).\n\n"
         

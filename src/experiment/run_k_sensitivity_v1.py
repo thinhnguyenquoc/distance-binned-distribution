@@ -211,14 +211,14 @@ def run_experiment(args):
     df_seed = df.copy()
     df_seed.to_csv(output_dir / "k_sensitivity_per_seed.csv", index=False)
     
-    # Confirmatory Analysis (now using all 5 folds per user request)
-    df_conf = df_city[df_city["fold"].isin([1, 2, 3, 4, 5])]
-    print(f"\nEvaluating all cities (Folds 1-5): {df_conf['city'].nunique()}")
+    # Full 5-fold Analysis
+    df_all = df_city[df_city["fold"].isin([1, 2, 3, 4, 5])]
+    print(f"\nEvaluating all cities (Folds 1-5): {df_all['city'].nunique()}")
     
     summary_data = []
     
     for K in K_values:
-        d = df_conf[df_conf["K"] == K]
+        d = df_all[df_all["K"] == K]
         n_cities = len(d)
         if n_cities == 0:
             continue
@@ -272,14 +272,14 @@ def run_experiment(args):
         s["p_1s_adj"] = adj_p_map.get(s["K"], None)
         
     # Contrasts
-    d8 = df_conf[df_conf["K"] == 8].set_index("city")
+    d8 = df_all[df_all["K"] == 8].set_index("city")
     mean_d8 = d8["delta_cpc"].mean()
     
     contrast_data = []
     raw_contrast_ps = []
     
     for K in secondary_ks:
-        dk = df_conf[df_conf["K"] == K].set_index("city")
+        dk = df_all[df_all["K"] == K].set_index("city")
         common = d8.index.intersection(dk.index)
         
         d8_com = d8.loc[common]
@@ -315,7 +315,7 @@ def run_experiment(args):
     # Generate Markdown
     md = []
     md.append("# 5-Fold Distance-Bin Number Sensitivity Test v1")
-    md.append(f"\nEvaluating all cities (Folds 1-5): {df_conf['city'].nunique()}")
+    md.append(f"\nEvaluating all cities (Folds 1-5): {df_all['city'].nunique()}")
     md.append("\n## Primary Results")
     md.append("| K | Mean M0 CPC | Mean M1 CPC | Mean $\\Delta$ CPC | 95% CI | Positive cities | Mean $K_{active}$ | Mean $w_{max}$ | Adjusted p |")
     md.append("|--:|--:|--:|--:|--:|--:|--:|--:|--:|")
@@ -338,7 +338,7 @@ def run_experiment(args):
         "model_seeds": seeds,
         "bootstrap_seed": 42,
         "folds": folds,
-        "confirmatory_folds": [1, 2, 3, 4, 5] if not args.smoke_test else [2],
+        "evaluated_folds": [1, 2, 3, 4, 5] if not args.smoke_test else [2],
         "K_values": K_values,
         "primary_K": 8,
         "binning_method": "pair-weighted quantile",
@@ -369,7 +369,7 @@ def run_experiment(args):
     
     # Fig 2: Per-city sensitivity
     plt.figure(figsize=(8, 5))
-    for name, group in df_conf.groupby("city"):
+    for name, group in df_all.groupby("city"):
         group = group.sort_values("K")
         fold = group["fold"].iloc[0]
         # In case we don't have enough colors, modulo by 10
@@ -391,7 +391,7 @@ def run_experiment(args):
     axes[0].plot(sns_k, [s["w_max_mean"] for s in summary_data], marker='o')
     axes[0].set_title('Mean w_max')
     
-    d_conf_minmass = df_conf.groupby("K")["min_pred_mass"].mean()
+    d_conf_minmass = df_all.groupby("K")["min_pred_mass"].mean()
     axes[1].plot(d_conf_minmass.index, d_conf_minmass.values, marker='o')
     axes[1].set_title('Mean Min Predicted Mass')
     
