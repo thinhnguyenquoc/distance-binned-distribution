@@ -195,7 +195,7 @@ def extract_yd_moving_oracle(
 
     if pair_distance is not None:
         p_dist = pair_distance.detach().cpu().numpy()
-        dist_km = np.expm1(p_dist) if np.max(p_dist) < 20.0 else p_dist
+        dist_km = p_dist
         inter_mask = (o_np != d_np) & (dist_km > 0.0)
     else:
         inter_mask = (o_np != d_np) & (bins_np > 0)

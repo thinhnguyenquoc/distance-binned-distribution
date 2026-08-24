@@ -393,7 +393,7 @@ def run_placebo_experiment(args):
             df[col] = np.nan
     
     agg_df = df.groupby(["fold", "target_city", "condition", "replicate_id"]).agg(agg_cols).reset_index()
-    agg_df.to_csv(f"{output_dir}/matched_placebo_per_seed.csv", index=False)
+    agg_df.to_csv(f"{output_dir}/matched_placebo_seed_averaged.csv", index=False)
     
     city_stats = []
     for tc in agg_df.target_city.unique():

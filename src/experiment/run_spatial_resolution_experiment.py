@@ -258,8 +258,10 @@ def compute_resolution_summary(results: list[dict], bootstrap_seed: int = DEFAUL
             "delta_spec_county_mean": float(d_spec_county.mean()),
             "delta_spec_county_ci": [ci_scounty_l, ci_scounty_h],
             "win_rate_resolution": f"{(d_res > 0).sum()}/{len(df)}",
+            "win_rate_spec_city": f"{(d_spec_city > 0).sum()}/{len(df)}",
             "win_rate_spec_county": f"{(d_spec_county > 0).sum()}/{len(df)}",
             "wilcoxon_p_resolution": float(p_res),
+            "wilcoxon_p_spec_city": float(p_scity),
             "wilcoxon_p_spec_county": float(p_scounty),
         },
         "multi_county_subset": {
@@ -285,7 +287,7 @@ def compute_resolution_summary(results: list[dict], bootstrap_seed: int = DEFAUL
 def write_resolution_tables(results: list[dict], summary: dict):
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
     
-    # 1. Main Table
+    # S1-A: Overall Comparative Performance
     p50 = summary["pooled_50"]
     mc = summary["multi_county_subset"]
     sc = summary["single_county_subset"]
@@ -293,27 +295,27 @@ def write_resolution_tables(results: list[dict], summary: dict):
     main_md = f"""# Table S1: Spatial Resolution Analysis (County-Level vs. City-Level Calibration)
 
 > **Research Question**: Does conditioning the aggregated distance distribution $Y_D$ on origin counties ($M_{{\\text{{county}}}}$) improve zero-shot flow prediction over city-wide macro distributions ($M_{{\\text{{city}}}}$)?
-> **Dataset**: 50 US Metropolitan Areas (45 Single-County, 5 Multi-County) under 5-Fold Stratified CV.
+> **Dataset**: {summary['n_total_cities']} US Metropolitan Areas ({summary['n_single_county_cities']} Single-County, {summary['n_multi_county_cities']} Multi-County) under 5-Fold Stratified CV.
 > **Calibration Protocol**: $K_{{\\text{{move}}}}=8$ quantile bins, $q=1.0$, within-tolerance distribution matching.
 
 ---
 
-## S1-A: Overall Comparative Performance ($n=50$ Cities)
+## S1-A: Overall Comparative Performance ($n={summary['n_total_cities']}$ Cities)
 
-| Condition / Model | Mean Interzonal CPC | Mean Gain vs $M_0$ (Δ) | 95% Bootstrap CI | Specificity Gain vs Placebo | Specificity Win Rate |
+| Condition / Model | Mean Interzonal CPC | Mean Gain vs $M_0$ (Δ) | 95% Bootstrap CI | City-Level Placebo Gain | City-Level Specificity Win Rate |
 |---|:---:|:---:|:---:|:---:|:---:|
 | **Zero-Shot Baseline ($M_0$)** | {p50['cpc_baseline_mean']:.4f} | — | — | — | — |
-| **+ City-Level Target $Y_D$ ($M_{{\\text{{city}}}}$)** | {p50['cpc_city_mean']:.4f} | {p50['delta_city_mean']:+.4f} | [{p50['delta_city_ci'][0]:+.4f}, {p50['delta_city_ci'][1]:+.4f}] | {p50['delta_spec_city_mean']:+.4f} | {p50['win_rate_spec_county']} |
-| **+ County-Level Target $Y_D$ ($M_{{\\text{{county}}}}$)** | **{p50['cpc_county_mean']:.4f}** | **{p50['delta_county_mean']:+.4f}** | **[{p50['delta_county_ci'][0]:+.4f}, {p50['delta_county_ci'][1]:+.4f}]** | **{p50['delta_spec_county_mean']:+.4f}** | **{p50['win_rate_spec_county']}** |
-| **Placebo Control ($M_{{\\text{{wrong}}}}$ 9-Donor Avg)** | {p50['cpc_wrong_mean']:.4f} | {p50['cpc_wrong_mean'] - p50['cpc_baseline_mean']:+.4f} | — | — | 0/50 |
+| **+ City-Level Target $Y_D$ ($M_{{\\text{{city}}}}$)** | {p50['cpc_city_mean']:.4f} | {p50['delta_city_mean']:+.4f} | [{p50['delta_city_ci'][0]:+.4f}, {p50['delta_city_ci'][1]:+.4f}] | {p50['delta_spec_city_mean']:+.4f} | {p50['win_rate_spec_city']} |
+| **+ County-Level Target $Y_D$ ($M_{{\\text{{county}}}}$)** | **{p50['cpc_county_mean']:.4f}** | **{p50['delta_county_mean']:+.4f}** | **[{p50['delta_county_ci'][0]:+.4f}, {p50['delta_county_ci'][1]:+.4f}]** | — | — |
+| **City-Level Placebo ($M_{{\\text{{wrong}}}}$ 9-Donor Avg)** | {p50['cpc_wrong_mean']:.4f} | {p50['cpc_wrong_mean'] - p50['cpc_baseline_mean']:+.4f} | — | — | 0/{summary['n_total_cities']} |
 
 ---
 
-## S1-B: Multi-County Metropolitan Focus ($n=5$ Heterogeneous Cities)
+## S1-B: Multi-County Metropolitan Focus ($n={summary['n_multi_county_cities']}$ Heterogeneous Cities)
 
 In multi-county metropolitan areas, distinct origin counties exhibit heterogeneous localized trip distributions.
 
-| City | Origin Counties | Zero-Shot $M_0$ | City-Level $M_{{\\text{{city}}}}$ | County-Level $M_{{\\text{{county}}}}$ | Resolution Gain ($\\Delta_{{\\text{{res}}}}$) | Placebo $M_{{\\text{{wrong}}}}$ |
+| City | Origin Counties | Zero-Shot $M_0$ | City-Level $M_{{\\text{{city}}}}$ | County-Level $M_{{\\text{{county}}}}$ | Resolution Gain ($\\Delta_{{\\text{{res}}}}$) | City-Level Placebo $M_{{\\text{{wrong}}}}$ |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 """
     for r in sorted([r for r in results if r["is_multi_county"]], key=lambda x: x["delta_cpc_resolution"], reverse=True):
@@ -383,59 +385,72 @@ def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAU
                 continue
                 
         log_msg("-" * 75)
-        log_msg(f">>> [FOLD {fold_id}/5] Training Backbone & Evaluating Spatial Resolution...")
+        log_msg(f">>> [FOLD {fold_id}/5] Evaluating Spatial Resolution on Frozen Backbones...")
         log_msg("-" * 75)
         
         # 1. Compute Bin Edges
         bin_edges, K_active = compute_kbin_edges(train35, K=K_MOVE, data_root=DATA_ROOT)
         
-        # 2. Train / Load Backbone Model
-        fold_seed = seed + fold_id
-        ckpt_path = RESULTS_DIR / "checkpoints" / f"fold{fold_id}_seed{fold_seed}.pt"
-        
-        model, scaler, train_info = train_zero_shot_model(
-            train_city_names=train35,
-            data_root=DATA_ROOT,
-            epochs=EPOCHS,
-            device_str=device_str,
-            verbose=True,
-            val_city_names=val5,
-            patience=PATIENCE,
-            min_delta=MIN_DELTA,
-            return_info=True,
-            seed=fold_seed,
-            checkpoint_path=ckpt_path,
-        )
-        
-        # 3. Precompute City-Level Y_D Oracles for all test cities in fold
-        test_yd_cache = {}
-        for t_city in test10:
-            cd_t = load_city(t_city, data_root=DATA_ROOT, feature_scaler=scaler)
-            dist_t = np.expm1(cd_t.pair_distance.numpy())
-            inter_t = (cd_t.pair_o_idx.numpy() != cd_t.pair_d_idx.numpy()) & (dist_t > 0.0)
-            t_gt_t = cd_t.pair_trips.numpy().astype(np.float64)
-            test_yd_cache[t_city] = extract_yd_kbins(dist_t, t_gt_t, bin_edges, inter_t)
+        # We will collect per-seed results for each city in this fold
+        fold_city_seed_results = {city: [] for city in test10}
+
+        for m_seed in ([1, 10, 100] if not smoke else [1, 10]):
+            ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
+            if not ckpt_path.exists():
+                raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}")
             
-        # 4. Evaluate each held-out test city
+            from src.training.train import load_checkpoint
+            model, scaler, _ = load_checkpoint(ckpt_path, device_str=device_str)
+            model.eval()
+            
+            # Precompute City-Level Y_D Oracles for all test cities using this seed's scaler
+            test_yd_cache = {}
+            for t_city in test10:
+                cd_t = load_city(t_city, data_root=DATA_ROOT, feature_scaler=scaler, fit_scaler=False)
+                dist_t = np.expm1(cd_t.pair_distance.numpy())
+                inter_t = (cd_t.pair_o_idx.numpy() != cd_t.pair_d_idx.numpy()) & (dist_t > 0.0)
+                t_gt_t = cd_t.pair_trips.numpy().astype(np.float64)
+                test_yd_cache[t_city] = extract_yd_kbins(dist_t, t_gt_t, bin_edges, inter_t)
+            
+            # Evaluate each held-out test city
+            for city in test10:
+                res = run_spatial_resolution_city(
+                    city=city,
+                    model=model,
+                    scaler=scaler,
+                    bin_edges=bin_edges,
+                    test_cities=test10,
+                    fold_id=fold_id,
+                    device=device,
+                    test_yd_cache=test_yd_cache,
+                )
+                fold_city_seed_results[city].append(res)
+                
+        # Average over seeds for each city
         for city in test10:
-            res = run_spatial_resolution_city(
-                city=city,
-                model=model,
-                scaler=scaler,
-                bin_edges=bin_edges,
-                test_cities=test10,
-                fold_id=fold_id,
-                device=device,
-                test_yd_cache=test_yd_cache,
-            )
-            all_results.append(res)
+            seed_results = fold_city_seed_results[city]
+            avg_res = {
+                "city": city,
+                "fold": fold_id,
+                "n_counties": seed_results[0]["n_counties"],
+                "is_multi_county": seed_results[0]["is_multi_county"],
+                "county_ids": seed_results[0]["county_ids"],
+                "mapping_stats": seed_results[0]["mapping_stats"],
+            }
+            # Average numerical keys
+            for k in ["cpc_baseline", "cpc_city", "cpc_county", "cpc_wrong", 
+                      "delta_cpc_city", "delta_cpc_county", "delta_cpc_resolution", 
+                      "delta_cpc_spec_city", "delta_cpc_spec_county", "elapsed_sec"]:
+                avg_res[k] = float(np.mean([r[k] for r in seed_results]))
             
-            mc_str = f" [Multi-County: {res['n_counties']} counties]" if res["is_multi_county"] else ""
+            all_results.append(avg_res)
+            
+            mc_str = f" [Multi-County: {avg_res['n_counties']} counties]" if avg_res["is_multi_county"] else ""
             log_msg(
-                f"  [{city:<16}] M0={res['cpc_baseline']:.4f} -> "
-                f"M_city={res['cpc_city']:.4f} (d={res['delta_cpc_city']:+.4f}) -> "
-                f"M_county={res['cpc_county']:.4f} (d={res['delta_cpc_county']:+.4f}) | "
-                f"dRes={res['delta_cpc_resolution']:+.4f}{mc_str}"
+                f"  [{city:<16}] M0={avg_res['cpc_baseline']:.4f} -> "
+                f"M_city={avg_res['cpc_city']:.4f} (d={avg_res['delta_cpc_city']:+.4f}) -> "
+                f"M_county={avg_res['cpc_county']:.4f} (d={avg_res['delta_cpc_county']:+.4f}) | "
+                f"dRes={avg_res['delta_cpc_resolution']:+.4f}{mc_str}"
             )
             
         t_fold_elapsed = time.time() - t_fold_start

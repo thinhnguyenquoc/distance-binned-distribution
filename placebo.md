@@ -1,6 +1,6 @@
 # Placebo Test Protocol (Target-Y_D)
 
-This document details the scientific rationale, experimental design, and execution protocol for the `Target-Y_D` Placebo Test implemented in `src/experiment/run_placebo_v1.py`.
+This document details the scientific rationale, experimental design, and execution protocol for the `Target-Y_D` Placebo Test implemented in `src/experiment/run_placebo_matched_v2.py`.
 
 ---
 

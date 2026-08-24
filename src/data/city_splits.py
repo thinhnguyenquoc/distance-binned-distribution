@@ -231,11 +231,16 @@ def load_splits_manifest_v2(
     """
     path = Path(manifest_path)
     if not path.exists():
-        # Auto-generate canonical manifest if not yet created
-        generate_splits_manifest_v2(data_root=data_root, output_path=str(path))
+        raise FileNotFoundError(f"Missing locked manifest at {path}. Protocol requires explicit locked splits.")
 
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
+        
+    stored_hash = data.get("manifest_sha256")
+    canonical = json.dumps(data.get("folds", {}), sort_keys=True)
+    actual_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    if stored_hash and actual_hash != stored_hash:
+        raise ValueError(f"Manifest integrity compromised! Expected SHA-256 {stored_hash} but got {actual_hash}")
 
     cities_info = get_all_cities_sorted_by_size(data_root)
     all_city_names = set(c["city"] for c in cities_info)

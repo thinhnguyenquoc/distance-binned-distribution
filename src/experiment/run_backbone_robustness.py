@@ -24,7 +24,7 @@ from typing import Dict, Any, List
 # Ensure repo root on path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.data.city_splits import generate_5fold_splits
+from src.data.city_splits import generate_35_5_10_splits
 from src.data.dataset import load_city, load_raw_city
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.calibration.bin_calibration import calibrate_kbins
@@ -67,7 +67,7 @@ def run_backbone_robustness(
     output_dir: str = "results/tables",
 ) -> Dict[str, Any]:
     os.makedirs(output_dir, exist_ok=True)
-    splits = generate_5fold_splits(data_root=data_root)
+    splits = generate_35_5_10_splits(data_root=data_root)
 
     results_file = Path("results/5fold_results.json")
     if not results_file.exists():
@@ -221,8 +221,7 @@ def run_backbone_robustness(
 
         return {
             "backbone": label,
-            "full_5_fold_fold2_5": get_block(conf_recs),
-            "full_50_cities": get_block(all_recs),
+            "full_5fold_50cities": get_block(all_recs),
         }
 
     summary = {
@@ -242,7 +241,7 @@ def run_backbone_robustness(
 
     for k, v in summary.items():
         b_name = v["backbone"]
-        c_stats = v["full_5_fold_fold2_5"]
+        c_stats = v["full_5fold_50cities"]
         m0_str = f"{c_stats['m0_cpc_mean']:.4f} +- {c_stats['m0_cpc_std']:.4f}"
         m1_str = f"**{c_stats['m1_cpc_mean']:.4f} +- {c_stats['m1_cpc_std']:.4f}**"
         dr_str = f"**{c_stats['delta_r_mean']:+.4f} +- {c_stats['delta_r_std']:.4f}**"
@@ -251,22 +250,6 @@ def run_backbone_robustness(
         w_p = f"{c_stats['wilcoxon_p']:.4e}"
         rmse_str = f"{c_stats['delta_rmse_mean']:+.4f}"
         t7_md.append(f"| **{b_name}** | {m0_str} | {m1_str} | {dr_str} | {ci_str} | {p_imp} | p = {w_p} | {rmse_str} |")
-
-    t7_md.append("")
-    t7_md.append("## Part B: Full Descriptive Set ($N=50$ Cities)")
-    t7_md.append("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta R$ | 95% Fold-Stratified Bootstrap CI | $P(\\Delta R > 0)$ | Wilcoxon $p$ |")
-    t7_md.append("|---|---|---|---|---|---|---|")
-
-    for k, v in summary.items():
-        b_name = v["backbone"]
-        a_stats = v["full_50_cities"]
-        m0_str = f"{a_stats['m0_cpc_mean']:.4f} +- {a_stats['m0_cpc_std']:.4f}"
-        m1_str = f"**{a_stats['m1_cpc_mean']:.4f} +- {a_stats['m1_cpc_std']:.4f}**"
-        dr_str = f"**{a_stats['delta_r_mean']:+.4f} +- {a_stats['delta_r_std']:.4f}**"
-        ci_str = f"[{a_stats['bootstrap_95_ci'][0]:+.4f}, {a_stats['bootstrap_95_ci'][1]:+.4f}]"
-        p_imp = f"{a_stats['p_improved']*100:.1f}% ({a_stats['n_improved']})"
-        w_p = f"{a_stats['wilcoxon_p']:.4e}"
-        t7_md.append(f"| **{b_name}** | {m0_str} | {m1_str} | {dr_str} | {ci_str} | {p_imp} | p = {w_p} |")
 
     t7_md_content = "\n".join(t7_md)
     with open(Path(output_dir) / "table7_backbone_robustness.md", "w", encoding="utf-8") as f:

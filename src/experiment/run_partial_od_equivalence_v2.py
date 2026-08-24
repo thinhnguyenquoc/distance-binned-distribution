@@ -276,8 +276,8 @@ def run_fold_partial_od(
                 if n_reveal == 0:
                     yd_partial = None
                     revealed_mass = 0.0
-                    tv_partial = 0.0
-                    js_partial = 0.0
+                    tv_partial = np.nan
+                    js_partial = np.nan
                 else:
                     rev_trips = t_true_support[rev_indices]
                     rev_bins = bin_idx_support[rev_indices]
@@ -293,8 +293,8 @@ def run_fold_partial_od(
                         tv_partial = float(0.5 * np.sum(np.abs(yd_partial - yd_full)))
                         js_partial = float(jensenshannon(yd_partial, yd_full))
                     else:
-                        tv_partial = 0.0
-                        js_partial = 0.0
+                        tv_partial = np.nan
+                        js_partial = np.nan
 
                 frac_pairs_rev = float(n_reveal) / float(n_pairs)
                 frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
@@ -308,10 +308,9 @@ def run_fold_partial_od(
                 # Evaluate across all 3 model seeds with identical mask
                 for s in model_seeds:
                     preds = seed_predictions[s]
-                    t0_unseen = preds["t0"][unseen_indices]
+                    t0_support = preds["t0"]
+                    t0_unseen = t0_support[unseen_indices]
                     t_full_unseen = preds["t_cal_full"][unseen_indices]
-                    N_hat_total = preds["N_hat"]
-                    Y_hat_total = preds["Y_hat"]
                     
                     # Compute M0 CPC on unseen set
                     denom_m0 = sum_true_unseen + float(np.sum(t0_unseen))
@@ -325,13 +324,17 @@ def run_fold_partial_od(
                     if yd_partial is None:
                         cpc_part_unseen = cpc_m0_unseen
                     else:
-                        active_p = (yd_partial > 1e-8) & (Y_hat_total > 1e-8)
-                        w_p = np.ones(8, dtype=np.float64)
-                        w_p[active_p] = yd_partial[active_p] / Y_hat_total[active_p]
-                        weighted_mass_p = float(np.dot(Y_hat_total, w_p))
-                        s_p = w_p / weighted_mass_p if weighted_mass_p > 0 else np.ones(8)
+                        from src.calibration.bin_calibration import calibrate_kbins
+                        t_part_support = calibrate_kbins(
+                            t0_support,
+                            dist_support,
+                            np.ones(len(t0_support), dtype=bool),
+                            yd_partial,
+                            bin_edges,
+                            q=1.0,
+                        )
+                        t_part_unseen = t_part_support[unseen_indices]
                         
-                        t_part_unseen = t0_unseen * s_p[bin_idx_support[unseen_indices]]
                         denom_part = sum_true_unseen + float(np.sum(t_part_unseen))
                         cpc_part_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_part_unseen)) / denom_part) if denom_part > 0 else 0.0
 
@@ -501,8 +504,22 @@ def aggregate_combined_results(
     for f in range(1, 6):
         fold_dir = output_dir / f"fold_{f}"
         marker = fold_dir / "completion.marker"
-        if not marker.exists():
-            raise RuntimeError(f"Cannot aggregate: Fold {f} completion.marker not found at {marker}")
+        manifest_path = fold_dir / "run_manifest.json"
+        
+        if not marker.exists() or not manifest_path.exists():
+            raise RuntimeError(f"Cannot aggregate: Fold {f} completion.marker or run_manifest.json not found")
+            
+        with open(manifest_path, "r") as mf:
+            manifest = json.load(mf)
+            
+        assert manifest.get("protocol_version") == "v2", f"Fold {f} protocol version mismatch"
+        assert manifest.get("model_seeds") == [1, 10, 100], f"Fold {f} model seeds mismatch (not [1, 10, 100])"
+        assert manifest.get("replicates") == 500, f"Fold {f} replicates != 500"
+        
+        from src.data.city_splits import generate_35_5_10_splits
+        splits = generate_35_5_10_splits()
+        locked_test_cities = splits[f]["test"]
+        assert manifest.get("cities") == locked_test_cities, f"Fold {f} test cities mismatch with locked manifest"
         
         all_raw_dfs.append(pd.read_csv(fold_dir / "raw.csv"))
         all_per_seed_dfs.append(pd.read_csv(fold_dir / "per_seed.csv"))
@@ -516,9 +533,20 @@ def aggregate_combined_results(
     per_seed_combined.to_csv(combined_dir / "per_seed_all_folds.csv", index=False)
     per_city_combined.to_csv(combined_dir / "per_city_all_folds.csv", index=False)
 
-    print(f"Combined Raw Rows:      {len(raw_combined):>10} (Expected: 1,125,000)")
-    print(f"Combined Per-Seed Rows: {len(per_seed_combined):>10} (Expected: 2,250)")
-    print(f"Combined Per-City Rows: {len(per_city_combined):>10} (Expected: 750)")
+    expected_raw_rows = 50 * 3 * 500 * 15  # 15 p-levels
+    expected_seed_rows = 50 * 3 * 15
+    expected_city_rows = 50 * 15
+    
+    assert len(raw_combined) == expected_raw_rows, f"Combined raw rows mismatch: {len(raw_combined)} != {expected_raw_rows}"
+    assert len(per_seed_combined) == expected_seed_rows, f"Combined seed rows mismatch"
+    assert len(per_city_combined) == expected_city_rows, f"Combined city rows mismatch"
+
+    print(f"Combined Raw Rows:      {len(raw_combined):>10} (Certified)")
+    print(f"Combined Per-Seed Rows: {len(per_seed_combined):>10} (Certified)")
+    print(f"Combined Per-City Rows: {len(per_city_combined):>10} (Certified)")
+    
+    with open(combined_dir / "FROZEN.marker", "w") as f:
+        f.write(f"MASTER 5-FOLD AGGREGATION CERTIFIED\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Statistical Analysis across N=50 cities
     summary_rows = []

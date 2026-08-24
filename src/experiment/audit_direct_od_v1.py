@@ -115,7 +115,7 @@ def run_audit_1_production_yd_reference(data_root="data") -> Dict[str, Any]:
                 max_t_diff = max(max_t_diff, t_diff)
                 max_cpc_diff = max(max_cpc_diff, cpc_diff)
                 
-                if t_diff > 1e-10 and cpc_diff > 1e-10:
+                if t_diff > 1e-10 or cpc_diff > 1e-10:
                     failures.append((fold_id, s, city_name, t_diff, cpc_diff))
 
     status = "PASS" if len(failures) == 0 else "FAIL"
@@ -142,6 +142,7 @@ def run_audit_2_solver_precision(data_root="data", b_audit=50) -> Dict[str, Any]
     max_b_diff = 0.0
     max_cpc_diff = 0.0
     total_reps_tested = 0
+    solver_failures = []
     
     # Load lambdas
     fold_lambdas = {}
@@ -191,7 +192,7 @@ def run_audit_2_solver_precision(data_root="data", b_audit=50) -> Dict[str, Any]
                         sum_true_unseen = float(np.sum(t_true_unseen))
                         
                         # 1. Production solver (tol=1e-6, max_iter=150)
-                        a_fast, b_fast, it_fast, _ = fit_od_fe_adapter(
+                        a_fast, b_fast, it_fast, conv_fast = fit_od_fe_adapter(
                             o_idx, d_idx, t0_support, t_true_support, rev_indices, num_nodes,
                             lambda_reg=lam, max_iter=150, tol=1e-6
                         )
@@ -200,7 +201,7 @@ def run_audit_2_solver_precision(data_root="data", b_audit=50) -> Dict[str, Any]
                         cpc_fast = (2.0 * np.sum(np.minimum(t_true_unseen, t_fast)) / denom_fast) if denom_fast > 0 else 0.0
                         
                         # 2. Ultra high-precision solver (tol=1e-10, max_iter=300)
-                        a_ref, b_ref, it_ref, _ = fit_od_fe_adapter(
+                        a_ref, b_ref, it_ref, conv_ref = fit_od_fe_adapter(
                             o_idx, d_idx, t0_support, t_true_support, rev_indices, num_nodes,
                             lambda_reg=lam, max_iter=300, tol=1e-10
                         )
@@ -208,6 +209,9 @@ def run_audit_2_solver_precision(data_root="data", b_audit=50) -> Dict[str, Any]
                         denom_ref = sum_true_unseen + float(np.sum(t_ref))
                         cpc_ref = (2.0 * np.sum(np.minimum(t_true_unseen, t_ref)) / denom_ref) if denom_ref > 0 else 0.0
                         
+                        if not conv_fast or not conv_ref:
+                            solver_failures.append((fold_id, city_name, rep_id, p_val))
+                            
                         diff_a = float(np.max(np.abs(a_fast - a_ref)))
                         diff_b = float(np.max(np.abs(b_fast - b_ref)))
                         diff_cpc = float(abs(cpc_fast - cpc_ref))
@@ -216,7 +220,7 @@ def run_audit_2_solver_precision(data_root="data", b_audit=50) -> Dict[str, Any]
                         max_b_diff = max(max_b_diff, diff_b)
                         max_cpc_diff = max(max_cpc_diff, diff_cpc)
 
-    pass_cpc = max_cpc_diff < 1e-5
+    pass_cpc = max_cpc_diff < 1e-5 and len(solver_failures) == 0
     status = "PASS" if pass_cpc else "FAIL"
     print(f"  Total Evaluations Tested: {total_reps_tested} reps x 3 p-levels")
     print(f"  Max |a_fast - a_ref|:     {max_a_diff:.8e}")
@@ -362,29 +366,40 @@ def run_audit_5_crossing_uncertainty_bootstrap() -> Dict[str, Any]:
             counts["no_cross_le_0.50%"] += 1
 
     boot_crossings = np.array(boot_crossings)
-    ci_l = float(np.percentile(boot_crossings, 2.5))
-    ci_h = float(np.percentile(boot_crossings, 97.5))
-    mean_cross = float(np.mean(boot_crossings))
-    median_cross = float(np.median(boot_crossings))
+    n_valid = len(boot_crossings)
+    if n_valid > 0:
+        ci_l = float(np.percentile(boot_crossings, 2.5))
+        ci_h = float(np.percentile(boot_crossings, 97.5))
+        mean_cross = float(np.mean(boot_crossings))
+        median_cross = float(np.median(boot_crossings))
+    else:
+        ci_l, ci_h, mean_cross, median_cross = np.nan, np.nan, np.nan, np.nan
 
-    print(f"  Valid Crossing Bootstrap Samples: {len(boot_crossings)}/{n_boot} ({len(boot_crossings)/n_boot*100:.2f}%)")
+    p_cross = (n_boot - counts["no_cross_le_0.50%"]) / n_boot * 100.0
+
+    print(f"  P(crossing <= 0.50%) = {p_cross:.2f}% ({n_valid}/{n_boot} samples)")
     print(f"    cross below 0.10%:       {counts['below_0.10%']} / {n_boot} ({counts['below_0.10%']/n_boot*100:.2f}%)")
     print(f"    cross 0.10–0.25%:        {counts['0.10-0.25%']} / {n_boot} ({counts['0.10-0.25%']/n_boot*100:.2f}%)")
     print(f"    cross 0.25–0.50%:        {counts['0.25-0.50%']} / {n_boot} ({counts['0.25-0.50%']/n_boot*100:.2f}%)")
     print(f"    no crossing <= 0.50%:    {counts['no_cross_le_0.50%']} / {n_boot} ({counts['no_cross_le_0.50%']/n_boot*100:.2f}%)")
-    print(f"  Mean Interpolated Crossing:   {mean_cross*100:.3f}%")
-    print(f"  Median Interpolated Crossing: {median_cross*100:.3f}%")
-    print(f"  Unconditional 95% Fold CI:    [{ci_l*100:.3f}%, {ci_h*100:.3f}%]")
+    print(f"  Conditional crossing location:")
+    if n_valid > 0:
+        print(f"    Mean Interpolated Crossing:   {mean_cross*100:.3f}%")
+        print(f"    Median Interpolated Crossing: {median_cross*100:.3f}%")
+        print(f"    95% CI conditional on crossing: [{ci_l*100:.3f}%, {ci_h*100:.3f}%]")
+    else:
+        print("    No crossings observed.")
     print(f"  Audit 5 Status: PASS")
 
     return {
         "status": "PASS",
         "n_boot": n_boot,
-        "valid_crossings": len(boot_crossings),
+        "valid_crossings": n_valid,
+        "p_crossing_le_050": p_cross,
         "counts": counts,
-        "mean_crossing": mean_cross,
-        "median_crossing": median_cross,
-        "ci_95_crossing_unconditional": [ci_l, ci_h]
+        "mean_crossing_conditional": mean_cross,
+        "median_crossing_conditional": median_cross,
+        "ci_95_crossing_conditional": [ci_l, ci_h]
     }
 
 

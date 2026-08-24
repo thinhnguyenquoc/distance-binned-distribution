@@ -52,7 +52,7 @@ def run_5fold_experiment(
 
     print("=" * 85)
     print("STARTING 5-FOLD CROSS-VALIDATION (MOVING-BIN CALIBRATION FRAMEWORK)")
-    print(f"Device: {device_str} | Epochs: {epochs_per_fold} | Graph: {graph_type} (r={radius_km}km) | Seeds: {num_trip_seeds}")
+    print(f"Device: {device_str} | Epochs: {epochs_per_fold} | Graph: {graph_type} (r={radius_km}km)")
     print(f"Primary Calibration Domain: Omega_c^+ (Interzonal moving bins 1, 2, 3)")
     print(f"Folds to run: {folds_to_run}")
     print("=" * 85)
@@ -99,9 +99,20 @@ def run_5fold_experiment(
             _ckpt_name = f"5fold_fold{fold_id}_seed{seed}.pt" if backbone == "gnn" else f"5fold_{backbone}_fold{fold_id}_seed{seed}.pt"
             _ckpt_path = _ckpt_dir / _ckpt_name
             
+            expected_config = {
+                "hidden_dim": hidden_dim,
+                "num_gnn_layers": num_gnn_layers,
+                "graph_type": graph_type,
+                "radius_km": radius_km,
+                "knn_k": knn_k,
+                "loss_type": loss_type,
+                "epochs": epochs_per_fold,
+                "lr": lr,
+                "backbone": backbone,
+            }
             if _ckpt_path.exists():
                 print(f"--- Found existing checkpoint {_ckpt_path}. Loading... ---")
-                model, scaler, _ = load_checkpoint(_ckpt_path, device_str=device_str)
+                model, scaler, _ = load_checkpoint(_ckpt_path, device_str=device_str, expected_config=expected_config)
                 model.eval()
             else:
                 print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) [Backbone: {backbone.upper()}] ---")
@@ -258,8 +269,9 @@ def run_5fold_experiment(
             print(f"  Delta Mean +- Std:                              {s_data['delta_cpc_inter']['mean']:+.4f} +- {s_data['delta_cpc_inter']['std']:.4f}")
             print(f"  Delta 95% CI (Fold-Stratified Bootstrap):       [{s_data['delta_cpc_inter']['ci_95_lower']:+.4f}, {s_data['delta_cpc_inter']['ci_95_upper']:+.4f}]")
             win_rate = s_data['p_improved'] * 100
-            n_wins = int(s_data['p_improved'] * s_data.get('n_cities', 50))
-            print(f"  Win Rate (Delta > 0):                           {n_wins}/50 cities ({win_rate:.1f}%)")
+            n_eval_cities = s_data.get('n_cities', len(all_city_results))
+            n_wins = int(s_data['p_improved'] * n_eval_cities)
+            print(f"  Win Rate (Delta > 0):                           {n_wins}/{n_eval_cities} cities ({win_rate:.1f}%)")
             if "wilcoxon_two_sided_p" in s_data:
                 print(f"  Wilcoxon Two-Sided p-value:                     {s_data['wilcoxon_two_sided_p']:.4e}")
             if "rank_biserial_r" in s_data:
@@ -274,7 +286,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4, 5])
-    parser.add_argument("--seeds", type=int, default=20)
     parser.add_argument("--graph-type", type=str, default="radius", choices=["radius", "adaptive_radius", "knn"])
     parser.add_argument("--radius", type=float, default=5.0)
     parser.add_argument("--knn-k", type=int, default=10)
@@ -284,7 +295,6 @@ if __name__ == "__main__":
     run_5fold_experiment(
         epochs_per_fold=args.epochs,
         folds_to_run=args.folds,
-        num_trip_seeds=args.seeds,
         graph_type=args.graph_type,
         radius_km=args.radius,
         knn_k=args.knn_k,

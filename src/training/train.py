@@ -2,12 +2,13 @@ r"""
 Cross-City Training and Transfer Pipeline.
 
 Stage A: Cross-city Training
-    Trains ZeroShotODModel on a list of source cities using ZTNB likelihood:
-        L_train = - 1 / |Omega^+| * sum_{(i,j) in Omega^+} log P_ZTNB(T_ij; mu_nb_ij, phi)
+    Trains ZeroShotODModel on a list of source cities using ZTNB likelihood on all positive observed support (including intrazonal):
+        L_train = - 1 / |Omega^+_all| * sum_{(i,j) in Omega^+_all} log P_ZTNB(T_ij; mu_nb_ij, phi)
+    City-level losses are averaged within city and optimization proceeds city-by-city, preventing large-support cities from dominating solely through pair count.
     After convergence, freezes parameters -> theta*.
 
 Stage B: Zero-Shot Transfer Evaluation
-    Evaluates theta* on held-out target city:
+    Evaluates theta* on held-out target city, evaluating the primary reconstruction estimand on positive interzonal support (Omega_c^+):
         (X^{c*}, G^{urban, c*}, D^{c*}) -> \hat{T}^{ZS} = E[T | T >= 1].
 """
 
@@ -94,6 +95,7 @@ def save_checkpoint(
 def load_checkpoint(
     path: Union[str, Path],
     device_str: str = "cpu",
+    expected_config: Optional[dict] = None,
 ) -> tuple:
     """
     Loads a checkpoint saved by save_checkpoint() and reconstructs the model and scaler.
@@ -101,6 +103,7 @@ def load_checkpoint(
     Args:
         path:       Path to the .pt checkpoint file.
         device_str: Device to map model weights onto ("cpu" or "cuda").
+        expected_config: Optional dictionary of hyperparams to validate against the checkpoint.
 
     Returns:
         (model, scaler, metadata) where:
@@ -115,6 +118,14 @@ def load_checkpoint(
         raise FileNotFoundError(f"Checkpoint not found: {path}")
 
     bundle = torch.load(path, map_location=torch.device(device_str), weights_only=False)
+
+    hp = bundle["hyperparams"]
+    if expected_config is not None:
+        for k, v in expected_config.items():
+            if k not in hp:
+                raise ValueError(f"Checkpoint config missing key '{k}' in {path}. Expected {v}. Checkpoint may be incomplete.")
+            if hp[k] != v:
+                raise ValueError(f"Checkpoint config mismatch in {path} for key '{k}': expected {v}, got {hp[k]}. Delete the stale checkpoint to retrain.")
 
     # --- Reconstruct model ---
     hp = bundle["hyperparams"]
@@ -199,9 +210,8 @@ def train_epoch(
         else:
             raise ValueError(f"Unknown loss type {loss_type}")
 
-        if torch.isnan(loss) or torch.isinf(loss):
-            print(f"Warning: NaN/Inf loss encountered for {city_data.city_name}, skipping.")
-            continue
+        if not torch.isfinite(loss):
+            raise FloatingPointError(f"NaN/Inf loss encountered for {city_data.city_name}. Stopping training to avoid invalid checkpoint.")
 
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
@@ -497,8 +507,16 @@ def train_zero_shot_model(
             "loss_type":      loss_type,
             "epochs":         epochs,
             "lr":             lr,
-            "weight_decay":   weight_decay,
-            "backbone":       backbone,
+            "weight_decay":         weight_decay,
+            "backbone":             backbone,
+            "patience":             patience,
+            "min_delta":            min_delta,
+            "lr_plateau_patience":  lr_plateau_patience,
+            "lr_plateau_factor":    lr_plateau_factor,
+            "lr_plateau_threshold": lr_plateau_threshold,
+            "threshold_mode":       threshold_mode,
+            "min_lr":               min_lr,
+            "split_manifest_sha256": getattr(model, "split_manifest_sha256", "NOT_SET"),
         }
         saved_path = save_checkpoint(
             path=checkpoint_path,

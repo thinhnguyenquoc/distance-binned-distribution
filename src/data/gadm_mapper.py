@@ -56,7 +56,7 @@ def get_gadm_gid2_mapping(meta_df: pd.DataFrame, repo_root: str) -> tuple[dict, 
             
         result.loc[missing, 'GID_2'] = nearest['GID_2']
         
-        # Enforce 1km threshold and record details
+        # Enforce 5km threshold and record details
         for row_idx, row in nearest.iterrows():
             idx_val = int(row['idx'])
             dist_m = float(row['nearest_distance_m'])

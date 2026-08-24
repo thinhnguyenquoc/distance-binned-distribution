@@ -189,7 +189,7 @@ def fast_cal_metrics(
     }
     
     tv_ach = float(0.5 * np.sum(np.abs(yd_tgt - yd_target)))
-    js_div = float(jensenshannon(yd_tgt, yd_target))
+    js_div = float(jensenshannon(yd_tgt, yd_target)) ** 2
     
     return cpc, mae, rmse, spearman_val, tv_ach, js_div, stats
 
@@ -274,14 +274,9 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
                 logger.info(f"    Evaluating seed {m_seed}...")
                 ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
                 if not ckpt_path.exists():
-                    logger.warning(f"    Checkpoint {ckpt_path} not found. Skipping.")
-                    continue
-                try:
-                    model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
-                    model.eval()
-                except Exception as e:
-                    logger.error(f"    Failed to load checkpoint {ckpt_path}: {e}")
-                    continue
+                    raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}. Protocol requires all 3 model seeds.")
+                model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
+                model.eval()
                 
                 city_data = load_city(tc, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
                 t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device="cpu")

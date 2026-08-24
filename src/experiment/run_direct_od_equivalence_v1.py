@@ -132,8 +132,7 @@ def fit_od_fe_adapter(
     """
     Solves the exact two-way fixed-effect ridge regression objective:
         min_{a, b} sum_{(i,j) in S_p} (r_ij - a_i - b_j)^2 + lambda * (||a||^2 + ||b||^2)
-    via Conjugate Gradient on the reduced Symmetric Positive Definite Schur complement system.
-    Guarantees exact convergence in < 30 iterations for all graph topologies.
+    Solved using conjugate gradient on the reduced SPD system; empirical convergence is monitored by the residual tolerance.
     """
     n_rev = len(rev_indices)
     if n_rev == 0:
@@ -180,8 +179,8 @@ def fit_od_fe_adapter(
         iters = it
         Ap = matvec(p)
         denom_alpha = float(torch.dot(p, Ap))
-        if denom_alpha <= 0:
-            converged = True
+        if denom_alpha <= 0 or not np.isfinite(denom_alpha):
+            converged = False
             break
         alpha = rsold / denom_alpha
         b = b + alpha * p
@@ -311,6 +310,9 @@ def select_fold_lambda(
                         a, b, _, conv = fit_od_fe_adapter(
                             o_idx, d_idx, t0_support, t_true, rev_indices, num_nodes, lambda_reg=lam
                         )
+                        if not conv:
+                            raise RuntimeError(f"OD-FE CG solver did not converge during lambda selection on val city {city_name}!")
+                        
                         t_direct_support = apply_od_fe_prediction(o_idx, d_idx, t0_support, a, b)
                         t_direct_unseen = t_direct_support[unseen_indices]
                         
@@ -495,12 +497,18 @@ def run_fold_direct_od(
     b_val = 50 if not smoke else 5
 
     # 1. Select / Load Fold Lambda
+    valid_lambda_cache = False
     if lambda_json_path.exists():
         with open(lambda_json_path, "r") as f:
             lam_info = json.load(f)
-            selected_lambda = float(lam_info["selected_lambda"])
-            print(f">>> [FOLD {fold_id}] Using cached lambda_f* = {selected_lambda}")
-    else:
+            if lam_info.get("val_cities") == val_cities and lam_info.get("model_seeds") == model_seeds and lam_info.get("b_val") == b_val:
+                selected_lambda = float(lam_info["selected_lambda"])
+                print(f">>> [FOLD {fold_id}] Using cached lambda_f* = {selected_lambda}")
+                valid_lambda_cache = True
+            else:
+                print(f">>> [FOLD {fold_id}] Cached lambda_f* is stale (different config). Re-selecting...")
+
+    if not valid_lambda_cache:
         selected_lambda, selection_df = select_fold_lambda(
             fold_id=fold_id,
             val_cities=val_cities,
@@ -517,6 +525,9 @@ def run_fold_direct_od(
                 "selected_lambda": selected_lambda,
                 "selection_source": "validation_cities_only",
                 "test_city_information_used": False,
+                "val_cities": val_cities,
+                "model_seeds": model_seeds,
+                "b_val": b_val,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             }, f, indent=2)
 

@@ -387,13 +387,6 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     _, ps = safe_wilcoxon(ds, alternative="greater")
 
     # --- Full 5-fold Evaluation Guard (Requires strictly complete 50 cities across Folds 1-5) ---
-    conf_mask = (fid >= 2)
-    conf_fid = fid[conf_mask]
-    is_full_5_fold_complete = bool(
-        len(conf_fid) == 40
-        and set(conf_fid.tolist()) == {2, 3, 4, 5}
-        and all((conf_fid == f).sum() == 10 for f in [1, 2, 3, 4, 5])
-    )
     is_full_50_complete = bool(
         n == 50
         and set(fid.tolist()) == {1, 2, 3, 4, 5}
@@ -401,18 +394,18 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     )
 
     conf_summary = None
-    if is_full_5_fold_complete:
-        c_dt = dt[conf_mask]
-        c_dw = dw[conf_mask]
-        c_ds = ds[conf_mask]
-        c_c0 = c0[conf_mask]
-        c_cyd = cyd[conf_mask]
-        c_n = 40
+    if is_full_50_complete:
+        c_dt = dt
+        c_dw = dw
+        c_ds = ds
+        c_c0 = c0
+        c_cyd = cyd
+        c_n = 50
         c_ddof = 1
 
-        c_ci_tl, c_ci_th, _ = fold_bootstrap(c_dt, conf_fid, seed=bootstrap_seed)
-        c_ci_wl, c_ci_wh, _ = fold_bootstrap(c_dw, conf_fid, seed=bootstrap_seed)
-        c_ci_sl, c_ci_sh, _ = fold_bootstrap(c_ds, conf_fid, seed=bootstrap_seed)
+        c_ci_tl, c_ci_th, _ = fold_bootstrap(c_dt, fid, seed=bootstrap_seed)
+        c_ci_wl, c_ci_wh, _ = fold_bootstrap(c_dw, fid, seed=bootstrap_seed)
+        c_ci_sl, c_ci_sh, _ = fold_bootstrap(c_ds, fid, seed=bootstrap_seed)
         _, c_pt = safe_wilcoxon(c_dt, alternative="greater")
         _, c_pw = safe_wilcoxon(c_dw, alternative="greater")
         _, c_ps = safe_wilcoxon(c_ds, alternative="greater")
@@ -462,7 +455,7 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     else:
         conf_summary = {
             "status": "not_available",
-            "reason": f"Incomplete full_5_fold test set (observed {int(conf_mask.sum())}/50 required test cities across Folds 1-5; 10 test cities per fold required)",
+            "reason": f"Incomplete full_5_fold test set (observed {n}/50 required test cities across Folds 1-5; 10 test cities per fold required)",
         }
 
     # --- Per-Fold Breakdown ---
@@ -502,7 +495,7 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
         "n_cities": n,
         "protocol_version": "e1-v2-amended",
         "is_full_50_complete": is_full_50_complete,
-        "is_full_5_fold_complete": is_full_5_fold_complete,
+        "is_full_5_fold_complete": is_full_50_complete,
         "std_ddof": ddof,
         # Full Out-of-Fold (n=50)
         "cpc_baseline_mean": float(c0.mean()),

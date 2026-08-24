@@ -115,10 +115,21 @@ def run_mlp_backbone_test(args: argparse.Namespace) -> None:
         for seed_idx, seed in enumerate(seeds):
             _ckpt_path = Path(output_dir) / "checkpoints" / f"mlp_fold{fold_id}_seed{seed}.pt"
             
+            expected_config = {
+                "hidden_dim": args.hidden_dim,
+                "num_gnn_layers": args.num_gnn_layers,
+                "graph_type": args.graph_type,
+                "radius_km": args.radius_km,
+                "knn_k": args.knn_k,
+                "loss_type": args.loss_type,
+                "epochs": epochs_per_fold,
+                "lr": args.lr,
+                "backbone": "mlp",
+            }
             if _ckpt_path.exists():
                 logger.info(f"--- Found existing MLP checkpoint {_ckpt_path}. Loading... ---")
                 from src.training.train import load_checkpoint
-                model, scaler, _ = load_checkpoint(_ckpt_path, device_str=args.device)
+                model, scaler, _ = load_checkpoint(_ckpt_path, device_str=args.device, expected_config=expected_config)
                 model.eval()
             else:
                 logger.info(f"--- Training MLP Seed {seed} (Fold {fold_id}) ---")
@@ -207,7 +218,7 @@ if __name__ == "__main__":
     parser.add_argument("--knn_k", type=int, default=10)
     parser.add_argument("--loss_type", type=str, default="ztnb")
     parser.add_argument("--device", type=str, default="cpu")
-    parser.add_argument("--folds", nargs="+", type=int, default=[2, 3, 4, 5])
+    parser.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4, 5])
     parser.add_argument("--seeds", nargs="+", type=int, default=[1, 10, 100])
     parser.add_argument("--smoke", action="store_true", help="Run quick 1-fold 1-seed smoke test")
     

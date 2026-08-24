@@ -24,14 +24,13 @@ def _compute_stats(arr: np.ndarray, ddof: int = 1) -> Dict[str, Any]:
     }
 
 
-def _fold_stratified_bootstrap(city_results: List[Dict[str, Any]], key: str, n_boot: int = 10000) -> tuple[float, float]:
+def _fold_stratified_bootstrap(values: np.ndarray, fold_ids: np.ndarray, n_boot: int = 10000) -> tuple[float, float]:
     """Fold-stratified bootstrap 95% CI for the mean of a given metric."""
     folds = {}
-    for r in city_results:
-        f = r.get("fold", -1)
+    for i, f in enumerate(fold_ids):
         if f not in folds:
             folds[f] = []
-        folds[f].append(r[key])
+        folds[f].append(values[i])
     
     if len(folds) == 0 or sum(len(v) for v in folds.values()) < 2:
         return 0.0, 0.0
@@ -71,10 +70,8 @@ def analyze_delta_r(city_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         delta_inter = m1_inter - m0_inter
         
         # Fold-stratified bootstrap
-        for i, r in enumerate(city_results):
-            r[f"_temp_delta_{scale_name}"] = delta_inter[i]
-        
-        ci_low, ci_high = _fold_stratified_bootstrap(city_results, f"_temp_delta_{scale_name}")
+        fold_ids = np.array([r.get("fold", -1) for r in city_results])
+        ci_low, ci_high = _fold_stratified_bootstrap(delta_inter, fold_ids)
         
         # Missingness Correlations
         missingness = {}

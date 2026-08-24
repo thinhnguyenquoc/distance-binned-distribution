@@ -154,7 +154,7 @@ def fast_cal_metrics(
     }
     
     tv_ach = float(0.5 * np.sum(np.abs(yd_tgt - yd_target)))
-    js_div = float(jensenshannon(yd_tgt, yd_target))
+    js_div = float(jensenshannon(yd_tgt, yd_target)) ** 2
     
     return cpc, mae, rmse, spearman_val, tv_ach, js_div, stats
 
@@ -231,14 +231,9 @@ def run_sampling_robustness(args: argparse.Namespace) -> None:
                 logger.info(f"    Evaluating seed {m_seed}...")
                 ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
                 if not ckpt_path.exists():
-                    logger.warning(f"    Checkpoint {ckpt_path} not found. Skipping.")
-                    continue
-                try:
-                    model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
-                    model.eval()
-                except Exception as e:
-                    logger.error(f"    Failed to load checkpoint {ckpt_path}: {e}")
-                    continue
+                    raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}. The protocol requires all 3 model seeds to evaluate.")
+                model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
+                model.eval()
                 
                 city_data = load_city(tc, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
                 t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device="cpu")
@@ -490,10 +485,20 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
     tv_los = [results[str(int(m))]["tv_ci_lo"] for m in finite_m]
     tv_his = [results[str(int(m))]["tv_ci_hi"] for m in finite_m]
     
+    # Read noise thresholds if available
+    e_cross, e_star = 0.0478, 0.0300
+    try:
+        with open("results/noise_robustness_v1/noise_summary.json", "r") as f:
+            noise_summ = json.load(f)
+            e_cross = noise_summ.get("epsilon_cross_positive_dCPC", e_cross)
+            e_star = noise_summ.get("epsilon_star_significant_benefit", e_star)
+    except Exception:
+        pass
+
     plt.plot(finite_m_arr, tv_means, marker="o", color="darkblue", linewidth=2, label="Empirical TV Error")
     plt.fill_between(finite_m_arr, tv_los, tv_his, color="royalblue", alpha=0.25, label="95% Bootstrap CI")
-    plt.axhline(0.0478, color="red", linestyle="--", linewidth=1.5, label="Theoretical Crossover $\\epsilon_{cross} = 4.78\\%$")
-    plt.axhline(0.0300, color="darkorange", linestyle=":", linewidth=1.5, label="Significance Threshold $\\epsilon^* = 3.00\\%$")
+    plt.axhline(e_cross, color="red", linestyle="--", linewidth=1.5, label=f"Theoretical Crossover $\\epsilon_{{cross}} = {e_cross*100:.2f}\\%$")
+    plt.axhline(e_star, color="darkorange", linestyle=":", linewidth=1.5, label=f"Significance Threshold $\\epsilon^* = {e_star*100:.2f}\\%$")
     if m_star is not None:
         plt.axvline(m_star, color="green", linestyle="-.", label=f"Required $m^* = {m_star:,}$ trips")
     plt.xscale("log")
@@ -547,7 +552,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
     for idx, m in enumerate(finite_m):
         plt.annotate(f"m={int(m):,}", (tv_means[idx], dcpc_means[idx]), textcoords="offset points", xytext=(5, 5), fontsize=8)
     plt.axhline(0, color="red", linestyle="--", alpha=0.7, label="Zero-Shot M0 Baseline")
-    plt.axvline(0.0478, color="darkorange", linestyle=":", label="Synthetic Crossover $\\epsilon_{cross} = 4.78\\%$")
+    plt.axvline(e_cross, color="darkorange", linestyle=":", label=f"Synthetic Crossover $\\epsilon_{{cross}} = {e_cross*100:.2f}\\%$")
     plt.xlabel("Empirical Total Variation Error $\\text{TV}$")
     plt.ylabel("Mean $\\Delta$CPC")
     plt.title("Bridge: Empirical Sampling Error vs Reconstruction Benefit $\\Delta$CPC")

@@ -6,20 +6,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def compute_effect_size(w_stat, n):
-    """Computes effect size r = Z / sqrt(N) for Wilcoxon signed-rank test."""
-    mean_w = n * (n + 1) / 4.0
-    var_w = n * (n + 1) * (2 * n + 1) / 24.0
-    z = (w_stat - mean_w) / np.sqrt(var_w)
-    return abs(z) / np.sqrt(n)
 
-def compute_ci(data, confidence=0.95):
-    """Computes confidence interval using bootstrap."""
-    np.random.seed(42)
-    bootstrapped_means = [np.mean(np.random.choice(data, size=len(data), replace=True)) for _ in range(10000)]
-    lower = np.percentile(bootstrapped_means, (1 - confidence) / 2 * 100)
-    upper = np.percentile(bootstrapped_means, (1 + confidence) / 2 * 100)
-    return lower, upper
 
 def main():
     results_file = Path("results/5fold_results.json")
@@ -62,25 +49,29 @@ def main():
     print("STATISTICAL TEST RESULTS (N=50 CITIES)")
     print("="*50)
     
+    city_stats = data.get("rq1_delta_r", {}).get("city", {})
+    if not city_stats:
+        print("Missing rq1_delta_r.city in JSON.")
+        return
+        
+    delta_stats = city_stats.get("delta_cpc_inter", {})
+    
     n_cities = len(delta_cpcs)
-    mean_delta = np.mean(delta_cpcs)
-    median_delta = np.median(delta_cpcs)
-    ci_lower, ci_upper = compute_ci(delta_cpcs)
+    mean_delta = delta_stats.get("mean", np.mean(delta_cpcs))
+    median_delta = delta_stats.get("median", np.median(delta_cpcs))
+    ci_lower = delta_stats.get("ci_95_lower", 0.0)
+    ci_upper = delta_stats.get("ci_95_upper", 0.0)
+    effect_size = city_stats.get("rank_biserial_r", 0.0)
+    p_value = city_stats.get("wilcoxon_one_sided_p", 1.0)
+    p_value_two_sided = city_stats.get("wilcoxon_two_sided_p", 1.0)
     
-    stat, p_value = stats.wilcoxon(cpc_m1, cpc_m0, alternative='greater')
-    stat_two_sided, p_value_two_sided = stats.wilcoxon(cpc_m1, cpc_m0)
-    effect_size = compute_effect_size(stat_two_sided, n_cities)
-    
-    t_stat, p_val_t = stats.ttest_rel(cpc_m1, cpc_m0)
-
     print(f"Number of cities: {n_cities}")
     print(f"Delta CPC (Mean):   {mean_delta:+.4f}")
     print(f"Delta CPC (Median): {median_delta:+.4f}")
     print(f"95% CI (Mean):      [{ci_lower:+.4f}, {ci_upper:+.4f}]")
-    print(f"Effect Size (r):    {effect_size:.4f}")
+    print(f"Matched-pairs Rank-biserial (r_rb): {effect_size:.4f}")
     print(f"Wilcoxon p-value (One-sided, M1 > M0): {p_value:.4e}")
     print(f"Wilcoxon p-value (Two-sided):          {p_value_two_sided:.4e}")
-    print(f"Paired t-test p-value (Two-sided):     {p_val_t:.4e}")
     print("="*50)
 
     # ---------------------------------------------------------

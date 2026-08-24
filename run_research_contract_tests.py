@@ -578,7 +578,7 @@ def test_gate_14_raw_to_summary_reproduction():
     stale_patterns = ["n=40", "N=40", "38/40", "p=0.0021", "Fold 1 exploratory"]
     for tf in table_files:
         if tf.exists():
-            content = tf.read_text(encoding="utf-8")
+            content = tf.read_text(encoding="utf-8", errors="replace")
             for sp in stale_patterns:
                 assert sp not in content, f"Found stale pattern '{sp}' in {tf.name}!"
                 
