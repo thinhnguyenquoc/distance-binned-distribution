@@ -86,7 +86,7 @@ def compute_pearson_r(t_true, t_pred) -> float:
 
 # Training & Experiment
 from src.training.train import train_zero_shot_model, infer_zero_shot
-from src.experiment.run_experiment import run_target_city_experiments, _interpolate_m_star
+from src.experiment.run_experiment import run_target_city_experiments
 from src.experiment.compute_qstar import analyze_qstar
 from src.experiment.compute_delta_r import analyze_delta_r
 
@@ -131,7 +131,7 @@ __all__ = [
     "train_zero_shot_model",
     "infer_zero_shot",
     "run_target_city_experiments",
-    "_interpolate_m_star",
+
     "analyze_qstar",
     "analyze_delta_r",
 ]
