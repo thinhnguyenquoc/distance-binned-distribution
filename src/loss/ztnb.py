@@ -26,7 +26,8 @@ def nb_log_prob(t: torch.Tensor, mu_nb: torch.Tensor, log_phi: torch.Tensor) -> 
     """
     Log-probability of base NB(mu_nb, phi) at integer count t.
     """
-    phi = torch.exp(log_phi)
+    log_phi_safe = torch.clamp(log_phi, min=-10.0, max=10.0)
+    phi = torch.exp(log_phi_safe)
     eps = 1e-8
 
     mu = mu_nb + eps
@@ -46,7 +47,8 @@ def nb_log_prob(t: torch.Tensor, mu_nb: torch.Tensor, log_phi: torch.Tensor) -> 
 
 def nb_log_prob_at_zero(mu_nb: torch.Tensor, log_phi: torch.Tensor) -> torch.Tensor:
     """log P_NB(T=0; mu_nb, phi) = phi * log(phi / (mu_nb + phi))"""
-    phi = torch.exp(log_phi)
+    log_phi_safe = torch.clamp(log_phi, min=-10.0, max=10.0)
+    phi = torch.exp(log_phi_safe)
     eps = 1e-8
     mu = mu_nb + eps
     phi = phi + eps
@@ -82,7 +84,8 @@ def compute_conditional_mean(mu_nb: torch.Tensor, log_phi: torch.Tensor) -> torc
     Converts base NB mean mu_nb to conditional positive mean E[T | T >= 1].
     E[T | T >= 1] = mu_nb / (1 - P_NB(0; mu_nb, phi))
     """
-    phi = torch.exp(log_phi)
+    log_phi_safe = torch.clamp(log_phi, min=-10.0, max=10.0)
+    phi = torch.exp(log_phi_safe)
     eps = 1e-8
     p0 = (phi / (mu_nb + phi + eps)) ** phi
     # Clamp 1-p0 to avoid division by zero when mu_nb is tiny

@@ -1,5 +1,5 @@
 r"""
-Gravity-Informed Urban-GNN Zero-Shot Model (M_0).
+Gravity-Informed Urban-GNN Support-Conditioned Zero-Shot Model (M_0).
 (neuroGravity-inspired neural transferable architecture)
 
 Mathematical Formulation:

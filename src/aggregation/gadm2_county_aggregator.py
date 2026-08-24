@@ -44,6 +44,13 @@ def aggregate_city_to_gadm2(
     
     Returns preflight dict with diagnostics.
     """
+    raise RuntimeError(
+        "gadm2_county_aggregator.py is officially deprecated and retired from the pipeline.\n"
+        "1. It silently drops tracts where centroids don't match exactly without a robust nearest-fallback.\n"
+        "2. It averages distances across tracts (mean tract-pair distance), which heavily distorts distance distributions "
+        "and is totally invalid for distance-binned Y_D reconstruction.\n"
+        "Use src.data.gadm_mapper.get_gadm_gid2_mapping on tract pairs directly instead."
+    )
     if gadm_gdf is None:
         gadm_gdf = load_gadm(gadm_shp)
     

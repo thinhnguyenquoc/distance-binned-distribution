@@ -43,7 +43,6 @@ def calibrate_moving_bins(
     target_moving_yd: np.ndarray | torch.Tensor,
     q: float = 1.0,
     pair_distance: torch.Tensor | None = None,
-    eps: float = 1e-8,
     tolerance: float = 1e-5,
 ) -> torch.Tensor:
     """
@@ -78,7 +77,7 @@ def calibrate_moving_bins(
     # Mask for interzonal pairs Omega_c^+ (i != j and D_ij > 0)
     if pair_distance is not None:
         p_dist = pair_distance.to(device=t_pred_zero_shot.device)
-        dist_km = torch.expm1(p_dist) if p_dist.max() < 20.0 else p_dist
+        dist_km = p_dist
         inter_mask = (pair_o_idx != pair_d_idx) & (dist_km > 0.0)
     else:
         inter_mask = (pair_o_idx != pair_d_idx) & (bin_labels > 0)
@@ -222,6 +221,11 @@ def calibrate_kbins(
         w_k(q)     = (Y_D_cond_k / Y_hat_k)^q
         s_k        = w_k / sum_l(Y_hat_l * w_l)
         T_cal_ij   = s_{b(ij)} * T0_ij   for (i,j) in Omega_c^+
+
+    Notes on zero-behavior:
+        If target Y_D_k == 0, then w_k(q) = 0 for ANY q > 0.
+        This forces hard-zero predictions on that bin, making q mapping non-continuous at q=0 if the target contains exact zeros.
+        Smoothing/pseudocounts must be applied to Y_D prior to calling this function if a softer response is desired.
 
     Invariants:
         1. Interzonal mass preservation: sum(T_cal[inter]) == sum(T0[inter]) within tolerance.

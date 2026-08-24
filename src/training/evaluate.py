@@ -8,10 +8,8 @@ Primary Metric:
 Secondary Metrics:
     1. Scale-Normalized Interzonal CPC (CPC_inter_norm = 1 - TVD):
         Evaluates pure structural flow geometry independent of total flow scale.
-    2. Full CPC (CPC_full) on all Omega_c (with intact intrazonal diagonal).
-    3. Full Scale-Normalized CPC (CPC_full_norm).
-    4. RMSE-log1p on Omega_c^+ and full Omega_c.
-    5. Pearson correlation r on Omega_c^+ and full Omega_c.
+    2. RMSE-log1p on Omega_c^+.
+    3. Pearson/Spearman correlation on Omega_c^+.
 """
 
 import math
@@ -117,7 +115,7 @@ def evaluate_moving_and_full(
 
     if pair_distance is not None:
         p_dist = pair_distance.detach().cpu().numpy()
-        dist_km = np.expm1(p_dist) if np.max(p_dist) < 20.0 else p_dist
+        dist_km = p_dist
         inter_mask = (o_np != d_np) & (dist_km > 0.0)
     else:
         inter_mask = (o_np != d_np) & (b_np > 0)

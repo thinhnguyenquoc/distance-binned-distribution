@@ -20,7 +20,7 @@ import torch.nn.functional as F
 class GraphConvLayer(nn.Module):
     """
     Message passing layer with edge distance modulation.
-    Aggregates neighbor features weighted by spatial distance:
+    Performs distance-conditioned message passing:
         m_ij = W_msg * [h_j || log(1 + d_ij)]
         h_i' = W_self * h_i + Agg_{j in N(i)}(m_ij)
     """
