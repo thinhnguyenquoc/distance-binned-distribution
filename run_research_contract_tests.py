@@ -104,35 +104,143 @@ def test_gate_2_data_leakage():
     bin_edges, K_act = compute_kbin_edges(train35, K=8, data_root="data")
     assert K_act == 8 and len(bin_edges) == 9
     
-    # 3. Mutation / Permutation Invariance on M0:
-    # M0 forward pass must be 100% invariant to any changes/mutations in target Y_D
+    # 3. M0 target-Y_D independence and deterministic inference.
+    import inspect
+    from src.data import yd_extractor
+    from src.calibration import bin_calibration
+
+    signature = inspect.signature(infer_zero_shot)
+    forbidden_params = {"yd", "y_d", "trip", "trip_distribution", "calibration"}
+    assert not any(
+        parameter.name.lower() in forbidden_params
+        for parameter in signature.parameters.values()
+    ), f"infer_zero_shot has target-Y_D-dependent input: {signature}"
+
+    source = inspect.getsource(infer_zero_shot)
+    forbidden_dependencies = ("compute_kbin_edges", "extract_yd_kbins", "calibrate_kbins")
+    assert not any(name in source for name in forbidden_dependencies), (
+        "infer_zero_shot directly depends on target-Y_D extraction/calibration"
+    )
+
+    def fail_if_target_yd_accessed(*args, **kwargs):
+        raise AssertionError("M0 accessed target-Y_D extraction or calibration")
+
+    patched_functions = {
+        (yd_extractor, "compute_kbin_edges"): yd_extractor.compute_kbin_edges,
+        (yd_extractor, "extract_yd_kbins"): yd_extractor.extract_yd_kbins,
+        (bin_calibration, "calibrate_kbins"): bin_calibration.calibrate_kbins,
+    }
+    for (module, name) in patched_functions:
+        setattr(module, name, fail_if_target_yd_accessed)
+
     city_data = load_city(test_city, data_root="data", feature_scaler=scaler, fit_scaler=False)
     coords = city_data.lon_lat.numpy()
     ei, ed = build_radius_graph(coords, radius_km=5.0)
-    
-    for seed in [1, 10, 100]:
-        ckpt_path = Path(f"results/checkpoints/5fold_fold1_seed{seed}.pt")
-        model, _, metadata = load_checkpoint(ckpt_path, device_str="cpu")
-        assert metadata.get("seed") == seed, (
-            f"{ckpt_path.name} metadata seed mismatch: "
-            f"expected {seed}, got {metadata.get('seed')}"
-        )
-        model.eval()
 
-        with torch.no_grad():
-            m0_clean = infer_zero_shot(model, city_data, ei, ed, device="cpu").numpy()
+    try:
+        for seed in [1, 10, 100]:
+            ckpt_path = Path(f"results/checkpoints/5fold_fold1_seed{seed}.pt")
+            model, _, metadata = load_checkpoint(ckpt_path, device_str="cpu")
+            assert metadata.get("seed") == seed, (
+                f"{ckpt_path.name} metadata seed mismatch: "
+                f"expected {seed}, got {metadata.get('seed')}"
+            )
+            model.eval()
 
-        # Test with 5 random/mutated Y_D distributions for each model seed.
-        rng = np.random.RandomState(42)
-        for _ in range(5):
-            mutated_yd = rng.dirichlet(np.ones(8))
-            # Run M0 prediction again (it should not take or be influenced by mutated_yd)
             with torch.no_grad():
-                m0_mutated = infer_zero_shot(model, city_data, ei, ed, device="cpu").numpy()
-            diff = np.max(np.abs(m0_clean - m0_mutated))
-            assert diff == 0.0, f"M0 output mutated for seed {seed}! Max diff: {diff}"
+                m0_first = infer_zero_shot(model, city_data, ei, ed, device="cpu")
+                m0_second = infer_zero_shot(model, city_data, ei, ed, device="cpu")
+            assert torch.equal(m0_first, m0_second), (
+                f"M0 inference is not deterministic for seed {seed}"
+            )
+    finally:
+        for (module, name), original in patched_functions.items():
+            setattr(module, name, original)
         
-    return True, "Scaler guarded (train-only), M0 bitwise identical under Y_D mutations for seeds 1, 10, 100"
+    return True, "Scaler guarded (train-only), M0 structurally Y_D-independent and deterministic for seeds 1, 10, 100"
+
+
+# -----------------------------------------------------------------------------
+# GATE 15: Radius Graph & Isolated-Node Fallback Contract
+# -----------------------------------------------------------------------------
+def test_gate_15_radius_graph_contract():
+    def independent_distances(lon_lat):
+        coordinates = np.asarray(lon_lat, dtype=np.float64)
+        radians = np.radians(coordinates)
+        delta = radians[:, None, :] - radians[None, :, :]
+        a = (
+            np.sin(delta[:, :, 1] / 2.0) ** 2
+            + np.cos(radians[:, None, 1])
+            * np.cos(radians[None, :, 1])
+            * np.sin(delta[:, :, 0] / 2.0) ** 2
+        )
+        return 2.0 * 6371.0 * np.arcsin(np.sqrt(np.clip(a, 0.0, 1.0)))
+
+    def independent_reference_graph(lon_lat, radius_km):
+        distances = independent_distances(lon_lat)
+        node_count = len(lon_lat)
+        directed_edges = set()
+        fallback_edges = set()
+
+        for source in range(node_count):
+            radius_neighbors = [
+                target
+                for target in range(node_count)
+                if target != source and 0.0 < distances[source, target] <= radius_km
+            ]
+            for target in radius_neighbors:
+                directed_edges.add((source, target))
+
+            if not radius_neighbors:
+                nearest = min(
+                    (target for target in range(node_count) if target != source),
+                    key=lambda target: distances[source, target],
+                )
+                directed_edges.add((source, nearest))
+                fallback_edges.update({(source, nearest), (nearest, source)})
+
+        symmetric_edges = directed_edges | {
+            (target, source) for source, target in directed_edges
+        }
+        reference_edges = symmetric_edges | {
+            (node, node) for node in range(node_count)
+        }
+        return reference_edges, fallback_edges, distances
+
+    coordinate_sets = [
+        np.array([[0.0, 0.0], [0.01, 0.0], [0.10, 0.0]], dtype=np.float64),
+    ]
+    held_out_city = generate_35_5_10_splits(data_root="data")[1]["test"][0]
+    coordinate_sets.append(load_city(held_out_city, data_root="data").lon_lat.numpy())
+
+    for coordinates in coordinate_sets:
+        expected_edges, fallback_edges, distances = independent_reference_graph(
+            coordinates, radius_km=5.0
+        )
+        edge_index, edge_dist = build_radius_graph(
+            coordinates, radius_km=5.0, use_cache=False
+        )
+        production_edges = {
+            (int(edge_index[0, index]), int(edge_index[1, index]))
+            for index in range(edge_index.shape[1])
+        }
+        assert production_edges == expected_edges, (
+            "Production radius graph differs from independent reference graph"
+        )
+
+        for index in range(edge_index.shape[1]):
+            source = int(edge_index[0, index])
+            target = int(edge_index[1, index])
+            expected_distance = distances[source, target]
+            assert np.isclose(float(edge_dist[index]), expected_distance, atol=1e-5, rtol=0.0), (
+                f"edge_dist mismatch for ({source}, {target})"
+            )
+            if source != target and expected_distance > 5.0:
+                assert (source, target) in fallback_edges, (
+                    f"Non-radius edge ({source}, {target}) is not an isolated-node fallback"
+                )
+
+    return True, "Radius edges, isolated-node fallback, symmetry, self-loops, and edge distances match independent reference"
 
 
 # -----------------------------------------------------------------------------
@@ -595,7 +703,7 @@ def test_gate_14_raw_to_summary_reproduction():
 # -----------------------------------------------------------------------------
 def run_all_gates():
     print("=" * 85)
-    print("RESEARCH CONTRACT VERIFICATION SUITE — 14 SCIENTIFIC & METHODOLOGICAL GATES")
+    print("RESEARCH CONTRACT VERIFICATION SUITE — 15 SCIENTIFIC & METHODOLOGICAL GATES")
     print("Locked Protocol: N=50 Cities, 5-Fold Disjoint Partition, K=8, q=1.0, Seeds={1,10,100}")
     print("=" * 85)
     
@@ -614,6 +722,7 @@ def run_all_gates():
         (12, "K=8 anchor equivalence", test_gate_12_k_sensitivity_anchor),
         (13, "Neural backbone fairness & pairing", test_gate_13_backbone_pairing),
         (14, "Raw -> summary reproduction & stale scan", test_gate_14_raw_to_summary_reproduction),
+        (15, "Radius graph & isolated-node fallback", test_gate_15_radius_graph_contract),
     ]
     
     passed_count = 0
@@ -629,14 +738,15 @@ def run_all_gates():
             log_gate(num, name, False, f"EXCEPTION: {e}")
             
     elapsed = time.perf_counter() - start_time
+    total_gates = len(gates)
     print("=" * 85)
-    if passed_count == 14:
-        print(f"\033[92mRESEARCH CONTRACT: 14/14 PASS\033[0m in {elapsed:.2f}s")
+    if passed_count == total_gates:
+        print(f"\033[92mRESEARCH CONTRACT: {passed_count}/{total_gates} PASS\033[0m in {elapsed:.2f}s")
         print("All protocol invariants, leakage guards, metrics, and summary files are 100% certified!")
         print("=" * 85)
         return 0
     else:
-        print(f"\033[91mRESEARCH CONTRACT: {passed_count}/14 PASS ({14 - passed_count} FAILED)\033[0m in {elapsed:.2f}s")
+        print(f"\033[91mRESEARCH CONTRACT: {passed_count}/{total_gates} PASS ({total_gates - passed_count} FAILED)\033[0m in {elapsed:.2f}s")
         print("=" * 85)
         return 1
 
