@@ -211,9 +211,9 @@ def run_experiment(args):
     df_seed = df.copy()
     df_seed.to_csv(output_dir / "k_sensitivity_per_seed.csv", index=False)
     
-    # Confirmatory Analysis
-    df_conf = df_city[df_city["fold"].isin([2, 3, 4, 5])]
-    print(f"\nConfirmatory cities: {df_conf['city'].nunique()}")
+    # Confirmatory Analysis (now using all 5 folds per user request)
+    df_conf = df_city[df_city["fold"].isin([1, 2, 3, 4, 5])]
+    print(f"\nEvaluating all cities (Folds 1-5): {df_conf['city'].nunique()}")
     
     summary_data = []
     
@@ -234,7 +234,7 @@ def run_experiment(args):
         boot_means = []
         for _ in range(10000):
             s = []
-            for fold in [2, 3, 4, 5]:
+            for fold in [1, 2, 3, 4, 5]:
                 vals = d[d["fold"] == fold]["delta_cpc"].values
                 if len(vals) > 0:
                     s.extend(rng.choice(vals, size=len(vals), replace=True))
@@ -315,7 +315,7 @@ def run_experiment(args):
     # Generate Markdown
     md = []
     md.append("# 5-Fold Distance-Bin Number Sensitivity Test v1")
-    md.append(f"\nConfirmatory cities (Folds 2-5): {df_conf['city'].nunique()}")
+    md.append(f"\nEvaluating all cities (Folds 1-5): {df_conf['city'].nunique()}")
     md.append("\n## Primary Results")
     md.append("| K | Mean M0 CPC | Mean M1 CPC | Mean $\\Delta$ CPC | 95% CI | Positive cities | Mean $K_{active}$ | Mean $w_{max}$ | Adjusted p |")
     md.append("|--:|--:|--:|--:|--:|--:|--:|--:|--:|")
@@ -338,7 +338,7 @@ def run_experiment(args):
         "model_seeds": seeds,
         "bootstrap_seed": 42,
         "folds": folds,
-        "confirmatory_folds": [2, 3, 4, 5] if not args.smoke_test else [2],
+        "confirmatory_folds": [1, 2, 3, 4, 5] if not args.smoke_test else [2],
         "K_values": K_values,
         "primary_K": 8,
         "binning_method": "pair-weighted quantile",

@@ -34,7 +34,7 @@ For each target city $c$ and each model seed $s \in \{1, 10, 100\}$, the zero-sh
 ### 4. Permuted-Bin Placebo Condition (Stress-Test)
 - The true target $Y_D$ is taken, but the probability mass among its **active bins** (bins with $p > 10^{-8}$) is randomly shuffled/permuted.
 - Replicates: Up to $B = 1000$ unique permutations.
-- Purpose: Acts as a **stress-test specificity under mass-preserving bin permutations**. Due to the lack of weight clipping, random permutations often create highly unrealistic target distributions (e.g., massive probability mass assigned to a bin where the model predicts near-zero mass). While our code guards against literal $w_k = \infty$ division-by-zero, such permutations still create hugely inflated calibration multipliers $w_k \gg 1$. Therefore, the massive CPC gap here should NOT be used to conclude the absolute real-world value of $Y_D$, but merely proves the sequence is sensitive.
+- Purpose: Acts as a **stress-test specificity under mass-preserving bin permutations**. Due to the lack of weight clipping, random permutations often create highly unrealistic target distributions (e.g., massive probability mass assigned to a bin where the model predicts near-zero mass). While our code guards against literal $w_k = \infty$ division-by-zero, such permutations still create hugely inflated calibration multipliers $w_k \gg 1$. Therefore, the massive CPC gap here should NOT be used to conclude the absolute real-world value of $Y_D$, but provides strong evidence that the improvement depends on the correct target-specific distance-bin structure rather than calibration strength alone.
 
 ---
 
