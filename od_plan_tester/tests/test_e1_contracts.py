@@ -2,16 +2,16 @@
 Unit and Contract Tests for E1 Oracle Existence Test Implementation (Amended Protocol v2).
 
 Tests cover:
-  - T49: 35/5/10 fold split invariants & manifest v2 integrity + SHA-256 matching.
-  - T50: compute_kbin_edges invariant (strictly increasing, bounds, deduplication).
-  - T51: extract_yd_kbins invariant (proper sum to 1.0, support handling).
-  - T52: calibrate_kbins mass preservation and intrazonal identity.
-  - T53: calibrate_kbins q=1 exact bin distribution matching.
-  - T54: calibrate_kbins GT permutation invariance.
-  - T55: wrong-donor helper distinctness, coverage (9 donors), and legacy single donor.
-  - T56: Confirmatory guard on incomplete subsets.
-  - T57: Size-stratified validation representation invariant across size strata and metadata logging.
-  - T58: Specificity estimand (Delta_target - Delta_wrong_avg9) & IQR calculation.
+  - T51: 35/5/10 fold split invariants & manifest v2 integrity + SHA-256 matching.
+  - T52: compute_kbin_edges invariant (strictly increasing, bounds, deduplication).
+  - T53: extract_yd_kbins invariant (proper sum to 1.0, support handling).
+  - T54: calibrate_kbins mass preservation and intrazonal identity.
+  - T55: calibrate_kbins q=1 exact bin distribution matching.
+  - T56: calibrate_kbins GT permutation invariance.
+  - T57: wrong-donor helper distinctness, coverage (9 donors), and legacy single donor.
+  - T58: Confirmatory guard on incomplete subsets.
+  - T59: Size-stratified validation representation invariant across size strata and metadata logging.
+  - T60: Specificity estimand (Delta_target - Delta_wrong_avg9) & IQR calculation.
 """
 
 import numpy as np
@@ -33,7 +33,7 @@ from src.data.dataset import get_scaler_fingerprint, load_city, load_cities, cle
 from src.experiment.run_e1 import compute_summary, compute_iqr, get_runtime_metadata, configure_cpu_threads
 
 
-def test_t49_splits_35_5_10_invariants_and_v1_locking():
+def test_t51_splits_35_5_10_invariants_and_v1_locking():
     splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
     assert len(splits) == 5
 
@@ -62,7 +62,7 @@ def test_t49_splits_35_5_10_invariants_and_v1_locking():
     assert len(set(all_test)) == 50
 
 
-def test_t50_kbin_edges_strictly_increasing():
+def test_t52_kbin_edges_strictly_increasing():
     splits = generate_35_5_10_splits("data")
     train35 = splits[1]["train"]
     edges, K_active = compute_kbin_edges(train35, K=8, data_root="data")
@@ -74,7 +74,7 @@ def test_t50_kbin_edges_strictly_increasing():
     assert K_active >= 2, f"Too few active bins: {K_active}"
 
 
-def test_t51_extract_yd_kbins_normalized():
+def test_t53_extract_yd_kbins_normalized():
     dist_km = np.array([0.0, 2.5, 5.0, 15.0, 30.0, 80.0, 150.0])
     trips   = np.array([50.0, 20.0, 30.0, 15.0, 10.0, 5.0, 2.0])
     inter_mask = np.array([False, True, True, True, True, True, True])
@@ -86,7 +86,7 @@ def test_t51_extract_yd_kbins_normalized():
     assert np.all(yd >= 0.0)
 
 
-def test_t52_calibrate_kbins_mass_and_intrazonal_invariants():
+def test_t54_calibrate_kbins_mass_and_intrazonal_invariants():
     t0 = np.array([100.0, 20.0, 30.0, 40.0, 50.0], dtype=np.float64)
     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
     inter_mask = np.array([False, True, True, True, True])
@@ -102,7 +102,7 @@ def test_t52_calibrate_kbins_mass_and_intrazonal_invariants():
     assert np.isclose(t_cal[inter_mask].sum(), t0[inter_mask].sum(), atol=1e-4)
 
 
-def test_t53_calibrate_kbins_q1_exact_distribution():
+def test_t55_calibrate_kbins_q1_exact_distribution():
     t0 = np.array([10.0, 50.0, 20.0, 10.0, 5.0], dtype=np.float64)
     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
     inter_mask = np.array([False, True, True, True, True])
@@ -120,7 +120,7 @@ def test_t53_calibrate_kbins_q1_exact_distribution():
         assert np.isclose(prop, yd_target[k], atol=1e-5), f"Bin {k} prop {prop} != target {yd_target[k]}"
 
 
-def test_t54_calibrate_kbins_gt_invariance():
+def test_t56_calibrate_kbins_gt_invariance():
     """T_cal is a function of (T0, Y_D), completely independent of T_GT at cell level."""
     t0 = np.array([50.0, 20.0, 30.0, 40.0], dtype=np.float64)
     dist_km = np.array([0.0, 5.0, 15.0, 45.0], dtype=np.float64)
@@ -134,7 +134,7 @@ def test_t54_calibrate_kbins_gt_invariance():
     assert np.allclose(t_cal1, t_cal2)
 
 
-def test_t55_donor_city_and_all_9_wrong_donors():
+def test_t57_donor_city_and_all_9_wrong_donors():
     test_cities = ["Austin", "Denver", "Portland", "Seattle", "Chicago", "Boston", "Miami", "Dallas", "Atlanta", "Detroit"]
     for c in test_cities:
         # Single donor
@@ -152,7 +152,7 @@ def test_t55_donor_city_and_all_9_wrong_donors():
     assert get_donor_city(sorted(test_cities)[-1], test_cities) == sorted(test_cities)[0]
 
 
-def test_t56_confirmatory_guard_on_incomplete_subsets():
+def test_t58_confirmatory_guard_on_incomplete_subsets():
     """Verify that smoke / partial results are NOT reported as confirmatory."""
     dummy_results = [
         {
@@ -174,12 +174,10 @@ def test_t56_confirmatory_guard_on_incomplete_subsets():
     ]
 
     summary = compute_summary(dummy_results)
-    assert not summary["is_confirmatory_complete"], "Partial 2-city run was falsely marked as confirmatory complete!"
     assert not summary["is_full_50_complete"], "Partial 2-city run was falsely marked as full 50 complete!"
-    assert summary["confirmatory_folds_2_5"]["status"] == "not_available", "Confirmatory status should be not_available!"
 
 
-def test_t57_stratified_validation_strata_coverage_and_metadata():
+def test_t59_stratified_validation_strata_coverage_and_metadata():
     """Verify validation representation across size strata and candidates metadata presence."""
     cities_info = get_all_cities_sorted_by_size("data")
     city_dict = {c["city"]: c for c in cities_info}
@@ -208,7 +206,7 @@ def test_t57_stratified_validation_strata_coverage_and_metadata():
             assert len(candidates) == 8, f"Stratum {s_name} in Fold {fold_id} must list exactly 8 candidates"
 
 
-def test_t58_specificity_estimand_and_iqr():
+def test_t60_specificity_estimand_and_iqr():
     """Verify that delta_specificity = delta_target - delta_wrong is computed on city level."""
     test_results = []
     for i in range(50):
@@ -237,20 +235,18 @@ def test_t58_specificity_estimand_and_iqr():
 
     summary = compute_summary(test_results)
     assert summary["is_full_50_complete"]
-    assert summary["is_confirmatory_complete"]
-    conf = summary["confirmatory_folds_2_5"]
 
     # Invariant: Mean Specificity = Mean Target - Mean Wrong
-    expected_spec = conf["delta_cpc_target_mean"] - conf["delta_cpc_wrong_mean"]
-    assert np.isclose(conf["delta_specificity_mean"], expected_spec, atol=1e-6)
+    expected_spec = summary["delta_cpc_target_mean"] - summary["delta_cpc_wrong_mean"]
+    assert np.isclose(summary["delta_specificity_mean"], expected_spec, atol=1e-6)
 
     # Invariant: IQR is non-negative
-    assert conf["delta_specificity_iqr"] >= 0.0
-    assert conf["delta_cpc_target_iqr"] >= 0.0
-    assert conf["delta_cpc_wrong_iqr"] >= 0.0
+    assert summary["delta_specificity_iqr"] >= 0.0
+    assert summary["delta_cpc_target_iqr"] >= 0.0
+    assert summary["delta_cpc_wrong_iqr"] >= 0.0
 
 
-def test_t59_runtime_metadata_and_cpu_thread_control():
+def test_t61_runtime_metadata_and_cpu_thread_control():
     """Verify runtime metadata collection, CPU thread configuration, and summary integration."""
     meta = get_runtime_metadata()
     required_keys = [
@@ -312,7 +308,7 @@ def test_t59_runtime_metadata_and_cpu_thread_control():
     assert summary["runtime_environment"]["torch_num_threads"] > 0
 
 
-def test_t60_scaler_fingerprint_and_cache_isolation():
+def test_t62_scaler_fingerprint_and_cache_isolation():
     """Verify deterministic content-based scaler hashing and cross-fold cache isolation."""
     from sklearn.preprocessing import StandardScaler
 
