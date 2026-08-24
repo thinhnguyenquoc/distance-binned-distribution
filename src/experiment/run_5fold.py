@@ -257,9 +257,13 @@ def run_5fold_experiment(
             print(f"  M1 Interzonal CPC (Mean):                       {s_data['m1_cpc_inter']['mean']:.4f}")
             print(f"  Delta Mean +- Std:                              {s_data['delta_cpc_inter']['mean']:+.4f} +- {s_data['delta_cpc_inter']['std']:.4f}")
             print(f"  Delta 95% CI (Fold-Stratified Bootstrap):       [{s_data['delta_cpc_inter']['ci_95_lower']:+.4f}, {s_data['delta_cpc_inter']['ci_95_upper']:+.4f}]")
-            print(f"  P(Delta > 0):                                   {s_data['p_improved'] * 100:.1f}%")
-            if "wilcoxon_one_sided_p" in s_data:
-                print(f"  Wilcoxon One-Sided p-value (H1: Delta > 0):     {s_data['wilcoxon_one_sided_p']:.4e}")
+            win_rate = s_data['p_improved'] * 100
+            n_wins = int(s_data['p_improved'] * s_data.get('n_cities', 50))
+            print(f"  Win Rate (Delta > 0):                           {n_wins}/50 cities ({win_rate:.1f}%)")
+            if "wilcoxon_two_sided_p" in s_data:
+                print(f"  Wilcoxon Two-Sided p-value:                     {s_data['wilcoxon_two_sided_p']:.4e}")
+            if "rank_biserial_r" in s_data:
+                print(f"  Matched-pairs Rank-biserial (r_rb):             {s_data['rank_biserial_r']:.4f}")
 
     print(f"\nSaved full results to: {out_file.resolve()}")
     print("=" * 85)

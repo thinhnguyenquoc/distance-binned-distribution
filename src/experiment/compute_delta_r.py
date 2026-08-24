@@ -93,9 +93,19 @@ def analyze_delta_r(city_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         }
 
         if len(delta_inter) >= 5:
+            w_stat, w_p_two = stats.wilcoxon(m1_inter, m0_inter, alternative="two-sided")
             _, w_p_one = stats.wilcoxon(m1_inter, m0_inter, alternative="greater")
-            _, w_p_two = stats.wilcoxon(m1_inter, m0_inter, alternative="two-sided")
+            
+            # Compute matched-pairs rank-biserial correlation
+            diff = m1_inter - m0_inter
+            diff = diff[diff != 0]
+            ranks = stats.rankdata(np.abs(diff))
+            w_plus = np.sum(ranks[diff > 0])
+            w_minus = np.sum(ranks[diff < 0])
+            r_rb = (w_plus - w_minus) / (w_plus + w_minus) if (w_plus + w_minus) > 0 else 0.0
+
             analysis[scale_name]["wilcoxon_one_sided_p"] = float(w_p_one)
             analysis[scale_name]["wilcoxon_two_sided_p"] = float(w_p_two)
+            analysis[scale_name]["rank_biserial_r"] = float(r_rb)
 
     return analysis
