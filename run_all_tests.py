@@ -87,6 +87,24 @@ def call_with_fixtures(func):
 
 
 def run_all_tests():
+    """Run every repository test through pytest's native collection/execution.
+
+    The previous implementation imported modules and invoked test functions
+    directly.  That bypassed pytest's fixture and outcome handling; in
+    particular, a ``pytest.skip`` exception could terminate this runner after
+    the first module and report an incomplete suite as successful.
+    """
+    import pytest
+
+    test_paths = [
+        str(repo_root / "od_plan_tester" / "tests"),
+        str(repo_root / "tests"),
+    ]
+    exit_code = pytest.main(["-q", "-p", "no:cacheprovider", *test_paths])
+    if exit_code != pytest.ExitCode.OK:
+        raise SystemExit(int(exit_code))
+    return
+
     test_files = sorted(
         list((repo_root / "od_plan_tester" / "tests").glob("test_*.py"))
         + list((repo_root / "tests").glob("test_*.py"))
