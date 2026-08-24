@@ -391,8 +391,8 @@ def run_experiment(args):
     axes[0].plot(sns_k, [s["w_max_mean"] for s in summary_data], marker='o')
     axes[0].set_title('Mean w_max')
     
-    d_conf_minmass = df_all.groupby("K")["min_pred_mass"].mean()
-    axes[1].plot(d_conf_minmass.index, d_conf_minmass.values, marker='o')
+    d_all_minmass = df_all.groupby("K")["min_pred_mass"].mean()
+    axes[1].plot(d_all_minmass.index, d_all_minmass.values, marker='o')
     axes[1].set_title('Mean Min Predicted Mass')
     
     axes[2].plot(sns_k, [s["k_act_mean"] for s in summary_data], marker='o')

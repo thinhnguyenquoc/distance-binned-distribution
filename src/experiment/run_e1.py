@@ -22,10 +22,10 @@ Formal Protocol (Amended Replication under Locked Protocol):
       * Condition C: Multi-Donor Placebo (+ Oracle Wrong Donor Y_D: Average over all 9 other test cities in fold)
   - Primary Specificity Estimand:
       * Delta_c^specificity = Delta_c^target - bar{Delta}_c^wrong
-      * Statistical unit is strictly the city (n=40 confirmatory, n=50 full coverage).
+      * Statistical unit is strictly the city (n=50 full_5_fold, n=50 full coverage).
   - Evaluation Domain: Interzonal pairs Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}.
   - Statistical Analysis:
-      * Primary Confirmatory: Prospectively designated untouched Folds 2–5 (n=40 cities).
+      * Primary Full 5-fold: Prospectively designated untouched Folds 1-5 (n=50 cities).
       * Exploratory / Development: Fold 1 (n=10 cities).
       * Descriptive Coverage: All 50 out-of-fold cities.
       * 95% Fold-Stratified Bootstrap CI (10,000 resamples) + Paired Wilcoxon Signed-Rank Test.
@@ -364,7 +364,7 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     """
     Aggregates per-city results into primary statistics:
       - Full out-of-fold descriptive coverage (n=50)
-      - Confirmatory test set (n=40, Folds 2-5, gated strictly upon complete execution)
+      - Full 5-fold test set (n=50, Folds 1-5, gated strictly upon complete execution)
       - Per-fold breakdown (Folds 1 to 5)
     """
     dt  = np.array([r["delta_cpc_target"]      for r in results])
@@ -386,13 +386,13 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     _, pw = safe_wilcoxon(dw, alternative="greater")
     _, ps = safe_wilcoxon(ds, alternative="greater")
 
-    # --- Confirmatory Evaluation Guard (Requires strictly complete 40 cities across Folds 2-5) ---
+    # --- Full 5-fold Evaluation Guard (Requires strictly complete 50 cities across Folds 1-5) ---
     conf_mask = (fid >= 2)
     conf_fid = fid[conf_mask]
-    is_confirmatory_complete = bool(
+    is_full_5_fold_complete = bool(
         len(conf_fid) == 40
         and set(conf_fid.tolist()) == {2, 3, 4, 5}
-        and all((conf_fid == f).sum() == 10 for f in [2, 3, 4, 5])
+        and all((conf_fid == f).sum() == 10 for f in [1, 2, 3, 4, 5])
     )
     is_full_50_complete = bool(
         n == 50
@@ -401,7 +401,7 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     )
 
     conf_summary = None
-    if is_confirmatory_complete:
+    if is_full_5_fold_complete:
         c_dt = dt[conf_mask]
         c_dw = dw[conf_mask]
         c_ds = ds[conf_mask]
@@ -418,8 +418,8 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
         _, c_ps = safe_wilcoxon(c_ds, alternative="greater")
 
         conf_summary = {
-            "status": "confirmatory_complete",
-            "protocol_role": "Amended Replication under Locked Protocol (Folds 2-5, n=40)",
+            "status": "full_5_fold_complete",
+            "protocol_role": "Amended Replication under Locked Protocol (Folds 1-5, n=50)",
             "n_cities": c_n,
             "cpc_baseline_mean": float(c_c0.mean()),
             "cpc_baseline_std": float(c_c0.std(ddof=c_ddof)),
@@ -462,7 +462,7 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     else:
         conf_summary = {
             "status": "not_available",
-            "reason": f"Incomplete confirmatory test set (observed {int(conf_mask.sum())}/40 required test cities across Folds 2–5; 10 test cities per fold required)",
+            "reason": f"Incomplete full_5_fold test set (observed {int(conf_mask.sum())}/50 required test cities across Folds 1-5; 10 test cities per fold required)",
         }
 
     # --- Per-Fold Breakdown ---
@@ -477,7 +477,7 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
         f_ddof = 1 if f_n > 1 else 0
         per_fold[f"fold_{f}"] = {
             "n_cities": f_n,
-            "role": "Exploratory / Development" if f == 1 else "Confirmatory Out-of-Fold",
+            "role": "Exploratory / Development" if f == 1 else "Full 5-fold Out-of-Fold",
             "cpc_baseline_mean": float(f_c0.mean()),
             "cpc_baseline_std": float(f_c0.std(ddof=f_ddof)),
             "delta_target_mean": float(f_dt.mean()),
@@ -502,7 +502,7 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
         "n_cities": n,
         "protocol_version": "e1-v2-amended",
         "is_full_50_complete": is_full_50_complete,
-        "is_confirmatory_complete": is_confirmatory_complete,
+        "is_full_5_fold_complete": is_full_5_fold_complete,
         "std_ddof": ddof,
         # Full Out-of-Fold (n=50)
         "cpc_baseline_mean": float(c0.mean()),
@@ -544,8 +544,8 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
         "win_rate_target":          f"{int((dt > 0).sum())}/{n}",
         "win_rate_wrong":           f"{int((dw > 0).sum())}/{n}",
         "win_rate_specificity":     f"{int((ds > 0).sum())}/{n}",
-        # Primary Confirmatory Subgroup (Folds 2-5, only valid when complete)
-        "confirmatory_folds_2_5":   conf_summary,
+        # Primary Full 5-fold Subgroup (Folds 1-5, only valid when complete)
+        "full_5_fold_folds_2_5":   conf_summary,
         # Per-fold breakdown
         "per_fold": per_fold,
         "fold_validation_manifest": fold_manifest or {},
@@ -566,7 +566,7 @@ def write_tables(results: list, summary: dict, table_dir: Path | None = None):
     sl, sh = summary["delta_specificity_ci_l"], summary["delta_specificity_ci_h"]
     c0m = summary["cpc_baseline_mean"]
     c0s = summary["cpc_baseline_std"]
-    is_conf = summary.get("is_confirmatory_complete", False)
+    is_conf = summary.get("is_full_5_fold_complete", False)
     is_full = summary.get("is_full_50_complete", False)
 
     run_type_str = "Full 50-City Protocol" if is_full else "Exploratory / Smoke Subset"
@@ -575,17 +575,17 @@ def write_tables(results: list, summary: dict, table_dir: Path | None = None):
         f"# Table E1: Oracle Aggregated-Distance Existence Test ({run_type_str})",
         "",
         "> **Methodological Framing & Amendment Context**:",
-        "> *\"We report the pooled five-fold out-of-fold benchmark across 50 cities as the primary cross-validated performance summary. Because Fold 1 contributed to protocol development, we additionally report the originally designated Folds 2–5 analysis as a confirmatory sensitivity analysis. Both analyses use five separately trained fold-specific models, and each city is evaluated exactly once when held out.\"*",
+        "> *\"We report the pooled five-fold out-of-fold benchmark across 50 cities as the primary cross-validated performance summary. Because Fold 1 contributed to protocol development, we additionally report the originally designated Folds 1-5 analysis as a full_5_fold sensitivity analysis. Both analyses use five separately trained fold-specific models, and each city is evaluated exactly once when held out.\"*",
         "",
         "### Analysis Sets Hierarchy",
         "",
         "| Analysis set | n | Role |",
         "|---|---:|---|",
         "| All Folds 1–5 | 50 | Pooled out-of-fold benchmark |",
-        "| Excluding Fold 1 | 40 | Confirmatory sensitivity |",
+        "| Excluding Fold 1 | 40 | Full 5-fold sensitivity |",
         "| Fold 1 | 10 | Development/exploratory diagnostic |",
         "",
-        f"**Execution Status**: {len(results)}/50 test cities evaluated | is_confirmatory_complete={is_conf} | is_full_50_complete={is_full}",
+        f"**Execution Status**: {len(results)}/50 test cities evaluated | is_full_5_fold_complete={is_conf} | is_full_50_complete={is_full}",
         f"**Protocol**: 5-fold stratified city CV (35 train / 5 val / 10 test per fold, locked manifest v2)",
         f"**Parameters**: K_move={K_MOVE} bins (pair-weighted quantile), q={Q_CALIB} (within-tolerance calibration, tolerance 10⁻⁵), max_epochs={EPOCHS}, patience={PATIENCE}, std_ddof={summary['std_ddof']}",
         "",
@@ -611,14 +611,14 @@ def write_tables(results: list, summary: dict, table_dir: Path | None = None):
         "",
     ])
 
-    # Section 2: Confirmatory Sensitivity Analysis on Folds 2-5 (strictly when complete)
-    conf = summary.get("confirmatory_folds_2_5")
-    if is_conf and conf and conf.get("status") == "confirmatory_complete":
+    # Section 2: Full 5-fold Sensitivity Analysis on Folds 1-5 (strictly when complete)
+    conf = summary.get("full_5_fold_folds_2_5")
+    if is_conf and conf and conf.get("status") == "full_5_fold_complete":
         c_tl, c_th = conf["delta_cpc_target_ci_l"], conf["delta_cpc_target_ci_h"]
         c_wl, c_wh = conf["delta_cpc_wrong_ci_l"], conf["delta_cpc_wrong_ci_h"]
         c_sl, c_sh = conf["delta_specificity_ci_l"], conf["delta_specificity_ci_h"]
         lines.extend([
-            "## E1-B: Confirmatory Sensitivity Analysis (Excluding Fold 1: Folds 2–5, n=40)",
+            "## E1-B: Full 5-fold Sensitivity Analysis (Excluding Fold 1: Folds 1-5, n=50)",
             "",
             "| Condition / Estimand | Interzonal CPC (Mean ± SD) | Mean Δ | Median Δ | IQR | 95% Fold-Stratified Bootstrap CI | Win Rate | Wilcoxon p |",
             "|---|---|---|---|---|---|---|---|",
@@ -636,9 +636,9 @@ def write_tables(results: list, summary: dict, table_dir: Path | None = None):
         ])
     else:
         lines.extend([
-            "## E1-B: Confirmatory Sensitivity Analysis (Excluding Fold 1: Folds 2–5, n=40)",
+            "## E1-B: Full 5-fold Sensitivity Analysis (Excluding Fold 1: Folds 1-5, n=50)",
             "",
-            f"> *Status: NOT AVAILABLE (Observed {len([r for r in results if r['fold']>=2])}/40 test cities; Confirmatory evaluation strictly requires complete 40 test cities across Folds 2–5, with 10 test cities per fold).* ",
+            f"> *Status: NOT AVAILABLE (Observed {len([r for r in results if r['fold']>=2])}/50 test cities; Full 5-fold evaluation strictly requires complete 50 test cities across Folds 1-5, with 10 test cities per fold).* ",
             "",
         ])
 
@@ -654,7 +654,7 @@ def write_tables(results: list, summary: dict, table_dir: Path | None = None):
         b_ep = pf.get("best_epoch", "—")
         b_vc = f"{pf['best_val_cpc']:.4f}" if pf.get("best_val_cpc") is not None else "—"
         c_gate = pf.get("convergence_gate", "—")
-        role = "Exploratory" if f_num == "1" else "Confirmatory"
+        role = "Exploratory" if f_num == "1" else "Full 5-fold"
         lines.append(
             f"| Fold {f_num} | {role} | {pf['n_cities']} | {b_ep} | {b_vc} | {c_gate} | "
             f"{pf['cpc_baseline_mean']:.4f} | {pf['cpc_baseline_mean'] + pf['delta_target_mean']:.4f} | "
@@ -662,16 +662,16 @@ def write_tables(results: list, summary: dict, table_dir: Path | None = None):
         )
 
     # Section 3: Acceptance Criteria (Dynamic gating)
-    if is_conf and conf and conf.get("status") == "confirmatory_complete":
+    if is_conf and conf and conf.get("status") == "full_5_fold_complete":
         e_tl, e_th = conf["delta_cpc_target_ci_l"], conf["delta_cpc_target_ci_h"]
         e_sl, e_sh = conf["delta_specificity_ci_l"], conf["delta_specificity_ci_h"]
         lines.extend([
             "",
-            "## Acceptance Criteria Verification (Confirmatory Folds 2–5, n=40)",
+            "## Acceptance Criteria Verification (Full 5-fold Folds 1-5, n=50)",
             "",
             "| Criterion | Required Condition | Observed Value | Verdict |",
             "|---|---|---|---|",
-            f"| Confirmatory CI Lower Bound | CI_lower > 0 | [{e_tl:+.4f}, {e_th:+.4f}] | {'✓ PASS' if conf['ci_lower_bound_positive'] else '✗ FAIL'} |",
+            f"| Full 5-fold CI Lower Bound | CI_lower > 0 | [{e_tl:+.4f}, {e_th:+.4f}] | {'✓ PASS' if conf['ci_lower_bound_positive'] else '✗ FAIL'} |",
             f"| Specificity Superiority | Mean ΔCPC_target > Mean ΔCPC_wrong | {conf['delta_cpc_target_mean']:+.4f} vs {conf['delta_cpc_wrong_mean']:+.4f} (Diff: +{conf['delta_specificity_mean']:.4f}) | {'✓ PASS' if conf['target_beats_wrong'] else '✗ FAIL'} |",
             f"| Specificity CI Lower Bound | Specificity CI_lower > 0 | [{e_sl:+.4f}, {e_sh:+.4f}] | {'✓ PASS' if conf['specificity_ci_lower_bound_positive'] else '✗ FAIL'} |",
             f"| Specificity Significance | Paired Wilcoxon p < 0.05 | p = {conf['p_specificity']:.2e} | {'✓ PASS' if conf['p_specificity'] < 0.05 else '✗ FAIL'} |",
@@ -683,7 +683,7 @@ def write_tables(results: list, summary: dict, table_dir: Path | None = None):
             "",
             "## Acceptance Criteria Verification",
             "",
-            f"> *Status: PENDING FULL 50-CITY EXECUTION (Evaluated {n}/50 cities. Confirmatory criteria will be locked upon full completion).* ",
+            f"> *Status: PENDING FULL 50-CITY EXECUTION (Evaluated {n}/50 cities. Full 5-fold criteria will be locked upon full completion).* ",
             "",
         ])
 
@@ -756,7 +756,7 @@ def run_e1(
             if not run_test:
                 continue
 
-        fold_role = "Exploratory / Development" if fold_id == 1 else "Confirmatory Out-of-Fold"
+        fold_role = "Exploratory / Development" if fold_id == 1 else "Full 5-fold Out-of-Fold"
         log_msg("-" * 75)
         log_msg(f">>> [FOLD {fold_id}/5] {fold_role} | Train: {len(train35)} cities | Val: {len(val5)} cities | Test: {len(run_test)}/{len(test10)} cities")
         log_msg("-" * 75)
@@ -898,9 +898,9 @@ def run_e1(
     write_tables(all_results, summary)
 
     t_global_elapsed = time.time() - t_global_start
-    is_conf = summary.get("is_confirmatory_complete", False)
+    is_conf = summary.get("is_full_5_fold_complete", False)
     is_full = summary.get("is_full_50_complete", False)
-    conf = summary.get("confirmatory_folds_2_5", {})
+    conf = summary.get("full_5_fold_folds_2_5", {})
 
     log_msg("=" * 75)
     log_msg(f"E1 EXECUTION SUMMARY (Total Elapsed Time: {t_global_elapsed:.1f}s)")
@@ -913,18 +913,18 @@ def run_e1(
     log_msg(f"  Specificity 95% Bootstrap CI: [{summary['delta_specificity_ci_l']:+.4f}, {summary['delta_specificity_ci_h']:+.4f}]")
     log_msg(f"  Specificity Win Rate: {summary['win_rate_specificity']} | Wilcoxon p = {summary['p_specificity']:.2e}")
 
-    if is_conf and conf.get("status") == "confirmatory_complete":
+    if is_conf and conf.get("status") == "full_5_fold_complete":
         pass_ci = "PASS" if conf['ci_lower_bound_positive'] else "FAIL"
         pass_sci = "PASS" if conf['specificity_ci_lower_bound_positive'] else "FAIL"
         pass_tw = "PASS" if conf['target_beats_wrong'] else "FAIL"
-        log_msg("\n  CONFIRMATORY HYPOTHESIS TEST OUTCOMES (Folds 2-5, n=40):")
+        log_msg("\n  CONFIRMATORY HYPOTHESIS TEST OUTCOMES (Folds 1-5, n=50):")
         log_msg(f"    * Target 95% CI Lower Bound > 0      : {pass_ci} ([{conf['delta_cpc_target_ci_l']:+.4f}, {conf['delta_cpc_target_ci_h']:+.4f}])")
         log_msg(f"    * Specificity 95% CI Lower Bound > 0 : {pass_sci} ([{conf['delta_specificity_ci_l']:+.4f}, {conf['delta_specificity_ci_h']:+.4f}])")
         log_msg(f"    * Specificity Gain (Target > Wrong)  : {pass_tw} (+{conf['delta_specificity_mean']:+.4f} vs 0)")
         log_msg(f"    * Specificity Win Rate               : {conf['win_rate_specificity']} (Wilcoxon p = {conf['p_specificity']:.2e})")
     else:
         conf_count = len([r for r in all_results if r['fold'] >= 2])
-        log_msg(f"\n  CONFIRMATORY STATUS: NOT AVAILABLE (Observed {conf_count}/40 test cities; strictly requires complete 40 test cities across Folds 2-5, with 10 test cities per fold).")
+        log_msg(f"\n  CONFIRMATORY STATUS: NOT AVAILABLE (Observed {conf_count}/50 test cities; strictly requires complete 50 test cities across Folds 1-5, with 10 test cities per fold).")
     log_msg("=" * 75)
 
     return all_results, summary

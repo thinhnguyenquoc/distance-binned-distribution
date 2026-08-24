@@ -8,7 +8,7 @@ For each backbone b, computes:
     - Delta R_b (CPC_inter)
     - Delta RMSE
     - Delta Spearman rho_s
-Across untouched Confirmatory Folds 2-5 (n=40) and Full Out-of-fold benchmark (N=50).
+Across untouched Full 5-fold Folds 1-5 (n=50) and Full Out-of-fold benchmark (N=50).
 """
 
 import os
@@ -171,9 +171,9 @@ def run_backbone_robustness(
                 "delta_spearman": m1_spr_gnn - m0_spr_gnn,
             })
 
-    # Summarize across Confirmatory Fold 2-5 (n=40) and Full (n=50)
+    # Summarize across Full 5-fold Fold 2-5 (n=50) and Full (n=50)
     def summarize_backbone(records: List[Dict[str, Any]], label: str) -> Dict[str, Any]:
-        conf_recs = [r for r in records if r["fold"] in [2, 3, 4, 5]]
+        conf_recs = [r for r in records if r["fold"] in [1, 2, 3, 4, 5]]
         all_recs = records
 
         def get_block(sub: List[Dict[str, Any]]):
@@ -221,7 +221,7 @@ def run_backbone_robustness(
 
         return {
             "backbone": label,
-            "confirmatory_fold2_5": get_block(conf_recs),
+            "full_5_fold_fold2_5": get_block(conf_recs),
             "full_50_cities": get_block(all_recs),
         }
 
@@ -236,13 +236,13 @@ def run_backbone_robustness(
     t7_md.append("")
     t7_md.append("> **Evaluation Scope**: Assesses whether distance-binned aggregate information ($Y_D^{\\text{target}}$) improves interzonal reconstruction across different zero-shot model families.")
     t7_md.append("")
-    t7_md.append("## Part A: Confirmatory Evaluation Set (Folds 2–5, $n=40$ Cities)")
+    t7_md.append("## Part A: Full 5-fold Evaluation Set (Folds 1-5, $n=50$ Cities)")
     t7_md.append("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta R$ | 95% Fold-Stratified Bootstrap CI | $P(\\Delta R > 0)$ | Wilcoxon $p$ | $\\Delta \\text{RMSE}$ |")
     t7_md.append("|---|---|---|---|---|---|---|---|")
 
     for k, v in summary.items():
         b_name = v["backbone"]
-        c_stats = v["confirmatory_fold2_5"]
+        c_stats = v["full_5_fold_fold2_5"]
         m0_str = f"{c_stats['m0_cpc_mean']:.4f} +- {c_stats['m0_cpc_std']:.4f}"
         m1_str = f"**{c_stats['m1_cpc_mean']:.4f} +- {c_stats['m1_cpc_std']:.4f}**"
         dr_str = f"**{c_stats['delta_r_mean']:+.4f} +- {c_stats['delta_r_std']:.4f}**"

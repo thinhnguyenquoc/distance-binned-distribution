@@ -449,18 +449,17 @@ def run_placebo_experiment(args):
 def generate_summary(city_df, raw_df):
     output_dir = "results/placebo_v1"
     
-    confirmatory_df = city_df[city_df.fold.isin([2, 3, 4, 5])]
-    exploratory_df = city_df[city_df.fold == 1]
-    
+    evaluated_df = city_df[city_df.fold.isin([1, 2, 3, 4, 5])]
+        
     summary = {
-        "confirmatory_n_cities": len(confirmatory_df),
+        "evaluated_n_cities": len(evaluated_df),
         "exploratory_n_cities": len(exploratory_df),
         "primary_test": {},
         "secondary_tests": {}
     }
     
     # Primary Test: H0: E[S_wrong] <= 0
-    s_wrong = confirmatory_df["specificity_wrong_mean"].values
+    s_wrong = evaluated_df["specificity_wrong_mean"].values
     mean_s_wrong = float(np.mean(s_wrong))
     sd_s_wrong = float(np.std(s_wrong, ddof=1))
     ci_lower, ci_upper = bootstrap_ci(s_wrong)
@@ -484,7 +483,7 @@ def generate_summary(city_df, raw_df):
     }
     
     # Train mean test
-    s_trainmean = confirmatory_df["specificity_trainmean_mean"].values
+    s_trainmean = evaluated_df["specificity_trainmean_mean"].values
     mean_s_trainmean = float(np.mean(s_trainmean))
     try:
         _, p_val_trainmean = wilcoxon(s_trainmean, alternative="greater")
@@ -492,7 +491,7 @@ def generate_summary(city_df, raw_df):
         p_val_trainmean = 1.0
     
     # Permuted test
-    s_perm = confirmatory_df["specificity_permuted_mean"].dropna().values
+    s_perm = evaluated_df["specificity_permuted_mean"].dropna().values
     mean_s_perm = float(np.mean(s_perm)) if len(s_perm) > 0 else np.nan
     
     if len(s_perm) > 0:
@@ -519,8 +518,8 @@ def generate_summary(city_df, raw_df):
         
     with open(f"{output_dir}/placebo_summary.md", "w") as f:
         f.write("# 5-Fold Target-Y_D Placebo Test Summary\n\n")
-        f.write("## Confirmatory Statistics (Folds 2-5)\n")
-        f.write(f"- Number of Cities: {len(confirmatory_df)}\n")
+        f.write("## Full 5-Fold Statistics (Folds 1-5)\n")
+        f.write(f"- Number of Cities: {len(evaluated_df)}\n")
         f.write(f"- Mean Specificity Gain vs Wrong City: {mean_s_wrong:.5f} (95% CI: [{ci_lower:.5f}, {ci_upper:.5f}])\n")
         f.write(f"- Primary Wilcoxon one-sided p-value: {p_val_one:.2e}\n")
         f.write(f"- Passed primary test: {summary['primary_test']['pass']}\n")
@@ -531,9 +530,9 @@ def generate_summary(city_df, raw_df):
     
     # Figure 1: Distributions
     plt.figure(figsize=(10, 6))
-    sns.kdeplot(confirmatory_df["target_delta_mean"], label="Target", fill=True)
-    sns.kdeplot(confirmatory_df["wrong_delta_mean"], label="Wrong City Placebo Mean", fill=True)
-    sns.kdeplot(confirmatory_df["permuted_delta_mean"].dropna(), label="Permuted Placebo Mean", fill=True)
+    sns.kdeplot(evaluated_df["target_delta_mean"], label="Target", fill=True)
+    sns.kdeplot(evaluated_df["wrong_delta_mean"], label="Wrong City Placebo Mean", fill=True)
+    sns.kdeplot(evaluated_df["permuted_delta_mean"].dropna(), label="Permuted Placebo Mean", fill=True)
     plt.axvline(0, color='k', linestyle='--', alpha=0.5)
     plt.title("Distribution of Delta CPC (Target vs Placebos)")
     plt.xlabel("Delta CPC")
@@ -543,7 +542,7 @@ def generate_summary(city_df, raw_df):
     
     # Figure 2: Specificity by City
     plt.figure(figsize=(12, 6))
-    df_plot = confirmatory_df.sort_values("specificity_wrong_mean").reset_index()
+    df_plot = evaluated_df.sort_values("specificity_wrong_mean").reset_index()
     sns.barplot(data=df_plot, x=df_plot.index, y="specificity_wrong_mean", hue="fold", dodge=False)
     plt.axhline(0, color='red', linestyle='--')
     plt.xticks([])
