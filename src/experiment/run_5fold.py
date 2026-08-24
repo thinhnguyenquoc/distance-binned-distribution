@@ -240,6 +240,7 @@ def run_5fold_experiment(
 
     print("\n" + "=" * 85)
     print("FINAL SUMMARY: UNIFIED RESOLUTION CALIBRATION (CITY / COUNTY / SUBZONE)")
+    print("TASK: OD intensity reconstruction conditional on the observed positive OD support.")
     print("=" * 85)
     print(f"Total cities evaluated: {len(all_city_results)}/50")
 
@@ -247,7 +248,11 @@ def run_5fold_experiment(
         if scale in delta_r_analysis:
             s_data = delta_r_analysis[scale]
             scale_label = "GADM 4.1 LEVEL-2 COUNTY" if scale == "county" else f"{scale.upper()}"
+            if scale == "subzone":
+                scale_label = "FINE-GRAINED SUBZONE ORACLE / INFORMATION CEILING"
             print(f"\n[{scale_label}-LEVEL CALIBRATION]")
+            if scale == "subzone":
+                print("  (Note: Subzone is a high-resolution ceiling limit, not used as main evidence for Y_D)")
             print(f"  M0 Interzonal CPC (Mean):                       {s_data['m0_cpc_inter']['mean']:.4f}")
             print(f"  M1 Interzonal CPC (Mean):                       {s_data['m1_cpc_inter']['mean']:.4f}")
             print(f"  Delta Mean +- Std:                              {s_data['delta_cpc_inter']['mean']:+.4f} +- {s_data['delta_cpc_inter']['std']:.4f}")
