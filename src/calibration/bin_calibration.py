@@ -116,7 +116,10 @@ def calibrate_moving_bins(
             ratio = p_cond[idx] / implied_p[idx]
             w[idx] = ratio ** q
         else:
-            w[idx] = 1.0
+            # Inactive bin (no candidate pairs in this bin) → zero weight.
+            # This is consistent with the mathematical spec: inactive bins carry no mass
+            # and must not contribute to the scaling normalization.
+            w[idx] = 0.0
 
     # Normalization to ensure interzonal mass preservation: \sum \hat{T}^{cal} == \sum \hat{T}^{ZS}
     weighted_mass = torch.sum(implied_p * w)

@@ -172,7 +172,10 @@ def extract_yd_4bin_oracle(pair_trips: torch.Tensor, bin_labels: torch.Tensor) -
     bins_np = bin_labels.detach().cpu().numpy()
     total_flow = float(np.sum(trips_np))
     if total_flow <= 0:
-        return np.array([0.25, 0.25, 0.25, 0.25])
+        raise ValueError(
+            "extract_yd_4bin_oracle: zero total flow — city data is degenerate. "
+            "Cannot compute 4-bin oracle Y_D. Check data integrity."
+        )
     for k in range(4):
         yd[k] = np.sum(trips_np[bins_np == k])
     return yd / total_flow
@@ -205,7 +208,10 @@ def extract_yd_moving_oracle(
     yd_3 = np.zeros(3, dtype=np.float64)
     total_inter = np.sum(inter_trips)
     if total_inter <= 0:
-        return np.array([0.5, 0.4, 0.1])
+        raise ValueError(
+            "extract_yd_moving_oracle: zero total interzonal flow — city data is degenerate. "
+            "Cannot compute oracle Y_D. Check data integrity."
+        )
 
     for idx, bin_k in enumerate([1, 2, 3]):
         yd_3[idx] = np.sum(inter_trips[inter_bins == bin_k])

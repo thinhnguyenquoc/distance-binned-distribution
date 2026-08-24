@@ -115,8 +115,10 @@ def evaluate_moving_and_full(
 
     if pair_distance is not None:
         p_dist = pair_distance.detach().cpu().numpy()
-        dist_km = p_dist
-        inter_mask = (o_np != d_np) & (dist_km > 0.0)
+        # NOTE: pair_distance is stored as log1p(km) in CityData. The > 0.0 check is equivalent
+        # to distance_km > 0 since log1p is monotone. Do NOT use dist_log1p for metric computation.
+        dist_log1p = p_dist
+        inter_mask = (o_np != d_np) & (dist_log1p > 0.0)
     else:
         inter_mask = (o_np != d_np) & (b_np > 0)
 
@@ -155,7 +157,20 @@ def evaluate_moving_and_full(
     return result
 
 def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]:
-    """Compatibility helper for raw full-pair evaluation."""
+    """
+    DEPRECATED — Compatibility helper for raw full-pair evaluation WITHOUT interzonal filtering.
+
+    WARNING: This function computes CPC over ALL pairs including intrazonal.
+    For scientific claims, use evaluate_moving_and_full() which correctly filters to Omega_c^+.
+    This function must NOT be used to report primary metrics in any experiment.
+    """
+    import warnings
+    warnings.warn(
+        "evaluate_all() computes over all pairs without interzonal filtering. "
+        "Use evaluate_moving_and_full() for scientifically valid metrics on Omega_c^+.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     t_t = t_true.detach().cpu().numpy().astype(np.float64)
     t_p = t_pred.detach().cpu().numpy().astype(np.float64)
     return {

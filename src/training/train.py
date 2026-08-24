@@ -258,6 +258,7 @@ def train_zero_shot_model(
     knn_k: int = 10,
     loss_type: str = "ztnb",
     backbone: str = "gnn",
+    dropout: float = 0.1,
     device_str: str = "cuda" if torch.cuda.is_available() else "cpu",
     verbose: bool = True,
     # --- Validation / early stopping ---
@@ -271,7 +272,9 @@ def train_zero_shot_model(
     min_lr: float = 1e-5,
     return_info: bool = False,
     seed: int | None = None,
-    # --- Checkpoint ---
+    # --- Checkpoint provenance ---
+    fold: int | None = None,
+    split_manifest_sha256: str | None = None,
     checkpoint_path: Optional[Union[str, Path]] = None,
     run_tag: Optional[str] = None,
 ) -> tuple:
@@ -299,6 +302,7 @@ def train_zero_shot_model(
 
     if seed is not None:
         torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
         _np.random.seed(seed)
 
     device = torch.device(device_str)
@@ -377,6 +381,7 @@ def train_zero_shot_model(
             node_out_dim=hidden_dim,
             num_gnn_layers=num_gnn_layers,
             decoder_hidden_dim=hidden_dim,
+            dropout=dropout,
         ).to(device)
     else:
         model = ZeroShotODModel(
@@ -385,6 +390,7 @@ def train_zero_shot_model(
             node_out_dim=hidden_dim,
             num_gnn_layers=num_gnn_layers,
             decoder_hidden_dim=hidden_dim,
+            dropout=dropout,
         ).to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -430,6 +436,7 @@ def train_zero_shot_model(
             with torch.no_grad():
                 for item in val_data_on_device:
                     if not item["has_inter"]:
+                        print(f"    [WARNING] Validation city '{item.get('city_name', '?')}' has no interzonal pairs — skipped in CPC computation. Check data integrity.", flush=True)
                         continue
                     t_hat = model(
                         item["x"], item["ei"], item["ed"],
@@ -442,7 +449,12 @@ def train_zero_shot_model(
                     cpc_val = (2.0 * sum_min / sum_total).item() if sum_total > 0 else 0.0
                     val_cpcs.append(cpc_val)
 
-            mean_val_cpc = float(_np.mean(val_cpcs)) if val_cpcs else 0.0
+            if not val_cpcs:
+                raise RuntimeError(
+                    "All validation cities were skipped (no interzonal pairs). "
+                    "Cannot compute validation CPC. Check dataset construction."
+                )
+            mean_val_cpc = float(_np.mean(val_cpcs))
             val_history.append(mean_val_cpc)
             val_cpc_str = f" | ValCPC: {mean_val_cpc:.4f}"
 
@@ -497,26 +509,35 @@ def train_zero_shot_model(
 
     # --- Persist checkpoint to disk if requested ---
     if checkpoint_path is not None:
+        # C1: split_manifest_sha256 must be passed explicitly; raise if caller forgot.
+        if split_manifest_sha256 is None:
+            raise ValueError(
+                "split_manifest_sha256 must be provided when saving a checkpoint. "
+                "Load the split manifest and pass its SHA256 hash to train_zero_shot_model()."
+            )
         hp = {
-            "node_in_dim":    train_cities[0].node_features.shape[1],
-            "hidden_dim":     hidden_dim,
-            "num_gnn_layers": num_gnn_layers,
-            "graph_type":     graph_type,
-            "radius_km":      radius_km,
-            "knn_k":          knn_k,
-            "loss_type":      loss_type,
-            "epochs":         epochs,
-            "lr":             lr,
-            "weight_decay":         weight_decay,
-            "backbone":             backbone,
-            "patience":             patience,
-            "min_delta":            min_delta,
-            "lr_plateau_patience":  lr_plateau_patience,
-            "lr_plateau_factor":    lr_plateau_factor,
-            "lr_plateau_threshold": lr_plateau_threshold,
-            "threshold_mode":       threshold_mode,
-            "min_lr":               min_lr,
-            "split_manifest_sha256": getattr(model, "split_manifest_sha256", "NOT_SET"),
+            "node_in_dim":           train_cities[0].node_features.shape[1],
+            "hidden_dim":            hidden_dim,
+            "num_gnn_layers":        num_gnn_layers,
+            "dropout":               dropout,
+            "graph_type":            graph_type,
+            "radius_km":             radius_km,
+            "knn_k":                 knn_k,
+            "loss_type":             loss_type,
+            "epochs":                epochs,
+            "lr":                    lr,
+            "weight_decay":          weight_decay,
+            "backbone":              backbone,
+            "patience":              patience,
+            "min_delta":             min_delta,
+            "lr_plateau_patience":   lr_plateau_patience,
+            "lr_plateau_factor":     lr_plateau_factor,
+            "lr_plateau_threshold":  lr_plateau_threshold,
+            "threshold_mode":        threshold_mode,
+            "min_lr":                min_lr,
+            # Provenance fields (C2, C1)
+            "fold":                  fold,
+            "split_manifest_sha256": split_manifest_sha256,
         }
         saved_path = save_checkpoint(
             path=checkpoint_path,

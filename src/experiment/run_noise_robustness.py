@@ -35,7 +35,7 @@ from src.data.urban_graph import build_radius_graph
 from src.training.train import load_checkpoint
 from src.training.evaluate import compute_cpc_pair
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
-from src.experiment.run_5fold import generate_35_5_10_splits
+from src.data.city_splits import generate_35_5_10_splits, load_splits_manifest_v2
 from src.experiment.run_experiment import infer_zero_shot
 
 def evaluate_cpc(t_true_inter: np.ndarray, t_pred_inter: np.ndarray) -> float:
@@ -330,8 +330,7 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
                             noisy_dict[eps], eps, False, N_hat, K, active, Y_hat, t0_inter, bin_idx, t_true_inter, cpc_m0, yd_target,
                             inv_sum_denom, inv_N, t_cal_buf, diff_buf
                         )
-                        if args.smoke:
-                            assert np.abs(n_tv - eps) < 1e-8, f"TV mismatch in loop for eps {eps}"
+                        assert np.abs(n_tv - eps) < 1e-8, f"TV mismatch in loop for eps {eps}: got {n_tv}"
                         raw_results.append(build_row(eps, b+1, n_cpc, n_mae, n_rmse, n_spr, n_tv, n_js, n_stats))
                 
     df = pd.DataFrame(raw_results)
@@ -568,7 +567,7 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
     manifest = {
         "noise_definition": "multiplicative compositional noise on active bins, TV distance matching via bisection",
         "timestamp": datetime.datetime.now().isoformat(),
-        "B_noise": 1000,
+        "B_noise": int(city_df.replicate.nunique() - 1) if not city_df.empty else B_noise,
         "epsilons": epsilons,
         "eps_cross": eps_cross,
         "eps_star": eps_star

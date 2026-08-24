@@ -30,7 +30,7 @@ from src.data.urban_graph import build_radius_graph
 from src.training.train import load_checkpoint
 from src.training.evaluate import compute_cpc_pair
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
-from src.experiment.run_5fold import generate_35_5_10_splits
+from src.data.city_splits import generate_35_5_10_splits, load_splits_manifest_v2
 from src.experiment.run_experiment import infer_zero_shot
 
 

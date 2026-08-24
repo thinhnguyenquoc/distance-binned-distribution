@@ -84,7 +84,10 @@ def build_knn_graph(
     else:
         lon_lat = np.asarray(lon_lat)
 
-    key = (cache_key or hash(lon_lat.tobytes()), "knn", k, include_self_loop)
+    import hashlib
+    coord_hash = hashlib.sha256(lon_lat.tobytes()).hexdigest()
+    base_key = f"{cache_key}_{coord_hash}" if cache_key else coord_hash
+    key = (base_key, "knn", k, include_self_loop)
     if use_cache and key in _GRAPH_CACHE:
         return _GRAPH_CACHE[key]
 

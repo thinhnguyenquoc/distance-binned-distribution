@@ -21,6 +21,10 @@ def get_gadm_gid2_mapping(meta_df: pd.DataFrame, repo_root: str) -> tuple[dict, 
         _GADM_GDF_CACHE = gpd.read_file(gadm_shp_path)[['GID_2', 'geometry']].to_crs("EPSG:4326")
         
     gadm = _GADM_GDF_CACHE
+    meta_df = meta_df.copy()
+    if 'idx' not in meta_df.columns:
+        meta_df['idx'] = meta_df.index.astype(int)
+
     tract_gdf = gpd.GeoDataFrame(
         meta_df, 
         geometry=gpd.points_from_xy(meta_df['lon'], meta_df['lat']), 
@@ -38,7 +42,6 @@ def get_gadm_gid2_mapping(meta_df: pd.DataFrame, repo_root: str) -> tuple[dict, 
     
     if missing.any():
         n_fallback = int(missing.sum())
-        
         missing_gdf = tract_gdf[missing].copy()
         
         # Project to EPSG:5070 (NAD83 / Conus Albers) for accurate distance in meters
@@ -54,13 +57,14 @@ def get_gadm_gid2_mapping(meta_df: pd.DataFrame, repo_root: str) -> tuple[dict, 
         if nearest.index.has_duplicates:
             nearest = nearest[~nearest.index.duplicated(keep='first')]
             
-        result.loc[missing, 'GID_2'] = nearest['GID_2']
-        
-        # Enforce 5km threshold and record details
+        # Validate 5km threshold BEFORE updating result
         for row_idx, row in nearest.iterrows():
-            idx_val = int(row['idx'])
+            idx_val = int(row['idx']) if 'idx' in row else int(row_idx)
             dist_m = float(row['nearest_distance_m'])
             gid2 = str(row['GID_2'])
+            
+            if dist_m > 5000.0:
+                raise ValueError(f"Mapping invariant failed: Tract {idx_val} is {dist_m:.2f}m away from nearest GADM polygon, exceeding 5km threshold.")
             
             fallback_details.append({
                 "tract_idx": idx_val,
@@ -68,9 +72,7 @@ def get_gadm_gid2_mapping(meta_df: pd.DataFrame, repo_root: str) -> tuple[dict, 
                 "nearest_distance_m": dist_m
             })
             
-            if dist_m > 5000.0:
-                raise ValueError(f"Mapping invariant failed: Tract {idx_val} is {dist_m:.2f}m away from nearest GADM polygon, exceeding 5km threshold.")
-                
+        result.loc[missing, 'GID_2'] = nearest['GID_2']
         print(f"  [GADM Mapping] WARNING: {n_fallback} tracts fell outside exact GADM polygons. Using nearest fallback (max dist: {max(d['nearest_distance_m'] for d in fallback_details):.2f}m).")
         
     if result["GID_2"].isna().any():
