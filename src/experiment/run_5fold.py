@@ -3,6 +3,7 @@ Master 5-Fold Cross-Validation Experiment Runner (Moving-Bin Calibration Framewo
 """
 
 import os
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 import sys
 import json
 import time
@@ -56,7 +57,19 @@ def run_5fold_experiment(
     print(f"Folds to run: {folds_to_run}")
     print("=" * 85)
 
+    out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
+    out_file = Path(output_dir) / out_file_name
+
     all_city_results = []
+    if out_file.exists():
+        try:
+            with open(out_file, "r") as f:
+                prev_json = json.load(f)
+                all_city_results = prev_json.get("city_level_results", [])
+                print(f"Loaded {len(all_city_results)} existing city records from {out_file}.")
+        except Exception:
+            all_city_results = []
+
     fold_summaries = {}
 
     start_total_time = time.time()
@@ -66,6 +79,9 @@ def run_5fold_experiment(
         train_cities = split["train"]
         val_cities = split["val"]
         test_cities = split["test"]
+
+        # Remove old records for this fold to ensure clean incremental update
+        all_city_results = [r for r in all_city_results if r.get("fold") != fold_id]
 
         print("\n" + "#" * 85)
         print(f"FOLD {fold_id}/5: Training on {len(train_cities)} cities -> Testing on {len(test_cities)} held-out cities")
@@ -80,29 +96,35 @@ def run_5fold_experiment(
         
         for seed_idx, seed in enumerate(seeds):
             _ckpt_dir  = Path(output_dir) / "checkpoints"
-            _ckpt_path = _ckpt_dir / f"5fold_{backbone}_fold{fold_id}_seed{seed}.pt"
-            print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) [Backbone: {backbone.upper()}] ---")
+            _ckpt_name = f"5fold_fold{fold_id}_seed{seed}.pt" if backbone == "gnn" else f"5fold_{backbone}_fold{fold_id}_seed{seed}.pt"
+            _ckpt_path = _ckpt_dir / _ckpt_name
             
-            model, scaler = train_zero_shot_model(
-                train_city_names=train_cities,
-                data_root=data_root,
-                epochs=epochs_per_fold,
-                lr=lr,
-                hidden_dim=hidden_dim,
-                num_gnn_layers=num_gnn_layers,
-                graph_type=graph_type,
-                radius_km=radius_km,
-                knn_k=knn_k,
-                loss_type=loss_type,
-                backbone=backbone,
-                device_str=device_str,
-                verbose=True,
-                val_city_names=val_cities,
-                patience=16,
-                checkpoint_path=_ckpt_path,
-                run_tag=f"5fold_{backbone}_fold{fold_id}_seed{seed}",
-                seed=seed,
-            )
+            if _ckpt_path.exists():
+                print(f"--- Found existing checkpoint {_ckpt_path}. Loading... ---")
+                model, scaler, _ = load_checkpoint(_ckpt_path, device_str=device_str)
+                model.eval()
+            else:
+                print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) [Backbone: {backbone.upper()}] ---")
+                model, scaler = train_zero_shot_model(
+                    train_city_names=train_cities,
+                    data_root=data_root,
+                    epochs=epochs_per_fold,
+                    lr=lr,
+                    hidden_dim=hidden_dim,
+                    num_gnn_layers=num_gnn_layers,
+                    graph_type=graph_type,
+                    radius_km=radius_km,
+                    knn_k=knn_k,
+                    loss_type=loss_type,
+                    backbone=backbone,
+                    device_str=device_str,
+                    verbose=True,
+                    val_city_names=val_cities,
+                    patience=16,
+                    checkpoint_path=_ckpt_path,
+                    run_tag=f"5fold_{backbone}_fold{fold_id}_seed{seed}",
+                    seed=seed,
+                )
             models.append(model)
             scalers.append(scaler)
         print(f"Fold {fold_id} models trained in {time.time() - fold_start:.1f}s.")
