@@ -47,7 +47,7 @@ def run_experiment(args):
     
     device = torch.device(args.device)
     splits = generate_35_5_10_splits(data_root=data_root)
-    K_values = [2, 4, 8, 12, 16]
+    K_values = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
     seeds = [1, 10, 100]
     
     folds = [1, 2, 3, 4, 5] if not args.smoke_test else [2]

@@ -65,6 +65,18 @@ def compute_spearman_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
     return float(rho) if not np.isnan(rho) else 0.0
 
 
+def compute_rmse_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes standard RMSE."""
+    return float(np.sqrt(np.mean((t_true - t_pred) ** 2)))
+
+def compute_nrmse_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes Normalized RMSE (RMSE / mean(true))."""
+    mean_t = np.mean(t_true)
+    if mean_t <= 0:
+        return 0.0
+    rmse = compute_rmse_pair(t_true, t_pred)
+    return float(rmse / mean_t)
+
 def compute_mae_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
     """Computes Mean Absolute Error."""
     return float(np.mean(np.abs(t_true - t_pred)))
@@ -116,7 +128,9 @@ def evaluate_moving_and_full(
     t_p_inter = t_p[inter_mask]
 
     cpc_inter = compute_cpc_pair(t_t_inter, t_p_inter)
-    rmse_inter = compute_rmse_log1p_pair(t_t_inter, t_p_inter)
+    rmse_log1p_inter = compute_rmse_log1p_pair(t_t_inter, t_p_inter)
+    rmse_inter = compute_rmse_pair(t_t_inter, t_p_inter)
+    nrmse_inter = compute_nrmse_pair(t_t_inter, t_p_inter)
     mae_inter = compute_mae_pair(t_t_inter, t_p_inter)
     spearman_inter = compute_spearman_pair(t_t_inter, t_p_inter)
     
@@ -131,7 +145,9 @@ def evaluate_moving_and_full(
     result = {
         "cpc": cpc_inter,                     # primary shorthand
         "cpc_inter": cpc_inter,
+        "rmse_log1p_inter": rmse_log1p_inter,
         "rmse_inter": rmse_inter,
+        "nrmse_inter": nrmse_inter,
         "mae_inter": mae_inter,
         "spearman_inter": spearman_inter,
         "rel_error_total": rel_error,
