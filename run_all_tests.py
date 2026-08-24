@@ -89,6 +89,7 @@ def call_with_fixtures(func):
 def run_all_tests():
     test_files = sorted(
         list((repo_root / "od_plan_tester" / "tests").glob("test_*.py"))
+        + list((repo_root / "tests").glob("test_*.py"))
         + list(repo_root.glob("test_*.py"))
     )
 
