@@ -1,0 +1,20 @@
+{
+  "fold": 1,
+  "completed_cities": [
+    "Arlington",
+    "Austin"
+  ],
+  "remaining_cities": [
+    "El_Paso",
+    "Long_Beach",
+    "Memphis",
+    "Milwaukee",
+    "New_York",
+    "San_Diego",
+    "Seattle",
+    "Virginia_Beach"
+  ],
+  "rows_written": 45000,
+  "protocol_version": "v2",
+  "timestamp": "2026-08-25 13:18:38"
+}

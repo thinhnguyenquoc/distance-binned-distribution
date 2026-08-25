@@ -1,0 +1,72 @@
+{
+  "n_total_cities": 50,
+  "n_multi_county_cities": 11,
+  "n_single_county_cities": 39,
+  "pooled_50": {
+    "cpc_baseline_mean": 0.712807294580449,
+    "cpc_city_mean": 0.7163467860508935,
+    "cpc_county_mean": 0.7164844995751158,
+    "cpc_wrong_mean": 0.6750862345766494,
+    "delta_city_mean": 0.003539491470444487,
+    "delta_city_ci": [
+      0.002606763556788414,
+      0.004482720290926319
+    ],
+    "delta_county_mean": 0.0036772049946668145,
+    "delta_county_ci": [
+      0.002719504236385914,
+      0.004661899314870614
+    ],
+    "delta_resolution_mean": 0.0001377135242223278,
+    "delta_resolution_median": 0.0,
+    "delta_resolution_ci": [
+      2.2271288260424683e-05,
+      0.0002806850539337412
+    ],
+    "delta_spec_city_mean": 0.04126055147424413,
+    "delta_spec_city_ci": [
+      0.03629615263852212,
+      0.04705375431588577
+    ],
+    "delta_spec_county_mean": 0.04139826499846645,
+    "delta_spec_county_ci": [
+      0.03646856028546279,
+      0.047165366734024244
+    ],
+    "win_rate_resolution": "9/50",
+    "win_rate_spec_city": "50/50",
+    "win_rate_spec_county": "50/50",
+    "wilcoxon_p_resolution": 0.006396080123866426,
+    "wilcoxon_p_spec_city": 8.881784197001252e-16,
+    "wilcoxon_p_spec_county": 8.881784197001252e-16
+  },
+  "multi_county_subset": {
+    "cities": [
+      "Milwaukee",
+      "New_York",
+      "Atlanta",
+      "Boston",
+      "Chicago",
+      "Detroit",
+      "Tulsa",
+      "Omaha",
+      "Dallas",
+      "Denver",
+      "Kansas_City"
+    ],
+    "cpc_baseline_mean": 0.6972081353254896,
+    "cpc_city_mean": 0.700710742400613,
+    "cpc_county_mean": 0.70133671296526,
+    "delta_city_mean": 0.0035026070751234778,
+    "delta_county_mean": 0.004128577639770422,
+    "delta_resolution_mean": 0.0006259705646469445,
+    "delta_resolution_max": 0.0027350158448791553,
+    "win_rate_resolution": "9/11"
+  },
+  "single_county_subset": {
+    "n_cities": 39,
+    "delta_resolution_mean": 0.0,
+    "delta_resolution_max": 0.0,
+    "exact_zero_invariant": true
+  }
+}
