@@ -1,0 +1,15 @@
+{
+  "noise_definition": "multiplicative compositional noise on active bins, TV distance matching via bisection",
+  "timestamp": "2026-08-25T07:27:51.382729",
+  "B_noise": 1000,
+  "epsilons": [
+    0.0,
+    0.01,
+    0.02,
+    0.03,
+    0.04,
+    0.05
+  ],
+  "eps_cross": 0.044439113700770264,
+  "eps_star": 0.03
+}

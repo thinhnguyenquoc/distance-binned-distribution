@@ -367,12 +367,18 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
         city_df.to_csv(f"{output_dir}/noise_per_city.csv", index=False)
         
         if not args.smoke:
-            generate_summary(city_df, output_dir, epsilons, nonzero_epsilons)
+            generate_summary(city_df, output_dir, epsilons, nonzero_epsilons, B_noise)
     else:
         logger.warning("No results were generated. Check checkpoints.")
         
 
-def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[float], nonzero_epsilons: List[float]) -> None:
+def generate_summary(
+    city_df: pd.DataFrame,
+    output_dir: str,
+    epsilons: List[float],
+    nonzero_epsilons: List[float],
+    b_noise: int | None = None,
+) -> None:
     evaluation_folds = sorted(city_df.fold.unique().tolist())
     eval_df = city_df[city_df.fold.isin(evaluation_folds)]
     
@@ -567,7 +573,7 @@ def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[floa
     manifest = {
         "noise_definition": "multiplicative compositional noise on active bins, TV distance matching via bisection",
         "timestamp": datetime.datetime.now().isoformat(),
-        "B_noise": int(city_df.replicate.nunique() - 1) if not city_df.empty else B_noise,
+        "B_noise": b_noise,
         "epsilons": epsilons,
         "eps_cross": eps_cross,
         "eps_star": eps_star
