@@ -21,7 +21,14 @@ from typing import List, Dict, Optional, Union
 import torch
 import torch.optim as optim
 
-from src.data.dataset import CityData, load_cities, load_city
+from src.data.dataset import (
+    CityData,
+    NODE_FEATURE_COLUMNS,
+    get_scaler_fingerprint,
+    load_cities,
+    load_city,
+    validate_feature_scaler,
+)
 from src.data.urban_graph import build_radius_graph, build_knn_graph
 from src.models.zero_shot_model import ZeroShotODModel
 from src.loss.ztnb import ztnb_nll, nb_nll
@@ -72,11 +79,19 @@ def save_checkpoint(
 
     scaler_data: dict = {}
     if scaler is not None and hasattr(scaler, "mean_") and scaler.mean_ is not None:
+        validate_feature_scaler(scaler)
         scaler_data = {
             "scaler_mean_":  _np.asarray(scaler.mean_,  dtype=_np.float64),
             "scaler_scale_": _np.asarray(scaler.scale_, dtype=_np.float64),
             "scaler_var_":   _np.asarray(scaler.var_,   dtype=_np.float64),
+            "scaler_n_features_in_": int(getattr(scaler, "n_features_in_", len(scaler.mean_))),
+            "scaler_fingerprint": get_scaler_fingerprint(scaler),
+            "scaler_feature_columns": list(NODE_FEATURE_COLUMNS),
         }
+        if hasattr(scaler, "n_samples_seen_"):
+            scaler_data["scaler_n_samples_seen_"] = _np.asarray(
+                scaler.n_samples_seen_
+            ).copy()
 
     bundle = {
         "model_state_dict": model.state_dict(),
@@ -163,7 +178,19 @@ def load_checkpoint(
         scaler.mean_  = bundle["scaler_mean_"]
         scaler.scale_ = bundle["scaler_scale_"]
         scaler.var_   = bundle["scaler_var_"]
-        scaler.n_features_in_ = len(scaler.mean_)
+        scaler.n_features_in_ = bundle.get("scaler_n_features_in_", len(scaler.mean_))
+        if "scaler_n_samples_seen_" in bundle:
+            scaler.n_samples_seen_ = bundle["scaler_n_samples_seen_"]
+        validate_feature_scaler(scaler)
+
+        expected_columns = bundle.get("scaler_feature_columns")
+        if expected_columns is not None and tuple(expected_columns) != NODE_FEATURE_COLUMNS:
+            raise ValueError(f"Checkpoint feature schema mismatch in {path}")
+
+        expected_fingerprint = bundle.get("scaler_fingerprint")
+        actual_fingerprint = get_scaler_fingerprint(scaler)
+        if expected_fingerprint is not None and actual_fingerprint != expected_fingerprint:
+            raise ValueError(f"Checkpoint scaler fingerprint mismatch in {path}")
 
     metadata = {
         "train_info":  bundle.get("train_info"),
@@ -171,6 +198,12 @@ def load_checkpoint(
         "seed":        bundle.get("seed"),
         "run_tag":     bundle.get("run_tag"),
         "saved_at":    bundle.get("saved_at"),
+        "scaler_provenance": {
+            "fingerprint": bundle.get("scaler_fingerprint"),
+            "n_features_in": bundle.get("scaler_n_features_in_"),
+            "n_samples_seen": bundle.get("scaler_n_samples_seen_"),
+            "feature_columns": bundle.get("scaler_feature_columns"),
+        },
     }
 
     return model, scaler, metadata
@@ -538,6 +571,11 @@ def train_zero_shot_model(
             # Provenance fields (C2, C1)
             "fold":                  fold,
             "split_manifest_sha256": split_manifest_sha256,
+            "scaler_fit_scope":      "training_split_only",
+            "scaler_weighting":      "per_tract",
+            "scaler_fit_cities":     sorted(train_city_names),
+            "scaler_fit_n_cities":   len(train_city_names),
+            "scaler_fit_n_rows":     int(scaler.n_samples_seen_),
         }
         saved_path = save_checkpoint(
             path=checkpoint_path,

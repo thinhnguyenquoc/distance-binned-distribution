@@ -8,7 +8,7 @@
 # | Master Test Runner & System Verification Suite for Distance-Binned Distribution OD Reconstruction.
 # | Discovers and runs all contract, unit, regression, and model tests across the codebase.
 # | """
-# | 
+# |
 # | import sys
 # | import os
 # | import time
@@ -17,11 +17,11 @@
 # | from pathlib import Path
 # | import numpy as np
 # | import torch
-# | 
+# |
 # | # Ensure root directory is in sys.path
 # | repo_root = Path(__file__).resolve().parent
 # | sys.path.insert(0, str(repo_root))
-# | 
+# |
 # | # Provide Pytest shim if pytest package is not installed in the local environment
 # | try:
 # |     import pytest
@@ -35,7 +35,7 @@
 # |             return bool(np.isclose(self.expected, actual, rtol=self.rel, atol=self.abs))
 # |         def __repr__(self):
 # |             return f"approx({self.expected})"
-# | 
+# |
 # |     class Raises:
 # |         def __init__(self, expected_exc):
 # |             self.expected_exc = expected_exc
@@ -45,7 +45,7 @@
 # |             if exc_type is None:
 # |                 raise AssertionError(f"DID NOT RAISE expected exception {self.expected_exc}")
 # |             return issubclass(exc_type, self.expected_exc)
-# | 
+# |
 # |     class Mark:
 # |         def __getattr__(self, name):
 # |             def decorator(*args, **kwargs):
@@ -53,7 +53,7 @@
 # |                     return args[0]
 # |                 return lambda fn: fn
 # |             return decorator
-# | 
+# |
 # |     class PytestShim:
 # |         approx = Approx
 # |         raises = Raises
@@ -63,10 +63,10 @@
 # |             if func and callable(func):
 # |                 return func
 # |             return lambda f: f
-# | 
+# |
 # |     sys.modules["pytest"] = PytestShim
-# | 
-# | 
+# |
+# |
 # | # Shared fixtures dictionary
 # | FIXTURES = {
 # |     "sample_coordinates": np.array([
@@ -81,8 +81,8 @@
 # |         torch.tensor([0, 0, 1, 1, 2, 2, 3, 3]),
 # |     ),
 # | }
-# | 
-# | 
+# |
+# |
 # | def call_with_fixtures(func):
 # |     sig = inspect.signature(func)
 # |     kwargs = {}
@@ -90,18 +90,18 @@
 # |         if param_name in FIXTURES:
 # |             kwargs[param_name] = FIXTURES[param_name]
 # |     return func(**kwargs)
-# | 
-# | 
+# |
+# |
 # | def run_all_tests():
 # |     """Run every repository test through pytest's native collection/execution.
-# | 
+# |
 # |     The previous implementation imported modules and invoked test functions
 # |     directly.  That bypassed pytest's fixture and outcome handling; in
 # |     particular, a ``pytest.skip`` exception could terminate this runner after
 # |     the first module and report an incomplete suite as successful.
 # |     """
 # |     import pytest
-# | 
+# |
 # |     test_paths = [
 # |         str(repo_root / "od_plan_tester" / "tests"),
 # |         str(repo_root / "tests"),
@@ -110,24 +110,24 @@
 # |     if exit_code != pytest.ExitCode.OK:
 # |         raise SystemExit(int(exit_code))
 # |     return
-# | 
+# |
 # |     test_files = sorted(
 # |         list((repo_root / "od_plan_tester" / "tests").glob("test_*.py"))
 # |         + list((repo_root / "tests").glob("test_*.py"))
 # |         + list(repo_root.glob("test_*.py"))
 # |     )
-# | 
+# |
 # |     total_passed = 0
 # |     total_failed = 0
 # |     failed_details = []
-# | 
+# |
 # |     print("=" * 85)
 # |     print("MASTER TEST SUITE & SYSTEM VERIFICATION AUDIT")
 # |     print(f"Discovered {len(test_files)} test modules in repository")
 # |     print("=" * 85)
-# | 
+# |
 # |     start_all = time.perf_counter()
-# | 
+# |
 # |     for tf in test_files:
 # |         if tf.name == "run_all_tests.py":
 # |             continue
@@ -143,7 +143,7 @@
 # |             total_failed += 1
 # |             failed_details.append((tf.name, "MODULE_LOAD", str(e)))
 # |             continue
-# | 
+# |
 # |         funcs = [getattr(mod, f) for f in dir(mod) if f.startswith("test_") and callable(getattr(mod, f))]
 # |         classes = [getattr(mod, c) for c in dir(mod) if inspect.isclass(getattr(mod, c)) and c.startswith("Test")]
 # |         
@@ -173,7 +173,7 @@
 # |         total_failed += file_failed
 # |         status_tag = "PASS" if file_failed == 0 else f"FAIL ({file_failed})"
 # |         print(f"  [{status_tag:<9}] {tf.name:<36} -> {file_passed} passed, {file_failed} failed")
-# | 
+# |
 # |     elapsed = time.perf_counter() - start_all
 # |     print("=" * 85)
 # |     print(f"TOTAL EXECUTION SUMMARY: {total_passed} PASSED | {total_failed} FAILED in {elapsed:.2f}s")
@@ -186,8 +186,8 @@
 # |         sys.exit(1)
 # |     else:
 # |         print("\nALL SYSTEM TESTS & INVARIANTS PASSED PERFECTLY!")
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     run_all_tests()
 
@@ -196,20 +196,20 @@
 
 # ===== BEGIN SOURCE FILE: run_full_experiment.py =====
 # | """Run the complete GNN and MLP experiment for a configurable seed set.
-# | 
+# |
 # | Each model is saved as results/checkpoints/{backbone}_fold{fold}_seed{seed}.pt.
 # | Existing checkpoints are reused only when their protocol provenance matches.
 # | """
-# | 
+# |
 # | import argparse
-# | 
+# |
 # | from src.experiment.run_5fold import run_5fold_experiment
-# | 
-# | 
+# |
+# |
 # | CANONICAL_SEEDS = [1, 10, 100]
 # | DEFAULT_SEEDS = CANONICAL_SEEDS
-# | 
-# | 
+# |
+# |
 # | def run_full_experiment(
 # |     seeds: list[int],
 # |     folds: list[int],
@@ -226,14 +226,14 @@
 # |         "seeds": seeds,
 # |         "device_str": device,
 # |     }
-# | 
+# |
 # |     print(f"Running GNN for seeds={seeds}, folds={folds}")
 # |     run_5fold_experiment(backbone="gnn", **common)
-# | 
+# |
 # |     print(f"Running MLP for seeds={seeds}, folds={folds}")
 # |     run_5fold_experiment(backbone="mlp", **common)
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(
 # |         description="Run full GNN + MLP experiments with reusable seed checkpoints"
@@ -245,7 +245,7 @@
 # |     parser.add_argument("--data-root", type=str, default="data")
 # |     parser.add_argument("--output-dir", type=str, default="results")
 # |     args = parser.parse_args()
-# | 
+# |
 # |     if len(set(args.seeds)) != len(args.seeds):
 # |         parser.error("--seeds must not contain duplicates")
 # |     if any(seed < 0 for seed in args.seeds):
@@ -257,7 +257,7 @@
 # |         )
 # |     if any(fold not in {1, 2, 3, 4, 5} for fold in args.folds):
 # |         parser.error("--folds must contain values from 1 through 5")
-# | 
+# |
 # |     run_full_experiment(
 # |         seeds=args.seeds,
 # |         folds=args.folds,
@@ -276,7 +276,7 @@
 # | Enforces strict protocol invariants, zero data-leakage guards, production calibration equivalence,
 # | statistical unit integrity, and independent raw-to-summary reproducibility before paper freeze.
 # | """
-# | 
+# |
 # | import sys
 # | import os
 # | import time
@@ -286,16 +286,16 @@
 # | import re
 # | from pathlib import Path
 # | from typing import Dict, List, Tuple, Any
-# | 
+# |
 # | import numpy as np
 # | import pandas as pd
 # | from scipy import stats
 # | import torch
-# | 
+# |
 # | # Ensure repository root is on sys.path
 # | REPO_ROOT = Path(__file__).resolve().parent
 # | sys.path.insert(0, str(REPO_ROOT))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_city, load_cities, load_raw_city, CityData
 # | from src.data.urban_graph import build_radius_graph
@@ -305,35 +305,35 @@
 # | from src.training.train import load_checkpoint, infer_zero_shot
 # | from src.experiment.run_noise_robustness import generate_nested_noisy_yd, fast_cal_metrics, holm_correction as holm_noise
 # | from src.experiment.run_sampling_robustness import sample_hypergeometric_yd, holm_correction as holm_sampling
-# | 
+# |
 # | GATE_RESULTS: Dict[str, Tuple[bool, str]] = {}
-# | 
-# | 
+# |
+# |
 # | def _result_roots() -> list[Path]:
 # |     roots = [Path("results")]
 # |     roots.extend(sorted(Path(".").glob("results_archive_*/old_results"), reverse=True))
 # |     return roots
-# | 
-# | 
+# |
+# |
 # | def _canonical_result_root() -> Path:
 # |     return Path("results")
-# | 
-# | 
+# |
+# |
 # | def _find_result_file(relative_path: str) -> Path:
 # |     for root in _result_roots():
 # |         candidate = root / relative_path
 # |         if candidate.exists():
 # |             return candidate
 # |     raise FileNotFoundError(f"Missing result artifact: {relative_path}")
-# | 
-# | 
+# |
+# |
 # | def log_gate(gate_num: int, name: str, passed: bool, msg: str = ""):
 # |     tag = "PASS" if passed else "FAIL"
 # |     color_tag = f"\033[92mPASS\033[0m" if passed else f"\033[91mFAIL\033[0m"
 # |     GATE_RESULTS[f"GATE {gate_num:2d}"] = (passed, f"{name}: {msg}")
 # |     print(f"GATE {gate_num:<2d}  {name:<38} {color_tag} {msg}")
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 1: Split Integrity Test
 # | # -----------------------------------------------------------------------------
@@ -365,8 +365,8 @@
 # |     f1 = splits[1]
 # |     assert len(f1["test"]) == 10 and len(f1["train"]) == 35 and len(f1["val"]) == 5
 # |     return True, "All 5 folds disjoint (35/5/10), exact 50-city test partition"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 2: Data-Leakage & Mutation Invariance Test
 # | # -----------------------------------------------------------------------------
@@ -391,7 +391,11 @@
 # |     finally:
 # |         StandardScaler.fit = original_fit
 # |         
-# |     assert len(fitted_row_counts) > 0, "Scaler fit was never called!"
+# |     expected_train_rows = sum(load_raw_city(city, data_root="data").n_tracts for city in train35)
+# |     assert fitted_row_counts == [expected_train_rows], (
+# |         "Scaler must be fit exactly once using only the Fold 1 training rows: "
+# |         f"expected {[expected_train_rows]}, observed {fitted_row_counts}"
+# |     )
 # |     
 # |     # 2. Bin edges computed strictly from train cities
 # |     bin_edges, K_act = compute_kbin_edges(train35, K=8, data_root="data")
@@ -401,23 +405,23 @@
 # |     import inspect
 # |     from src.data import yd_extractor
 # |     from src.calibration import bin_calibration
-# | 
+# |
 # |     signature = inspect.signature(infer_zero_shot)
 # |     forbidden_params = {"yd", "y_d", "trip", "trip_distribution", "calibration"}
 # |     assert not any(
 # |         parameter.name.lower() in forbidden_params
 # |         for parameter in signature.parameters.values()
 # |     ), f"infer_zero_shot has target-Y_D-dependent input: {signature}"
-# | 
+# |
 # |     source = inspect.getsource(infer_zero_shot)
 # |     forbidden_dependencies = ("compute_kbin_edges", "extract_yd_kbins", "calibrate_kbins")
 # |     assert not any(name in source for name in forbidden_dependencies), (
 # |         "infer_zero_shot directly depends on target-Y_D extraction/calibration"
 # |     )
-# | 
+# |
 # |     def fail_if_target_yd_accessed(*args, **kwargs):
 # |         raise AssertionError("M0 accessed target-Y_D extraction or calibration")
-# | 
+# |
 # |     patched_functions = {
 # |         (yd_extractor, "compute_kbin_edges"): yd_extractor.compute_kbin_edges,
 # |         (yd_extractor, "extract_yd_kbins"): yd_extractor.extract_yd_kbins,
@@ -425,11 +429,11 @@
 # |     }
 # |     for (module, name) in patched_functions:
 # |         setattr(module, name, fail_if_target_yd_accessed)
-# | 
+# |
 # |     city_data = load_city(test_city, data_root="data", feature_scaler=scaler, fit_scaler=False)
 # |     coords = city_data.lon_lat.numpy()
 # |     ei, ed = build_radius_graph(coords, radius_km=5.0)
-# | 
+# |
 # |     try:
 # |         for seed in [1, 10, 100]:
 # |             ckpt_path = _find_result_file(f"checkpoints/5fold_fold1_seed{seed}.pt")
@@ -439,7 +443,7 @@
 # |                 f"expected {seed}, got {metadata.get('seed')}"
 # |             )
 # |             model.eval()
-# | 
+# |
 # |             with torch.no_grad():
 # |                 m0_first = infer_zero_shot(model, city_data, ei, ed, device="cpu")
 # |                 m0_second = infer_zero_shot(model, city_data, ei, ed, device="cpu")
@@ -451,8 +455,8 @@
 # |             setattr(module, name, original)
 # |         
 # |     return True, "Scaler guarded (train-only), M0 structurally Y_D-independent and deterministic for seeds 1, 10, 100"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 15: Radius Graph & Isolated-Node Fallback Contract
 # | # -----------------------------------------------------------------------------
@@ -468,13 +472,13 @@
 # |             * np.sin(delta[:, :, 0] / 2.0) ** 2
 # |         )
 # |         return 2.0 * 6371.0 * np.arcsin(np.sqrt(np.clip(a, 0.0, 1.0)))
-# | 
+# |
 # |     def independent_reference_graph(lon_lat, radius_km):
 # |         distances = independent_distances(lon_lat)
 # |         node_count = len(lon_lat)
 # |         directed_edges = set()
 # |         fallback_edges = set()
-# | 
+# |
 # |         for source in range(node_count):
 # |             radius_neighbors = [
 # |                 target
@@ -483,7 +487,7 @@
 # |             ]
 # |             for target in radius_neighbors:
 # |                 directed_edges.add((source, target))
-# | 
+# |
 # |             if not radius_neighbors:
 # |                 nearest = min(
 # |                     (target for target in range(node_count) if target != source),
@@ -491,7 +495,7 @@
 # |                 )
 # |                 directed_edges.add((source, nearest))
 # |                 fallback_edges.update({(source, nearest), (nearest, source)})
-# | 
+# |
 # |         symmetric_edges = directed_edges | {
 # |             (target, source) for source, target in directed_edges
 # |         }
@@ -499,13 +503,13 @@
 # |             (node, node) for node in range(node_count)
 # |         }
 # |         return reference_edges, fallback_edges, distances
-# | 
+# |
 # |     coordinate_sets = [
 # |         np.array([[0.0, 0.0], [0.01, 0.0], [0.10, 0.0]], dtype=np.float64),
 # |     ]
 # |     held_out_city = generate_35_5_10_splits(data_root="data")[1]["test"][0]
 # |     coordinate_sets.append(load_city(held_out_city, data_root="data").lon_lat.numpy())
-# | 
+# |
 # |     for coordinates in coordinate_sets:
 # |         expected_edges, fallback_edges, distances = independent_reference_graph(
 # |             coordinates, radius_km=5.0
@@ -520,7 +524,7 @@
 # |         assert production_edges == expected_edges, (
 # |             "Production radius graph differs from independent reference graph"
 # |         )
-# | 
+# |
 # |         for index in range(edge_index.shape[1]):
 # |             source = int(edge_index[0, index])
 # |             target = int(edge_index[1, index])
@@ -532,10 +536,10 @@
 # |                 assert (source, target) in fallback_edges, (
 # |                     f"Non-radius edge ({source}, {target}) is not an isolated-node fallback"
 # |                 )
-# | 
+# |
 # |     return True, "Radius edges, isolated-node fallback, symmetry, self-loops, and edge distances match independent reference"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 3: Checkpoint Protocol Deep Audit (30 Checkpoints)
 # | # -----------------------------------------------------------------------------
@@ -582,8 +586,8 @@
 # |         assert len(bundle.get("scaler_mean_")) == 26, f"{p.name} scaler_mean_ length != 26"
 # |         
 # |     return True, "15 GNN + 15 MLP checkpoints audited for filename/metadata fold-seed integrity"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 4: Zero-Shot Inference & No-Gradient Guard
 # | # -----------------------------------------------------------------------------
@@ -622,8 +626,8 @@
 # |         assert torch.equal(p_init, p_curr), "Model weights drifted during inference!"
 # |         
 # |     return True, "Optimizer & backward guarded, parameters 100% frozen"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 5: Production Calibration Equivalence (5 Cities x 3 Seeds)
 # | # -----------------------------------------------------------------------------
@@ -693,8 +697,8 @@
 # |             comparisons += 1
 # |             
 # |     return True, f"15/15 checks (5 cities x 3 seeds) passed. Max diff: {max_diff:.2e} < 1e-6 (q=1.0 locked)"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 6: Mass, Weights & Inactive Bin Conservation Test
 # | # -----------------------------------------------------------------------------
@@ -731,8 +735,8 @@
 # |     assert not np.isnan(t_sparse_cal).any() and not np.isinf(t_sparse_cal).any()
 # |     
 # |     return True, f"Mass err: {rel_mass_err:.2e}, Bin err: {bin_match_err:.2e}, No NaN/Inf, Inactive handled"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 7: CPC Metric Oracle & Support Guard Test
 # | # -----------------------------------------------------------------------------
@@ -741,7 +745,7 @@
 # |         sum_min = np.sum(np.minimum(y_true, y_pred))
 # |         sum_tot = np.sum(y_true) + np.sum(y_pred)
 # |         return (2.0 * sum_min / sum_tot) if sum_tot > 0 else 0.0
-# | 
+# |
 # |     # 1. Identity case: CPC(y, y) == 1.0
 # |     y1 = np.array([10.0, 50.0, 100.0, 500.0])
 # |     assert abs(compute_cpc_pair(y1, y1) - 1.0) < 1e-12
@@ -767,8 +771,8 @@
 # |     assert (raw.dist_km[inter] > 0.0).all(), "Non-positive distance found in interzonal mask!"
 # |     
 # |     return True, "Metric oracle exact match, interzonal support Omega_c^+ strictly disjoint from intra"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 8: Statistical Unit N=50 Test
 # | # -----------------------------------------------------------------------------
@@ -802,8 +806,8 @@
 # |     assert abs(ci_l - 0.00267) < 0.0003 and abs(ci_h - 0.00452) < 0.0003
 # |     
 # |     return True, "Unit is strictly city (N=50), fold-stratified bootstrap verifies [0.0027, 0.0045]"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 9: Production Holm Correction Test
 # | # -----------------------------------------------------------------------------
@@ -830,8 +834,8 @@
 # |     assert np.allclose(adj_un, [0.135, 0.005, 0.500, 0.160, 0.048])
 # |     
 # |     return True, "Production holm_correction tested directly, 100% verified against hand calculation"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 10: Production Noise Perturbation Contract Test
 # | # -----------------------------------------------------------------------------
@@ -852,8 +856,8 @@
 # |         assert abs(tv - eps) < 1e-3, f"Achieved TV {tv:.4f} diverges from requested {eps}"
 # |         
 # |     return True, f"eps=0 exact, nested perturbation TV exact across eps in {eps_grid}"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 11: Production Hypergeometric Sampling Contract Test
 # | # -----------------------------------------------------------------------------
@@ -881,8 +885,8 @@
 # |         assert np.all(integer_counts <= bin_counts), "Subsampled counts exceed population bin counts!"
 # |         
 # |     return True, "Draws without replacement: sum(c_k)=m, 0 <= c_k <= C_k, m=inf & m>N exact"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 12: K-Sensitivity Anchor Test
 # | # -----------------------------------------------------------------------------
@@ -908,8 +912,8 @@
 # |     assert max_diff < 1e-5, f"K=8 sensitivity diverges from 5-fold main by max diff {max_diff:.2e}"
 # |     
 # |     return True, f"K=8 sensitivity anchor matches 5-fold main (max diff: {max_diff:.2e} < 1e-5)"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 13: Neural Backbone Fairness & Pairing Test
 # | # -----------------------------------------------------------------------------
@@ -939,8 +943,8 @@
 # |     assert abs(mean_gamma) < 0.001, f"Backbone mean delta difference too large: {mean_gamma:+.4f}"
 # |     
 # |     return True, f"Exact 50 paired cities with matching folds, mean Gamma = {mean_gamma:+.4f}"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATE 14: Comprehensive Raw -> Summary Reproduction & Stale Scan
 # | # -----------------------------------------------------------------------------
@@ -997,8 +1001,8 @@
 # |                 assert sp not in content, f"Found stale pattern '{sp}' in {tf.name}!"
 # |                 
 # |     return True, "All 4 raw datasets reproduce summary numbers within tolerance, zero stale n=40 strings"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # GATES 18-22: Extended GNN Invariants
 # | # -----------------------------------------------------------------------------
@@ -1013,17 +1017,17 @@
 # |     assert int(city_data.pair_d_idx.min()) >= 0
 # |     assert int(city_data.pair_o_idx.max()) < len(city_data.node_features)
 # |     assert int(city_data.pair_d_idx.max()) < len(city_data.node_features)
-# | 
+# |
 # |     distance_km = torch.expm1(city_data.pair_distance)
 # |     interzonal = (city_data.pair_o_idx != city_data.pair_d_idx) & (distance_km > 0.0)
 # |     assert torch.equal(interzonal, (city_data.bin_labels > 0))
 # |     assert torch.all(city_data.pair_trips >= 1)
 # |     return True, "Pair arrays, indices, interzonal support, and positive-trips alignment verified"
-# | 
-# | 
+# |
+# |
 # | def test_gate_19_node_permutation_equivariance():
 # |     from src.models.node_encoder import UrbanGNN
-# | 
+# |
 # |     torch.manual_seed(19)
 # |     node_count = 5
 # |     x = torch.randn(node_count, 26)
@@ -1032,7 +1036,7 @@
 # |     )
 # |     edge_dist = torch.tensor([1.0, 1.0, 2.0, 2.0, 3.0, 3.0])
 # |     model = UrbanGNN(in_dim=26, hidden_dim=8, out_dim=8, num_layers=2, dropout=0.0).eval()
-# | 
+# |
 # |     original = model(x, edge_index, edge_dist)
 # |     for _ in range(10):
 # |         new_to_old = torch.randperm(node_count)
@@ -1043,11 +1047,11 @@
 # |         permuted = model(x[new_to_old], remapped_edges, edge_dist)
 # |         assert torch.allclose(permuted[old_to_new], original, atol=1e-6, rtol=0.0)
 # |     return True, "Node permutation remapping preserves GNN embeddings up to inverse permutation"
-# | 
-# | 
+# |
+# |
 # | def test_gate_20_true_message_passing():
 # |     from src.models.node_encoder import UrbanGNN
-# | 
+# |
 # |     torch.manual_seed(20)
 # |     model = UrbanGNN(in_dim=26, hidden_dim=8, out_dim=8, num_layers=2, dropout=0.0).eval()
 # |     x = torch.zeros(3, 26)
@@ -1070,11 +1074,11 @@
 # |     isolated_changed = model(isolated_perturbed, disconnected_edges, torch.ones(9))
 # |     assert torch.equal(isolated_baseline[:3], isolated_changed[:3])
 # |     return True, "Neighbor feature perturbation changes connected-node embeddings"
-# | 
-# | 
+# |
+# |
 # | def test_gate_21_edge_distance_sensitivity():
 # |     from src.models.node_encoder import GraphConvLayer
-# | 
+# |
 # |     layer = GraphConvLayer(2, 2)
 # |     layer.norm = torch.nn.Identity()
 # |     with torch.no_grad():
@@ -1083,18 +1087,18 @@
 # |         layer.msg_linear.weight[0, -1] = 1.0
 # |         layer.self_linear.weight.zero_()
 # |         layer.self_linear.bias.zero_()
-# | 
+# |
 # |     x = torch.zeros(2, 2)
 # |     edge_index = torch.tensor([[0], [1]], dtype=torch.long)
 # |     near = layer(x, edge_index, torch.tensor([1.0]))
 # |     far = layer(x, edge_index, torch.tensor([10.0]))
 # |     assert not torch.equal(near[1], far[1])
 # |     return True, "Graph convolution output changes when edge distance changes"
-# | 
-# | 
+# |
+# |
 # | def test_gate_22_ztnb_numerical_contract():
 # |     from src.loss.ztnb import ztnb_nll
-# | 
+# |
 # |     t = torch.tensor([1.0, 2.0, 5.0])
 # |     mu = torch.tensor([0.5, 2.0, 7.0])
 # |     log_phi = torch.tensor([-0.5, 0.0, 1.0])
@@ -1114,14 +1118,14 @@
 # |     actual = ztnb_nll(t, mu, log_phi)
 # |     assert torch.allclose(actual, expected, atol=1e-7, rtol=0.0)
 # |     return True, "ZTNB NLL matches independent negative-binomial zero-truncation calculation"
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # MLP-5 through MLP-25: MLP-specific contracts
 # | # -----------------------------------------------------------------------------
 # | def _mlp_fixture(dropout=0.0):
 # |     from src.models.zero_shot_model import ZeroShotMLPModel
-# | 
+# |
 # |     torch.manual_seed(25)
 # |     model = ZeroShotMLPModel(
 # |         node_in_dim=26, node_hidden_dim=8, node_out_dim=8,
@@ -1138,25 +1142,25 @@
 # |     edge_index = torch.tensor([[0, 1], [1, 0]], dtype=torch.long)
 # |     edge_dist = torch.tensor([1.0, 1.0])
 # |     return model, x, population, pairs_o, pairs_d, pair_distance, edge_index, edge_dist
-# | 
-# | 
+# |
+# |
 # | def test_mlp_5_feature_ordering():
 # |     from src.data.dataset import CENSUS_COLS, POI_COLS, ROAD_COLS
 # |     assert len(CENSUS_COLS) + len(POI_COLS) + len(ROAD_COLS) == 26
 # |     assert len(set(CENSUS_COLS + POI_COLS + ROAD_COLS)) == 26
 # |     return True, "MLP feature manifest has 26 unique fixed-order columns"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_6_origin_destination_alignment():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     captured = {}
 # |     original_decoder = model.decoder.forward
-# | 
+# |
 # |     def spy_decoder(h_i, h_j, log_distance, log_t_grav):
 # |         captured["h_i"] = h_i.detach().clone()
 # |         captured["h_j"] = h_j.detach().clone()
 # |         return original_decoder(h_i, h_j, log_distance, log_t_grav)
-# | 
+# |
 # |     model.decoder.forward = spy_decoder
 # |     model.eval()
 # |     try:
@@ -1168,8 +1172,8 @@
 # |     assert torch.equal(captured["h_j"], embeddings[d_idx])
 # |     assert first.shape == o_idx.shape
 # |     return True, "Runtime decoder receives origin and destination embeddings by exact pair index"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_7_pair_distance_haversine_alignment():
 # |     from src.data.dataset import load_raw_city
 # |     raw = load_raw_city("Austin", data_root="data")
@@ -1182,32 +1186,32 @@
 # |     distances = 2.0 * 6371.0 * np.arcsin(np.sqrt(np.clip(a, 0.0, 1.0)))
 # |     assert np.allclose(distances, raw.dist_km, atol=0.002, rtol=0.0)
 # |     return True, "MLP pair distances match Haversine within 0.002 km data-rounding tolerance"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_8_gravity_prior_alignment():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     captured = {}
 # |     original_forward = model.gravity_prior.forward
-# | 
+# |
 # |     def spy_forward(population_i, population_j, distance_km):
 # |         captured["population_i"] = population_i.detach().clone()
 # |         captured["population_j"] = population_j.detach().clone()
 # |         captured["distance_km"] = distance_km.detach().clone()
 # |         return original_forward(population_i, population_j, distance_km)
-# | 
+# |
 # |     model.gravity_prior.forward = spy_forward
 # |     try:
 # |         model.eval()
 # |         model(x, ei, ed, o_idx, d_idx, distance, population)
 # |     finally:
 # |         model.gravity_prior.forward = original_forward
-# | 
+# |
 # |     assert torch.equal(captured["population_i"], population[o_idx])
 # |     assert torch.equal(captured["population_j"], population[d_idx])
 # |     assert torch.allclose(captured["distance_km"], torch.expm1(distance), atol=1e-6, rtol=0.0)
 # |     return True, "MLP runtime gravity wiring preserves origin, destination, and distance alignment"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_9_10_support_mask_alignment():
 # |     from src.data.dataset import load_city
 # |     from src.training.evaluate import evaluate_moving_and_full
@@ -1224,12 +1228,12 @@
 # |     assert np.isclose(result["cpc_inter"], float(expected), atol=1e-12)
 # |     assert int(mask.sum()) < len(mask) or torch.all(mask)
 # |     return True, "MLP evaluation uses one interzonal observed-support mask for truth and prediction"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_10_mask_alignment():
 # |     return test_mlp_9_10_support_mask_alignment()
-# | 
-# | 
+# |
+# |
 # | def test_mlp_11_finite_inputs():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     assert torch.isfinite(x).all()
@@ -1237,8 +1241,8 @@
 # |     output = model(x, ei, ed, o_idx, d_idx, distance, population)
 # |     assert torch.isfinite(output).all()
 # |     return True, "MLP inputs and outputs are finite"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_12_log_transforms():
 # |     values = torch.tensor([0.0, 1.0, 10.0, 100.0])
 # |     transformed = torch.log1p(values)
@@ -1247,8 +1251,8 @@
 # |     )
 # |     assert torch.allclose(transformed, expected, atol=1e-7, rtol=0.0)
 # |     return True, "Distance and nonnegative feature transform contract uses log1p"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_13_node_permutation_invariance():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     model.eval()
@@ -1264,8 +1268,8 @@
 # |         )
 # |         assert torch.allclose(permuted, original, atol=1e-6, rtol=0.0)
 # |     return True, "MLP pair predictions are invariant under node permutation with remapped indices"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_14_pair_order_equivariance():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     model.eval()
@@ -1274,8 +1278,8 @@
 # |     shuffled = model(x, ei, ed, o_idx[order], d_idx[order], distance[order], population)
 # |     assert torch.allclose(shuffled, original[order], atol=1e-6, rtol=0.0)
 # |     return True, "MLP output follows pair-row permutation"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_15_no_graph_dependency():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     model.eval()
@@ -1286,8 +1290,8 @@
 # |     )
 # |     assert torch.equal(first, second)
 # |     return True, "MLP predictions are independent of edge_index and edge_dist"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_16_origin_destination_asymmetry():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     model.eval()
@@ -1295,8 +1299,8 @@
 # |     reverse = model(x, ei, ed, d_idx, o_idx, distance, population)
 # |     assert not torch.equal(forward, reverse)
 # |     return True, "MLP retains ordered origin/destination representation"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_17_layers_active():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     calls = []
@@ -1307,8 +1311,8 @@
 # |         hook.remove()
 # |     assert len(calls) == len(model.node_encoder.layers)
 # |     return True, "All configured MLP node layers execute in forward path"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_18_gradient_flow():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     loss = model(
@@ -1320,8 +1324,8 @@
 # |     assert all(parameter.grad is not None for parameter in trainable)
 # |     assert any(float(parameter.grad.abs().sum()) > 0.0 for parameter in trainable)
 # |     return True, "Gradients reach all trainable MLP model parameters"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_19_optimizer_coverage():
 # |     model, *_ = _mlp_fixture()
 # |     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
@@ -1329,16 +1333,16 @@
 # |     optimizer_ids = {id(parameter) for group in optimizer.param_groups for parameter in group["params"]}
 # |     assert model_ids == optimizer_ids
 # |     return True, "Optimizer covers every MLP model parameter exactly"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_21_positive_parameters():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture()
 # |     output = model(x, ei, ed, o_idx, d_idx, distance, population)
 # |     assert torch.isfinite(output).all() and torch.all(output > 0.0)
 # |     assert torch.isfinite(model.phi) and model.phi > 0.0
 # |     return True, "MLP mu and dispersion parameters are finite and strictly positive"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_25_same_support():
 # |     from src.data.dataset import load_city
 # |     city = load_city("Austin", data_root="data")
@@ -1346,11 +1350,11 @@
 # |     m0_m1_support = (city.pair_o_idx != city.pair_d_idx) & (distance > 0.0)
 # |     assert torch.equal(m0_m1_support, (city.bin_labels > 0))
 # |     return True, "M0 and M1 share exact pair support mask"
-# | 
-# | 
+# |
+# |
 # | def test_gate_51_feature_reconstruction_and_log1p():
 # |     from src.data.dataset import CENSUS_COLS, POI_COLS, ROAD_COLS, load_raw_city, load_city
-# | 
+# |
 # |     columns = CENSUS_COLS + POI_COLS + ROAD_COLS
 # |     for city_name in ["Austin", "Denver", "Seattle"]:
 # |         raw = load_raw_city(city_name, data_root="data", use_cache=False)
@@ -1374,17 +1378,17 @@
 # |         expected_raw = np.nan_to_num(np.concatenate(reconstructed, axis=1), nan=0.0, posinf=0.0, neginf=0.0)
 # |         assert expected_raw.shape[1] == len(columns) == 26
 # |         assert np.allclose(expected_raw, raw.X_raw, atol=0.0, rtol=0.0)
-# | 
+# |
 # |         city = load_city(city_name, data_root="data", use_cache=False)
 # |         assert torch.allclose(city.pair_distance, torch.log1p(torch.tensor(raw.dist_km)), atol=1e-6, rtol=0.0)
 # |         assert torch.isfinite(city.node_features).all()
-# | 
+# |
 # |     return True, "Independent CSV reconstruction matches 26-column raw features and production log1p distances"
-# | 
-# | 
+# |
+# |
 # | def test_gate_52_pair_support_hashes():
 # |     import hashlib
-# | 
+# |
 # |     manifest_path = Path("results/audit/ordered_support_manifest.json")
 # |     assert manifest_path.exists(), f"Missing frozen support manifest: {manifest_path}"
 # |     frozen = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -1398,8 +1402,8 @@
 # |         hashes[city_name] = hashlib.sha256(support_path.read_bytes()).hexdigest()
 # |     assert hashes == expected, "OD support artifact hash differs from frozen manifest"
 # |     return True, "OD support artifact hashes match frozen expected manifest for all 50 cities"
-# | 
-# | 
+# |
+# |
 # | def test_gate_53_runner_provenance_wiring():
 # |     mlp_source = Path("src/experiment/run_mlp_backbone_test.py").read_text()
 # |     gnn_source = Path("src/experiment/run_5fold.py").read_text()
@@ -1407,28 +1411,44 @@
 # |         assert "fold=fold_id" in source
 # |         assert "split_manifest_sha256=" in source
 # |     return True, "Active training runners pass fold and locked split-manifest provenance"
-# | 
-# | 
+# |
+# |
 # | def test_gate_54_scaler_reproduction_all_folds():
-# |     from src.data.dataset import load_raw_city
-# | 
+# |     from sklearn.preprocessing import StandardScaler
+# |     from src.data.dataset import get_scaler_fingerprint, load_raw_city
+# |
 # |     splits = generate_35_5_10_splits(data_root="data")
+# |     fold_fingerprints = []
 # |     for fold_id, split in splits.items():
 # |         matrices = [load_raw_city(city, data_root="data").X_raw for city in split["train"]]
 # |         matrix = np.concatenate(matrices, axis=0).astype(np.float64)
-# |         expected_mean = matrix.mean(axis=0)
-# |         expected_scale = matrix.std(axis=0)
-# |         expected_scale[expected_scale == 0.0] = 1.0
+# |         independent_scaler = StandardScaler().fit(matrix)
+# |         fold_fingerprints.append(get_scaler_fingerprint(independent_scaler))
+# |         transformed = independent_scaler.transform(matrix)
+# |         assert np.allclose(transformed.mean(axis=0), 0.0, atol=1e-12, rtol=0.0)
+# |         assert np.allclose(transformed.std(axis=0), 1.0, atol=1e-12, rtol=0.0)
+# |
+# |         checkpoint_stats = []
 # |         for checkpoint in [
 # |             *[_find_result_file(f"checkpoints/5fold_fold{fold_id}_seed{seed}.pt") for seed in [1, 10, 100]],
 # |             *[_find_result_file(f"checkpoints/mlp_fold{fold_id}_seed{seed}.pt") for seed in [1, 10, 100]],
 # |         ]:
 # |             bundle = torch.load(checkpoint, map_location="cpu", weights_only=False)
-# |             assert np.allclose(bundle["scaler_mean_"], expected_mean, atol=1e-10, rtol=0.0)
-# |             assert np.allclose(bundle["scaler_scale_"], expected_scale, atol=1e-10, rtol=0.0)
-# |     return True, "Independent train-only scaler mean/scale matches all 5 folds and 3 seeds"
-# | 
-# | 
+# |             assert np.array_equal(bundle["scaler_mean_"], independent_scaler.mean_)
+# |             assert np.array_equal(bundle["scaler_var_"], independent_scaler.var_)
+# |             assert np.array_equal(bundle["scaler_scale_"], independent_scaler.scale_)
+# |             checkpoint_stats.append((bundle["scaler_mean_"], bundle["scaler_scale_"]))
+# |
+# |         reference_mean, reference_scale = checkpoint_stats[0]
+# |         assert all(
+# |             np.array_equal(mean, reference_mean) and np.array_equal(scale, reference_scale)
+# |             for mean, scale in checkpoint_stats[1:]
+# |         ), f"Fold {fold_id} scaler differs across seeds or backbones"
+# |
+# |     assert len(set(fold_fingerprints)) == 5, "Expected a distinct train-only scaler for each fold"
+# |     return True, "Independent train-only scaler exactly matches all folds, seeds, and backbones"
+# |
+# |
 # | def test_gate_55_existing_checkpoint_internal_provenance():
 # |     manifest = json.loads(Path("results/e1/splits_manifest_v2.json").read_text(encoding="utf-8"))
 # |     expected_manifest_hash = manifest["manifest_sha256"]
@@ -1451,8 +1471,8 @@
 # |         + ", ".join(missing)
 # |     )
 # |     return True, "All existing checkpoints contain internal fold and split-manifest provenance"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_3_no_yd_dependency():
 # |     import inspect
 # |     from src.models.zero_shot_model import ZeroShotMLPModel
@@ -1460,8 +1480,8 @@
 # |     assert "pair_trips" not in source
 # |     assert "calibrat" not in source.lower()
 # |     return True, "MLP forward path has no target-Y_D or calibration input"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_4_no_target_od_truth():
 # |     import inspect
 # |     from src.models.zero_shot_model import ZeroShotMLPModel
@@ -1470,28 +1490,28 @@
 # |     assert "trip_count" not in source
 # |     assert "flow" not in source.lower()
 # |     return True, "MLP forward path does not consume target OD truth"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_20_ztnb_loss():
 # |     return test_gate_22_ztnb_numerical_contract()
-# | 
-# | 
+# |
+# |
 # | def test_mlp_22_eval_deterministic():
 # |     model, x, population, o_idx, d_idx, distance, ei, ed = _mlp_fixture(dropout=0.2)
 # |     model.eval()
 # |     outputs = [model(x, ei, ed, o_idx, d_idx, distance, population) for _ in range(5)]
 # |     assert all(torch.equal(outputs[0], output) for output in outputs[1:])
 # |     return True, "MLP eval inference is bitwise deterministic across five runs"
-# | 
-# | 
+# |
+# |
 # | def test_mlp_23_checkpoint_integrity():
 # |     return test_gate_3_checkpoint_protocol()
-# | 
-# | 
+# |
+# |
 # | def test_mlp_24_cpc():
 # |     return test_gate_7_cpc_metric_oracle()
-# | 
-# | 
+# |
+# |
 # | # -----------------------------------------------------------------------------
 # | # MASTER RUNNER
 # | # -----------------------------------------------------------------------------
@@ -1583,8 +1603,8 @@
 # |         print(f"\033[91mRESEARCH CONTRACT: {passed_count}/{total_gates} PASS ({total_gates - passed_count} FAILED)\033[0m in {elapsed:.2f}s")
 # |         print("=" * 85)
 # |         return 1
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     sys.exit(run_all_gates())
 
@@ -1595,17 +1615,17 @@
 # | """
 # | Project Adapter: Bridge between od_plan_tester test suite and moving-bin framework.
 # | """
-# | 
+# |
 # | import sys
 # | from pathlib import Path
 # | import torch
 # | import numpy as np
-# | 
+# |
 # | # Ensure repo root is on sys.path
 # | REPO_ROOT = Path(__file__).resolve().parent.parent
 # | if str(REPO_ROOT) not in sys.path:
 # |     sys.path.insert(0, str(REPO_ROOT))
-# | 
+# |
 # | # Loss & Oracle
 # | from src.loss.ztnb import (
 # |     nb_log_prob,
@@ -1614,14 +1634,14 @@
 # |     nb_nll,
 # |     compute_conditional_mean,
 # | )
-# | 
+# |
 # | # Models
 # | from src.models.gravity import GravityPrior
 # | from src.models.node_encoder import UrbanGNN
 # | UrbanNodeEncoder = UrbanGNN
 # | from src.models.decoder import PairwiseODDecoder
 # | from src.models.zero_shot_model import ZeroShotODModel
-# | 
+# |
 # | # Data & Graph
 # | from src.data.urban_graph import (
 # |     haversine_distance_matrix,
@@ -1641,13 +1661,13 @@
 # |     compute_distributional_overlap,
 # |     CITY_FIPS_GADM,
 # | )
-# | 
+# |
 # | # Calibration: Primary is calibrate_moving_bins
 # | from src.calibration.bin_calibration import (
 # |     calibrate_moving_bins,
 # |     calibrate_4bin_legacy_ablation,
 # | )
-# | 
+# |
 # | # Evaluation
 # | from src.training.evaluate import (
 # |     compute_cpc_pair,
@@ -1657,33 +1677,33 @@
 # |     evaluate_all,
 # |     evaluate_moving_and_full,
 # | )
-# | 
+# |
 # | def compute_cpc(t_true, t_pred) -> float:
 # |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
 # |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
 # |     return compute_cpc_pair(t_t, t_p)
-# | 
+# |
 # | def compute_cpc_norm(t_true, t_pred) -> float:
 # |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
 # |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
 # |     return compute_cpc_norm_pair(t_t, t_p)
-# | 
+# |
 # | def compute_rmse_log1p(t_true, t_pred) -> float:
 # |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
 # |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
 # |     return compute_rmse_log1p_pair(t_t, t_p)
-# | 
+# |
 # | def compute_pearson_r(t_true, t_pred) -> float:
 # |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
 # |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
 # |     return compute_pearson_pair(t_t, t_p)
-# | 
+# |
 # | # Training & Experiment
 # | from src.training.train import train_zero_shot_model, infer_zero_shot
 # | from src.experiment.run_experiment import run_target_city_experiments
 # | from src.experiment.compute_qstar import analyze_qstar
 # | from src.experiment.compute_delta_r import analyze_delta_r
-# | 
+# |
 # | __all__ = [
 # |     "nb_log_prob",
 # |     "nb_log_prob_at_zero",
@@ -1725,7 +1745,7 @@
 # |     "train_zero_shot_model",
 # |     "infer_zero_shot",
 # |     "run_target_city_experiments",
-# | 
+# |
 # |     "analyze_qstar",
 # |     "analyze_delta_r",
 # | ]
@@ -1737,18 +1757,18 @@
 # | """
 # | Pytest configuration and shared fixtures for od_plan_tester.
 # | """
-# | 
+# |
 # | import pytest
 # | import torch
 # | import numpy as np
-# | 
-# | 
+# |
+# |
 # | @pytest.fixture(autouse=True)
 # | def set_random_seeds():
 # |     torch.manual_seed(42)
 # |     np.random.seed(42)
-# | 
-# | 
+# |
+# |
 # | @pytest.fixture
 # | def sample_coordinates():
 # |     """Returns sample lat/lon coordinates for spatial graph tests."""
@@ -1759,8 +1779,8 @@
 # |         [-84.4500, 33.8000],  # Atlanta sub (~8 km)
 # |         [-85.0000, 34.2000],  # Distant isolated tract (~70 km)
 # |     ])
-# | 
-# | 
+# |
+# |
 # | @pytest.fixture
 # | def synthetic_od_flows():
 # |     """Returns mock true flow counts and distance bins."""
@@ -1777,10 +1797,10 @@
 # | Test to ensure manual Partial-OD calibration is exactly numerically equivalent 
 # | to the canonical `calibrate_kbins` production operator.
 # | """
-# | 
+# |
 # | import pytest
 # | import numpy as np
-# | 
+# |
 # | def test_manual_calibration_equivalence_to_canonical():
 # |     """
 # |     T27: Ensure any manual multiplicative calibration is numerically equivalent 
@@ -1858,7 +1878,7 @@
 # ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_e1_contracts.py =====
 # | """
 # | Unit and Contract Tests for E1 Oracle Existence Test Implementation (Amended Protocol v2).
-# | 
+# |
 # | Tests cover:
 # |   - T51: 35/5/10 fold split invariants & manifest v2 integrity + SHA-256 matching.
 # |   - T52: compute_kbin_edges invariant (strictly increasing, bounds, deduplication).
@@ -1871,11 +1891,11 @@
 # |   - T59: Size-stratified validation representation invariant across size strata and metadata logging.
 # |   - T60: Specificity estimand (Delta_target - Delta_wrong_avg9) & IQR calculation.
 # | """
-# | 
+# |
 # | import numpy as np
 # | import pytest
 # | import torch
-# | 
+# |
 # | from src.data.city_splits import (
 # |     get_all_cities_sorted_by_size,
 # |     generate_5fold_splits,
@@ -1889,95 +1909,95 @@
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.data.dataset import get_scaler_fingerprint, load_city, load_cities, clear_city_cache
 # | from src.experiment.run_e1 import compute_summary, compute_iqr, get_runtime_metadata, configure_cpu_threads
-# | 
-# | 
+# |
+# |
 # | def test_t51_splits_35_5_10_invariants_and_v1_locking():
 # |     splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
 # |     assert len(splits) == 5
-# | 
+# |
 # |     all_test = []
 # |     for f, s in splits.items():
 # |         train = set(s["train"])
 # |         val   = set(s["val"])
 # |         test  = set(s["test"])
-# | 
+# |
 # |         assert len(s["train"]) == 35, f"Fold {f} train size {len(s['train'])} != 35"
 # |         assert len(s["val"]) == 5, f"Fold {f} val size {len(s['val'])} != 5"
 # |         assert len(s["test"]) == 10, f"Fold {f} test size {len(s['test'])} != 10"
-# | 
+# |
 # |         # Strictly identical to locked E1-v1 test sets
 # |         assert s["test"] == sorted(LOCKED_V1_TEST_FOLDS[f]), f"Fold {f} test set does not match locked v1 test set"
-# | 
+# |
 # |         # Disjoint within fold
 # |         assert len(train & val) == 0, f"Fold {f} train and val overlap!"
 # |         assert len(train & test) == 0, f"Fold {f} train and test overlap!"
 # |         assert len(val & test) == 0, f"Fold {f} val and test overlap!"
-# | 
+# |
 # |         all_test.extend(s["test"])
-# | 
+# |
 # |     # Across folds: test sets form exact partition of 50 cities
 # |     assert len(all_test) == 50
 # |     assert len(set(all_test)) == 50
-# | 
-# | 
+# |
+# |
 # | def test_t52_kbin_edges_strictly_increasing():
 # |     splits = generate_35_5_10_splits("data")
 # |     train35 = splits[1]["train"]
 # |     edges, K_active = compute_kbin_edges(train35, K=8, data_root="data")
-# | 
+# |
 # |     assert len(edges) == K_active + 1
 # |     assert edges[0] == 0.0
 # |     assert np.isinf(edges[-1])
 # |     assert np.all(np.diff(edges) > 0), f"Bin edges not strictly increasing: {edges}"
 # |     assert K_active >= 2, f"Too few active bins: {K_active}"
-# | 
-# | 
+# |
+# |
 # | def test_t53_extract_yd_kbins_normalized():
 # |     dist_km = np.array([0.0, 2.5, 5.0, 15.0, 30.0, 80.0, 150.0])
 # |     trips   = np.array([50.0, 20.0, 30.0, 15.0, 10.0, 5.0, 2.0])
 # |     inter_mask = np.array([False, True, True, True, True, True, True])
 # |     edges = np.array([0.0, 10.0, 50.0, 100.0, np.inf])
-# | 
+# |
 # |     yd = extract_yd_kbins(dist_km, trips, edges, inter_mask)
 # |     assert len(yd) == 4
 # |     assert np.isclose(yd.sum(), 1.0, atol=1e-6)
 # |     assert np.all(yd >= 0.0)
-# | 
-# | 
+# |
+# |
 # | def test_t54_calibrate_kbins_mass_and_intrazonal_invariants():
 # |     t0 = np.array([100.0, 20.0, 30.0, 40.0, 50.0], dtype=np.float64)
 # |     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
 # |     inter_mask = np.array([False, True, True, True, True])
 # |     edges = np.array([0.0, 5.0, 15.0, 50.0, np.inf])
 # |     yd_target = np.array([0.1, 0.4, 0.3, 0.2])
-# | 
+# |
 # |     t_cal = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
-# | 
+# |
 # |     # Invariant 1: Intrazonal preserved
 # |     assert np.isclose(t_cal[0], t0[0], atol=1e-6)
-# | 
+# |
 # |     # Invariant 2: Interzonal mass preserved
 # |     assert np.isclose(t_cal[inter_mask].sum(), t0[inter_mask].sum(), atol=1e-4)
-# | 
-# | 
+# |
+# |
 # | def test_t55_calibrate_kbins_q1_exact_distribution():
 # |     t0 = np.array([10.0, 50.0, 20.0, 10.0, 5.0], dtype=np.float64)
 # |     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
 # |     inter_mask = np.array([False, True, True, True, True])
 # |     edges = np.array([0.0, 5.0, 15.0, 50.0, np.inf])
 # |     yd_target = np.array([0.40, 0.30, 0.20, 0.10])
-# | 
+# |
 # |     t_cal = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
 # |     inter_cal = t_cal[inter_mask]
 # |     total_cal = inter_cal.sum()
-# | 
+# |
 # |     for k in range(4):
 # |         lo, hi = edges[k], edges[k+1]
 # |         in_b = (dist_km[inter_mask] > lo) & (dist_km[inter_mask] <= hi)
 # |         prop = inter_cal[in_b].sum() / total_cal
 # |         assert np.isclose(prop, yd_target[k], atol=1e-5), f"Bin {k} prop {prop} != target {yd_target[k]}"
-# | 
-# | 
+# |
+# |
 # | def test_t56_calibrate_kbins_gt_invariance():
 # |     """T_cal is a function of (T0, Y_D), completely independent of T_GT at cell level."""
 # |     t0 = np.array([50.0, 20.0, 30.0, 40.0], dtype=np.float64)
@@ -1985,13 +2005,13 @@
 # |     inter_mask = np.array([False, True, True, True])
 # |     edges = np.array([0.0, 10.0, 30.0, np.inf])
 # |     yd_target = np.array([0.5, 0.3, 0.2])
-# | 
+# |
 # |     t_cal1 = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
 # |     t_cal2 = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
-# | 
+# |
 # |     assert np.allclose(t_cal1, t_cal2)
-# | 
-# | 
+# |
+# |
 # | def test_t57_donor_city_and_all_9_wrong_donors():
 # |     test_cities = ["Austin", "Denver", "Portland", "Seattle", "Chicago", "Boston", "Miami", "Dallas", "Atlanta", "Detroit"]
 # |     for c in test_cities:
@@ -1999,17 +2019,17 @@
 # |         donor = get_donor_city(c, test_cities)
 # |         assert donor != c, f"Donor {donor} is identical to target {c}"
 # |         assert donor in test_cities, f"Donor {donor} not in test set"
-# | 
+# |
 # |         # 9 wrong donors
 # |         wrong_9 = get_wrong_donors(c, test_cities)
 # |         assert len(wrong_9) == 9, f"Expected 9 wrong donors, got {len(wrong_9)}"
 # |         assert c not in wrong_9, f"Target city {c} was included in wrong donors list"
 # |         assert set(wrong_9) == set(test_cities) - {c}
-# | 
+# |
 # |     # Verify wrap-around for legacy single donor
 # |     assert get_donor_city(sorted(test_cities)[-1], test_cities) == sorted(test_cities)[0]
-# | 
-# | 
+# |
+# |
 # | def test_t58_confirmatory_guard_on_incomplete_subsets():
 # |     """Verify that smoke / partial results are NOT reported as confirmatory."""
 # |     dummy_results = [
@@ -2030,24 +2050,24 @@
 # |             "Y_D_target": [0.125]*8, "wrong_donor_breakdown": []
 # |         }
 # |     ]
-# | 
+# |
 # |     summary = compute_summary(dummy_results)
 # |     assert not summary["is_full_50_complete"], "Partial 2-city run was falsely marked as full 50 complete!"
-# | 
-# | 
+# |
+# |
 # | def test_t59_stratified_validation_strata_coverage_and_metadata():
 # |     """Verify validation representation across size strata and candidates metadata presence."""
 # |     cities_info = get_all_cities_sorted_by_size("data")
 # |     city_dict = {c["city"]: c for c in cities_info}
 # |     splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
-# | 
+# |
 # |     for fold_id, s in splits.items():
 # |         val_cities = set(s["val"])
 # |         test_cities = set(s["test"])
 # |         non_test_cities = [c["city"] for c in cities_info if c["city"] not in test_cities]
 # |         non_test_info = [city_dict[c] for c in non_test_cities]
 # |         ordered = sorted(non_test_info, key=lambda x: (x["n_tracts"], x["city"]))
-# | 
+# |
 # |         # Stratum coverage check
 # |         strata = [ordered[i * 8 : (i + 1) * 8] for i in range(5)]
 # |         for s_idx, stratum in enumerate(strata):
@@ -2056,14 +2076,14 @@
 # |             assert len(overlap) == 1, (
 # |                 f"Fold {fold_id} stratum {s_idx} must have exactly 1 validation city, got {overlap}"
 # |             )
-# | 
+# |
 # |         # Candidates metadata check
 # |         cand_meta = s.get("validation_candidates_by_stratum", {})
 # |         assert len(cand_meta) == 5, f"Fold {fold_id} missing stratum candidate metadata"
 # |         for s_name, candidates in cand_meta.items():
 # |             assert len(candidates) == 8, f"Stratum {s_name} in Fold {fold_id} must list exactly 8 candidates"
-# | 
-# | 
+# |
+# |
 # | def test_t60_specificity_estimand_and_iqr():
 # |     """Verify that delta_specificity = delta_target - delta_wrong is computed on city level."""
 # |     test_results = []
@@ -2090,20 +2110,20 @@
 # |             "Y_D_target": [0.125]*8,
 # |             "wrong_donor_breakdown": [],
 # |         })
-# | 
+# |
 # |     summary = compute_summary(test_results)
 # |     assert summary["is_full_50_complete"]
-# | 
+# |
 # |     # Invariant: Mean Specificity = Mean Target - Mean Wrong
 # |     expected_spec = summary["delta_cpc_target_mean"] - summary["delta_cpc_wrong_mean"]
 # |     assert np.isclose(summary["delta_specificity_mean"], expected_spec, atol=1e-6)
-# | 
+# |
 # |     # Invariant: IQR is non-negative
 # |     assert summary["delta_specificity_iqr"] >= 0.0
 # |     assert summary["delta_cpc_target_iqr"] >= 0.0
 # |     assert summary["delta_cpc_wrong_iqr"] >= 0.0
-# | 
-# | 
+# |
+# |
 # | def test_t61_runtime_metadata_and_cpu_thread_control():
 # |     """Verify runtime metadata collection, CPU thread configuration, and summary integration."""
 # |     meta = get_runtime_metadata()
@@ -2122,11 +2142,11 @@
 # |     ]
 # |     for key in required_keys:
 # |         assert key in meta, f"Missing required runtime metadata key: {key}"
-# | 
+# |
 # |     assert meta["cpu_count_logical"] is not None and meta["cpu_count_logical"] > 0
 # |     assert meta["torch_num_threads"] > 0
 # |     assert meta["torch_num_interop_threads"] > 0
-# | 
+# |
 # |     # Test thread configuration
 # |     orig_threads = torch.get_num_threads()
 # |     try:
@@ -2140,7 +2160,7 @@
 # |         assert updated_meta["mkl_num_threads"] == str(set_threads)
 # |     finally:
 # |         configure_cpu_threads(orig_threads)
-# | 
+# |
 # |     # Test compute_summary integration
 # |     mock_results = [{
 # |         "city": "Boston",
@@ -2164,42 +2184,42 @@
 # |     summary = compute_summary(mock_results)
 # |     assert "runtime_environment" in summary
 # |     assert summary["runtime_environment"]["torch_num_threads"] > 0
-# | 
-# | 
+# |
+# |
 # | def test_t62_scaler_fingerprint_and_cache_isolation():
 # |     """Verify deterministic content-based scaler hashing and cross-fold cache isolation."""
 # |     from sklearn.preprocessing import StandardScaler
-# | 
+# |
 # |     # 1. Unfitted / None scaler handling
 # |     assert get_scaler_fingerprint(None) is None
-# | 
+# |
 # |     s1 = StandardScaler()
 # |     s1.mean_ = np.ones(26, dtype=np.float64) * 1.0
 # |     s1.var_  = np.ones(26, dtype=np.float64) * 0.5
 # |     s1.scale_ = np.sqrt(s1.var_)
-# | 
+# |
 # |     s2 = StandardScaler()
 # |     s2.mean_ = np.ones(26, dtype=np.float64) * 1.0
 # |     s2.var_  = np.ones(26, dtype=np.float64) * 0.5
 # |     s2.scale_ = np.sqrt(s2.var_)
-# | 
+# |
 # |     s3 = StandardScaler()
 # |     s3.mean_ = np.ones(26, dtype=np.float64) * 2.0
 # |     s3.var_  = np.ones(26, dtype=np.float64) * 1.0
 # |     s3.scale_ = np.sqrt(s3.var_)
-# | 
+# |
 # |     # Invariant: identical parameters -> identical fingerprint (even with different object IDs)
 # |     assert get_scaler_fingerprint(s1) == get_scaler_fingerprint(s2)
 # |     assert id(s1) != id(s2)
-# | 
+# |
 # |     # Invariant: different parameters -> different fingerprint
 # |     assert get_scaler_fingerprint(s1) != get_scaler_fingerprint(s3)
-# | 
+# |
 # |     # 2. In-memory cache isolation on load_city
 # |     clear_city_cache()
 # |     cd_s1 = load_city("Boston", data_root="data", feature_scaler=s1)
 # |     cd_s3 = load_city("Boston", data_root="data", feature_scaler=s3)
-# | 
+# |
 # |     # Features must differ because s1 and s3 normalization parameters differ
 # |     assert not torch.allclose(cd_s1.node_features, cd_s3.node_features)
 # |     
@@ -2215,7 +2235,7 @@
 # | Tests for Experiment Contracts, Moving-Bin Support, and Manifest Integrity.
 # | (Tests T37 to T45)
 # | """
-# | 
+# |
 # | import json
 # | import hashlib
 # | from pathlib import Path
@@ -2231,8 +2251,8 @@
 # | from src.training.evaluate import compute_cpc_pair
 # | from src.data.city_splits import generate_5fold_splits
 # | from src.data.urban_graph import build_radius_graph
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_model_freezing_theta_star():
 # |     """T37: Model parameters theta* are completely frozen (requires_grad=False) before target inference."""
@@ -2243,11 +2263,11 @@
 # |         device_str="cpu",
 # |         verbose=False,
 # |     )
-# | 
+# |
 # |     for name, param in model.named_parameters():
 # |         assert not param.requires_grad, f"Parameter {name} was not frozen!"
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_shared_support_omega_c_across_conditions():
 # |     """T38: All moving-bin experimental conditions evaluate on identical candidate support Omega_c."""
@@ -2259,12 +2279,12 @@
 # |         device_str="cpu",
 # |         verbose=False,
 # |     )
-# | 
+# |
 # |     cd = load_city("Denver", data_root="data", feature_scaler=fitted_scaler)
 # |     dist_km = np.expm1(cd.pair_distance.numpy())
 # |     expected_inter_mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
 # |     expected_n_inter = int(np.sum(expected_inter_mask))
-# | 
+# |
 # |     from src.data.yd_extractor import compute_kbin_edges
 # |     bin_edges, _ = compute_kbin_edges(["Raleigh", "Denver"], K=8, data_root="data")
 # |     res = run_target_city_experiments(
@@ -2275,17 +2295,17 @@
 # |         bin_edges=bin_edges,
 # |         device_str="cpu",
 # |     )
-# | 
+# |
 # |     # 1. Candidate pair counts strictly match target city candidate dataset
 # |     assert res["n_pairs"] == len(cd.pair_o_idx)
 # |     assert res["n_inter_pairs"] == expected_n_inter
-# | 
+# |
 # |     # 2. Key conditions exist
 # |     assert "M0" in res
 # |     assert "M1_city_oracle_obs" in res
 # |     assert "M1_county_oracle_obs" in res
 # |     assert "M1_subzone_oracle_obs" in res
-# | 
+# |
 # |     # 3. Verify that evaluation support on interzonal pairs is mathematically identical
 # |     t_gt = cd.pair_trips.numpy()
 # |     cpc_inter_m0_expected = compute_cpc_pair(
@@ -2294,26 +2314,26 @@
 # |     )
 # |     assert res["M0"]["cpc_inter"] > 0.0
 # |     assert res["M1_city_oracle_obs"]["cpc_inter"] > 0.0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_delta_r_and_realization_gap_formulas():
 # |     """T39: Verify Delta R^+ and realization gap arithmetic formulas on interzonal metrics."""
 # |     cpc_m0 = 0.35
 # |     cpc_m1_real = 0.42
 # |     cpc_m1_oracle = 0.50
-# | 
+# |
 # |     delta_r_real = cpc_m1_real - cpc_m0
 # |     delta_r_oracle = cpc_m1_oracle - cpc_m0
 # |     realization_gap = cpc_m1_oracle - cpc_m1_real
-# | 
+# |
 # |     assert pytest.approx(0.07, rel=1e-5) == delta_r_real
 # |     assert pytest.approx(0.15, rel=1e-5) == delta_r_oracle
 # |     assert pytest.approx(0.08, rel=1e-5) == realization_gap
-# | 
-# | 
-# | 
-# | 
+# |
+# |
+# |
+# |
 # | @pytest.mark.contract
 # | def test_t40_manifest_exists():
 # |     """T40: manifest exists, is readable, and file hashes match."""
@@ -2332,7 +2352,7 @@
 # |         if p.exists():
 # |             computed = hashlib.sha256(p.read_bytes()).hexdigest()
 # |             assert computed == expected_hash, f"Hash mismatch for {fp}!"
-# | 
+# |
 # | @pytest.mark.contract
 # | def test_t41_50_unique_test_cities():
 # |     """T41: manifest vs pipeline (50 unique test cities)."""
@@ -2343,7 +2363,7 @@
 # |     cities = set([r["city"] for r in results["city_level_results"]])
 # |     assert len(cities) == manifest["contract_conditions"]["unique_cities"]
 # |     assert len(cities) == 50
-# | 
+# |
 # | @pytest.mark.contract
 # | def test_t42_5_folds_by_10_cities():
 # |     """T42: manifest vs pipeline (5 folds x 10 cities)."""
@@ -2361,7 +2381,7 @@
 # |     for count in fold_counts.values():
 # |         assert count == manifest["contract_conditions"]["cities_per_fold"]
 # |         assert count == 10
-# | 
+# |
 # | @pytest.mark.contract
 # | def test_t43_primary_k_is_8():
 # |     """T43: manifest vs pipeline (primary K == 8)."""
@@ -2372,7 +2392,7 @@
 # |     from src.data.yd_extractor import compute_kbin_edges
 # |     bin_edges, _ = compute_kbin_edges(["Denver"], K=locked_k, data_root="data")
 # |     assert len(bin_edges) - 1 == locked_k
-# | 
+# |
 # | @pytest.mark.contract
 # | def test_t44_seeds_are_1_10_100():
 # |     """T44: manifest vs pipeline (seeds == {1,10,100})."""
@@ -2393,7 +2413,7 @@
 # |                         found_seeds = set(elt.value for elt in node.value.elts if isinstance(elt, ast.Constant))
 # |     
 # |     assert found_seeds == locked_seeds, f"Found seeds {found_seeds} in run_5fold.py!"
-# | 
+# |
 # | @pytest.mark.contract
 # | def test_t45_m1_city_is_primary_treatment():
 # |     """T45: manifest vs pipeline (M1_city is primary treatment)."""
@@ -2405,7 +2425,7 @@
 # |         results = json.load(f)
 # |     keys = results["city_level_results"][0].keys()
 # |     assert primary in keys, f"{primary} not found in pipeline results!"
-# | 
+# |
 # | @pytest.mark.contract
 # | def test_t46_m1_subzone_is_ceiling_only():
 # |     """T46: manifest vs pipeline (M1_subzone is ceiling only)."""
@@ -2417,7 +2437,7 @@
 # |         results = json.load(f)
 # |     keys = results["city_level_results"][0].keys()
 # |     assert ceiling in keys, f"{ceiling} not found in pipeline results!"
-# | 
+# |
 # | @pytest.mark.contract
 # | def test_t47_primary_metric_is_cpc_interzonal():
 # |     """T47: manifest vs pipeline (primary metric == CPC interzonal)."""
@@ -2429,7 +2449,7 @@
 # |         results = json.load(f)
 # |     m0_metrics = results["city_level_results"][0]["M0"].keys()
 # |     assert metric in m0_metrics, f"{metric} not found in pipeline metrics!"
-# | 
+# |
 # | @pytest.mark.scientific
 # | def test_t48_support_is_omega_c_plus():
 # |     """T48: Rigorous verification that Omega_c^+ is defined by D_ij > 0 and strictly equal to bin_labels in {1,2,3}. (Restored T44)"""
@@ -2439,17 +2459,17 @@
 # |         o_np = cd.pair_o_idx.numpy()
 # |         d_np = cd.pair_d_idx.numpy()
 # |         b_np = cd.bin_labels.numpy()
-# | 
+# |
 # |         # Check equivalence between distance threshold and bin assignment
 # |         mask_dist = (o_np != d_np) & (dist_km > 0.0)
 # |         mask_bins = (o_np != d_np) & (b_np > 0)
 # |         assert np.array_equal(mask_dist, mask_bins), f"{city_name}: mask_dist and mask_bins mismatch!"
-# | 
+# |
 # |         # Intrazonal pairs are strictly bin 0
 # |         diag_mask = (o_np == d_np)
 # |         assert np.all(b_np[diag_mask] == 0), f"{city_name}: intrazonal pairs contain non-zero bins!"
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_t49_main_results_reproduce_locked_values():
 # |     """T49: main results reproduce locked values."""
@@ -2472,7 +2492,7 @@
 # |     
 # |     assert abs(mean_delta - locked_delta) < 1e-4, f"Delta CPC mismatch: {mean_delta} vs {locked_delta}"
 # |     assert abs(win_rate - locked_win_rate) < 1e-4, f"Win rate mismatch: {win_rate} vs {locked_win_rate}"
-# | 
+# |
 # | @pytest.mark.scientific
 # | def test_t50_target_ground_truth_permutation_invariance_for_m0():
 # |     """T50: Changing, permuting, or zeroing target ground-truth T^GT has zero effect on M0 predictions. (Restored T45)"""
@@ -2484,12 +2504,12 @@
 # |         device_str="cpu",
 # |         verbose=False,
 # |     )
-# | 
+# |
 # |     cd = load_city("Portland", data_root="data", feature_scaler=fitted_scaler)
 # |     import copy
 # |     cd = copy.deepcopy(cd)
 # |     edge_idx, edge_dist = build_radius_graph(cd.lon_lat, radius_km=5.0)
-# | 
+# |
 # |     with torch.no_grad():
 # |         pred_orig = model(
 # |             cd.node_features,
@@ -2501,10 +2521,10 @@
 # |             cd.population,
 # |             return_conditional_mean=True,
 # |         )
-# | 
+# |
 # |     # Permute trips completely
 # |     cd.pair_trips = cd.pair_trips[torch.randperm(len(cd.pair_trips))]
-# | 
+# |
 # |     with torch.no_grad():
 # |         pred_permuted = model(
 # |             cd.node_features,
@@ -2516,10 +2536,10 @@
 # |             cd.population,
 # |             return_conditional_mean=True,
 # |         )
-# | 
+# |
 # |     # Set trips to zeros
 # |     cd.pair_trips = torch.zeros_like(cd.pair_trips)
-# | 
+# |
 # |     with torch.no_grad():
 # |         pred_zeros = model(
 # |             cd.node_features,
@@ -2531,7 +2551,7 @@
 # |             cd.population,
 # |             return_conditional_mean=True,
 # |         )
-# | 
+# |
 # |     torch.testing.assert_close(pred_orig, pred_permuted, rtol=0, atol=1e-6)
 # |     torch.testing.assert_close(pred_orig, pred_zeros, rtol=0, atol=1e-6)
 
@@ -2543,7 +2563,7 @@
 # | Tests for Spatial Urban Graph Topology and Fallback Invariants.
 # | (Tests T07 to T10)
 # | """
-# | 
+# |
 # | import pytest
 # | import torch
 # | import numpy as np
@@ -2551,80 +2571,80 @@
 # |     build_radius_graph,
 # |     haversine_distance_matrix,
 # | )
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_radius_graph_5km_threshold(sample_coordinates):
 # |     """T07: Radius graph with r=5.0 km connects all pairs within 5 km."""
 # |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0)
-# | 
+# |
 # |     # Core tract 0 (-84.388, 33.749) and tract 1 (-84.390, 33.750) are ~0.25 km apart
 # |     # Tract 2 is ~1.5 km apart. They should be connected.
 # |     dist_mat = haversine_distance_matrix(sample_coordinates)
 # |     assert dist_mat[0, 1] < 5.0
 # |     assert dist_mat[0, 2] < 5.0
-# | 
+# |
 # |     # Verify edge exists in edge_index
 # |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
 # |     assert (0, 1) in edges or (1, 0) in edges
 # |     assert (0, 2) in edges or (2, 0) in edges
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_radius_graph_isolated_fallback_1nn(sample_coordinates):
 # |     """T08: Isolated tract (node 4, ~70 km away) connects via 1-NN fallback (degree >= 1)."""
 # |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0)
-# | 
+# |
 # |     # Node 4 is distant. It must have at least 1 neighbor via fallback
 # |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
 # |     node_4_neighbors = [dst for src, dst in edges if src == 4 and dst != 4]
-# | 
+# |
 # |     assert len(node_4_neighbors) >= 1, "Isolated node must have 1-NN fallback edge"
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_urban_graph_zero_od_leakage(sample_coordinates):
 # |     """T09: Graph construction uses only spatial coordinates and is completely independent of OD flows."""
 # |     ei1, ed1 = build_radius_graph(sample_coordinates, radius_km=5.0)
 # |     ei2, ed2 = build_radius_graph(sample_coordinates, radius_km=5.0)
-# | 
+# |
 # |     assert torch.equal(ei1, ei2)
 # |     assert torch.equal(ed1, ed2)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_graph_symmetric_and_self_loops(sample_coordinates):
 # |     """T10: Built graph contains self-loops and is undirected (symmetric adjacency)."""
 # |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0, include_self_loop=True)
-# | 
+# |
 # |     n_nodes = len(sample_coordinates)
 # |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
-# | 
+# |
 # |     # Check self loops
 # |     for i in range(n_nodes):
 # |         assert (i, i) in edges
-# | 
+# |
 # |     # Check symmetry
 # |     for u, v in edges:
 # |         assert (v, u) in edges
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_graph_caching_and_clear(sample_coordinates):
 # |     """T11: Graph caching returns identical cached tensors and respects clear_graph_cache."""
 # |     from src.data.urban_graph import build_radius_graph, build_knn_graph, clear_graph_cache, _GRAPH_CACHE
-# | 
+# |
 # |     clear_graph_cache()
 # |     assert len(_GRAPH_CACHE) == 0
-# | 
+# |
 # |     ei1, ed1 = build_radius_graph(sample_coordinates, radius_km=5.0, use_cache=True)
 # |     assert len(_GRAPH_CACHE) == 1
-# | 
+# |
 # |     ei2, ed2 = build_radius_graph(sample_coordinates, radius_km=5.0, use_cache=True)
 # |     assert len(_GRAPH_CACHE) == 1
 # |     assert torch.equal(ei1, ei2)
 # |     assert torch.equal(ed1, ed2)
-# | 
+# |
 # |     # Test knn caching
 # |     ki1, kd1 = build_knn_graph(sample_coordinates, k=3, use_cache=True)
 # |     assert len(_GRAPH_CACHE) == 2
@@ -2632,44 +2652,44 @@
 # |     assert len(_GRAPH_CACHE) == 2
 # |     assert torch.equal(ki1, ki2)
 # |     assert torch.equal(kd1, kd2)
-# | 
+# |
 # |     clear_graph_cache()
 # |     assert len(_GRAPH_CACHE) == 0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_raw_city_data_caching():
 # |     """T12: Raw city dataset cache avoids redundant I/O and supports independent scalers."""
 # |     from src.data.dataset import load_city, load_raw_city, clear_city_cache, _RAW_CITY_CACHE
 # |     from sklearn.preprocessing import StandardScaler
-# | 
+# |
 # |     clear_city_cache()
 # |     assert len(_RAW_CITY_CACHE) == 0
-# | 
+# |
 # |     raw1 = load_raw_city("Raleigh", data_root="data", use_cache=True)
 # |     assert len(_RAW_CITY_CACHE) == 1
 # |     raw2 = load_raw_city("Raleigh", data_root="data", use_cache=True)
 # |     assert raw1 is raw2
-# | 
+# |
 # |     # Verify scaling with two different scalers preserves raw features
 # |     s1 = StandardScaler()
 # |     s1.fit(raw1.X_raw * 2.0)
 # |     cd1 = load_city("Raleigh", data_root="data", feature_scaler=s1, use_cache=True)
-# | 
+# |
 # |     s2 = StandardScaler()
 # |     s2.fit(raw1.X_raw * 0.5)
 # |     cd2 = load_city("Raleigh", data_root="data", feature_scaler=s2, use_cache=True)
-# | 
+# |
 # |     # cd1 and cd2 have different normalized features but share same raw data
 # |     assert not torch.allclose(cd1.node_features, cd2.node_features)
 # |     assert torch.equal(cd1.pair_distance, cd2.pair_distance)
 # |     assert torch.equal(cd1.pair_trips, cd2.pair_trips)
 # |     assert torch.equal(cd1.lon_lat, cd2.lon_lat)
-# | 
+# |
 # |     clear_city_cache()
 # |     assert len(_RAW_CITY_CACHE) == 0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_distance_matrix_caching_and_clear(sample_coordinates):
 # |     """T13: Haversine distance matrix cache avoids redundant O(N^2) computation."""
@@ -2680,74 +2700,74 @@
 # |         clear_graph_cache,
 # |         _DISTANCE_MATRIX_CACHE,
 # |     )
-# | 
+# |
 # |     clear_distance_matrix_cache()
 # |     assert len(_DISTANCE_MATRIX_CACHE) == 0
-# | 
+# |
 # |     # 1. Direct call caches the matrix
 # |     m1 = haversine_distance_matrix(sample_coordinates, use_cache=True)
 # |     assert len(_DISTANCE_MATRIX_CACHE) == 1
-# | 
+# |
 # |     m2 = haversine_distance_matrix(sample_coordinates, use_cache=True)
 # |     assert m1 is m2  # Exact object identity from cache
 # |     assert np.array_equal(m1, m2)
-# | 
+# |
 # |     # 2. build_radius_graph with different radii shares the cached distance matrix
 # |     clear_graph_cache()
 # |     assert len(_DISTANCE_MATRIX_CACHE) == 0
-# | 
+# |
 # |     _ = build_radius_graph(sample_coordinates, radius_km=3.0, use_cache=True)
 # |     assert len(_DISTANCE_MATRIX_CACHE) == 1
-# | 
+# |
 # |     # Calling with radius=7.0 reuses the distance matrix without recomputing
 # |     _ = build_radius_graph(sample_coordinates, radius_km=7.0, use_cache=True)
 # |     assert len(_DISTANCE_MATRIX_CACHE) == 1
-# | 
+# |
 # |     clear_distance_matrix_cache()
 # |     assert len(_DISTANCE_MATRIX_CACHE) == 0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_city_data_instance_cache_with_scaler():
 # |     """T14: CityData instance cache returns identical object when called with same scaler."""
 # |     from src.data.dataset import load_city, load_raw_city, clear_city_cache, _CITY_DATA_CACHE
 # |     from sklearn.preprocessing import StandardScaler
-# | 
+# |
 # |     clear_city_cache()
 # |     assert len(_CITY_DATA_CACHE) == 0
-# | 
+# |
 # |     raw = load_raw_city("Raleigh", data_root="data", use_cache=True)
 # |     s = StandardScaler()
 # |     s.fit(raw.X_raw)
-# | 
+# |
 # |     cd1 = load_city("Raleigh", data_root="data", feature_scaler=s, use_cache=True)
 # |     assert len(_CITY_DATA_CACHE) == 1
-# | 
+# |
 # |     cd2 = load_city("Raleigh", data_root="data", feature_scaler=s, use_cache=True)
 # |     assert cd1 is cd2  # Exact object identity reused without re-creating tensors
 # |     assert len(_CITY_DATA_CACHE) == 1
-# | 
+# |
 # |     clear_city_cache()
 # |     assert len(_CITY_DATA_CACHE) == 0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_preload_all_cities_smoke():
 # |     """T15: preload_all_cities warms up raw data and spatial graph caches for selected cities."""
 # |     from src.data.dataset import preload_all_cities, clear_city_cache, _RAW_CITY_CACHE
 # |     from src.data.urban_graph import _GRAPH_CACHE, clear_graph_cache
-# | 
+# |
 # |     clear_city_cache()
 # |     clear_graph_cache()
-# | 
+# |
 # |     preload_all_cities(data_root="data", city_names=["Raleigh", "Denver"], build_graphs=True, radius_km=5.0)
 # |     assert len(_RAW_CITY_CACHE) == 2
 # |     assert len(_GRAPH_CACHE) == 2
-# | 
+# |
 # |     clear_city_cache()
 # |     clear_graph_cache()
-# | 
-# | 
+# |
+# |
 
 # ===== END SOURCE FILE: od_plan_tester/tests/test_graph_topology.py =====
 
@@ -2757,13 +2777,13 @@
 # | Tests for Interzonal Moving-Bin Calibration on Omega_c^+ (Soft KL Projection).
 # | (Tests T16 to T21)
 # | """
-# | 
+# |
 # | import pytest
 # | import torch
 # | import numpy as np
 # | from od_plan_tester.project_adapter import calibrate_moving_bins
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_moving_mass_preservation():
 # |     """T16: Interzonal mass preservation on Omega_c^+ within numerical tolerance."""
@@ -2774,23 +2794,23 @@
 # |     # force first 10 to be intrazonal
 # |     for i in range(10):
 # |         d_idx[i] = o_idx[i]
-# | 
+# |
 # |     bins = torch.randint(1, 4, (100,))
 # |     bins[:10] = 0
-# | 
+# |
 # |     t0 = torch.rand(100) * 100.0 + 1.0
 # |     target_moving = np.array([0.30, 0.50, 0.20])
-# | 
+# |
 # |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# | 
+# |
 # |     inter_mask = (o_idx != d_idx) & (bins > 0)
 # |     inter_mass0 = t0[inter_mask].sum().item()
 # |     inter_mass_cal = t_cal[inter_mask].sum().item()
 # |     rel_err = abs(inter_mass_cal - inter_mass0) / inter_mass0
-# | 
+# |
 # |     assert rel_err < 1e-5, f"Interzonal mass preservation relative error {rel_err} exceeds 1e-5"
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_intrazonal_identity():
 # |     """T17: Intrazonal pairs (i == j, D == 0, bin 0) are strictly preserved identically: T_cal == T_zs."""
@@ -2800,13 +2820,13 @@
 # |     bins = torch.tensor([0, 0, 1, 2, 3, 0])
 # |     t0 = torch.tensor([50.0, 120.0, 30.0, 80.0, 20.0, 200.0])
 # |     target_moving = np.array([0.25, 0.50, 0.25])
-# | 
+# |
 # |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# | 
+# |
 # |     intra_mask = (o_idx == d_idx) | (bins == 0)
 # |     assert torch.allclose(t_cal[intra_mask], t0[intra_mask], atol=1e-6)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_q_zero_is_zero_shot_identity():
 # |     """T18: At q=0, calibration outputs exactly zero-shot flows (T_cal == T_zs)."""
@@ -2816,11 +2836,11 @@
 # |     bins = torch.tensor([1, 2, 3])
 # |     t0 = torch.tensor([10.0, 50.0, 100.0])
 # |     target_moving = np.array([0.40, 0.40, 0.20])
-# | 
+# |
 # |     t_cal_0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
 # |     assert torch.allclose(t_cal_0, t0, atol=1e-6)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_q_one_matches_target_distribution():
 # |     """T19: At q=1, active moving-bin proportions match target distribution within tolerance < 1e-5."""
@@ -2830,19 +2850,19 @@
 # |     bins = torch.tensor([1, 1, 2, 2, 3, 3])
 # |     t0 = torch.tensor([10.0, 15.0, 40.0, 60.0, 100.0, 150.0])
 # |     target_moving = np.array([0.20, 0.50, 0.30])
-# | 
+# |
 # |     t_cal_1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0, tolerance=1e-5)
-# | 
+# |
 # |     inter_total = t_cal_1.sum().item()
 # |     p_b1 = t_cal_1[bins == 1].sum().item() / inter_total
 # |     p_b2 = t_cal_1[bins == 2].sum().item() / inter_total
 # |     p_b3 = t_cal_1[bins == 3].sum().item() / inter_total
-# | 
+# |
 # |     assert abs(p_b1 - 0.20) < 1e-5
 # |     assert abs(p_b2 - 0.50) < 1e-5
 # |     assert abs(p_b3 - 0.30) < 1e-5
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_q_monotonic_soft_response():
 # |     """T20: Soft multiplier w_k(q) = (p_cond / p_implied)^q smoothly interpolates between q=0 and q=1."""
@@ -2851,17 +2871,17 @@
 # |     bins = torch.tensor([1, 2])
 # |     t0 = torch.tensor([10.0, 90.0])  # implied: [0.1, 0.9]
 # |     target_moving = np.array([0.5, 0.5, 0.0])  # target for bins 1, 2, 3
-# | 
+# |
 # |     t_q0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
 # |     t_q5 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.5)
 # |     t_q1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# | 
+# |
 # |     # Bin 1 flow must strictly increase with q
 # |     assert t_q0[0].item() < t_q5[0].item() < t_q1[0].item()
 # |     # Bin 2 flow must strictly decrease with q
 # |     assert t_q0[1].item() > t_q5[1].item() > t_q1[1].item()
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_inactive_bin_conditioning():
 # |     """T21: For cities with diameter < 100 km (bin 3 absent), target is conditioned on active moving bins."""
@@ -2870,18 +2890,18 @@
 # |     bins = torch.tensor([1, 2])  # only bins 1 and 2 present
 # |     t0 = torch.tensor([30.0, 70.0])
 # |     target_moving = np.array([0.40, 0.40, 0.20])  # has 0.20 on bin 3
-# | 
+# |
 # |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# | 
+# |
 # |     # Conditioned target on {1, 2} is [0.4/0.8, 0.4/0.8] = [0.5, 0.5]
 # |     inter_total = t_cal.sum().item()
 # |     p_b1 = t_cal[bins == 1].sum().item() / inter_total
 # |     p_b2 = t_cal[bins == 2].sum().item() / inter_total
-# | 
+# |
 # |     assert pytest.approx(0.5, abs=1e-5) == p_b1
 # |     assert pytest.approx(0.5, abs=1e-5) == p_b2
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_calibrate_moving_bins_with_pair_distance():
 # |     """T21b: Verify calibrate_moving_bins using direct pair_distance tensor (D_ij > 0)."""
@@ -2893,16 +2913,16 @@
 # |     pair_distance = torch.log1p(dist_km)
 # |     t0 = torch.tensor([50.0, 120.0, 30.0, 80.0, 20.0, 200.0])
 # |     target_moving = np.array([0.25, 0.50, 0.25])
-# | 
+# |
 # |     t_cal_bins = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
 # |     t_cal_dist = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0, pair_distance=pair_distance)
-# | 
+# |
 # |     assert torch.allclose(t_cal_bins, t_cal_dist, atol=1e-6)
 # |     # Intrazonal identity
 # |     assert torch.allclose(t_cal_dist[[0, 1, 5]], t0[[0, 1, 5]], atol=1e-6)
 # |     # Interzonal mass preservation
 # |     assert pytest.approx(t0[[2, 3, 4]].sum().item(), rel=1e-5) == t_cal_dist[[2, 3, 4]].sum().item()
-# | 
+# |
 
 # ===== END SOURCE FILE: od_plan_tester/tests/test_kl_calibration.py =====
 
@@ -2912,7 +2932,7 @@
 # | Tests for Data Splits, Scaler Isolation, and Omega_c Candidate Provenance.
 # | (Tests T11 to T15)
 # | """
-# | 
+# |
 # | import pytest
 # | import torch
 # | import numpy as np
@@ -2921,48 +2941,48 @@
 # |     load_city,
 # |     load_cities,
 # | )
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_stratified_5fold_split_structure():
 # |     """T11: 5-Fold split contains 5 folds, each with 40 train and 10 test cities."""
 # |     splits = generate_5fold_splits(data_root="data")
-# | 
+# |
 # |     assert len(splits) == 5
 # |     for fold_id, split in splits.items():
 # |         assert len(split["train"]) == 40
 # |         assert len(split["test"]) == 10
 # |         # Disjoint
 # |         assert len(set(split["train"]) & set(split["test"])) == 0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_stratified_5fold_exact_single_coverage():
 # |     """T12: Across all 5 folds, every single city of the 50 cities is tested exactly once."""
 # |     splits = generate_5fold_splits(data_root="data")
-# | 
+# |
 # |     all_test_cities = []
 # |     for split in splits.values():
 # |         all_test_cities.extend(split["test"])
-# | 
+# |
 # |     assert len(all_test_cities) == 50
 # |     assert len(set(all_test_cities)) == 50, "Every city must appear in the test set exactly once."
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_scaler_train_isolation():
 # |     """T13: StandardScaler is fitted strictly on source training cities; target city tracts never enter scaler."""
 # |     train_cities = ["Raleigh", "Denver"]
 # |     test_city = "Philadelphia"
-# | 
+# |
 # |     train_data_list, fitted_scaler = load_cities(train_cities, data_root="data")
 # |     test_data = load_city(test_city, data_root="data", feature_scaler=fitted_scaler, fit_scaler=False)
-# | 
+# |
 # |     total_train_tracts = sum(c.n_tracts for c in train_data_list)
 # |     assert fitted_scaler.n_samples_seen_ == total_train_tracts
 # |     assert fitted_scaler.n_samples_seen_ != (total_train_tracts + test_data.n_tracts)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_omega_c_provenance_strictly_positive():
 # |     """T14: Target city candidate pairs Omega_c contain strictly positive flow counts (T_ij >= 1)."""
@@ -2971,21 +2991,21 @@
 # |         cd = load_city(c_name, data_root="data")
 # |         assert (cd.pair_trips >= 1.0).all()
 # |         assert cd.pair_trips.min().item() >= 1.0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_unobserved_pairs_excluded_not_zero_filled():
 # |     """T15: Candidate support Omega_c has size <= N*(N-1); unobserved pairs are excluded (not zero-filled)."""
 # |     cd = load_city("Philadelphia", data_root="data")
 # |     n_nodes = cd.n_tracts
 # |     max_possible_pairs = n_nodes * n_nodes
-# | 
+# |
 # |     assert cd.n_pairs <= max_possible_pairs
 # |     assert len(cd.pair_trips) == cd.n_pairs
 # |     # Ensure there are no 0s stored
 # |     assert not (cd.pair_trips == 0).any()
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_omega_c_plus_distance_equivalence():
 # |     """T15b: Omega_c^+ definition invariant: (bin_labels > 0) <=> (D_ij > 0) <=> (pair_o != pair_d)."""
@@ -2993,43 +3013,43 @@
 # |     for c_name in test_cities:
 # |         cd = load_city(c_name, data_root="data")
 # |         dist_km = torch.expm1(cd.pair_distance)
-# | 
+# |
 # |         # 1. Invariant: bin_labels > 0 iff distance_km > 0
 # |         assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Bin label vs distance mismatch in {c_name}"
-# | 
+# |
 # |         # 2. Invariant: (pair_o != pair_d) & (bin_labels > 0) strictly matches (pair_o != pair_d) & (D_ij > 0)
 # |         mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
 # |         mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
 # |         assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ mask mismatch in {c_name}"
-# | 
+# |
 # |         # 3. Invariant: Intrazonal pairs have distance == 0 and bin == 0
 # |         intra_mask = (cd.pair_o_idx == cd.pair_d_idx)
 # |         assert torch.all(dist_km[intra_mask] == 0.0)
 # |         assert torch.all(cd.bin_labels[intra_mask] == 0)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.scientific
 # | def test_all_50_cities_omega_plus_invariants():
 # |     """T15c: Exhaustive verification across all 50 dataset cities that D_ij > 0 <=> bin_labels > 0."""
 # |     from src.data.city_splits import get_all_cities_sorted_by_size
 # |     all_cities_info = get_all_cities_sorted_by_size(data_root="data")
 # |     assert len(all_cities_info) == 50
-# | 
+# |
 # |     for c_info in all_cities_info:
 # |         c_name = c_info["city"]
 # |         cd = load_city(c_name, data_root="data")
 # |         dist_km = torch.expm1(cd.pair_distance)
-# | 
+# |
 # |         # Invariant: bin_labels > 0 strictly equals distance_km > 0
 # |         assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Distance vs bin mismatch in {c_name}"
-# | 
+# |
 # |         # Invariant: Omega_c^+ mask strictly identical
 # |         mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
 # |         mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
 # |         assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ definition discrepancy in {c_name}"
-# | 
-# | 
-# | 
+# |
+# |
+# |
 
 # ===== END SOURCE FILE: od_plan_tester/tests/test_leakage_and_splits.py =====
 
@@ -3039,7 +3059,7 @@
 # | Tests for Evaluation Metrics Suite (CPC, CPC_norm, RMSE-log1p, Pearson r).
 # | (Tests T27 to T31)
 # | """
-# | 
+# |
 # | import pytest
 # | import torch
 # | import numpy as np
@@ -3050,60 +3070,60 @@
 # |     compute_pearson_r,
 # |     evaluate_all,
 # | )
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_cpc_bounds_and_symmetry():
 # |     """T27: CPC is bounded in [0, 1] and symmetric CPC(A, B) == CPC(B, A)."""
 # |     t_true = torch.tensor([10.0, 50.0, 100.0, 500.0])
 # |     t_pred = torch.tensor([15.0, 40.0, 120.0, 480.0])
-# | 
+# |
 # |     cpc1 = compute_cpc(t_true, t_pred)
 # |     cpc2 = compute_cpc(t_pred, t_true)
-# | 
+# |
 # |     assert 0.0 <= cpc1 <= 1.0
 # |     assert pytest.approx(cpc1, rel=1e-6) == cpc2
-# | 
+# |
 # |     # Perfect prediction has CPC = 1.0
 # |     assert pytest.approx(1.0, rel=1e-6) == compute_cpc(t_true, t_true)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_cpc_norm_1_minus_tvd():
 # |     """T28: Normalized CPC matches 1 - 0.5 * sum |p_i - q_i| and is scale-invariant."""
 # |     t_true = torch.tensor([10.0, 20.0, 30.0])
 # |     t_pred = torch.tensor([20.0, 40.0, 60.0])  # identical shape, 2x scale
-# | 
+# |
 # |     cpc_norm = compute_cpc_norm(t_true, t_pred)
 # |     assert pytest.approx(1.0, rel=1e-6) == cpc_norm
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_rmse_log1p_zero_on_identical():
 # |     """T29: RMSE-log1p is strictly 0.0 on identical inputs and positive otherwise."""
 # |     t_true = torch.tensor([5.0, 15.0, 50.0])
 # |     t_pred = torch.tensor([10.0, 20.0, 60.0])
-# | 
+# |
 # |     assert pytest.approx(0.0, abs=1e-6) == compute_rmse_log1p(t_true, t_true)
 # |     assert compute_rmse_log1p(t_true, t_pred) > 0.0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_pearson_r_bounds():
 # |     """T30: Pearson r is 1.0 on linear transformation and bounded in [-1, 1]."""
 # |     t_true = torch.tensor([10.0, 20.0, 30.0, 40.0])
 # |     t_pred = 3.0 * t_true + 5.0
-# | 
+# |
 # |     r = compute_pearson_r(t_true, t_pred)
 # |     assert pytest.approx(1.0, rel=1e-5) == r
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_evaluate_all_contract():
 # |     """T31: evaluate_all returns all locked primary and secondary metrics in a dictionary."""
 # |     t_true = torch.tensor([10.0, 20.0, 30.0])
 # |     t_pred = torch.tensor([12.0, 18.0, 35.0])
-# | 
+# |
 # |     res = evaluate_all(t_true, t_pred)
 # |     assert isinstance(res, dict)
 # |     assert "cpc" in res
@@ -3121,7 +3141,7 @@
 # | Tests for Moving-Bin Y_D Extraction (Oracle & Real Meta) and Distributional Overlap.
 # | (Tests T22 to T26)
 # | """
-# | 
+# |
 # | import pytest
 # | import torch
 # | import numpy as np
@@ -3131,8 +3151,8 @@
 # |     compute_distributional_overlap,
 # |     sample_multinomial_yd,
 # | )
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_yd_moving_oracle_assignment():
 # |     """T22: extract_yd_moving_oracle produces shape (3,), sums to 1.0, and excludes intrazonal trips."""
@@ -3141,15 +3161,15 @@
 # |     d_idx = torch.tensor([0, 1, 2, 3])
 # |     bin_labels = torch.tensor([0, 1, 2, 3])
 # |     pair_trips = torch.tensor([100.0, 10.0, 20.0, 30.0])
-# | 
+# |
 # |     yd_moving = extract_yd_moving_oracle(pair_trips, bin_labels, o_idx, d_idx)
-# | 
+# |
 # |     assert yd_moving.shape == (3,)
 # |     assert pytest.approx(1.0, rel=1e-6) == float(np.sum(yd_moving))
 # |     # Interzonal total = 60 -> proportions: [10/60, 20/60, 30/60] = [1/6, 1/3, 1/2]
 # |     np.testing.assert_allclose(yd_moving, [1.0 / 6.0, 1.0 / 3.0, 0.5], atol=1e-5)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_M1_city_oracle_obs_meta_sum():
 # |     """T23: extract_M1_city_oracle_obs from Meta mobility data produces shape (3,) and sums strictly to 1.0."""
@@ -3160,42 +3180,42 @@
 # |         assert yd_real.shape == (3,)
 # |         assert pytest.approx(1.0, rel=1e-5) == float(np.sum(yd_real))
 # |         assert (yd_real >= 0.0).all()
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_distributional_overlap_bounds():
 # |     """T24: compute_distributional_overlap (Overlap / CPC_dist) is in [0, 1] and 1.0 on identical distributions."""
 # |     p = np.array([0.25, 0.50, 0.25])
 # |     q = np.array([0.30, 0.40, 0.30])
-# | 
+# |
 # |     overlap_self = compute_distributional_overlap(p, p)
 # |     overlap_pq = compute_distributional_overlap(p, q)
-# | 
+# |
 # |     assert pytest.approx(1.0, rel=1e-6) == overlap_self
 # |     assert 0.0 <= overlap_pq <= 1.0
 # |     # Overlap = min(0.25, 0.30) + min(0.50, 0.40) + min(0.25, 0.30) = 0.25 + 0.40 + 0.25 = 0.90
 # |     assert pytest.approx(0.90, rel=1e-6) == overlap_pq
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_multinomial_sampling_stochastic_validity():
 # |     """T25: Multinomial sampling produces valid distributions across seeds."""
 # |     t_true = torch.tensor([50.0, 150.0, 300.0, 500.0])
 # |     bin_labels = torch.tensor([0, 1, 2, 3])
-# | 
+# |
 # |     for m in [100, 1000, 10000]:
 # |         yd_m = sample_multinomial_yd(t_true, bin_labels, m=m, seed=42)
 # |         assert len(yd_m) == 4
 # |         assert pytest.approx(1.0, rel=1e-5) == float(np.sum(yd_m))
 # |         assert (yd_m >= 0.0).all()
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_multinomial_sampling_asymptotic_convergence():
 # |     """T26: When m=inf, Multinomial sampling converges to the exact underlying empirical distribution."""
 # |     t_true = torch.tensor([100.0, 200.0, 300.0, 400.0])
 # |     bin_labels = torch.tensor([0, 1, 2, 3])
-# | 
+# |
 # |     yd_inf = sample_multinomial_yd(t_true, bin_labels, m=np.inf, seed=42)
 # |     expected = np.array([0.1, 0.2, 0.3, 0.4])
 # |     np.testing.assert_allclose(yd_inf, expected, atol=1e-6)
@@ -3208,7 +3228,7 @@
 # | Tests for ZTNB Loss, Conditional Expectation, and Gravity Prior Oracle.
 # | (Tests T01 to T06)
 # | """
-# | 
+# |
 # | import math
 # | import pytest
 # | import torch
@@ -3220,14 +3240,14 @@
 # |     compute_conditional_mean,
 # |     GravityPrior,
 # | )
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_ztnb_log_prob_zero_formula():
 # |     """T01: Verify base NB log P(T=0) = phi * log(phi / (mu + phi))."""
 # |     mu_vals = [0.5, 2.0, 10.0, 100.0]
 # |     phi_vals = [0.1, 1.0, 5.0]
-# | 
+# |
 # |     for mu in mu_vals:
 # |         for phi in phi_vals:
 # |             log_phi = torch.tensor(math.log(phi))
@@ -3235,8 +3255,8 @@
 # |             log_p0 = nb_log_prob_at_zero(mu_t, log_phi).item()
 # |             expected = phi * math.log(phi / (mu + phi))
 # |             assert pytest.approx(expected, rel=1e-5) == log_p0
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | @pytest.mark.scientific
 # | def test_ztnb_nll_strictly_positive_support():
@@ -3244,43 +3264,43 @@
 # |     t_pos = torch.tensor([1.0, 2.0, 5.0, 20.0])
 # |     mu = torch.tensor([1.5, 2.0, 4.0, 18.0])
 # |     log_phi = torch.tensor(0.0)
-# | 
+# |
 # |     loss = ztnb_nll(t_pos, mu, log_phi)
 # |     assert torch.isfinite(loss)
 # |     assert loss.item() > 0.0
-# | 
+# |
 # |     # Ensure zero counts trigger assertion error
 # |     t_with_zero = torch.tensor([0.0, 1.0, 2.0])
 # |     with pytest.raises(AssertionError):
 # |         ztnb_nll(t_with_zero, torch.ones(3), log_phi)
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_ztnb_conditional_mean_strictly_greater():
 # |     """T03: Conditional positive expectation E[T | T >= 1] = mu / (1 - P(0)) is strictly > mu."""
 # |     mu = torch.tensor([0.1, 1.0, 5.0, 20.0])
 # |     log_phi = torch.tensor(math.log(2.0))
 # |     c_mean = compute_conditional_mean(mu, log_phi)
-# | 
+# |
 # |     assert (c_mean > mu).all()
 # |     # Manual check for mu=1.0, phi=2.0
 # |     # P(0) = (2 / (1 + 2))^2 = 4/9
 # |     # E[T|T>=1] = 1.0 / (1 - 4/9) = 9/5 = 1.8
 # |     expected_1 = 1.0 / (1.0 - (2.0 / 3.0) ** 2)
 # |     assert pytest.approx(expected_1, rel=1e-4) == c_mean[1].item()
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_ztnb_conditional_mean_asymptotics():
 # |     """T04: As mu -> infinity, P(0) -> 0 and E[T | T >= 1] -> mu."""
 # |     mu_large = torch.tensor([10000.0, 50000.0])
 # |     log_phi = torch.tensor(0.0)  # phi = 1.0
 # |     c_mean = compute_conditional_mean(mu_large, log_phi)
-# | 
+# |
 # |     rel_diff = torch.abs(c_mean - mu_large) / mu_large
 # |     assert (rel_diff < 1e-3).all()
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.reference
 # | def test_gravity_prior_formula_and_decay():
 # |     """T05: Gravity model formula: log T = G + log Pi + log Pj - alpha * log D."""
@@ -3288,18 +3308,18 @@
 # |     pi = torch.tensor([1000.0, 2000.0])
 # |     pj = torch.tensor([500.0, 4000.0])
 # |     d = torch.tensor([10.0, 20.0])
-# | 
+# |
 # |     log_t = grav(pi, pj, d)
 # |     expected_0 = 0.5 + math.log(1000.0) + math.log(500.0) - 1.5 * math.log(10.0)
 # |     assert pytest.approx(expected_0, rel=1e-4) == log_t[0].item()
-# | 
+# |
 # |     # Verify distance decay: larger distance yields smaller predicted flow
 # |     d_near = torch.tensor([5.0])
 # |     d_far = torch.tensor([50.0])
 # |     p_const = torch.tensor([1000.0])
 # |     assert grav(p_const, p_const, d_near).item() > grav(p_const, p_const, d_far).item()
-# | 
-# | 
+# |
+# |
 # | @pytest.mark.contract
 # | def test_gravity_prior_learnable_gradients():
 # |     """T06: Trainable shared gravity parameters G and log_alpha produce finite valid gradients."""
@@ -3307,11 +3327,11 @@
 # |     pi = torch.tensor([1000.0])
 # |     pj = torch.tensor([1000.0])
 # |     d = torch.tensor([5.0])
-# | 
+# |
 # |     out = grav(pi, pj, d)
 # |     loss = (out - torch.tensor([10.0])) ** 2
 # |     loss.backward()
-# | 
+# |
 # |     assert grav.G.grad is not None and torch.isfinite(grav.G.grad)
 # |     assert grav.log_alpha.grad is not None and torch.isfinite(grav.log_alpha.grad)
 
@@ -3320,15 +3340,15 @@
 
 # ===== BEGIN SOURCE FILE: src/aggregation/gadm2_county_aggregator.py =====
 # | # File: src/aggregation/gadm2_county_aggregator.py
-# | 
+# |
 # | import os
 # | from pathlib import Path
 # | from typing import Optional, List, Dict, Any
 # | import geopandas as gpd
 # | import pandas as pd
 # | import numpy as np
-# | 
-# | 
+# |
+# |
 # | def find_default_gadm_path() -> str:
 # |     """Find default GADM shapefile path."""
 # |     candidates = [
@@ -3340,8 +3360,8 @@
 # |         if Path(c).exists():
 # |             return c
 # |     return candidates[0]
-# | 
-# | 
+# |
+# |
 # | def load_gadm(gadm_shp: Optional[str] = None) -> gpd.GeoDataFrame:
 # |     """Load and prepare GADM level-2 GeoDataFrame."""
 # |     if gadm_shp is None:
@@ -3351,8 +3371,8 @@
 # |     gadm = gpd.read_file(gadm_shp)
 # |     gadm = gadm[['GID_2', 'NAME_2', 'geometry']].to_crs("EPSG:4326")
 # |     return gadm
-# | 
-# | 
+# |
+# |
 # | def aggregate_city_to_gadm2(
 # |     city_name: str,
 # |     data_root: str = "data",
@@ -3469,8 +3489,8 @@
 # |     print(f"  -> Trip conservation error: {preflight['trip_conservation_error']:.2e}")
 # |     
 # |     return preflight
-# | 
-# | 
+# |
+# |
 # | def run_all(
 # |     cities: Optional[List[str]] = None,
 # |     data_root: str = "data",
@@ -3526,8 +3546,8 @@
 # |     print(f"\nPreflight report saved to {report_path}")
 # |     
 # |     return report_df
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     run_all()
 
@@ -3537,41 +3557,41 @@
 # ===== BEGIN SOURCE FILE: src/calibration/bin_calibration.py =====
 # | r"""
 # | Interzonal Moving-Bin Calibration on Omega_c^+ via Soft KL Projection.
-# | 
+# |
 # | Mathematical Formulation:
 # |     1. Interzonal Domain:
 # |         Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}
 # |         Intrazonal pairs (i == j, D_ii = 0) are kept intact: \hat{T}_{ii}^{cal} = \hat{T}_{ii}^{ZS}.
-# | 
+# |
 # |     2. Moving-Bin Target Distribution:
 # |         Y_{c, k}^{Meta, +} = Y_{c, k}^{Meta} / sum_{l=1}^3 Y_{c, l}^{Meta}   for k in {1, 2, 3}
 # |         Y_{c, k}^{oracle, +} = sum_{(i,j) in Omega_{c,k}^+} T_{ij}^{GT} / sum_{(i,j) in Omega_c^+} T_{ij}^{GT}
-# | 
+# |
 # |     3. Support Conditioning:
 # |         For cities with diameter < 100 km (where bin 3 has 0 pairs), condition target on active moving bins:
 # |         p_k^{cond, +} = Y_k^+ * 1(k active) / sum_{l active} Y_l^+
-# | 
+# |
 # |     4. Soft Calibration Multipliers (0 <= q <= 1):
 # |         \hat{B}_k^+ = sum_{(i,j) in Omega_{c,k}^+} \hat{T}_{ij}^{ZS}
 # |         \hat{N}^+ = sum_{(i,j) in Omega_c^+} \hat{T}_{ij}^{ZS}
 # |         \hat{Y}_k^{ZS, +} = \hat{B}_k^+ / \hat{N}^+
-# | 
+# |
 # |         w_k(q) = ( p_k^{cond, +} / \hat{Y}_k^{ZS, +} )^q
 # |         s_k = w_k(q) / sum_{l active} [ \hat{Y}_l^{ZS, +} * w_l(q) ]
-# | 
+# |
 # |         \hat{T}_{ij}^{cal} = s_{b(i,j)} * \hat{T}_{ij}^{ZS}   for (i,j) in Omega_c^+
-# | 
+# |
 # | Strict Invariants:
 # |     1. Interzonal mass preservation: \sum_{Omega^+} \hat{T}^{cal} == \sum_{Omega^+} \hat{T}^{ZS}.
 # |     2. Intrazonal identity: \hat{T}_{ii}^{cal} == \hat{T}_{ii}^{ZS}.
 # |     3. At q=1: implied moving-bin proportions match p_k^{cond, +} exactly within 1e-5.
 # |     4. At q=0: \hat{T}^{cal} == \hat{T}^{ZS} (pure zero-shot).
 # | """
-# | 
+# |
 # | import numpy as np
 # | import torch
-# | 
-# | 
+# |
+# |
 # | def calibrate_moving_bins(
 # |     t_pred_zero_shot: torch.Tensor,
 # |     bin_labels: torch.Tensor,
@@ -3584,7 +3604,7 @@
 # | ) -> torch.Tensor:
 # |     """
 # |     Applies interzonal moving-bin calibration on Omega_c^+ (bins 1, 2, 3).
-# | 
+# |
 # |     Args:
 # |         t_pred_zero_shot: (E,) zero-shot predicted flows on Omega_c.
 # |         bin_labels:       (E,) bin index (0=intrazonal, 1=(0,10), 2=[10,100), 3=100+).
@@ -3594,23 +3614,23 @@
 # |         q:                soft calibration parameter in [0, 1]. q=1 is full match, q=0 is zero-shot.
 # |         pair_distance:    Optional (E,) pairwise distance tensor (log1p km or km).
 # |         tolerance:        numerical precision tolerance (default 1e-5).
-# | 
+# |
 # |     Returns:
 # |         t_cal: (E,) calibrated flows with intrazonal preserved and interzonal re-scaled.
 # |     """
 # |     assert 0.0 <= q <= 1.0, f"q must be in [0, 1], got {q}"
-# | 
+# |
 # |     if isinstance(target_moving_yd, np.ndarray):
 # |         p_raw = torch.tensor(target_moving_yd, dtype=torch.float32, device=t_pred_zero_shot.device)
 # |     else:
 # |         p_raw = target_moving_yd.to(device=t_pred_zero_shot.device, dtype=torch.float32)
-# | 
+# |
 # |     # Normalize moving target
 # |     raw_sum = torch.sum(p_raw)
 # |     if raw_sum <= 0:
 # |         return t_pred_zero_shot.clone()
 # |     p_raw = p_raw / raw_sum
-# | 
+# |
 # |     # Mask for interzonal pairs Omega_c^+ (i != j and D_ij > 0)
 # |     if pair_distance is not None:
 # |         p_dist = pair_distance.to(device=t_pred_zero_shot.device)
@@ -3619,23 +3639,23 @@
 # |     else:
 # |         inter_mask = (pair_o_idx != pair_d_idx) & (bin_labels > 0)
 # |     intra_mask = ~inter_mask
-# | 
+# |
 # |     # Clone predictions
 # |     t_cal = t_pred_zero_shot.clone()
-# | 
+# |
 # |     n_inter_hat = torch.sum(t_pred_zero_shot[inter_mask])
 # |     if n_inter_hat <= 0:
 # |         return t_cal
-# | 
+# |
 # |     # Compute implied mass on moving bins {1, 2, 3}
 # |     implied_b = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
 # |     active_mask = torch.zeros(3, dtype=torch.bool, device=t_pred_zero_shot.device)
-# | 
+# |
 # |     for idx, bin_k in enumerate([1, 2, 3]):
 # |         k_mask = inter_mask & (bin_labels == bin_k)
 # |         implied_b[idx] = torch.sum(t_pred_zero_shot[k_mask])
 # |         active_mask[idx] = k_mask.any()
-# | 
+# |
 # |     # Condition target on active moving bins
 # |     p_active = p_raw * active_mask.float()
 # |     active_sum = torch.sum(p_active)
@@ -3643,9 +3663,9 @@
 # |         p_cond = implied_b / n_inter_hat
 # |     else:
 # |         p_cond = p_active / active_sum
-# | 
+# |
 # |     implied_p = implied_b / n_inter_hat
-# | 
+# |
 # |     # Compute soft weights w_k(q) = (p_cond / implied_p)^q
 # |     w = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
 # |     for idx in range(3):
@@ -3657,28 +3677,28 @@
 # |             # This is consistent with the mathematical spec: inactive bins carry no mass
 # |             # and must not contribute to the scaling normalization.
 # |             w[idx] = 0.0
-# | 
+# |
 # |     # Normalization to ensure interzonal mass preservation: \sum \hat{T}^{cal} == \sum \hat{T}^{ZS}
 # |     weighted_mass = torch.sum(implied_p * w)
 # |     s = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
 # |     if weighted_mass > 0:
 # |         s = w / weighted_mass
-# | 
+# |
 # |     # Apply scaling to interzonal pairs
 # |     for idx, bin_k in enumerate([1, 2, 3]):
 # |         k_mask = inter_mask & (bin_labels == bin_k)
 # |         if k_mask.any():
 # |             t_cal[k_mask] = t_pred_zero_shot[k_mask] * s[idx]
-# | 
+# |
 # |     # Invariant 1: Interzonal mass preservation within numerical tolerance
 # |     cal_inter_mass = torch.sum(t_cal[inter_mask])
 # |     mass_diff_rel = torch.abs(cal_inter_mass - n_inter_hat) / n_inter_hat
 # |     if mass_diff_rel > tolerance:
 # |         t_cal[inter_mask] = t_cal[inter_mask] * (n_inter_hat / cal_inter_mass)
-# | 
+# |
 # |     # Invariant 2: Intrazonal identity
 # |     assert torch.allclose(t_cal[intra_mask], t_pred_zero_shot[intra_mask], atol=1e-6), "Intrazonal violated!"
-# | 
+# |
 # |     # Invariant 3: If q=1, verify bin matching on active bins within 1e-5
 # |     if abs(q - 1.0) < 1e-4:
 # |         cal_inter_p = torch.zeros(3, dtype=torch.float32, device=t_pred_zero_shot.device)
@@ -3688,7 +3708,7 @@
 # |                 cal_inter_p[idx] = torch.sum(t_cal[inter_mask & (bin_labels == bin_k)])
 # |         if total_inter_cal > 0:
 # |             cal_inter_p = cal_inter_p / total_inter_cal
-# | 
+# |
 # |         for idx in range(3):
 # |             if active_mask[idx]:
 # |                 bin_err = torch.abs(cal_inter_p[idx] - p_cond[idx]).item()
@@ -3696,10 +3716,10 @@
 # |                     f"Invariant failed on moving bin {idx+1}: target={p_cond[idx].item():.6f}, "
 # |                     f"got={cal_inter_p[idx].item():.6f}, err={bin_err:.6f}"
 # |                 )
-# | 
+# |
 # |     return t_cal
-# | 
-# | 
+# |
+# |
 # | def calibrate_4bin_legacy_ablation(
 # |     t_pred_zero_shot: torch.Tensor,
 # |     bin_labels: torch.Tensor,
@@ -3714,33 +3734,33 @@
 # |         p_raw = torch.tensor(target_4bin_yd, dtype=torch.float32, device=t_pred_zero_shot.device)
 # |     else:
 # |         p_raw = target_4bin_yd.to(device=t_pred_zero_shot.device, dtype=torch.float32)
-# | 
+# |
 # |     n_hat = torch.sum(t_pred_zero_shot)
 # |     if n_hat <= 0:
 # |         return t_pred_zero_shot
-# | 
+# |
 # |     implied_b = torch.zeros(4, dtype=torch.float32, device=t_pred_zero_shot.device)
 # |     active_mask = torch.zeros(4, dtype=torch.bool, device=t_pred_zero_shot.device)
 # |     for k in range(4):
 # |         mask = (bin_labels == k)
 # |         implied_b[k] = torch.sum(t_pred_zero_shot[mask])
 # |         active_mask[k] = mask.any()
-# | 
+# |
 # |     p_active = p_raw * active_mask.float()
 # |     p_cond = p_active / torch.clamp(torch.sum(p_active), min=eps)
-# | 
+# |
 # |     s = (p_cond * n_hat + eps) / (implied_b + eps)
 # |     t_cal = t_pred_zero_shot * s[bin_labels]
-# | 
+# |
 # |     cal_mass = torch.sum(t_cal)
 # |     t_cal = t_cal * (n_hat / (cal_mass + eps))
 # |     return t_cal
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # E1: Dynamic K-bin calibration (numpy-based, for Oracle Existence Test)
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | def calibrate_kbins(
 # |     t0_np: np.ndarray,
 # |     dist_km: np.ndarray,
@@ -3752,27 +3772,27 @@
 # | ) -> np.ndarray:
 # |     r"""
 # |     Closed-form K-bin Moving-Bin calibration for E1.
-# | 
+# |
 # |     Works on numpy arrays (CPU-only). Mirrors calibrate_moving_bins() semantics
 # |     but accepts dynamic bin_edges (K bins, not fixed 3-bin schema).
-# | 
+# |
 # |     Mathematical formulation:
 # |         Y_D_cond_k = Y_D_k * active_k / sum_l(Y_D_l * active_l)
 # |         w_k(q)     = (Y_D_cond_k / Y_hat_k)^q
 # |         s_k        = w_k / sum_l(Y_hat_l * w_l)
 # |         T_cal_ij   = s_{b(ij)} * T0_ij   for (i,j) in Omega_c^+
-# | 
+# |
 # |     Notes on zero-behavior:
 # |         If target Y_D_k == 0, then w_k(q) = 0 for ANY q > 0.
 # |         This forces hard-zero predictions on that bin, making q mapping non-continuous at q=0 if the target contains exact zeros.
 # |         Smoothing/pseudocounts must be applied to Y_D prior to calling this function if a softer response is desired.
-# | 
+# |
 # |     Invariants:
 # |         1. Interzonal mass preservation: sum(T_cal[inter]) == sum(T0[inter]) within tolerance.
 # |         2. Intrazonal identity: T_cal[~inter] == T0[~inter] exactly.
 # |         3. At q=1: bin proportions of T_cal match Y_D_cond within tolerance for active bins.
 # |         4. GT-independence: output is a function of T0 and Y_D only, not T^GT.
-# | 
+# |
 # |     Args:
 # |         t0_np:      (E,) zero-shot predicted flows (numpy float array).
 # |         dist_km:    (E,) pairwise distances in km.
@@ -3781,27 +3801,27 @@
 # |         bin_edges:  (K+1,) strictly increasing edges from compute_kbin_edges.
 # |         q:          soft calibration strength in [0, 1]. q=1 = exact match.
 # |         tolerance:  numerical precision for invariant checks.
-# | 
+# |
 # |     Returns:
 # |         t_cal: (E,) calibrated flows; intrazonal unchanged, interzonal rescaled.
 # |     """
 # |     assert 0.0 <= q <= 1.0, f"q must be in [0, 1], got {q}"
 # |     K = len(bin_edges) - 1
 # |     assert len(yd_target) == K, f"yd_target length {len(yd_target)} != K={K}"
-# | 
+# |
 # |     # Normalize input Y_D (defensive)
 # |     yd_sum = float(np.sum(yd_target))
 # |     yd_raw = yd_target / yd_sum if yd_sum > 0 else np.ones(K) / K
-# | 
+# |
 # |     t_cal = t0_np.copy().astype(np.float64)
 # |     inter_T0 = t0_np[inter_mask].astype(np.float64)
 # |     N_hat = inter_T0.sum()
-# | 
+# |
 # |     if N_hat <= 0:
 # |         return t_cal  # no interzonal flow to calibrate
-# | 
+# |
 # |     inter_dist = dist_km[inter_mask]
-# | 
+# |
 # |     # Compute implied distribution Y_hat from zero-shot
 # |     Y_hat = np.zeros(K, dtype=np.float64)
 # |     active = np.zeros(K, dtype=bool)
@@ -3810,40 +3830,40 @@
 # |         in_bin = (inter_dist > lo) & (inter_dist <= hi)
 # |         Y_hat[k] = inter_T0[in_bin].sum() / N_hat
 # |         active[k] = bool(in_bin.any())
-# | 
+# |
 # |     # Condition Y_D on active bins only
 # |     yd_active = yd_raw * active.astype(np.float64)
 # |     active_sum = yd_active.sum()
 # |     Y_D_cond = yd_active / active_sum if active_sum > 0 else Y_hat.copy()
-# | 
+# |
 # |     # Soft weights: w_k = (Y_D_cond_k / Y_hat_k)^q
 # |     w = np.ones(K, dtype=np.float64)
 # |     for k in range(K):
 # |         if active[k] and Y_hat[k] > 0:
 # |             w[k] = (Y_D_cond[k] / Y_hat[k]) ** q
-# | 
+# |
 # |     # Normalize: s_k = w_k / sum_l(Y_hat_l * w_l)
 # |     weighted_mass = float((Y_hat * w).sum())
 # |     s = w / weighted_mass if weighted_mass > 0 else np.ones(K)
-# | 
+# |
 # |     # Apply per-bin scaling to interzonal pairs
 # |     idx = np.where(inter_mask)[0]
 # |     for k in range(K):
 # |         lo, hi = float(bin_edges[k]), float(bin_edges[k + 1])
 # |         in_bin = (inter_dist > lo) & (inter_dist <= hi)
 # |         t_cal[idx[in_bin]] = t0_np[idx[in_bin]] * s[k]
-# | 
+# |
 # |     # --- Invariant 1: Interzonal mass preservation ---
 # |     cal_mass = float(t_cal[inter_mask].sum())
 # |     mass_err_rel = abs(cal_mass - N_hat) / max(N_hat, 1e-8)
 # |     if mass_err_rel > tolerance:
 # |         t_cal[inter_mask] = t_cal[inter_mask] * (N_hat / cal_mass)
-# | 
+# |
 # |     # --- Invariant 2: Intrazonal identity ---
 # |     intra_mask = ~inter_mask
 # |     assert np.allclose(t_cal[intra_mask], t0_np[intra_mask], atol=1e-6), \
 # |         "calibrate_kbins: Intrazonal identity violated"
-# | 
+# |
 # |     # --- Invariant 3: At q=1, bin proportions match Y_D_cond ---
 # |     if abs(q - 1.0) < 1e-4:
 # |         total_cal = float(t_cal[inter_mask].sum())
@@ -3858,10 +3878,10 @@
 # |                         f"calibrate_kbins bin {k}: target={Y_D_cond[k]:.6f}, "
 # |                         f"got={cal_prop:.6f}, err={bin_err:.6f}"
 # |                     )
-# | 
+# |
 # |     return t_cal
-# | 
-# | 
+# |
+# |
 # | def calibrate_kbins_grouped(
 # |     t0_np: np.ndarray,
 # |     dist_km: np.ndarray,
@@ -3939,26 +3959,26 @@
 # |         t_cal[g_mask] = t_cal_g
 # |         
 # |     return t_cal
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     t0 = torch.tensor([50.0, 100.0, 300.0, 600.0])  # pair 0 is intrazonal, 1,2,3 are interzonal
 # |     bins = torch.tensor([0, 1, 2, 3])
 # |     o_idx = torch.tensor([0, 0, 0, 0])
 # |     d_idx = torch.tensor([0, 1, 2, 3])  # pair 0 is (0,0) intrazonal
 # |     target_moving = np.array([0.25, 0.45, 0.30])  # sums to 1.0 for bins 1, 2, 3
-# | 
+# |
 # |     # q=1.0 (Full calibration)
 # |     t_cal_1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
 # |     print("Zero-shot t0:      ", t0.tolist())
 # |     print("Calibrated t_cal(1):", t_cal_1.tolist())
 # |     print("Intrazonal flow 0: ", t_cal_1[0].item(), "== t0[0]:", t0[0].item())
 # |     print("Interzonal mass:   ", t_cal_1[1:].sum().item(), "== t0[1:].sum:", t0[1:].sum().item())
-# | 
+# |
 # |     # q=0.5 (Soft calibration)
 # |     t_cal_half = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.5)
 # |     print("Soft t_cal(0.5):   ", t_cal_half.tolist())
-# | 
+# |
 # |     # q=0.0 (Zero-shot identity)
 # |     t_cal_0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
 # |     assert torch.allclose(t_cal_0, t0), "q=0 must equal zero-shot!"
@@ -3970,7 +3990,7 @@
 # ===== BEGIN SOURCE FILE: src/data/city_splits.py =====
 # | """
 # | 5-Fold Stratified City Splits across 50 US cities for Experiment E1 (v2 Amended Protocol).
-# | 
+# |
 # | Design Principles:
 # | 1. Outer Split Invariance: 10 test cities per fold are locked exactly from E1-v1 to prevent
 # |    post-hoc test set selection or tie-break perturbation.
@@ -3982,7 +4002,7 @@
 # | 5. Estimand Alignment: Unit of analysis is strictly the city; wrong placebo is averaged over
 # |    all 9 within-fold donors for specificity Delta_c^specificity = Delta_c^target - bar{Delta}_c^wrong.
 # | """
-# | 
+# |
 # | import os
 # | import csv
 # | import json
@@ -3990,7 +4010,7 @@
 # | import hashlib
 # | from pathlib import Path
 # | from typing import List, Dict, Tuple
-# | 
+# |
 # | # Canonical test sets locked from E1-v1 to prevent any outer fold shift
 # | LOCKED_V1_TEST_FOLDS: Dict[int, List[str]] = {
 # |     1: [
@@ -4014,7 +4034,7 @@
 # |         "Miami", "Philadelphia", "San_Jose", "Tucson", "Wichita"
 # |     ],
 # | }
-# | 
+# |
 # | STRATUM_NAMES = [
 # |     "stratum_0_small",
 # |     "stratum_1_small_med",
@@ -4022,8 +4042,8 @@
 # |     "stratum_3_med_large",
 # |     "stratum_4_large",
 # | ]
-# | 
-# | 
+# |
+# |
 # | def get_all_cities_sorted_by_size(data_root: str = "data") -> List[Dict]:
 # |     """
 # |     Inspects all 50 cities and returns them sorted by tract count.
@@ -4032,7 +4052,7 @@
 # |     root = Path(data_root)
 # |     city_dirs = [d.name for d in root.iterdir() if d.is_dir()]
 # |     cities_info = []
-# | 
+# |
 # |     for city in city_dirs:
 # |         meta_path = root / city / "meta.csv"
 # |         if not meta_path.exists():
@@ -4040,20 +4060,20 @@
 # |         with open(meta_path, newline="") as f:
 # |             n_tracts = sum(1 for _ in f) - 1
 # |         cities_info.append({"city": city, "n_tracts": n_tracts})
-# | 
+# |
 # |     # Sort ascending by tract count, tie-break with city name
 # |     cities_info.sort(key=lambda x: (x["n_tracts"], x["city"]))
 # |     return cities_info
-# | 
-# | 
+# |
+# |
 # | def generate_5fold_splits(data_root: str = "data") -> Dict[int, Dict[str, List[str]]]:
 # |     """
 # |     DEPRECATED — Returns 5 outer folds with 40 train / 10 test cities.
-# | 
+# |
 # |     WARNING: This function produces 40/0/10 splits (no validation set), which VIOLATES
 # |     the locked 35/5/10 protocol (Contract §7). It is retained only for backward
 # |     compatibility with legacy test code.
-# | 
+# |
 # |     Use generate_35_5_10_splits() or load_splits_manifest_v2() instead.
 # |     """
 # |     import warnings
@@ -4075,8 +4095,8 @@
 # |             "test": test_cities,
 # |         }
 # |     return splits
-# | 
-# | 
+# |
+# |
 # | def select_stratified_validation(
 # |     non_test_info: List[Dict],
 # |     fold_id: int,
@@ -4084,26 +4104,26 @@
 # | ) -> Tuple[List[str], List[str], Dict[str, List[Dict]]]:
 # |     """
 # |     Selects 5 validation cities from 40 non-test cities using 5 size strata.
-# | 
+# |
 # |     Algorithm:
 # |       1. Sort 40 non-test cities by (n_tracts, city).
 # |       2. Divide into 5 size strata of 8 cities each (small -> large).
 # |       3. Draw 1 validation city from each stratum using Random(seed + fold_id).
 # |       4. The remaining 35 cities form the training set.
-# | 
+# |
 # |     Returns:
 # |       (train_cities, val_cities, validation_candidates_by_stratum)
 # |     """
 # |     ordered = sorted(non_test_info, key=lambda x: (x["n_tracts"], x["city"]))
 # |     assert len(ordered) == 40, f"Expected 40 non-test cities, got {len(ordered)}"
-# | 
+# |
 # |     # 40 cities -> 5 size strata x 8 cities
 # |     strata = [ordered[i * 8 : (i + 1) * 8] for i in range(5)]
-# | 
+# |
 # |     rng = random.Random(seed + fold_id)
 # |     val_cities = []
 # |     candidates_by_stratum = {}
-# | 
+# |
 # |     for s_idx, stratum in enumerate(strata):
 # |         s_name = STRATUM_NAMES[s_idx]
 # |         chosen = rng.choice(stratum)["city"]
@@ -4112,13 +4132,13 @@
 # |             {"city": item["city"], "n_tracts": item["n_tracts"], "selected_for_val": item["city"] == chosen}
 # |             for item in stratum
 # |         ]
-# | 
+# |
 # |     val_set = set(val_cities)
 # |     train_cities = [item["city"] for item in ordered if item["city"] not in val_set]
-# | 
+# |
 # |     return sorted(train_cities), sorted(val_cities), candidates_by_stratum
-# | 
-# | 
+# |
+# |
 # | def generate_splits_manifest_v2(
 # |     data_root: str = "data",
 # |     seed: int = 20260818,
@@ -4131,63 +4151,63 @@
 # |     cities_info = get_all_cities_sorted_by_size(data_root)
 # |     all_city_names = sorted([c["city"] for c in cities_info])
 # |     assert len(all_city_names) == 50, f"Expected 50 cities, found {len(all_city_names)}"
-# | 
+# |
 # |     city_dict = {c["city"]: c for c in cities_info}
 # |     manifest_folds = {}
 # |     test_count = {c: 0 for c in all_city_names}
-# | 
+# |
 # |     for fold_id in range(1, 6):
 # |         # 1. Lock outer test fold directly from E1-v1
 # |         test_cities = sorted(LOCKED_V1_TEST_FOLDS[fold_id])
 # |         assert len(test_cities) == 10, f"Fold {fold_id} test size {len(test_cities)} != 10"
-# | 
+# |
 # |         # 2. Extract 40 non-test cities
 # |         non_test_cities = [c for c in all_city_names if c not in set(test_cities)]
 # |         non_test_info = [city_dict[c] for c in non_test_cities]
 # |         assert len(non_test_info) == 40, f"Fold {fold_id} non-test count != 40"
-# | 
+# |
 # |         # 3. Stratified validation selection
 # |         train_cities, val_cities, candidates_by_stratum = select_stratified_validation(
 # |             non_test_info, fold_id=fold_id, seed=seed
 # |         )
-# | 
+# |
 # |         train_set = set(train_cities)
 # |         val_set = set(val_cities)
 # |         test_set = set(test_cities)
-# | 
+# |
 # |         # Invariant Assertions within fold
 # |         assert len(train_cities) == 35, f"Fold {fold_id} train size != 35"
 # |         assert len(val_cities) == 5, f"Fold {fold_id} val size != 5"
 # |         assert len(test_cities) == 10, f"Fold {fold_id} test size != 10"
-# | 
+# |
 # |         # No duplicate cities within lists
 # |         assert len(set(train_cities)) == 35, f"Fold {fold_id} train contains duplicates"
 # |         assert len(set(val_cities)) == 5, f"Fold {fold_id} val contains duplicates"
 # |         assert len(set(test_cities)) == 10, f"Fold {fold_id} test contains duplicates"
-# | 
+# |
 # |         # Pairwise disjointness
 # |         assert train_set.isdisjoint(val_set), f"Fold {fold_id} train/val overlap"
 # |         assert train_set.isdisjoint(test_set), f"Fold {fold_id} train/test overlap"
 # |         assert val_set.isdisjoint(test_set), f"Fold {fold_id} val/test overlap"
 # |         assert (train_set | val_set | test_set) == set(all_city_names), f"Fold {fold_id} does not partition 50 cities"
-# | 
+# |
 # |         for c in test_cities:
 # |             test_count[c] += 1
-# | 
+# |
 # |         manifest_folds[str(fold_id)] = {
 # |             "train": train_cities,
 # |             "val": val_cities,
 # |             "test": test_cities,
 # |             "validation_candidates_by_stratum": candidates_by_stratum,
 # |         }
-# | 
+# |
 # |     # Across all 5 folds: each city tested exactly once
 # |     assert all(test_count[city] == 1 for city in all_city_names), "Test city partition invariant violated across folds"
-# | 
+# |
 # |     # Compute SHA-256 hash over canonical fold content
 # |     folds_canonical_json = json.dumps(manifest_folds, sort_keys=True)
 # |     manifest_sha256 = hashlib.sha256(folds_canonical_json.encode("utf-8")).hexdigest()
-# | 
+# |
 # |     manifest_data = {
 # |         "version": "e1-splits-v2",
 # |         "protocol_status": "amended replication under a locked protocol",
@@ -4197,15 +4217,15 @@
 # |         "manifest_sha256": manifest_sha256,
 # |         "folds": manifest_folds,
 # |     }
-# | 
+# |
 # |     out_file = Path(output_path)
 # |     out_file.parent.mkdir(parents=True, exist_ok=True)
 # |     with open(out_file, "w", encoding="utf-8") as f:
 # |         json.dump(manifest_data, f, indent=2)
-# | 
+# |
 # |     return manifest_data
-# | 
-# | 
+# |
+# |
 # | def load_splits_manifest_v2(
 # |     manifest_path: str = "results/e1/splits_manifest_v2.json",
 # |     data_root: str = "data",
@@ -4216,7 +4236,7 @@
 # |     path = Path(manifest_path)
 # |     if not path.exists():
 # |         raise FileNotFoundError(f"Missing locked manifest at {path}. Protocol requires explicit locked splits.")
-# | 
+# |
 # |     with open(path, "r", encoding="utf-8") as f:
 # |         data = json.load(f)
 # |         
@@ -4227,57 +4247,57 @@
 # |     actual_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 # |     if actual_hash != stored_hash:
 # |         raise ValueError(f"Manifest integrity compromised! Expected SHA-256 {stored_hash} but got {actual_hash}")
-# | 
+# |
 # |     cities_info = get_all_cities_sorted_by_size(data_root)
 # |     all_city_names = set(c["city"] for c in cities_info)
-# | 
+# |
 # |     folds_raw = data.get("folds", {})
 # |     assert len(folds_raw) == 5, f"Expected 5 folds in manifest, found {len(folds_raw)}"
-# | 
+# |
 # |     parsed_splits = {}
 # |     test_count = {c: 0 for c in all_city_names}
-# | 
+# |
 # |     for fold_key in sorted(folds_raw.keys(), key=lambda x: int(x)):
 # |         fold_id = int(fold_key)
 # |         f_data = folds_raw[fold_key]
 # |         train = sorted(f_data["train"])
 # |         val = sorted(f_data["val"])
 # |         test = sorted(f_data["test"])
-# | 
+# |
 # |         # Invariant Assertions
 # |         assert len(train) == 35, f"Fold {fold_id} train size {len(train)} != 35"
 # |         assert len(val) == 5, f"Fold {fold_id} val size {len(val)} != 5"
 # |         assert len(test) == 10, f"Fold {fold_id} test size {len(test)} != 10"
-# | 
+# |
 # |         assert len(set(train)) == 35, f"Fold {fold_id} train has duplicates"
 # |         assert len(set(val)) == 5, f"Fold {fold_id} val has duplicates"
 # |         assert len(set(test)) == 10, f"Fold {fold_id} test has duplicates"
-# | 
+# |
 # |         # Verify test set exactly matches the locked E1-v1 test set
 # |         assert test == sorted(LOCKED_V1_TEST_FOLDS[fold_id]), (
 # |             f"Fold {fold_id} test set does not match locked E1-v1 test set!"
 # |         )
-# | 
+# |
 # |         train_set, val_set, test_set = set(train), set(val), set(test)
 # |         assert train_set.isdisjoint(val_set), f"Fold {fold_id} train & val overlap"
 # |         assert train_set.isdisjoint(test_set), f"Fold {fold_id} train & test overlap"
 # |         assert val_set.isdisjoint(test_set), f"Fold {fold_id} val & test overlap"
 # |         assert (train_set | val_set | test_set) == all_city_names, f"Fold {fold_id} does not partition 50 cities"
-# | 
+# |
 # |         for c in test:
 # |             test_count[c] += 1
-# | 
+# |
 # |         parsed_splits[fold_id] = {
 # |             "train": train,
 # |             "val": val,
 # |             "test": test,
 # |             "validation_candidates_by_stratum": f_data.get("validation_candidates_by_stratum", {}),
 # |         }
-# | 
+# |
 # |     assert all(test_count[city] == 1 for city in all_city_names), "Not all cities tested exactly once across folds"
 # |     return parsed_splits
-# | 
-# | 
+# |
+# |
 # | def get_wrong_donors(target_city: str, test_cities: List[str]) -> List[str]:
 # |     """
 # |     Returns all other 9 test cities in the fold as wrong donors.
@@ -4285,8 +4305,8 @@
 # |     test_sorted = sorted(test_cities)
 # |     assert target_city in test_sorted, f"Target city {target_city} not in test fold {test_sorted}"
 # |     return [c for c in test_sorted if c != target_city]
-# | 
-# | 
+# |
+# |
 # | def get_donor_city(target_city: str, test_cities: List[str]) -> str:
 # |     """
 # |     Single deterministic wrong-donor assignment (next city alphabetically, legacy fallback).
@@ -4294,8 +4314,8 @@
 # |     test_sorted = sorted(test_cities)
 # |     idx = test_sorted.index(target_city)
 # |     return test_sorted[(idx + 1) % len(test_sorted)]
-# | 
-# | 
+# |
+# |
 # | def generate_35_5_10_splits(data_root: str = "data") -> Dict[int, Dict[str, List[str]]]:
 # |     """
 # |     Convenience wrapper returning the locked v2 35/5/10 splits.
@@ -4304,8 +4324,8 @@
 # |         manifest_path="results/e1/splits_manifest_v2.json",
 # |         data_root=data_root,
 # |     )
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     print("Generating and locking splits manifest v2 (Amended Protocol)...")
 # |     manifest = generate_splits_manifest_v2("data")
@@ -4325,7 +4345,7 @@
 # ===== BEGIN SOURCE FILE: src/data/dataset.py =====
 # | """
 # | City dataset loader for the distance-binned OD reconstruction study.
-# | 
+# |
 # | Loads a single city's data from the standard directory layout:
 # |     data/{city}/
 # |         meta.csv               — tract metadata (idx, lon, lat, area_km2, city)
@@ -4336,7 +4356,7 @@
 # |         pairs/
 # |             od.csv             — candidate OD pairs with trip_count
 # |             distance.csv       — pairwise distances (km) for same candidate set
-# | 
+# |
 # | Returns a CityData dataclass with:
 # |     node_features  : FloatTensor (N, F)
 # |     pair_o_idx     : LongTensor  (E,)     — origin tract index
@@ -4348,30 +4368,30 @@
 # |     city_name      : str
 # |     n_tracts       : int
 # |     n_pairs        : int
-# | 
+# |
 # | Normalization:
 # |     - Node features: StandardScaler fitted on training cities, applied to all.
 # |     - Distances: log(1 + d_km).
 # |     - Trip counts: kept as raw integers (ZTNB operates on counts directly).
 # | """
-# | 
+# |
 # | from __future__ import annotations
-# | 
+# |
 # | import os
 # | import csv
 # | import hashlib
 # | import dataclasses
 # | from pathlib import Path
 # | from typing import List, Optional, Dict
-# | 
+# |
 # | import numpy as np
 # | import torch
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # Node feature columns (order must match across all cities)
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | # Census features used (subset — well-defined across all 50 cities)
 # | CENSUS_COLS = [
 # |     "total_population", "median_age", "median_income", "per_capita_income",
@@ -4379,51 +4399,53 @@
 # |     "commute_active_pct", "commute_wfh_pct", "zero_vehicle_pct",
 # |     "avg_vehicles_per_household", "higher_education_pct", "homeownership_rate",
 # | ]
-# | 
+# |
 # | # POI features
 # | POI_COLS = [
 # |     "office", "office_density", "industrial", "industrial_density",
 # |     "commercial", "commercial_density", "education_primary",
 # |     "education_primary_density",
 # | ]
-# | 
+# |
 # | # Road features
 # | ROAD_COLS = [
 # |     "road_length_total", "road_density", "road_count",
 # |     "motorway_length", "primary_length",
 # | ]
-# | 
-# | 
+# |
+# | NODE_FEATURE_COLUMNS = tuple(CENSUS_COLS + POI_COLS + ROAD_COLS)
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # Data class
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | @dataclasses.dataclass
 # | class CityData:
 # |     city_name:      str
 # |     n_tracts:       int
 # |     n_pairs:        int
-# | 
+# |
 # |     # Node-level (N, *)
 # |     node_features:  torch.Tensor   # (N, F) normalized
 # |     population:     torch.Tensor   # (N,)   raw population
 # |     lon_lat:        torch.Tensor   # (N, 2) [lon, lat]
-# | 
+# |
 # |     # Pair-level (E, *)
 # |     pair_o_idx:     torch.LongTensor   # (E,)
 # |     pair_d_idx:     torch.LongTensor   # (E,)
 # |     pair_distance:  torch.Tensor       # (E,) log1p(km)
 # |     pair_trips:     torch.Tensor       # (E,) raw counts, all >= 1
 # |     bin_labels:     torch.LongTensor   # (E,) distance bin index (0-3)
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # Distance bin assignment
 # | # ---------------------------------------------------------------------------
 # | # Bins match Meta mobility categories: 0 km | (0,10) | [10,100) | 100+
 # | BIN_EDGES = [0.0, 1e-9, 10.0, 100.0, float("inf")]
 # | BIN_LABELS = ["zero", "short", "medium", "long"]   # 0, 1, 2, 3
-# | 
+# |
 # | def assign_bins(distance_km: np.ndarray) -> np.ndarray:
 # |     """Assign each pair to a distance bin (0=zero, 1=short, 2=medium, 3=long)."""
 # |     bins = np.zeros(len(distance_km), dtype=np.int64)
@@ -4431,12 +4453,12 @@
 # |     bins[(distance_km >= 10) & (distance_km < 100)] = 2
 # |     bins[distance_km >= 100]                         = 3
 # |     return bins
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # CSV loading helpers
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | def _load_csv_columns(path: Path, cols: List[str], key_col: str = "idx") -> np.ndarray:
 # |     """Load specific columns from a CSV, ordered by key_col. Returns float array."""
 # |     data: Dict[int, List[float]] = {}
@@ -4462,8 +4484,8 @@
 # |     for k, v in data.items():
 # |         arr[k] = v
 # |     return arr
-# | 
-# | 
+# |
+# |
 # | def _load_meta(path: Path):
 # |     """Load meta.csv -> idx, lon, lat, population placeholder."""
 # |     idx_list, lons, lats = [], [], []
@@ -4484,8 +4506,8 @@
 # |         lon_arr[i] = lon
 # |         lat_arr[i] = lat
 # |     return np.stack([lon_arr, lat_arr], axis=1)   # (N, 2)
-# | 
-# | 
+# |
+# |
 # | def _load_pairs(od_path: Path, dist_path: Path):
 # |     """Load od.csv and distance.csv into aligned arrays."""
 # |     od: Dict[tuple, int] = {}
@@ -4495,7 +4517,7 @@
 # |             trip = int(row["trip_count"])
 # |             if trip > 0:
 # |                 od[(int(row["o_idx"]), int(row["d_idx"]))] = trip
-# | 
+# |
 # |     dist_map: Dict[tuple, float] = {}
 # |     with open(dist_path, newline="") as f:
 # |         reader = csv.DictReader(f)
@@ -4508,7 +4530,7 @@
 # |     missing_dist = od_keys - dist_keys
 # |     if len(missing_dist) > 0:
 # |         raise ValueError(f"Found {len(missing_dist)} positive OD pairs missing from distance.csv (e.g. {list(missing_dist)[:3]}). Support integrity compromised.")
-# | 
+# |
 # |     # Iterate over distance pairs that have positive OD trips
 # |     origins, dests, trips, dists = [], [], [], []
 # |     for pair in dist_keys:
@@ -4520,15 +4542,15 @@
 # |         dests.append(pair[1])
 # |         trips.append(trip_count)
 # |         dists.append(dist_map[pair])
-# | 
+# |
 # |     return (
 # |         np.array(origins, dtype=np.int64),
 # |         np.array(dests,   dtype=np.int64),
 # |         np.array(trips,   dtype=np.float32),
 # |         np.array(dists,   dtype=np.float32),
 # |     )
-# | 
-# | 
+# |
+# |
 # | @dataclasses.dataclass
 # | class RawCityData:
 # |     city_name:      str
@@ -4543,13 +4565,13 @@
 # |     pair_trips:     torch.Tensor       # (E,) raw counts, all >= 1 float32
 # |     bin_labels:     torch.LongTensor   # (E,) distance bin index (0-3)
 # |     dist_km:        np.ndarray         # (E,) raw pairwise distance in km
-# | 
-# | 
+# |
+# |
 # | # Global In-Memory Caches for parsed raw CSV city datasets & normalized CityData instances
 # | _RAW_CITY_CACHE: Dict[tuple[str, str], RawCityData] = {}
 # | _CITY_DATA_CACHE: Dict[tuple[str, str, Optional[str]], CityData] = {}
-# | 
-# | 
+# |
+# |
 # | def get_scaler_fingerprint(scaler: Optional[object]) -> Optional[str]:
 # |     """
 # |     Computes a deterministic content-based fingerprint (SHA-256) of a fitted StandardScaler.
@@ -4564,15 +4586,42 @@
 # |         s_bytes = np.ascontiguousarray(getattr(scaler, "scale_", np.ones_like(scaler.mean_)), dtype=np.float64).tobytes()
 # |         return hashlib.sha256(m_bytes + v_bytes + s_bytes).hexdigest()
 # |     return f"unfitted_{id(scaler)}"
-# | 
-# | 
+# |
+# |
+# | def validate_feature_scaler(scaler: object) -> None:
+# |     """Validate that a fitted scaler is safe for the fixed node-feature schema."""
+# |     expected_features = len(NODE_FEATURE_COLUMNS)
+# |     for attribute in ("mean_", "var_", "scale_"):
+# |         if not hasattr(scaler, attribute):
+# |             raise ValueError(f"Feature scaler is not fitted: missing {attribute}")
+# |         values = np.asarray(getattr(scaler, attribute), dtype=np.float64)
+# |         if values.shape != (expected_features,):
+# |             raise ValueError(
+# |                 f"Feature scaler {attribute} has shape {values.shape}; "
+# |                 f"expected ({expected_features},)"
+# |             )
+# |         if not np.isfinite(values).all():
+# |             raise ValueError(f"Feature scaler {attribute} contains NaN or Inf")
+# |
+# |     if np.any(np.asarray(scaler.var_) < 0.0):
+# |         raise ValueError("Feature scaler var_ contains negative values")
+# |     if np.any(np.asarray(scaler.scale_) <= 0.0):
+# |         raise ValueError("Feature scaler scale_ must be strictly positive")
+# |
+# |     n_features = getattr(scaler, "n_features_in_", expected_features)
+# |     if int(n_features) != expected_features:
+# |         raise ValueError(
+# |             f"Feature scaler expects {n_features} features; expected {expected_features}"
+# |         )
+# |
+# |
 # | def clear_city_cache() -> None:
 # |     """Flushes both raw and normalized in-memory city dataset caches."""
 # |     global _RAW_CITY_CACHE, _CITY_DATA_CACHE
 # |     _RAW_CITY_CACHE.clear()
 # |     _CITY_DATA_CACHE.clear()
-# | 
-# | 
+# |
+# |
 # | def load_raw_city(
 # |     city_name: str,
 # |     data_root: str = "data",
@@ -4584,33 +4633,33 @@
 # |     cache_key = (city_name, str(Path(data_root).resolve()))
 # |     if use_cache and cache_key in _RAW_CITY_CACHE:
 # |         return _RAW_CITY_CACHE[cache_key]
-# | 
+# |
 # |     base = Path(data_root) / city_name
-# | 
+# |
 # |     # --- Node features ---
 # |     census = _load_csv_columns(base / "nodes" / "census.csv", CENSUS_COLS)
 # |     poi    = _load_csv_columns(base / "nodes" / "poi.csv",    POI_COLS)
 # |     road   = _load_csv_columns(base / "nodes" / "road.csv",   ROAD_COLS)
 # |     X_raw  = np.concatenate([census, poi, road], axis=1)   # (N, F)
 # |     X_raw  = np.nan_to_num(X_raw, nan=0.0, posinf=0.0, neginf=0.0)
-# | 
+# |
 # |     # Population for gravity prior (first census column)
 # |     population = census[:, 0].copy()   # total_population
-# | 
+# |
 # |     # Coordinates
 # |     lon_lat = _load_meta(base / "meta.csv")   # (N, 2)
 # |     n_tracts = X_raw.shape[0]
-# | 
+# |
 # |     # --- Pair data ---
 # |     o_idx, d_idx, trips, dist_km = _load_pairs(
 # |         base / "pairs" / "od.csv",
 # |         base / "pairs" / "distance.csv",
 # |     )
 # |     assert (trips >= 1).all(), f"{city_name}: found zero trip counts in candidate set"
-# | 
+# |
 # |     log_dist = np.log1p(dist_km)
 # |     bin_labels = assign_bins(dist_km)
-# | 
+# |
 # |     raw_data = RawCityData(
 # |         city_name     = city_name,
 # |         n_tracts      = n_tracts,
@@ -4625,17 +4674,17 @@
 # |         bin_labels    = torch.tensor(bin_labels, dtype=torch.long),
 # |         dist_km       = dist_km,
 # |     )
-# | 
+# |
 # |     if use_cache:
 # |         _RAW_CITY_CACHE[cache_key] = raw_data
-# | 
+# |
 # |     return raw_data
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # Main loader
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | def load_city(
 # |     city_name: str,
 # |     data_root: str = "data",
@@ -4645,7 +4694,7 @@
 # | ) -> CityData:
 # |     """
 # |     Load one city's data, optionally applying or fitting a feature scaler.
-# | 
+# |
 # |     Args:
 # |         city_name:      Directory name under data_root.
 # |         data_root:      Root of the data/ directory.
@@ -4653,19 +4702,24 @@
 # |                         If None and fit_scaler=True, fits a new one.
 # |         fit_scaler:     If True, fits scaler on this city's data.
 # |         use_cache:      If True, retrieves raw parsed data from in-memory cache.
-# | 
+# |
 # |     Returns:
 # |         CityData instance.
 # |     """
+# |     if feature_scaler is not None and fit_scaler:
+# |         raise ValueError("Pass either feature_scaler or fit_scaler=True, not both")
+# |     if feature_scaler is not None:
+# |         validate_feature_scaler(feature_scaler)
+# |
 # |     scaler_key = get_scaler_fingerprint(feature_scaler)
 # |     resolved_root = str(Path(data_root).resolve())
 # |     cache_key = (city_name, resolved_root, scaler_key)
-# | 
+# |
 # |     if use_cache and not fit_scaler and cache_key in _CITY_DATA_CACHE:
 # |         return _CITY_DATA_CACHE[cache_key]
-# | 
+# |
 # |     raw = load_raw_city(city_name, data_root=data_root, use_cache=use_cache)
-# | 
+# |
 # |     # --- Normalize node features ---
 # |     if feature_scaler is not None:
 # |         X_norm = feature_scaler.transform(raw.X_raw)
@@ -4677,10 +4731,10 @@
 # |         cache_key = (city_name, resolved_root, scaler_key)
 # |     else:
 # |         X_norm = raw.X_raw
-# | 
+# |
 # |     # Replace NaN/Inf that may arise from missing features
 # |     X_norm = np.nan_to_num(X_norm, nan=0.0, posinf=0.0, neginf=0.0)
-# | 
+# |
 # |     cd = CityData(
 # |         city_name     = raw.city_name,
 # |         n_tracts      = raw.n_tracts,
@@ -4694,13 +4748,13 @@
 # |         pair_trips    = raw.pair_trips,
 # |         bin_labels    = raw.bin_labels,
 # |     )
-# | 
+# |
 # |     if use_cache:
 # |         _CITY_DATA_CACHE[cache_key] = cd
-# | 
+# |
 # |     return cd
-# | 
-# | 
+# |
+# |
 # | def load_cities(
 # |     city_names: List[str],
 # |     data_root: str = "data",
@@ -4709,21 +4763,27 @@
 # |     """
 # |     Load multiple cities, fitting a single StandardScaler on all training
 # |     node features jointly (to ensure consistent normalization).
-# | 
+# |
 # |     Returns:
 # |         (list of CityData, fitted scaler)
 # |     """
 # |     from sklearn.preprocessing import StandardScaler
-# | 
+# |
+# |     if not city_names:
+# |         raise ValueError("At least one training city is required to fit the feature scaler")
+# |     if len(city_names) != len(set(city_names)):
+# |         raise ValueError("Training city names must be unique when fitting the feature scaler")
+# |
 # |     # First pass: collect raw features from memory cache
 # |     raw_list = [load_raw_city(name, data_root=data_root, use_cache=use_cache) for name in city_names]
 # |     all_X = [r.X_raw for r in raw_list]
-# | 
+# |
 # |     scaler = StandardScaler()
 # |     scaler.fit(np.concatenate(all_X, axis=0))
+# |     validate_feature_scaler(scaler)
 # |     scaler_key = get_scaler_fingerprint(scaler)
 # |     resolved_root = str(Path(data_root).resolve())
-# | 
+# |
 # |     # Second pass: construct CityData with fitted scaler and cache into _CITY_DATA_CACHE
 # |     cities = []
 # |     for raw in raw_list:
@@ -4747,10 +4807,10 @@
 # |             if use_cache:
 # |                 _CITY_DATA_CACHE[cache_key] = cd
 # |             cities.append(cd)
-# | 
+# |
 # |     return cities, scaler
-# | 
-# | 
+# |
+# |
 # | def preload_all_cities(
 # |     data_root: str = "data",
 # |     city_names: Optional[List[str]] = None,
@@ -4769,21 +4829,21 @@
 # |             city_names = sorted([d.name for d in p.iterdir() if d.is_dir() and (d / "meta.csv").exists()])
 # |         else:
 # |             city_names = []
-# | 
+# |
 # |     for name in city_names:
 # |         raw = load_raw_city(name, data_root=data_root, use_cache=True)
 # |         if build_graphs:
 # |             build_radius_graph(raw.lon_lat, radius_km=radius_km, use_cache=True)
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # Quick smoke test
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | if __name__ == "__main__":
 # |     import sys
 # |     root = sys.argv[1] if len(sys.argv) > 1 else "data"
-# | 
+# |
 # |     print("Loading Raleigh (small)...")
 # |     cd = load_city("Raleigh", data_root=root)
 # |     print(f"  Tracts: {cd.n_tracts}, Pairs: {cd.n_pairs}")
@@ -4793,13 +4853,13 @@
 # |     print(f"  bin_labels: unique={cd.bin_labels.unique().tolist()}")
 # |     print(f"  bin distribution: { {i: (cd.bin_labels==i).sum().item() for i in range(4)} }")
 # |     print()
-# | 
+# |
 # |     print("Loading Raleigh + Denver jointly (scaler fit)...")
 # |     cities, scaler = load_cities(["Raleigh", "Denver"], data_root=root)
 # |     for c in cities:
 # |         print(f"  {c.city_name}: node_features mean~{c.node_features.mean():.3f} std~{c.node_features.std():.3f}")
 # |     print()
-# | 
+# |
 # |     print("Smoke test passed.")
 
 # ===== END SOURCE FILE: src/data/dataset.py =====
@@ -4810,9 +4870,9 @@
 # | import geopandas as gpd
 # | from pathlib import Path
 # | import os
-# | 
+# |
 # | _GADM_GDF_CACHE = None
-# | 
+# |
 # | def get_gadm_gid2_mapping(meta_df: pd.DataFrame, repo_root: str) -> tuple[dict, dict]:
 # |     """
 # |     Returns a tuple: (mapping_dict, stats_dict).
@@ -4832,7 +4892,7 @@
 # |     meta_df = meta_df.copy()
 # |     if 'idx' not in meta_df.columns:
 # |         meta_df['idx'] = meta_df.index.astype(int)
-# | 
+# |
 # |     tract_gdf = gpd.GeoDataFrame(
 # |         meta_df, 
 # |         geometry=gpd.points_from_xy(meta_df['lon'], meta_df['lat']), 
@@ -4900,24 +4960,24 @@
 # ===== BEGIN SOURCE FILE: src/data/trip_sampler.py =====
 # | """
 # | Multinomial Trip Sampler for M_q condition.
-# | 
+# |
 # | Draws m random trips according to the categorical distribution over Omega_c:
 # |     p_{ij} = T^{GT}_{ij} / sum_{a,b} T^{GT}_{ab}
-# | 
+# |
 # | From the sampled trips, estimates the empirical distance distribution:
 # |     \tilde{Y}_D^{(m)}[k] = sum_{ij in B_k} n_{ij} / m
-# | 
+# |
 # | Grid:
 # |     m in {100, 500, 1k, 5k, 10k, 50k, 100k, inf}
 # | """
-# | 
+# |
 # | import numpy as np
 # | import torch
-# | 
-# | 
+# |
+# |
 # | M_GRID = [100, 500, 1000, 5000, 10000, 50000, 100000, float("inf")]
-# | 
-# | 
+# |
+# |
 # | def sample_multinomial_yd(
 # |     pair_trips: torch.Tensor,
 # |     bin_labels: torch.Tensor,
@@ -4926,43 +4986,43 @@
 # | ) -> np.ndarray:
 # |     """
 # |     Samples m trips from multinomial distribution and returns the 4-bin distribution \tilde{Y}_D^{(m)}.
-# | 
+# |
 # |     Args:
 # |         pair_trips: (E,) positive trip counts.
 # |         bin_labels: (E,) bin index (0..3).
 # |         m: number of trips to sample (float('inf') returns exact oracle).
 # |         seed: random seed for reproducibility.
-# | 
+# |
 # |     Returns:
 # |         np.ndarray of shape (4,) representing bin proportions.
 # |     """
 # |     trips = pair_trips.detach().cpu().numpy().astype(np.float64)
 # |     bins = bin_labels.detach().cpu().numpy().astype(np.int64)
-# | 
+# |
 # |     total_trips = np.sum(trips)
 # |     if total_trips <= 0:
 # |         return np.array([0.25, 0.25, 0.25, 0.25])
-# | 
+# |
 # |     # If m is infinity or m >= total_trips, return the oracle
 # |     if np.isinf(m):
 # |         yd = np.zeros(4, dtype=np.float64)
 # |         for k in range(4):
 # |             yd[k] = np.sum(trips[bins == k])
 # |         return yd / total_flow if (total_flow := np.sum(yd)) > 0 else np.array([0.25, 0.25, 0.25, 0.25])
-# | 
+# |
 # |     m = int(m)
 # |     p_vals = trips / total_trips
-# | 
+# |
 # |     rng = np.random.default_rng(seed)
 # |     sampled_counts = rng.multinomial(m, p_vals)  # (E,) counts of sampled trips
-# | 
+# |
 # |     yd_m = np.zeros(4, dtype=np.float64)
 # |     for k in range(4):
 # |         yd_m[k] = np.sum(sampled_counts[bins == k])
-# | 
+# |
 # |     return yd_m / float(m)
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     trips = torch.tensor([10.0, 90.0, 200.0, 700.0])
 # |     bins = torch.tensor([0, 1, 2, 3])
@@ -4976,39 +5036,39 @@
 # ===== BEGIN SOURCE FILE: src/data/urban_graph.py =====
 # | """
 # | Spatial Urban Graph Construction (G^urban).
-# | 
+# |
 # | Constructs the urban spatial graph from tract centroid coordinates (lon, lat).
 # | Crucial requirement: G^urban uses ONLY observable spatial geography, NEVER OD flows.
-# | 
+# |
 # | Supports:
 # | 1. k-NN graph: connects each node to its k geographically nearest neighbors.
 # | 2. Radius graph: connects nodes within a geographic distance threshold d_max (km).
 # | 3. Adaptive Radius graph: radius normalized to the city's empirical spatial diameter / extent.
 # | """
-# | 
+# |
 # | import math
 # | import numpy as np
 # | import torch
-# | 
-# | 
+# |
+# |
 # | # Global In-Memory Cache for spatial urban graphs & distance matrices
 # | _GRAPH_CACHE: dict[tuple, tuple[torch.Tensor, torch.Tensor]] = {}
 # | _DISTANCE_MATRIX_CACHE: dict[tuple | int | str, np.ndarray] = {}
-# | 
-# | 
+# |
+# |
 # | def clear_graph_cache() -> None:
 # |     """Flushes the global in-memory spatial urban graph and distance matrix caches."""
 # |     global _GRAPH_CACHE, _DISTANCE_MATRIX_CACHE
 # |     _GRAPH_CACHE.clear()
 # |     _DISTANCE_MATRIX_CACHE.clear()
-# | 
-# | 
+# |
+# |
 # | def clear_distance_matrix_cache() -> None:
 # |     """Flushes the global in-memory pairwise distance matrix cache."""
 # |     global _DISTANCE_MATRIX_CACHE
 # |     _DISTANCE_MATRIX_CACHE.clear()
-# | 
-# | 
+# |
+# |
 # | def haversine_distance_matrix(
 # |     lon_lat: np.ndarray | torch.Tensor,
 # |     use_cache: bool = True,
@@ -5022,30 +5082,30 @@
 # |         lon_lat = lon_lat.detach().cpu().numpy()
 # |     else:
 # |         lon_lat = np.asarray(lon_lat, dtype=np.float64)
-# | 
+# |
 # |     import hashlib
 # |     coord_hash = hashlib.sha256(lon_lat.tobytes()).hexdigest()
 # |     key = f"{cache_key}_{coord_hash}" if cache_key else coord_hash
 # |     if use_cache and key in _DISTANCE_MATRIX_CACHE:
 # |         return _DISTANCE_MATRIX_CACHE[key]
-# | 
+# |
 # |     R = 6371.0
 # |     lons = np.radians(lon_lat[:, 0])
 # |     lats = np.radians(lon_lat[:, 1])
-# | 
+# |
 # |     dlon = lons[:, None] - lons[None, :]
 # |     dlat = lats[:, None] - lats[None, :]
-# | 
+# |
 # |     a = np.sin(dlat / 2.0) ** 2 + np.cos(lats[:, None]) * np.cos(lats[None, :]) * np.sin(dlon / 2.0) ** 2
 # |     c = 2.0 * np.arcsin(np.sqrt(np.clip(a, 0.0, 1.0)))
 # |     dist_mat = R * c
-# | 
+# |
 # |     if use_cache:
 # |         _DISTANCE_MATRIX_CACHE[key] = dist_mat
-# | 
+# |
 # |     return dist_mat
-# | 
-# | 
+# |
+# |
 # | def build_knn_graph(
 # |     lon_lat: np.ndarray | torch.Tensor,
 # |     k: int = 10,
@@ -5059,52 +5119,52 @@
 # |         lon_lat = lon_lat.detach().cpu().numpy()
 # |     else:
 # |         lon_lat = np.asarray(lon_lat)
-# | 
+# |
 # |     import hashlib
 # |     coord_hash = hashlib.sha256(lon_lat.tobytes()).hexdigest()
 # |     base_key = f"{cache_key}_{coord_hash}" if cache_key else coord_hash
 # |     key = (base_key, "knn", k, include_self_loop)
 # |     if use_cache and key in _GRAPH_CACHE:
 # |         return _GRAPH_CACHE[key]
-# | 
+# |
 # |     N = len(lon_lat)
 # |     k = min(k, N - 1)
 # |     if dist_mat is None:
 # |         dist_mat = haversine_distance_matrix(lon_lat, use_cache=use_cache, cache_key=cache_key)
-# | 
+# |
 # |     rows, cols, dists = [], [], []
 # |     for i in range(N):
 # |         indices = np.argsort(dist_mat[i])
 # |         neighbors = indices[1 : k + 1]
-# | 
+# |
 # |         if include_self_loop:
 # |             rows.append(i)
 # |             cols.append(i)
 # |             dists.append(0.0)
-# | 
+# |
 # |         for nbr in neighbors:
 # |             rows.append(i)
 # |             cols.append(nbr)
 # |             dists.append(dist_mat[i, nbr])
-# | 
+# |
 # |     edge_dict = {}
 # |     for r, c, d in zip(rows, cols, dists):
 # |         edge_dict[(r, c)] = d
 # |         edge_dict[(c, r)] = d
-# | 
+# |
 # |     e_rows = [k[0] for k in edge_dict.keys()]
 # |     e_cols = [k[1] for k in edge_dict.keys()]
 # |     e_dists = list(edge_dict.values())
-# | 
+# |
 # |     edge_index = torch.tensor([e_rows, e_cols], dtype=torch.long)
 # |     edge_dist = torch.tensor(e_dists, dtype=torch.float32)
-# | 
+# |
 # |     res = (edge_index, edge_dist)
 # |     if use_cache:
 # |         _GRAPH_CACHE[key] = res
 # |     return res
-# | 
-# | 
+# |
+# |
 # | def build_radius_graph(
 # |     lon_lat: np.ndarray | torch.Tensor,
 # |     radius_km: float = 5.0,
@@ -5118,53 +5178,53 @@
 # |         lon_lat = lon_lat.detach().cpu().numpy()
 # |     else:
 # |         lon_lat = np.asarray(lon_lat)
-# | 
+# |
 # |     import hashlib
 # |     coord_hash = hashlib.sha256(lon_lat.tobytes()).hexdigest()
 # |     base_key = f"{cache_key}_{coord_hash}" if cache_key else coord_hash
 # |     key = (base_key, "radius", float(radius_km), include_self_loop)
 # |     if use_cache and key in _GRAPH_CACHE:
 # |         return _GRAPH_CACHE[key]
-# | 
+# |
 # |     N = len(lon_lat)
 # |     if dist_mat is None:
 # |         dist_mat = haversine_distance_matrix(lon_lat, use_cache=use_cache, cache_key=cache_key)
-# | 
+# |
 # |     rows, cols, dists = [], [], []
 # |     for i in range(N):
 # |         if include_self_loop:
 # |             rows.append(i)
 # |             cols.append(i)
 # |             dists.append(0.0)
-# | 
+# |
 # |         within_radius = np.where((dist_mat[i] <= radius_km) & (dist_mat[i] > 0))[0]
 # |         if len(within_radius) == 0:
 # |             closest = np.argsort(dist_mat[i])[1]
 # |             within_radius = [closest]
-# | 
+# |
 # |         for nbr in within_radius:
 # |             rows.append(i)
 # |             cols.append(nbr)
 # |             dists.append(dist_mat[i, nbr])
-# | 
+# |
 # |     edge_dict = {}
 # |     for r, c, d in zip(rows, cols, dists):
 # |         edge_dict[(r, c)] = d
 # |         edge_dict[(c, r)] = d
-# | 
+# |
 # |     e_rows = [k[0] for k in edge_dict.keys()]
 # |     e_cols = [k[1] for k in edge_dict.keys()]
 # |     e_dists = list(edge_dict.values())
-# | 
+# |
 # |     edge_index = torch.tensor([e_rows, e_cols], dtype=torch.long)
 # |     edge_dist = torch.tensor(e_dists, dtype=torch.float32)
-# | 
+# |
 # |     res = (edge_index, edge_dist)
 # |     if use_cache:
 # |         _GRAPH_CACHE[key] = res
 # |     return res
-# | 
-# | 
+# |
+# |
 # | def build_adaptive_radius_graph(
 # |     lon_lat: np.ndarray | torch.Tensor,
 # |     scale_fraction: float = 0.15,
@@ -5191,8 +5251,8 @@
 # |         dist_mat=dist_mat,
 # |     )
 # |     return ei, ed, adaptive_radius
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     coords = np.array([
 # |         [-84.3880, 33.7490],
@@ -5209,21 +5269,21 @@
 # ===== BEGIN SOURCE FILE: src/data/yd_extractor.py =====
 # | """
 # | Y_D Extractor for Moving Bins (Primary) and Full 4-Bin (Ablation).
-# | 
+# |
 # | Primary Moving-Bin Formulation:
 # |     Excludes stay-at-home / immobility Bin 0.
 # |     Normalizes across actual movement/displacement categories {1, 2, 3}:
 # |         Bin 1: (0, 10) km
 # |         Bin 2: [10, 100) km
 # |         Bin 3: 100+ km
-# | 
+# |
 # |     Y_{c, k}^{Meta, +}   = Y_{c, k}^{Meta} / sum_{l=1}^3 Y_{c, l}^{Meta}
 # |     Y_{c, k}^{oracle, +} = sum_{(i,j) in Omega_{c,k}^+} T_{ij}^{GT} / sum_{(i,j) in Omega_c^+} T_{ij}^{GT}
-# | 
+# |
 # | Distributional Overlap Metric (CPC_dist / Overlap):
 # |     Overlap(p, q) = sum_k min(p_k, q_k) = 1 - 0.5 * ||p - q||_1
 # | """
-# | 
+# |
 # | import os
 # | import sys
 # | import glob
@@ -5231,11 +5291,11 @@
 # | import numpy as np
 # | import torch
 # | from pathlib import Path
-# | 
+# |
 # | # Ensure root directory is in sys.path
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
-# | 
+# |
+# |
 # | # Comprehensive official mapping of 50 US cities to County Names, State, and FIPS
 # | CITY_FIPS_GADM = {
 # |     "Albuquerque": {"state": "NM", "fips": "35001", "gadm_names": ["Bernalillo"]},
@@ -5289,22 +5349,22 @@
 # |     "Washington_DC": {"state": "DC", "fips": "11001", "gadm_names": ["District of Columbia"]},
 # |     "Wichita": {"state": "KS", "fips": "20173", "gadm_names": ["Sedgwick"]},
 # | }
-# | 
+# |
 # | META_CAT_TO_BIN = {
 # |     "0": 0,
 # |     "(0, 10)": 1,
 # |     "[10, 100)": 2,
 # |     "100+": 3,
 # | }
-# | 
+# |
 # | _SNAPSHOT_CACHE = None
-# | 
-# | 
+# |
+# |
 # | def _load_snapshot_dataframes(meta_prior_dir: str = "meta_prior") -> list[pd.DataFrame]:
 # |     global _SNAPSHOT_CACHE
 # |     if _SNAPSHOT_CACHE is not None:
 # |         return _SNAPSHOT_CACHE
-# | 
+# |
 # |     meta_dir = Path(meta_prior_dir)
 # |     files = sorted(list(meta_dir.glob("*.csv")))
 # |     snapshots = []
@@ -5318,46 +5378,46 @@
 # |             snapshots.append(us_df)
 # |         except Exception:
 # |             continue
-# | 
+# |
 # |     _SNAPSHOT_CACHE = snapshots
 # |     return _SNAPSHOT_CACHE
-# | 
-# | 
+# |
+# |
 # | def extract_yd_4bin_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
 # |     """Extracts raw 4-bin Meta distribution (including Bin 0) for ablation."""
 # |     city_info = CITY_FIPS_GADM.get(city_name, None)
 # |     if city_info is None:
 # |         return None
-# | 
+# |
 # |     counties = city_info["gadm_names"]
 # |     snapshots = _load_snapshot_dataframes(meta_prior_dir=meta_prior_dir)
 # |     if not snapshots:
 # |         return None
-# | 
+# |
 # |     snapshot_distributions = []
 # |     for df in snapshots:
 # |         matched = df[df["gadm_name"].isin(counties)]
 # |         if len(matched) == 0:
 # |             continue
-# | 
+# |
 # |         cat_means = matched.groupby("home_to_ping_distance_category")["distance_category_ping_fraction"].mean()
 # |         yd_snap = np.zeros(4, dtype=np.float64)
 # |         for cat_str, bin_idx in META_CAT_TO_BIN.items():
 # |             if cat_str in cat_means:
 # |                 yd_snap[bin_idx] = float(cat_means[cat_str])
-# | 
+# |
 # |         snap_sum = np.sum(yd_snap)
 # |         if snap_sum > 0:
 # |             snapshot_distributions.append(yd_snap / snap_sum)
-# | 
+# |
 # |     if not snapshot_distributions:
 # |         return None
-# | 
+# |
 # |     mean_yd = np.mean(snapshot_distributions, axis=0)
 # |     total = np.sum(mean_yd)
 # |     return mean_yd / total if total > 0 else None
-# | 
-# | 
+# |
+# |
 # | def extract_M1_city_oracle_obs(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
 # |     """
 # |     Primary Meta extractor: extracts the 3 moving bins {1, 2, 3} normalized to sum to 1.0.
@@ -5366,14 +5426,14 @@
 # |     yd_4 = extract_yd_4bin_real(city_name, meta_prior_dir=meta_prior_dir)
 # |     if yd_4 is None:
 # |         return None
-# | 
+# |
 # |     moving_3 = yd_4[1:].copy()  # bins 1, 2, 3
 # |     total_moving = np.sum(moving_3)
 # |     if total_moving <= 0:
 # |         return None
 # |     return moving_3 / total_moving
-# | 
-# | 
+# |
+# |
 # | def extract_yd_4bin_oracle(pair_trips: torch.Tensor, bin_labels: torch.Tensor) -> np.ndarray:
 # |     """Extracts raw 4-bin oracle distribution from GT flows."""
 # |     yd = np.zeros(4, dtype=np.float64)
@@ -5388,8 +5448,8 @@
 # |     for k in range(4):
 # |         yd[k] = np.sum(trips_np[bins_np == k])
 # |     return yd / total_flow
-# | 
-# | 
+# |
+# |
 # | def extract_yd_moving_oracle(
 # |     pair_trips: torch.Tensor,
 # |     bin_labels: torch.Tensor,
@@ -5404,7 +5464,7 @@
 # |     bins_np = bin_labels.detach().cpu().numpy()
 # |     o_np = pair_o_idx.detach().cpu().numpy()
 # |     d_np = pair_d_idx.detach().cpu().numpy()
-# | 
+# |
 # |     if pair_distance is not None:
 # |         p_dist = pair_distance.detach().cpu().numpy()
 # |         dist_km = p_dist
@@ -5413,7 +5473,7 @@
 # |         inter_mask = (o_np != d_np) & (bins_np > 0)
 # |     inter_trips = trips_np[inter_mask]
 # |     inter_bins = bins_np[inter_mask]
-# | 
+# |
 # |     yd_3 = np.zeros(3, dtype=np.float64)
 # |     total_inter = np.sum(inter_trips)
 # |     if total_inter <= 0:
@@ -5421,25 +5481,25 @@
 # |             "extract_yd_moving_oracle: zero total interzonal flow — city data is degenerate. "
 # |             "Cannot compute oracle Y_D. Check data integrity."
 # |         )
-# | 
+# |
 # |     for idx, bin_k in enumerate([1, 2, 3]):
 # |         yd_3[idx] = np.sum(inter_trips[inter_bins == bin_k])
-# | 
+# |
 # |     return yd_3 / total_inter
-# | 
-# | 
+# |
+# |
 # | def compute_distributional_overlap(p: np.ndarray, q: np.ndarray) -> float:
 # |     """
 # |     Computes Distributional Overlap (CPC_dist) between two probability vectors:
 # |     Overlap(p, q) = sum_k min(p_k, q_k) = 1 - 0.5 * ||p - q||_1
 # |     """
 # |     return float(np.sum(np.minimum(p, q)))
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # E1: Dynamic K-bin extraction for Oracle Existence Test
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | def compute_kbin_edges(
 # |     train_city_names: list,
 # |     K: int = 8,
@@ -5448,49 +5508,49 @@
 # |     """
 # |     Compute K-bin pair-weighted quantile edges from training cities.
 # |     Intrazonal pairs (D_ij = 0) are excluded.
-# | 
+# |
 # |     NOTE: Pair-weighted — large cities contribute more pairs than small cities.
 # |     This is intentional and documented; see E1.md.
-# | 
+# |
 # |     Args:
 # |         train_city_names: List of training city names.
 # |         K: Number of moving-distance bins (Bin 0 intrazonal excluded).
 # |         data_root: Root directory of city data.
-# | 
+# |
 # |     Returns:
 # |         (edges, K_active): edges is (K_active+1,) array strictly increasing,
 # |         K_active <= K (may be < K if quantile degeneration occurs).
 # |     """
 # |     from src.data.dataset import load_raw_city
-# | 
+# |
 # |     all_dist = []
 # |     for city_name in train_city_names:
 # |         raw = load_raw_city(city_name, data_root=data_root)
 # |         dist_km = raw.dist_km
 # |         inter = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0)
 # |         all_dist.extend(dist_km[inter].tolist())
-# | 
+# |
 # |     all_dist = np.array(all_dist)
 # |     assert len(all_dist) > K, f"Too few interzonal pairs ({len(all_dist)}) for K={K} bins"
-# | 
+# |
 # |     # K-1 internal breakpoints → K bins; skip 0th and 100th percentile
 # |     quantile_pts = np.linspace(0, 100, K + 1)[1:-1]   # shape: (K-1,)
 # |     internal_edges = np.percentile(all_dist, quantile_pts)
-# | 
+# |
 # |     # Deduplicate: remove duplicate edges (handles concentrated distributions)
 # |     internal_edges = np.unique(internal_edges)
 # |     edges = np.concatenate([[0.0], internal_edges, [np.inf]])
-# | 
+# |
 # |     # INVARIANT: strictly increasing
 # |     assert np.all(np.diff(edges) > 0), f"Non-strict bin edges: {edges}"
-# | 
+# |
 # |     K_active = len(edges) - 1
 # |     if K_active < K:
 # |         print(f"[WARNING] compute_kbin_edges: K_active={K_active} < K={K} due to quantile degeneration")
-# | 
+# |
 # |     return edges, K_active
-# | 
-# | 
+# |
+# |
 # | def extract_yd_kbins(
 # |     dist_km: np.ndarray,
 # |     trips: np.ndarray,
@@ -5499,43 +5559,43 @@
 # | ) -> np.ndarray:
 # |     """
 # |     Extract K-bin oracle trip-length distribution from ground-truth flows.
-# | 
+# |
 # |     Aggregates GT flows by distance bin — NOT pair-level individual flows.
 # |     Adaptation receives only this K-dim histogram vector; it does NOT see T_ij.
-# | 
+# |
 # |     NOTE: Uses GT trips to compute bin totals → oracle aggregate information.
 # |     This is intentional for E1 Oracle Existence Test; see E1.md.
-# | 
+# |
 # |     Args:
 # |         dist_km:    (E,) pairwise distances in km.
 # |         trips:      (E,) ground-truth flow counts T_ij^GT.
 # |         bin_edges:  (K+1,) strictly increasing bin edges (from compute_kbin_edges).
 # |         inter_mask: (E,) boolean mask for interzonal pairs Omega_c^+.
-# | 
+# |
 # |     Returns:
 # |         yd: (K,) normalized oracle distance distribution summing to 1.0.
 # |     """
 # |     K = len(bin_edges) - 1
 # |     yd = np.zeros(K, dtype=np.float64)
-# | 
+# |
 # |     inter_trips = trips[inter_mask]
 # |     inter_dist = dist_km[inter_mask]
-# | 
+# |
 # |     for k in range(K):
 # |         lo, hi = bin_edges[k], bin_edges[k + 1]
 # |         in_bin = (inter_dist > lo) & (inter_dist <= hi)
 # |         yd[k] = inter_trips[in_bin].sum()
-# | 
+# |
 # |     total = yd.sum()
 # |     if total > 0:
 # |         yd = yd / total
 # |     else:
 # |         # Fallback: uniform over K bins
 # |         yd = np.ones(K, dtype=np.float64) / K
-# | 
+# |
 # |     return yd   # shape: (K,) summing to 1.0
-# | 
-# | 
+# |
+# |
 # | def extract_yd_kbins_grouped(
 # |     dist_km: np.ndarray,
 # |     trips: np.ndarray,
@@ -5575,16 +5635,16 @@
 # |         yd_dict[g] = yd_g
 # |         
 # |     return yd_dict
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     from src.data.dataset import load_city
-# | 
+# |
 # |     for city in ["Philadelphia", "Austin", "Raleigh", "Denver", "Seattle"]:
 # |         cd = load_city(city, "data")
 # |         o_3 = extract_yd_moving_oracle(cd.pair_trips, cd.bin_labels, cd.pair_o_idx, cd.pair_d_idx)
 # |         print(f"{city:<15}: Oracle_moving = {np.round(o_3, 4).tolist()}")
-# | 
+# |
 
 # ===== END SOURCE FILE: src/data/yd_extractor.py =====
 
@@ -5593,7 +5653,7 @@
 # | """
 # | Comprehensive Audit & Precision Certification Suite for Direct Partial-OD Equivalence v1
 # | ========================================================================================
-# | 
+# |
 # | Modules:
 # |     1. Production Y_D reference audit: Compare manual t_cal_full vs production calibrate_kbins across 50 cities x 3 seeds.
 # |     2. OD-FE solver precision audit: Compare production CG solver (tol=1e-6) vs ultra-high precision CG solver (tol=1e-10) across 50 cities x 3 seeds at p in {0.10%, 0.25%, 0.50%}, B=50.
@@ -5602,21 +5662,21 @@
 # |     5. Crossing uncertainty bootstrap: 10,000 fold-stratified bootstrap samples computing 95% CI of p_eq,interp.
 # |     6. Absolute observation counts & support diagnostics at p in {0.10%, 0.25%, 0.50%}.
 # | """
-# | 
+# |
 # | import sys
 # | import time
 # | import json
 # | from pathlib import Path
 # | from typing import Dict, List, Tuple, Any
-# | 
+# |
 # | import numpy as np
 # | import pandas as pd
 # | from scipy import stats
 # | import torch
-# | 
+# |
 # | REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # | sys.path.insert(0, str(REPO_ROOT))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_city, load_raw_city
 # | from src.data.urban_graph import build_radius_graph
@@ -5628,8 +5688,8 @@
 # |     PARTIAL_OD_BASE_SEED, get_stable_mask_seed, fit_od_fe_adapter,
 # |     apply_od_fe_prediction, holm_correction, fold_stratified_bootstrap
 # | )
-# | 
-# | 
+# |
+# |
 # | def run_audit_1_production_yd_reference(data_root="data") -> Dict[str, Any]:
 # |     print("\n--- AUDIT 1: Production Y_D Reference Bitwise & CPC Audit (50 Cities x 3 Seeds) ---")
 # |     splits = generate_35_5_10_splits(data_root=data_root)
@@ -5638,7 +5698,7 @@
 # |     max_cpc_diff = 0.0
 # |     total_checks = 0
 # |     failures = []
-# | 
+# |
 # |     for fold_id in range(1, 6):
 # |         split = splits[fold_id]
 # |         train_cities = split["train"]
@@ -5709,7 +5769,7 @@
 # |                 
 # |                 if t_diff > 1e-10 or cpc_diff > 1e-10:
 # |                     failures.append((fold_id, s, city_name, t_diff, cpc_diff))
-# | 
+# |
 # |     status = "PASS" if len(failures) == 0 else "FAIL"
 # |     print(f"  Total Evaluations: {total_checks} (50 cities x 3 seeds)")
 # |     print(f"  Max |T_manual - T_production|: {max_t_diff:.8e}")
@@ -5723,8 +5783,8 @@
 # |         "max_cpc_diff": max_cpc_diff,
 # |         "failures": failures
 # |     }
-# | 
-# | 
+# |
+# |
 # | def run_audit_2_solver_precision(data_root="data", b_audit=50) -> Dict[str, Any]:
 # |     print(f"\n--- AUDIT 2: OD-FE Solver Precision Audit (50 Cities x 3 Seeds x B={b_audit} Reps) ---")
 # |     splits = generate_35_5_10_splits(data_root=data_root)
@@ -5741,7 +5801,7 @@
 # |     for f in range(1, 6):
 # |         with open(f"results/direct_od_equivalence_v1/fold_{f}/lambda_selected.json") as jf:
 # |             fold_lambdas[f] = json.load(jf)["selected_lambda"]
-# | 
+# |
 # |     for fold_id in range(1, 6):
 # |         split = splits[fold_id]
 # |         test_cities = split["test"]
@@ -5769,7 +5829,7 @@
 # |                 with torch.no_grad():
 # |                     m0_full = infer_zero_shot(model, city_data, ei, ed, device="cpu").numpy().astype(np.float64)
 # |                 t0_support = m0_full[inter_pos]
-# | 
+# |
 # |                 for rep_id in range(b_audit):
 # |                     total_reps_tested += 1
 # |                     mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
@@ -5811,7 +5871,7 @@
 # |                         max_a_diff = max(max_a_diff, diff_a)
 # |                         max_b_diff = max(max_b_diff, diff_b)
 # |                         max_cpc_diff = max(max_cpc_diff, diff_cpc)
-# | 
+# |
 # |     pass_cpc = max_cpc_diff < 1e-5 and len(solver_failures) == 0
 # |     status = "PASS" if pass_cpc else "FAIL"
 # |     print(f"  Total Evaluations Tested: {total_reps_tested} reps x 3 p-levels")
@@ -5819,7 +5879,7 @@
 # |     print(f"  Max |b_fast - b_ref|:     {max_b_diff:.8e}")
 # |     print(f"  Max |CPC_fast - CPC_ref|: {max_cpc_diff:.8e} (Threshold: < 1.0e-5)")
 # |     print(f"  Audit 2 Status: {status}")
-# | 
+# |
 # |     return {
 # |         "status": status,
 # |         "max_a_diff": max_a_diff,
@@ -5827,13 +5887,13 @@
 # |         "max_cpc_diff": max_cpc_diff,
 # |         "criterion_passed": pass_cpc
 # |     }
-# | 
-# | 
+# |
+# |
 # | def run_audit_3_lambda_tie_rule() -> Dict[str, Any]:
 # |     print("\n--- AUDIT 3: Lambda Selection Tie-Rule Audit ---")
 # |     fold_gaps = {}
 # |     all_gaps_exceed_tol = True
-# | 
+# |
 # |     for f in range(1, 6):
 # |         csv_p = Path(f"results/direct_od_equivalence_v1/fold_{f}/lambda_selection.csv")
 # |         df = pd.read_csv(csv_p)
@@ -5851,7 +5911,7 @@
 # |         if gap <= 1e-6:
 # |             all_gaps_exceed_tol = False
 # |         print(f"  Fold {f}: Selected lambda={df_sorted.iloc[0]['lambda']}, Best={best_score:.5f}, 2nd={second_score:.5f}, Gap={gap:.6f} (> 1e-6: {gap > 1e-6})")
-# | 
+# |
 # |     status = "PASS" if all_gaps_exceed_tol else "TIE_RULE_TRIGGERED"
 # |     print(f"  Audit 3 Status: {status}")
 # |     return {
@@ -5859,8 +5919,8 @@
 # |         "fold_gaps": fold_gaps,
 # |         "all_gaps_exceed_tol": all_gaps_exceed_tol
 # |     }
-# | 
-# | 
+# |
+# |
 # | def run_audit_4_monte_carlo_precision() -> Dict[str, Any]:
 # |     print("\n--- AUDIT 4: Monte-Carlo Precision & Standard Error Audit (p in {0.10%, 0.25%, 0.50%}) ---")
 # |     raw_df = pd.read_csv("results/direct_od_equivalence_v1/combined/raw_all_folds.csv")
@@ -5897,7 +5957,7 @@
 # |             "passed_1e-4_gate": passed
 # |         }
 # |         print(f"  p = {p_val*100:5.2f}%: Mean City MC-SE = {mean_city_mc_se:.6f} | MCSE(Mean D) = {mcse_mean_D:.6e} (< 1e-4: {passed})")
-# | 
+# |
 # |     status = "PASS" if all_passed else "RERUN_B500_REQUIRED"
 # |     print(f"  Audit 4 Status: {status}")
 # |     return {
@@ -5905,8 +5965,8 @@
 # |         "results_by_p": mcse_results,
 # |         "all_passed": all_passed
 # |     }
-# | 
-# | 
+# |
+# |
 # | def run_audit_5_crossing_uncertainty_bootstrap() -> Dict[str, Any]:
 # |     print("\n--- AUDIT 5: Crossing Uncertainty Fold-Stratified Bootstrap (10,000 Replicates across [0, 0.50%]) ---")
 # |     per_city_df = pd.read_csv("results/direct_od_equivalence_v1/combined/per_city_all_folds.csv")
@@ -5920,7 +5980,7 @@
 # |     d_by_p = {}
 # |     for p in grid:
 # |         d_by_p[p] = per_city_df[per_city_df.p == p].set_index("city")["difference_direct_minus_yd"].to_dict()
-# | 
+# |
 # |     boot_crossings = []
 # |     counts = {
 # |         "below_0.10%": 0,
@@ -5928,7 +5988,7 @@
 # |         "0.25-0.50%": 0,
 # |         "no_cross_le_0.50%": 0
 # |     }
-# | 
+# |
 # |     for b in range(n_boot):
 # |         sampled_cities = []
 # |         for f in range(1, 6):
@@ -5956,7 +6016,7 @@
 # |                 
 # |         if not found:
 # |             counts["no_cross_le_0.50%"] += 1
-# | 
+# |
 # |     boot_crossings = np.array(boot_crossings)
 # |     n_valid = len(boot_crossings)
 # |     if n_valid > 0:
@@ -5966,9 +6026,9 @@
 # |         median_cross = float(np.median(boot_crossings))
 # |     else:
 # |         ci_l, ci_h, mean_cross, median_cross = np.nan, np.nan, np.nan, np.nan
-# | 
+# |
 # |     p_cross = (n_boot - counts["no_cross_le_0.50%"]) / n_boot * 100.0
-# | 
+# |
 # |     print(f"  P(crossing <= 0.50%) = {p_cross:.2f}% ({n_valid}/{n_boot} samples)")
 # |     print(f"    cross below 0.10%:       {counts['below_0.10%']} / {n_boot} ({counts['below_0.10%']/n_boot*100:.2f}%)")
 # |     print(f"    cross 0.10–0.25%:        {counts['0.10-0.25%']} / {n_boot} ({counts['0.10-0.25%']/n_boot*100:.2f}%)")
@@ -5982,7 +6042,7 @@
 # |     else:
 # |         print("    No crossings observed.")
 # |     print(f"  Audit 5 Status: PASS")
-# | 
+# |
 # |     return {
 # |         "status": "PASS",
 # |         "n_boot": n_boot,
@@ -5993,8 +6053,8 @@
 # |         "median_crossing_conditional": median_cross,
 # |         "ci_95_crossing_conditional": [ci_l, ci_h]
 # |     }
-# | 
-# | 
+# |
+# |
 # | def run_audit_6_absolute_observation_counts() -> Dict[str, Any]:
 # |     print("\n--- AUDIT 6: Absolute Observation Counts & Support Coverage Diagnostics ---")
 # |     raw_df = pd.read_csv("results/direct_od_equivalence_v1/combined/raw_all_folds.csv")
@@ -6029,14 +6089,14 @@
 # |         
 # |         st = stats_by_p[p_val]
 # |         print(f"  p = {p_val*100:5.2f}%: Median Pairs = {st['median_revealed_pairs']:>5} (IQR: [{st['iqr_revealed_pairs'][0]}, {st['iqr_revealed_pairs'][1]}], Range: [{st['min_revealed_pairs']}, {st['max_revealed_pairs']}]) | Both Cov = {st['mean_both_cov_pct']:.2f}% | Mass = {st['mean_revealed_mass_pct']:.2f}%")
-# | 
+# |
 # |     print(f"  Audit 6 Status: PASS")
 # |     return {
 # |         "status": "PASS",
 # |         "stats_by_p": stats_by_p
 # |     }
-# | 
-# | 
+# |
+# |
 # | def execute_full_audit_suite():
 # |     print("=" * 85)
 # |     print("DIRECT PARTIAL-OD EQUIVALENCE v1 — 6-GATE SCIENTIFIC AUDIT & CERTIFICATION SUITE")
@@ -6093,8 +6153,8 @@
 # |         json.dump(audit_report, f, indent=2)
 # |         
 # |     return all_passed
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     success = execute_full_audit_suite()
 # |     sys.exit(0 if success else 1)
@@ -6107,14 +6167,14 @@
 # | Compare Urban GNN and Pairwise MLP backbones across the locked 5-fold evaluation (N=50 cities).
 # | Reads results from `results/5fold_results.json` and `results/mlp_backbone_results.json`.
 # | """
-# | 
+# |
 # | import os
 # | import json
 # | import argparse
 # | import numpy as np
 # | from pathlib import Path
 # | from scipy import stats
-# | 
+# |
 # | def analyze_subset(gnn_map, all_mlp_results, folds_to_include, label):
 # |     paired_results = []
 # |     for m in all_mlp_results:
@@ -6144,19 +6204,19 @@
 # |             "mlp_delta": mlp_delta,
 # |             "gamma": g["delta_cpc"] - mlp_delta
 # |         })
-# | 
+# |
 # |     if not paired_results:
 # |         return None
-# | 
+# |
 # |     def summarize(vals):
 # |         mean_v = float(np.mean(vals))
 # |         median_v = float(np.median(vals))
 # |         sd_v = float(np.std(vals, ddof=1)) if len(vals) > 1 else 0.0
-# | 
+# |
 # |         delta_by_fold = {f: [] for f in folds_to_include}
 # |         for v, r in zip(vals, paired_results):
 # |             delta_by_fold[r["fold"]].append(v)
-# | 
+# |
 # |         rng = np.random.default_rng(42)
 # |         boot_means = []
 # |         for _ in range(10000):
@@ -6167,26 +6227,26 @@
 # |                     samp.extend(rng.choice(fold_vals, size=len(fold_vals), replace=True))
 # |             boot_means.append(np.mean(samp) if samp else 0.0)
 # |         ci_l, ci_h = np.percentile(boot_means, [2.5, 97.5])
-# | 
+# |
 # |         return {
 # |             "mean": mean_v,
 # |             "std": sd_v,
 # |             "median": median_v,
 # |             "ci_95": (float(ci_l), float(ci_h))
 # |         }
-# | 
+# |
 # |     gnn_deltas = np.array([r["gnn_delta"] for r in paired_results])
 # |     mlp_deltas = np.array([r["mlp_delta"] for r in paired_results])
 # |     gammas = np.array([r["gamma"] for r in paired_results])
-# | 
+# |
 # |     gnn_sum = summarize(gnn_deltas)
 # |     mlp_sum = summarize(mlp_deltas)
 # |     gamma_sum = summarize(gammas)
-# | 
+# |
 # |     _, gnn_w_p = stats.wilcoxon(gnn_deltas, alternative="greater")
 # |     _, mlp_w_p = stats.wilcoxon(mlp_deltas, alternative="greater")
 # |     _, gamma_w_p = stats.wilcoxon(gammas, alternative="two-sided")
-# | 
+# |
 # |     return {
 # |         "label": label,
 # |         "n": len(paired_results),
@@ -6203,24 +6263,24 @@
 # |         "gamma_sum": gamma_sum,
 # |         "gamma_p": float(gamma_w_p),
 # |     }
-# | 
-# | 
+# |
+# |
 # | def run_comparison(output_dir: str = "results", export_md: bool = True):
 # |     print("\n" + "=" * 85)
 # |     print("COMPARISON: Gravity-Informed Urban GNN vs Pairwise Spatial MLP (Backbone Robustness)")
 # |     print("=" * 85)
-# | 
+# |
 # |     gnn_results_path = Path(output_dir) / "5fold_results.json"
 # |     mlp_results_path = Path(output_dir) / "mlp_backbone_results.json"
-# | 
+# |
 # |     with open(gnn_results_path, "r") as f:
 # |         gnn_json = json.load(f)
 # |         gnn_data = gnn_json.get("city_level_results", [])
-# | 
+# |
 # |     with open(mlp_results_path, "r") as f:
 # |         mlp_json = json.load(f)
 # |         all_mlp_results = mlp_json.get("city_level_results", mlp_json) if isinstance(mlp_json, dict) else mlp_json
-# | 
+# |
 # |     gnn_map = {}
 # |     for r in gnn_data:
 # |         m0_data = r.get("M0")
@@ -6231,10 +6291,10 @@
 # |                 "m1_cpc_inter": m1_data.get("cpc_inter", 0.0),
 # |                 "delta_cpc": m1_data.get("cpc_inter", 0.0) - m0_data.get("cpc_inter", 0.0)
 # |             }
-# | 
+# |
 # |     # part_a = analyze_subset(gnn_map, all_mlp_results, [2, 3, 4, 5], "Part A: Confirmatory Evaluation Set (Folds 2–5, n=40 Cities)")
 # |     part_b = analyze_subset(gnn_map, all_mlp_results, [1, 2, 3, 4, 5], "Five-Fold Cross-City Evaluation Set (All 5 Folds, N=50 Cities)")
-# | 
+# |
 # |     for res in [part_b]:
 # |         if not res:
 # |             continue
@@ -6242,7 +6302,7 @@
 # |         print(f"Urban GNN:     M0={res['gnn_m0_mean']:.4f} -> M1={res['gnn_m1_mean']:.4f} | dCPC={res['gnn_sum']['mean']:+.4f} +- {res['gnn_sum']['std']:.4f} | 95% CI [{res['gnn_sum']['ci_95'][0]:+.4f}, {res['gnn_sum']['ci_95'][1]:+.4f}] | Pos={res['gnn_pos']}/{res['n']} | p={res['gnn_p']:.2e}")
 # |         print(f"Pairwise MLP:  M0={res['mlp_m0_mean']:.4f} -> M1={res['mlp_m1_mean']:.4f} | dCPC={res['mlp_sum']['mean']:+.4f} +- {res['mlp_sum']['std']:.4f} | 95% CI [{res['mlp_sum']['ci_95'][0]:+.4f}, {res['mlp_sum']['ci_95'][1]:+.4f}] | Pos={res['mlp_pos']}/{res['n']} | p={res['mlp_p']:.2e}")
 # |         print(f"Difference G:  dCPC={res['gamma_sum']['mean']:+.4f} +- {res['gamma_sum']['std']:.4f} | 95% CI [{res['gamma_sum']['ci_95'][0]:+.4f}, {res['gamma_sum']['ci_95'][1]:+.4f}] | p={res['gamma_p']:.2e}")
-# | 
+# |
 # |     if export_md:
 # |         table_path = Path(output_dir) / "tables" / "table_gnn_vs_mlp_comparison.md"
 # |         table_path.parent.mkdir(parents=True, exist_ok=True)
@@ -6267,8 +6327,8 @@
 # |                 f.write(f"| **Architecture Advantage ($\\Gamma = \\Delta_\\text{{GNN}} - \\Delta_\\text{{MLP}}$)** | — | — | **{gam_mean:+.4f} +- {gam_std:.4f}** | [{res['gamma_sum']['ci_95'][0]:+.4f}, {res['gamma_sum']['ci_95'][1]:+.4f}] | — | p = {res['gamma_p']:.2e} |\n\n")
 # |             
 # |         print(f"\nSaved comparison table to {table_path}")
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(description="Compare Urban GNN and Pairwise MLP backbones")
 # |     parser.add_argument("--output_dir", type=str, default="results")
@@ -6282,12 +6342,12 @@
 # | """
 # | Cross-city Statistical Analysis of Moving-Bin Calibration Results (RQ1).
 # | """
-# | 
+# |
 # | import numpy as np
 # | from scipy import stats
 # | from typing import List, Dict, Any
-# | 
-# | 
+# |
+# |
 # | def _compute_stats(arr: np.ndarray, ddof: int = 1) -> Dict[str, Any]:
 # |     """Compute summary statistics with sample standard deviation (ddof=1) and sample size n."""
 # |     n = int(len(arr))
@@ -6303,8 +6363,8 @@
 # |         "min": float(np.min(arr)) if n > 0 else 0.0,
 # |         "max": float(np.max(arr)) if n > 0 else 0.0,
 # |     }
-# | 
-# | 
+# |
+# |
 # | def _fold_stratified_bootstrap(values: np.ndarray, fold_ids: np.ndarray, n_boot: int = 10000) -> tuple[float, float]:
 # |     """Fold-stratified bootstrap 95% CI for the mean of a given metric."""
 # |     folds = {}
@@ -6326,11 +6386,11 @@
 # |         boot_means.append(np.mean(samp))
 # |     
 # |     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
-# | 
-# | 
+# |
+# |
 # | def analyze_delta_r(city_results: List[Dict[str, Any]]) -> Dict[str, Any]:
 # |     n_cities = len(city_results)
-# | 
+# |
 # |     # Primary: Interzonal CPC on Omega_c^+
 # |     m0_inter = np.array([r["M0"]["cpc_inter"] for r in city_results])
 # |     
@@ -6339,13 +6399,13 @@
 # |         "std_definition": "sample_sd_ddof_1",
 # |         "missingness_correlations": {}
 # |     }
-# | 
+# |
 # |     scales = [
 # |         ("city", "M1_city_oracle_obs"),
 # |         ("county", "M1_county_oracle_obs"),
 # |         ("subzone", "M1_subzone_oracle_obs")
 # |     ]
-# | 
+# |
 # |     for scale_name, scale_key in scales:
 # |         m1_inter = np.array([r[scale_key]["cpc_inter"] for r in city_results])
 # |         delta_inter = m1_inter - m0_inter
@@ -6362,14 +6422,14 @@
 # |                 rho, _ = stats.pearsonr(feature_vals, delta_inter)
 # |                 missingness[f"corr_with_{feature}"] = float(rho)
 # |         analysis["missingness_correlations"][scale_name] = missingness
-# | 
+# |
 # |         analysis[scale_name] = {
 # |             "m0_cpc_inter": _compute_stats(m0_inter),
 # |             "m1_cpc_inter": _compute_stats(m1_inter),
 # |             "delta_cpc_inter": {**_compute_stats(delta_inter), "ci_95_lower": ci_low, "ci_95_upper": ci_high},
 # |             "p_improved": float(np.mean(delta_inter > 0)),
 # |         }
-# | 
+# |
 # |         if len(delta_inter) >= 5:
 # |             w_stat, w_p_two = stats.wilcoxon(m1_inter, m0_inter, alternative="two-sided")
 # |             _, w_p_one = stats.wilcoxon(m1_inter, m0_inter, alternative="greater")
@@ -6381,11 +6441,11 @@
 # |             w_plus = np.sum(ranks[diff > 0])
 # |             w_minus = np.sum(ranks[diff < 0])
 # |             r_rb = (w_plus - w_minus) / (w_plus + w_minus) if (w_plus + w_minus) > 0 else 0.0
-# | 
+# |
 # |             analysis[scale_name]["wilcoxon_one_sided_p"] = float(w_p_one)
 # |             analysis[scale_name]["wilcoxon_two_sided_p"] = float(w_p_two)
 # |             analysis[scale_name]["rank_biserial_r"] = float(r_rb)
-# | 
+# |
 # |     return analysis
 
 # ===== END SOURCE FILE: src/experiment/compute_delta_r.py =====
@@ -6394,16 +6454,16 @@
 # ===== BEGIN SOURCE FILE: src/experiment/compute_qstar.py =====
 # | """
 # | Cross-city Statistical Analysis of q* and m* (RQ2).
-# | 
+# |
 # | Distinctly computes:
 # |     - Real (Primary RQ2): m*_real, q*_real = m*_real / T_total against Y_D^{Meta}
 # |     - Oracle (Benchmark): m*_oracle, q*_oracle against Y_D^{oracle}
 # | """
-# | 
+# |
 # | import numpy as np
 # | from typing import List, Dict, Any
-# | 
-# | 
+# |
+# |
 # | def _summary_stats(arr: np.ndarray, ddof: int = 1) -> Dict[str, Any]:
 # |     """Compute summary statistics with sample standard deviation (ddof=1) and sample size n."""
 # |     n = int(len(arr))
@@ -6418,11 +6478,11 @@
 # |         "min": float(np.min(arr)) if n > 0 else 0.0,
 # |         "max": float(np.max(arr)) if n > 0 else 0.0,
 # |     }
-# | 
-# | 
+# |
+# |
 # | def analyze_qstar(city_results: List[Dict[str, Any]]) -> Dict[str, Any]:
 # |     out = {"n_cities": len(city_results)}
-# | 
+# |
 # |     # Oracle
 # |     m_oracle = np.array([r["m_star_oracle"] for r in city_results if r.get("m_star_oracle") is not None])
 # |     q_oracle = np.array([r["q_star_oracle"] for r in city_results if r.get("q_star_oracle") is not None])
@@ -6431,7 +6491,7 @@
 # |             "m_star": _summary_stats(m_oracle),
 # |             "q_star": _summary_stats(q_oracle),
 # |         }
-# | 
+# |
 # |     # Real (Primary)
 # |     m_real = np.array([r["m_star_real"] for r in city_results if r.get("m_star_real") is not None])
 # |     q_real = np.array([r["q_star_real"] for r in city_results if r.get("q_star_real") is not None])
@@ -6441,7 +6501,7 @@
 # |             "m_star": _summary_stats(m_real),
 # |             "q_star": _summary_stats(q_real),
 # |         }
-# | 
+# |
 # |     return out
 
 # ===== END SOURCE FILE: src/experiment/compute_qstar.py =====
@@ -6455,15 +6515,15 @@
 # | from scipy import stats
 # | import matplotlib.pyplot as plt
 # | import seaborn as sns
-# | 
-# | 
-# | 
+# |
+# |
+# |
 # | def main():
 # |     results_file = Path("results/5fold_results.json")
 # |     if not results_file.exists():
 # |         print(f"Error: {results_file} not found.")
 # |         return
-# | 
+# |
 # |     with open(results_file, "r") as f:
 # |         data = json.load(f)
 # |     
@@ -6471,14 +6531,14 @@
 # |     if len(city_results) == 0:
 # |         print("No city results found in JSON.")
 # |         return
-# | 
+# |
 # |     print(f"Loaded {len(city_results)} cities from {results_file}")
 # |     
 # |     cpc_m0 = []
 # |     cpc_m1 = []
 # |     delta_cpcs = []
 # |     city_names = []
-# | 
+# |
 # |     for res in city_results:
 # |         m0 = res["M0"]["cpc_inter"]
 # |         m1 = res["M1_city_oracle_obs"]["cpc_inter"]  # Using M1_city as primary M1
@@ -6523,7 +6583,7 @@
 # |     print(f"Wilcoxon p-value (One-sided, M1 > M0): {p_value:.4e}")
 # |     print(f"Wilcoxon p-value (Two-sided):          {p_value_two_sided:.4e}")
 # |     print("="*50)
-# | 
+# |
 # |     # ---------------------------------------------------------
 # |     # 3. STORYBOARD FIGURES
 # |     # ---------------------------------------------------------
@@ -6549,7 +6609,7 @@
 # |     plt.savefig(plots_dir / "Figure_3_Delta_CPC_Distribution.png", dpi=300)
 # |     plt.close()
 # |     print(f"Saved Figure 3: {plots_dir / 'Figure_3_Delta_CPC_Distribution.png'}")
-# | 
+# |
 # |     # Figure 4: M0 vs M1 across cities
 # |     plt.figure(figsize=(6, 6))
 # |     plt.scatter(cpc_m0, cpc_m1, alpha=0.7, edgecolors='w', s=60, color='#1f77b4')
@@ -6568,7 +6628,7 @@
 # |     plt.savefig(plots_dir / "Figure_4_M0_vs_M1_Scatter.png", dpi=300)
 # |     plt.close()
 # |     print(f"Saved Figure 4: {plots_dir / 'Figure_4_M0_vs_M1_Scatter.png'}")
-# | 
+# |
 # | if __name__ == "__main__":
 # |     main()
 
@@ -6579,7 +6639,7 @@
 # | """
 # | Master 5-Fold Cross-Validation Experiment Runner (Moving-Bin Calibration Framework).
 # | """
-# | 
+# |
 # | import os
 # | os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 # | import sys
@@ -6588,20 +6648,20 @@
 # | import argparse
 # | import torch
 # | from pathlib import Path
-# | 
+# |
 # | # Ensure root directory is in sys.path
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.yd_extractor import compute_kbin_edges
 # | from src.training.train import train_zero_shot_model
 # | from src.experiment.run_experiment import run_target_city_experiments
 # | from src.experiment.compute_delta_r import analyze_delta_r
 # | from src.experiment.compute_qstar import analyze_qstar
-# | 
+# |
 # | from src.training.train import load_checkpoint
-# | 
-# | 
+# |
+# |
 # | def _write_json_atomic(path: Path, payload: dict) -> None:
 # |     temporary_path = path.with_suffix(path.suffix + ".tmp")
 # |     with open(temporary_path, "w", encoding="utf-8") as output_file:
@@ -6609,8 +6669,8 @@
 # |         output_file.flush()
 # |         os.fsync(output_file.fileno())
 # |     os.replace(temporary_path, path)
-# | 
-# | 
+# |
+# |
 # | def run_5fold_experiment(
 # |     data_root: str = "data",
 # |     meta_prior_dir: str = "meta_prior",
@@ -6636,22 +6696,22 @@
 # |         raise FileNotFoundError(f"Missing locked split manifest: {manifest_path}")
 # |     with open(manifest_path, "r", encoding="utf-8") as manifest_file:
 # |         split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
-# | 
+# |
 # |     if device_str is None:
 # |         device_str = "cuda" if torch.cuda.is_available() else "cpu"
-# | 
+# |
 # |     if folds_to_run is None:
 # |         folds_to_run = [1, 2, 3, 4, 5]
 # |     if seeds is None:
 # |         seeds = [1, 10, 100]
-# | 
+# |
 # |     print("=" * 85)
 # |     print("STARTING 5-FOLD CROSS-VALIDATION (MOVING-BIN CALIBRATION FRAMEWORK)")
 # |     print(f"Device: {device_str} | Epochs: {epochs_per_fold} | Graph: {graph_type} (r={radius_km}km)")
 # |     print(f"Primary Calibration Domain: Omega_c^+ (Interzonal moving bins 1, 2, 3)")
 # |     print(f"Folds to run: {folds_to_run}")
 # |     print("=" * 85)
-# | 
+# |
 # |     out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
 # |     out_file = Path(output_dir) / out_file_name
 # |     run_signature = {
@@ -6667,7 +6727,7 @@
 # |         "loss_type": loss_type,
 # |         "split_manifest_sha256": split_manifest_sha256,
 # |     }
-# | 
+# |
 # |     all_city_results = []
 # |     if out_file.exists():
 # |         try:
@@ -6680,23 +6740,23 @@
 # |                     print(f"Ignoring stale result artifact with mismatched run signature: {out_file}")
 # |         except Exception:
 # |             all_city_results = []
-# | 
+# |
 # |     fold_summaries = {}
-# | 
+# |
 # |     start_total_time = time.time()
-# | 
+# |
 # |     for fold_id in folds_to_run:
 # |         split = splits[fold_id]
 # |         train_cities = split["train"]
 # |         val_cities = split["val"]
 # |         test_cities = split["test"]
-# | 
+# |
 # |         print("\n" + "#" * 85)
 # |         print(f"FOLD {fold_id}/5: Training on {len(train_cities)} cities -> Testing on {len(test_cities)} held-out cities")
 # |         print(f"Validation cities: {val_cities}")
 # |         print(f"Held-out targets: {test_cities}")
 # |         print("#" * 85)
-# | 
+# |
 # |         fold_start = time.time()
 # |         models = []
 # |         scalers = []
@@ -6753,13 +6813,13 @@
 # |             models.append(model)
 # |             scalers.append(scaler)
 # |         print(f"Fold {fold_id} models trained in {time.time() - fold_start:.1f}s.")
-# | 
-# | 
-# | 
-# | 
+# |
+# |
+# |
+# |
 # |         # Compute Bin Edges from 35 train cities (K=8)
 # |         bin_edges, K_active = compute_kbin_edges(train_cities, K=8, data_root=data_root)
-# | 
+# |
 # |         # Stage B: Target City Evaluation
 # |         fold_city_results = [r for r in all_city_results if r.get("fold") == fold_id]
 # |         completed_cities = {r.get("city") for r in fold_city_results}
@@ -6808,14 +6868,14 @@
 # |             city_res["fold"] = fold_id
 # |             fold_city_results.append(city_res)
 # |             all_city_results.append(city_res)
-# | 
+# |
 # |             m0_c = city_res['M0']['cpc_inter']
 # |             m1_city = city_res['M1_city_oracle_obs']['cpc_inter']
 # |             m1_county = city_res['M1_county_oracle_obs']['cpc_inter']
 # |             m1_sub = city_res['M1_subzone_oracle_obs']['cpc_inter']
-# | 
+# |
 # |             print(f" | M0: {m0_c:.4f} | M1_city: {m1_city:.4f} (d={avg_res['delta_city']:+.4f}) | M1_county: {m1_county:.4f} (d={avg_res['delta_county']:+.4f}) | M1_subzone: {m1_sub:.4f} (d={avg_res['delta_subzone']:+.4f}) | {time.time() - t0:.1f}s")
-# | 
+# |
 # |             _write_json_atomic(out_file, {
 # |                 "experiment_config": {
 # |                     **run_signature,
@@ -6826,7 +6886,7 @@
 # |                 "rq1_delta_r": analyze_delta_r(all_city_results),
 # |                 "city_level_results": all_city_results,
 # |             })
-# | 
+# |
 # |         fold_summaries[f"fold_{fold_id}"] = {
 # |             "test_cities": test_cities,
 # |             "mean_delta_city": float(sum(r["delta_city"] for r in fold_city_results) / max(1, len(fold_city_results))),
@@ -6853,10 +6913,10 @@
 # |         }
 # |         temp_results["experiment_config"]["run_signature"] = run_signature
 # |         _write_json_atomic(out_file, temp_results)
-# | 
+# |
 # |     # Cross-city Statistical Aggregation (Final)
 # |     delta_r_analysis = analyze_delta_r(all_city_results)
-# | 
+# |
 # |     final_results = {
 # |         "experiment_config": {
 # |             "device": device_str,
@@ -6872,18 +6932,18 @@
 # |         "rq1_delta_r": delta_r_analysis,
 # |         "city_level_results": all_city_results,
 # |     }
-# | 
+# |
 # |     out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
 # |     out_file = Path(output_dir) / out_file_name
 # |     final_results["experiment_config"]["run_signature"] = run_signature
 # |     _write_json_atomic(out_file, final_results)
-# | 
+# |
 # |     print("\n" + "=" * 85)
 # |     print("FINAL SUMMARY: UNIFIED RESOLUTION CALIBRATION (CITY / COUNTY / SUBZONE)")
 # |     print("TASK: OD intensity reconstruction conditional on the observed positive OD support.")
 # |     print("=" * 85)
 # |     print(f"Total cities evaluated: {len(all_city_results)}/50")
-# | 
+# |
 # |     for scale in ["city", "county", "subzone"]:
 # |         if scale in delta_r_analysis:
 # |             s_data = delta_r_analysis[scale]
@@ -6905,12 +6965,12 @@
 # |                 print(f"  Wilcoxon Two-Sided p-value:                     {s_data['wilcoxon_two_sided_p']:.4e}")
 # |             if "rank_biserial_r" in s_data:
 # |                 print(f"  Matched-pairs Rank-biserial (r_rb):             {s_data['rank_biserial_r']:.4f}")
-# | 
+# |
 # |     print(f"\nSaved full results to: {out_file.resolve()}")
 # |     print("=" * 85)
 # |     return final_results
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser()
 # |     parser.add_argument("--epochs", type=int, default=200)
@@ -6941,14 +7001,14 @@
 # | Evaluates the Calibration Operator across multiple zero-shot backbones:
 # |     1. Classical 2-Parameter Gravity Baseline: T_ij^grav = exp(G) * P_i * P_j * D_ij^(-alpha)
 # |     2. Proposed Gravity-Informed Urban GNN: f_theta(X_i, X_j, D_ij, T_ij^grav)
-# | 
+# |
 # | For each backbone b, computes:
 # |     - Delta R_b (CPC_inter)
 # |     - Delta RMSE
 # |     - Delta Spearman rho_s
 # | Across untouched Full 5-fold Folds 1-5 (n=50) and Full Out-of-fold benchmark (N=50).
 # | """
-# | 
+# |
 # | import os
 # | os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 # | import sys
@@ -6958,23 +7018,23 @@
 # | from pathlib import Path
 # | from scipy import stats
 # | from typing import Dict, Any, List
-# | 
+# |
 # | # Ensure repo root on path
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_city, load_raw_city
 # | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.training.evaluate import compute_cpc_pair, compute_spearman_pair
-# | 
-# | 
+# |
+# |
 # | def fit_gravity_parameters(train_cities: List[str], data_root: str = "data") -> tuple[float, float]:
 # |     """Fits global classical gravity parameters G and alpha via log-linear regression on training cities."""
 # |     log_pi_pj = []
 # |     log_dist = []
 # |     log_flow = []
-# | 
+# |
 # |     for c in train_cities:
 # |         raw = load_raw_city(c, data_root=data_root)
 # |         dist_km = raw.dist_km
@@ -6986,11 +7046,11 @@
 # |         p_j = np.clip(p[raw.pair_d_idx.numpy()[mask]], 1.0, None)
 # |         d = np.clip(dist_km[mask], 0.1, None)
 # |         f = raw.pair_trips.numpy()[mask]
-# | 
+# |
 # |         log_pi_pj.extend(np.log(p_i) + np.log(p_j))
 # |         log_dist.extend(np.log(d))
 # |         log_flow.extend(np.log(f))
-# | 
+# |
 # |     # OLS: log_flow = G + 1.0 * log_pi_pj - alpha * log_dist
 # |     y = np.array(log_flow) - np.array(log_pi_pj)
 # |     X = np.column_stack([np.ones(len(y)), -np.array(log_dist)])
@@ -6998,55 +7058,55 @@
 # |     G = float(beta[0])
 # |     alpha = float(beta[1])
 # |     return G, alpha
-# | 
-# | 
+# |
+# |
 # | def run_backbone_robustness(
 # |     data_root: str = "data",
 # |     output_dir: str = "results/tables",
 # | ) -> Dict[str, Any]:
 # |     os.makedirs(output_dir, exist_ok=True)
 # |     splits = generate_35_5_10_splits(data_root=data_root)
-# | 
+# |
 # |     results_file = Path("results/5fold_results.json")
 # |     if not results_file.exists():
 # |         raise FileNotFoundError(f"Missing {results_file}. Run 5-fold experiment first.")
-# | 
+# |
 # |     with open(results_file, "r") as f:
 # |         full_res = json.load(f)
-# | 
+# |
 # |     city_map = {r["city"]: r for r in full_res["city_level_results"]}
-# | 
+# |
 # |     results_by_backbone: Dict[str, List[Dict[str, Any]]] = {
 # |         "classical_gravity": [],
 # |         "urban_gnn": [],
 # |     }
-# | 
+# |
 # |     print("Running Backbone Robustness across 5 folds...")
-# | 
+# |
 # |     for fold_id in range(1, 6):
 # |         train_cities = splits[fold_id]["train"]
 # |         test_cities = splits[fold_id]["test"]
-# | 
+# |
 # |         # 1. Fit Classical Gravity on Fold training cities
 # |         G_fit, alpha_fit = fit_gravity_parameters(train_cities, data_root=data_root)
 # |         print(f"Fold {fold_id} Classical Gravity: G={G_fit:.3f}, alpha={alpha_fit:.3f}")
-# | 
+# |
 # |         # Compute K=8 bin edges from training cities
 # |         bin_edges, _ = compute_kbin_edges(train_cities, K=8, data_root=data_root)
-# | 
+# |
 # |         for city_name in test_cities:
 # |             raw = load_raw_city(city_name, data_root=data_root)
 # |             existing_r = city_map.get(city_name)
 # |             if existing_r is None:
 # |                 continue
-# | 
+# |
 # |             dist_km = raw.dist_km
 # |             inter_mask = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0)
 # |             t_true_inter = raw.pair_trips.numpy()[inter_mask]
-# | 
+# |
 # |             # Extract Oracle Target Y_D
 # |             yd_target = extract_yd_kbins(dist_km, raw.pair_trips.numpy(), bin_edges, inter_mask)
-# | 
+# |
 # |             # --- Backbone 1: Classical Gravity ---
 # |             p = raw.population.numpy()
 # |             p_i = np.clip(p[raw.pair_o_idx.numpy()], 1.0, None)
@@ -7054,20 +7114,20 @@
 # |             d = np.clip(dist_km, 0.1, None)
 # |             t_grav = np.exp(G_fit) * p_i * p_j * (d ** (-alpha_fit))
 # |             t_grav_inter = t_grav[inter_mask]
-# | 
+# |
 # |             # Evaluate M0_grav
 # |             m0_cpc_grav = float(compute_cpc_pair(t_true_inter, t_grav_inter))
 # |             m0_rmse_grav = float(np.sqrt(np.mean((t_true_inter - t_grav_inter) ** 2)))
 # |             m0_spr_grav = float(compute_spearman_pair(t_true_inter, t_grav_inter))
-# | 
+# |
 # |             # Apply K=8 calibration on Gravity
 # |             t_grav_cal = calibrate_kbins(t_grav, dist_km, inter_mask, yd_target, bin_edges, q=1.0)
 # |             t_grav_cal_inter = t_grav_cal[inter_mask]
-# | 
+# |
 # |             m1_cpc_grav = float(compute_cpc_pair(t_true_inter, t_grav_cal_inter))
 # |             m1_rmse_grav = float(np.sqrt(np.mean((t_true_inter - t_grav_cal_inter) ** 2)))
 # |             m1_spr_grav = float(compute_spearman_pair(t_true_inter, t_grav_cal_inter))
-# | 
+# |
 # |             results_by_backbone["classical_gravity"].append({
 # |                 "city": city_name,
 # |                 "fold": fold_id,
@@ -7081,7 +7141,7 @@
 # |                 "m1_spearman_inter": m1_spr_grav,
 # |                 "delta_spearman": m1_spr_grav - m0_spr_grav,
 # |             })
-# | 
+# |
 # |             # --- Backbone 2: Gravity-Informed Urban GNN (Main) ---
 # |             m0_gnn = existing_r["M0"]
 # |             m1_gnn = existing_r.get("M1_city_oracle_obs", existing_r.get("M1_city_oracle_obs", {}))
@@ -7089,12 +7149,12 @@
 # |             m0_cpc_gnn = m0_gnn["cpc_inter"]
 # |             m1_cpc_gnn = m1_gnn["cpc_inter"]
 # |             delta_gnn = m1_cpc_gnn - m0_cpc_gnn
-# | 
+# |
 # |             m0_rmse_gnn = m0_gnn.get("rmse_inter", 0.0)
 # |             m1_rmse_gnn = m1_gnn.get("rmse_inter", 0.0)
 # |             m0_spr_gnn = m0_gnn.get("spearman_inter", 0.0)
 # |             m1_spr_gnn = m1_gnn.get("spearman_inter", 0.0)
-# | 
+# |
 # |             results_by_backbone["urban_gnn"].append({
 # |                 "city": city_name,
 # |                 "fold": fold_id,
@@ -7108,12 +7168,12 @@
 # |                 "m1_spearman_inter": m1_spr_gnn,
 # |                 "delta_spearman": m1_spr_gnn - m0_spr_gnn,
 # |             })
-# | 
+# |
 # |     # Summarize across Full 5-fold Fold 2-5 (n=50) and Full (n=50)
 # |     def summarize_backbone(records: List[Dict[str, Any]], label: str) -> Dict[str, Any]:
 # |         conf_recs = [r for r in records if r["fold"] in [1, 2, 3, 4, 5]]
 # |         all_recs = records
-# | 
+# |
 # |         def get_block(sub: List[Dict[str, Any]]):
 # |             n = len(sub)
 # |             m0_cpc = np.array([r["m0_cpc_inter"] for r in sub])
@@ -7121,12 +7181,12 @@
 # |             dr = np.array([r["delta_r"] for r in sub])
 # |             d_rmse = np.array([r["delta_rmse"] for r in sub])
 # |             d_sp = np.array([r["delta_spearman"] for r in sub])
-# | 
+# |
 # |             # Stratified bootstrap CI
 # |             delta_by_fold = {}
 # |             for f in (range(1, 6) if n == 50 else range(2, 6)):
 # |                 delta_by_fold[f] = [r["delta_r"] for r in sub if r["fold"] == f]
-# | 
+# |
 # |             rng = np.random.default_rng(42)
 # |             boot_means = []
 # |             for _ in range(5000):
@@ -7136,9 +7196,9 @@
 # |                         samp.extend(rng.choice(vals, size=len(vals), replace=True))
 # |                 boot_means.append(np.mean(samp))
 # |             ci_l, ci_h = np.percentile(boot_means, [2.5, 97.5])
-# | 
+# |
 # |             _, w_p = stats.wilcoxon(m1_cpc, m0_cpc, alternative="greater")
-# | 
+# |
 # |             return {
 # |                 "n": n,
 # |                 "m0_cpc_mean": float(np.mean(m0_cpc)),
@@ -7156,17 +7216,17 @@
 # |                 "delta_rmse_mean": float(np.mean(d_rmse)),
 # |                 "delta_spearman_mean": float(np.mean(d_sp)),
 # |             }
-# | 
+# |
 # |         return {
 # |             "backbone": label,
 # |             "full_5fold_50cities": get_block(all_recs),
 # |         }
-# | 
+# |
 # |     summary = {
 # |         "classical_gravity": summarize_backbone(results_by_backbone["classical_gravity"], "Classical 2-Parameter Gravity"),
 # |         "urban_gnn": summarize_backbone(results_by_backbone["urban_gnn"], "Gravity-Informed Urban GNN"),
 # |     }
-# | 
+# |
 # |     # Generate Markdown Table
 # |     t7_md = []
 # |     t7_md.append("# Backbone Robustness — Marginal Value of Calibration Across Model Architectures")
@@ -7176,7 +7236,7 @@
 # |     t7_md.append("## Part A: Full 5-fold Evaluation Set (Folds 1-5, $n=50$ Cities)")
 # |     t7_md.append("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta R$ | 95% Fold-Stratified Bootstrap CI | $P(\\Delta R > 0)$ | Wilcoxon $p$ | $\\Delta \\text{RMSE}$ |")
 # |     t7_md.append("|---|---|---|---|---|---|---|---|")
-# | 
+# |
 # |     for k, v in summary.items():
 # |         b_name = v["backbone"]
 # |         c_stats = v["full_5fold_50cities"]
@@ -7188,18 +7248,18 @@
 # |         w_p = f"{c_stats['wilcoxon_p']:.4e}"
 # |         rmse_str = f"{c_stats['delta_rmse_mean']:+.4f}"
 # |         t7_md.append(f"| **{b_name}** | {m0_str} | {m1_str} | {dr_str} | {ci_str} | {p_imp} | p = {w_p} | {rmse_str} |")
-# | 
+# |
 # |     t7_md_content = "\n".join(t7_md)
 # |     with open(Path(output_dir) / "table7_backbone_robustness.md", "w", encoding="utf-8") as f:
 # |         f.write(t7_md_content)
-# | 
+# |
 # |     with open("results/backbone_robustness_results.json", "w", encoding="utf-8") as f:
 # |         json.dump({"summary": summary, "per_city_records": results_by_backbone}, f, indent=2)
-# | 
+# |
 # |     print(f"Backbone robustness table generated at {output_dir}/table7_backbone_robustness.md")
 # |     return summary
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     run_backbone_robustness()
 
@@ -7210,11 +7270,11 @@
 # | """
 # | Convergence Pilot for Zero-Shot OD Backbone (Fold 1)
 # | ====================================================
-# | 
+# |
 # | Purpose:
 # |     Examine the optimization trajectory and empirical convergence limit of the
 # |     ZeroShotODModel across 100 epochs on Fold 1 (35 train / 5 val cities).
-# | 
+# |
 # | Logging:
 # |     - epoch (1 to 100)
 # |     - train_loss (ZTNB NLL)
@@ -7222,12 +7282,12 @@
 # |     - learning_rate
 # |     - best_epoch & best_val_cpc tracking
 # |     - early_stopping_epoch (if triggered, patience=15)
-# | 
+# |
 # | Outputs:
 # |     - results/e1/convergence_pilot_fold1.json
 # |     - results/e1/tables/convergence_pilot.md
 # | """
-# | 
+# |
 # | import json
 # | import time
 # | import argparse
@@ -7235,35 +7295,35 @@
 # | from pathlib import Path
 # | import numpy as np
 # | import torch
-# | 
+# |
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.training.train import train_zero_shot_model
-# | 
+# |
 # | MAX_EPOCHS = 100
 # | PATIENCE = 15
 # | DATA_ROOT = "data"
 # | RESULTS_DIR = Path("results/e1")
-# | 
-# | 
+# |
+# |
 # | def run_convergence_pilot(fold_id: int = 1, device_str: str = "cpu"):
 # |     t0 = time.time()
 # |     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 # |     (RESULTS_DIR / "tables").mkdir(exist_ok=True)
-# | 
+# |
 # |     splits = generate_35_5_10_splits(DATA_ROOT)
 # |     split = splits[fold_id]
 # |     train35 = split["train"]
 # |     val5    = split["val"]
-# | 
+# |
 # |     print(f"\n{'='*70}")
 # |     print(f"CONVERGENCE PILOT: FOLD {fold_id} (Max {MAX_EPOCHS} Epochs, Patience={PATIENCE})")
 # |     print(f"{'='*70}")
 # |     print(f"Train ({len(train35)} cities): {train35[:4]}... {train35[-2:]}")
 # |     print(f"Val   ({len(val5)} cities): {val5}")
 # |     print(f"{'-'*70}")
-# | 
+# |
 # |     _ckpt_path = RESULTS_DIR / "checkpoints" / f"convergence_pilot_fold{fold_id}.pt"
 # |     model, scaler, info = train_zero_shot_model(
 # |         train_city_names=train35,
@@ -7278,15 +7338,15 @@
 # |         checkpoint_path=_ckpt_path,
 # |         run_tag=f"convergence_pilot_fold{fold_id}",
 # |     )
-# | 
+# |
 # |     elapsed = time.time() - t0
-# | 
+# |
 # |     # Build per-epoch history table
 # |     history = []
 # |     val_cpcs = info["val_cpc_history"]
 # |     train_losses = info["train_loss_history"]
 # |     n_epochs = len(val_cpcs)
-# | 
+# |
 # |     for ep in range(1, n_epochs + 1):
 # |         history.append({
 # |             "epoch": ep,
@@ -7294,7 +7354,7 @@
 # |             "val_cpc": float(val_cpcs[ep - 1]),
 # |             "is_best": bool(ep == info["best_epoch"]),
 # |         })
-# | 
+# |
 # |     pilot_results = {
 # |         "fold_id": fold_id,
 # |         "max_epochs": MAX_EPOCHS,
@@ -7309,12 +7369,12 @@
 # |         "checkpoint_path": str(_ckpt_path.resolve()),
 # |         "epoch_history": history,
 # |     }
-# | 
+# |
 # |     # Save JSON artifact
 # |     json_path = RESULTS_DIR / f"convergence_pilot_fold{fold_id}.json"
 # |     json_path.write_text(json.dumps(pilot_results, indent=2), encoding="utf-8")
 # |     print(f"\nSaved raw convergence trajectory -> {json_path}")
-# | 
+# |
 # |     # Generate Markdown summary table
 # |     md_lines = [
 # |         f"# Convergence Pilot Trajectory (Fold {fold_id}, Max {MAX_EPOCHS} Epochs)",
@@ -7324,15 +7384,15 @@
 # |         "| Epoch | Train Loss (ZTNB) | Validation CPC (Interzonal) | Status |",
 # |         "|---|---|---|---|",
 # |     ]
-# | 
+# |
 # |     for h in history:
 # |         status_marker = "**BEST CHECKPOINT**" if h["is_best"] else ""
 # |         md_lines.append(f"| {h['epoch']:03d} | {h['train_loss']:.4f} | {h['val_cpc']:.4f} | {status_marker} |")
-# | 
+# |
 # |     table_path = RESULTS_DIR / "tables" / f"convergence_pilot_fold{fold_id}.md"
 # |     table_path.write_text("\n".join(md_lines) + "\n", encoding="utf-8")
 # |     print(f"Saved Markdown report -> {table_path}")
-# | 
+# |
 # |     print(f"\n{'='*70}")
 # |     print(f"Convergence Pilot Complete in {elapsed:.1f}s")
 # |     print(f"  Best Epoch: {info['best_epoch']} / {info['epochs_trained']}")
@@ -7340,11 +7400,11 @@
 # |     print(f"  Early stopping triggered: {info['stopped_early']}")
 # |     print(f"  Checkpoint saved: {_ckpt_path.resolve()}")
 # |     print(f"{'='*70}\n")
-# | 
-# | 
+# |
+# |
 # |     return pilot_results
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(description="Convergence Pilot for Zero-Shot Model")
 # |     parser.add_argument("--fold", type=int, default=1, help="Fold ID to test (default: 1)")
@@ -7359,14 +7419,14 @@
 # | """
 # | Direct Partial-OD Information Equivalence Experiment (v1) - High-Performance Vectorized Runner
 # | =============================================================================================
-# | 
+# |
 # | Core Scientific Research Question:
 # |     Under a prespecified low-capacity direct-OD adaptation procedure
 # |     (OD Fixed-Effect Residual Adapter, OD-FE), what fraction of directly observed
 # |     positive interzonal OD pairs is required to achieve reconstruction gain on
 # |     the remaining unseen pairs comparable to that obtained from the full
 # |     target-city distance-binned mobility distribution (Y_D)?
-# | 
+# |
 # | Strict Protocol Invariants:
 # |     - 5-Fold Cross-City Evaluation (50 held-out test cities).
 # |     - Frozen Gravity-Informed Urban GNN backbones (seeds 1, 10, 100).
@@ -7376,7 +7436,7 @@
 # |     - Primary Grid: 15 p-levels in [0.0, 0.001, ..., 0.90].
 # |     - B = 200 replicates per city.
 # | """
-# | 
+# |
 # | import os
 # | import sys
 # | import time
@@ -7386,17 +7446,17 @@
 # | import multiprocessing as mp
 # | from pathlib import Path
 # | from typing import Dict, List, Tuple, Any, Optional
-# | 
+# |
 # | import numpy as np
 # | import pandas as pd
 # | from scipy import stats
 # | import matplotlib.pyplot as plt
 # | import torch
-# | 
+# |
 # | # Ensure repository root is on sys.path
 # | REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # | sys.path.insert(0, str(REPO_ROOT))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_city, load_raw_city
 # | from src.data.urban_graph import build_radius_graph
@@ -7404,7 +7464,7 @@
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.training.evaluate import compute_cpc_pair
 # | from src.training.train import load_checkpoint, infer_zero_shot
-# | 
+# |
 # | PARTIAL_OD_BASE_SEED = 202608231
 # | PRIMARY_GRID_DIRECT = [
 # |     0.0, 0.001, 0.0025, 0.005, 0.01, 0.02, 0.05, 
@@ -7412,7 +7472,7 @@
 # | ]
 # | LAMBDA_CANDIDATES = [0.1, 1.0, 10.0, 100.0]
 # | VAL_P_GRID = [0.02, 0.05, 0.10, 0.20]
-# | 
+# |
 # | RAW_COLUMNS_DIRECT = [
 # |     "fold", "city", "model_seed", "replicate_id", "p", "mask_seed",
 # |     "selected_lambda", "n_total_pairs", "n_revealed", "n_unseen",
@@ -7424,13 +7484,13 @@
 # |     "gain_full_yd", "gain_direct_od", "difference_direct_minus_yd",
 # |     "relative_direct_vs_yd", "total_m0_mass", "total_direct_mass", "K", "q"
 # | ]
-# | 
-# | 
+# |
+# |
 # | def get_stable_mask_seed(base_seed: int, fold: int, city: str, replicate_id: int) -> int:
 # |     s = f"{base_seed}_{fold}_{city}_{replicate_id}"
 # |     return int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16) % (2**32)
-# | 
-# | 
+# |
+# |
 # | def holm_correction(p_vals: List[float]) -> np.ndarray:
 # |     n = len(p_vals)
 # |     if n == 0:
@@ -7443,8 +7503,8 @@
 # |         running_max = max(running_max, p_adj)
 # |         adj_p[idx] = min(1.0, running_max)
 # |     return adj_p
-# | 
-# | 
+# |
+# |
 # | def fold_stratified_bootstrap(
 # |     city_df: pd.DataFrame, 
 # |     metric_col: str, 
@@ -7460,7 +7520,7 @@
 # |         f_vals = sub[sub.fold == f][metric_col].values
 # |         if len(f_vals) > 0:
 # |             vals[f] = f_vals
-# | 
+# |
 # |     boot_means = np.empty(n_boot, dtype=np.float64)
 # |     total_cities = sum(len(v) for v in vals.values())
 # |     if total_cities == 0:
@@ -7472,10 +7532,10 @@
 # |             idx = rng.randint(0, len(arr), size=len(arr))
 # |             sample_sum += arr[idx].sum()
 # |         boot_means[b] = sample_sum / total_cities
-# | 
+# |
 # |     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
-# | 
-# | 
+# |
+# |
 # | def fit_od_fe_adapter(
 # |     o_idx: np.ndarray,
 # |     d_idx: np.ndarray,
@@ -7495,44 +7555,44 @@
 # |     n_rev = len(rev_indices)
 # |     if n_rev == 0:
 # |         return np.zeros(num_nodes, dtype=np.float64), np.zeros(num_nodes, dtype=np.float64), 0, True
-# | 
+# |
 # |     o_rev = torch.as_tensor(o_idx[rev_indices], dtype=torch.long)
 # |     d_rev = torch.as_tensor(d_idx[rev_indices], dtype=torch.long)
 # |     t0_rev = torch.as_tensor(t0_support[rev_indices], dtype=torch.float64)
 # |     t_true_rev = torch.as_tensor(t_true_support[rev_indices], dtype=torch.float64)
-# | 
+# |
 # |     # Target residual r_ij = log(1 + T_ij) - log(1 + \hat{T}^0_ij)
 # |     r_rev = torch.log1p(t_true_rev) - torch.log1p(t0_rev)
-# | 
+# |
 # |     n_i = torch.bincount(o_rev, minlength=num_nodes).double()
 # |     m_j = torch.bincount(d_rev, minlength=num_nodes).double()
-# | 
+# |
 # |     inv_denom_a = 1.0 / (n_i + lambda_reg)
 # |     denom_b = m_j + lambda_reg
-# | 
+# |
 # |     c_a = torch.bincount(o_rev, weights=r_rev, minlength=num_nodes)
 # |     c_b = torch.bincount(d_rev, weights=r_rev, minlength=num_nodes)
-# | 
+# |
 # |     rhs_b = c_b - torch.bincount(d_rev, weights=inv_denom_a[o_rev] * c_a[o_rev], minlength=num_nodes)
-# | 
+# |
 # |     def matvec(v):
 # |         Av = v[d_rev]
 # |         scaled_Av = inv_denom_a[o_rev] * Av
 # |         At_scaled_Av = torch.bincount(d_rev, weights=scaled_Av, minlength=num_nodes)
 # |         return denom_b * v - At_scaled_Av
-# | 
+# |
 # |     b = torch.zeros(num_nodes, dtype=torch.float64)
 # |     r = rhs_b - matvec(b)
 # |     p = r.clone()
 # |     rsold = torch.dot(r, r)
-# | 
+# |
 # |     if float(rsold) < 1e-16:
 # |         a = inv_denom_a * c_a
 # |         return a.numpy(), b.numpy(), 0, True
-# | 
+# |
 # |     converged = False
 # |     iters = 0
-# | 
+# |
 # |     for it in range(1, max_iter + 1):
 # |         iters = it
 # |         Ap = matvec(p)
@@ -7549,11 +7609,11 @@
 # |             break
 # |         p = r + (rsnew / rsold) * p
 # |         rsold = rsnew
-# | 
+# |
 # |     a = inv_denom_a * (c_a - torch.bincount(o_rev, weights=b[d_rev], minlength=num_nodes))
 # |     return a.numpy(), b.numpy(), iters, converged
-# | 
-# | 
+# |
+# |
 # | def apply_od_fe_prediction(
 # |     o_idx: np.ndarray,
 # |     d_idx: np.ndarray,
@@ -7577,8 +7637,8 @@
 # |         t_direct = t0_support.copy()
 # |         
 # |     return t_direct
-# | 
-# | 
+# |
+# |
 # | def select_fold_lambda(
 # |     fold_id: int,
 # |     val_cities: List[str],
@@ -7601,7 +7661,7 @@
 # |         model, scaler, _ = load_checkpoint(ckpt_path, device_str=device)
 # |         model.eval()
 # |         fold_models[s] = (model, scaler)
-# | 
+# |
 # |     # Pre-cache validation city zero-shot predictions
 # |     val_cache: Dict[str, Dict[str, Any]] = {}
 # |     for city_name in val_cities:
@@ -7613,7 +7673,7 @@
 # |         o_idx_support = raw_data.pair_o_idx.numpy()[inter_pos]
 # |         d_idx_support = raw_data.pair_d_idx.numpy()[inter_pos]
 # |         num_nodes = raw_data.n_tracts
-# | 
+# |
 # |         seed_preds = {}
 # |         for s in model_seeds:
 # |             model, scaler = fold_models[s]
@@ -7623,7 +7683,7 @@
 # |             with torch.no_grad():
 # |                 m0_full = infer_zero_shot(model, city_data, ei, ed, device=device).numpy().astype(np.float64)
 # |             seed_preds[s] = m0_full[inter_pos]
-# | 
+# |
 # |         val_cache[city_name] = {
 # |             "n_pairs": int(inter_pos.sum()),
 # |             "t_true": t_true_support,
@@ -7632,7 +7692,7 @@
 # |             "num_nodes": num_nodes,
 # |             "seed_preds": seed_preds
 # |         }
-# | 
+# |
 # |     lambda_scores = []
 # |     
 # |     for lam in LAMBDA_CANDIDATES:
@@ -7646,25 +7706,25 @@
 # |             o_idx = cdata["o_idx"]
 # |             d_idx = cdata["d_idx"]
 # |             num_nodes = cdata["num_nodes"]
-# | 
+# |
 # |             for rep_id in range(b_val):
 # |                 mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, f"val_{city_name}", rep_id)
 # |                 perm = np.random.RandomState(mask_seed).permutation(n_pairs)
-# | 
+# |
 # |                 for p_val in VAL_P_GRID:
 # |                     n_rev = int(np.round(p_val * n_pairs))
 # |                     rev_indices = perm[:n_rev]
 # |                     unseen_indices = perm[n_rev:]
 # |                     t_true_unseen = t_true[unseen_indices]
 # |                     sum_true_unseen = float(np.sum(t_true_unseen))
-# | 
+# |
 # |                     for s in model_seeds:
 # |                         t0_support = cdata["seed_preds"][s]
 # |                         t0_unseen = t0_support[unseen_indices]
 # |                         
 # |                         denom_m0 = sum_true_unseen + float(np.sum(t0_unseen))
 # |                         cpc_m0 = (2.0 * np.sum(np.minimum(t_true_unseen, t0_unseen)) / denom_m0) if denom_m0 > 0 else 0.0
-# | 
+# |
 # |                         a, b, _, conv = fit_od_fe_adapter(
 # |                             o_idx, d_idx, t0_support, t_true, rev_indices, num_nodes, lambda_reg=lam
 # |                         )
@@ -7676,10 +7736,10 @@
 # |                         
 # |                         denom_dir = sum_true_unseen + float(np.sum(t_direct_unseen))
 # |                         cpc_dir = (2.0 * np.sum(np.minimum(t_true_unseen, t_direct_unseen)) / denom_dir) if denom_dir > 0 else 0.0
-# | 
+# |
 # |                         cpc_unseen_list.append(cpc_dir)
 # |                         gain_list.append(cpc_dir - cpc_m0)
-# | 
+# |
 # |         mean_cpc = float(np.mean(cpc_unseen_list))
 # |         mean_gain = float(np.mean(gain_list))
 # |         lambda_scores.append({
@@ -7690,15 +7750,15 @@
 # |             "masks_per_city": b_val
 # |         })
 # |         print(f"  candidate lambda = {lam:<5} | Val Mean CPC_U = {mean_cpc:.5f} | Val Mean Gain = {mean_gain:+.5f}")
-# | 
+# |
 # |     selection_df = pd.DataFrame(lambda_scores)
 # |     # Sort descending by validation_mean_cpc, then descending by lambda (tie-breaker prefers higher regularization)
 # |     best_row = selection_df.sort_values(by=["validation_mean_cpc", "lambda"], ascending=[False, False]).iloc[0]
 # |     selected_lam = float(best_row["lambda"])
 # |     print(f"  --> Selected lambda_f* = {selected_lam} for Fold {fold_id}\n")
 # |     return selected_lam, selection_df
-# | 
-# | 
+# |
+# |
 # | def _process_city_replicates_chunk(
 # |     args: Tuple[int, str, List[int], int, List[int], List[float], float, Dict[str, Any]]
 # | ) -> List[Tuple]:
@@ -7715,14 +7775,14 @@
 # |     n_origins_total = city_cached_data["n_origins_total"]
 # |     n_dests_total = city_cached_data["n_dests_total"]
 # |     seed_predictions = city_cached_data["seed_predictions"]
-# | 
+# |
 # |     rows = []
-# | 
+# |
 # |     for rep_id in rep_ids:
 # |         mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
 # |         rng = np.random.RandomState(mask_seed)
 # |         perm = rng.permutation(n_pairs)
-# | 
+# |
 # |         for p_val in p_grid:
 # |             n_reveal = int(np.round(p_val * n_pairs))
 # |             rev_indices = perm[:n_reveal]
@@ -7730,7 +7790,7 @@
 # |             n_unseen = len(unseen_indices)
 # |             if n_unseen == 0:
 # |                 continue
-# | 
+# |
 # |             if n_reveal == 0:
 # |                 revealed_mass = 0.0
 # |                 c_o = 0.0
@@ -7749,7 +7809,7 @@
 # |                 unseen_d = d_idx_support[unseen_indices]
 # |                 both_cov = np.isin(unseen_o, list(rev_o_set)) & np.isin(unseen_d, list(rev_d_set))
 # |                 c_both = float(np.mean(both_cov))
-# | 
+# |
 # |             frac_pairs_rev = float(n_reveal) / float(n_pairs)
 # |             frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
 # |             unseen_mass = total_trip_mass - revealed_mass
@@ -7757,7 +7817,7 @@
 # |             
 # |             t_true_unseen = t_true_support[unseen_indices]
 # |             sum_true_unseen = float(np.sum(t_true_unseen))
-# | 
+# |
 # |             # Evaluate across all model seeds with identical mask
 # |             for s in model_seeds:
 # |                 preds = seed_predictions[s]
@@ -7801,12 +7861,12 @@
 # |                     
 # |                     denom_dir = sum_true_unseen + float(np.sum(t_dir_unseen))
 # |                     cpc_dir_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_dir_unseen)) / denom_dir) if denom_dir > 0 else 0.0
-# | 
+# |
 # |                 gain_full = float(cpc_full_unseen - cpc_m0_unseen)
 # |                 gain_direct = float(cpc_dir_unseen - cpc_m0_unseen)
 # |                 diff_direct_minus_yd = float(gain_direct - gain_full)
 # |                 rel_direct = float(gain_direct / gain_full) if abs(gain_full) > 1e-8 else 1.0
-# | 
+# |
 # |                 rows.append((
 # |                     fold_id, city_name, s, rep_id, p_val, mask_seed,
 # |                     selected_lambda, n_pairs, n_reveal, n_unseen,
@@ -7817,10 +7877,10 @@
 # |                     gain_full, gain_direct, diff_direct_minus_yd,
 # |                     rel_direct, N_hat_total, tot_dir_mass, 8, 1.0
 # |                 ))
-# | 
+# |
 # |     return rows
-# | 
-# | 
+# |
+# |
 # | def run_fold_direct_od(
 # |     fold_id: int,
 # |     data_root: str = "data",
@@ -7835,7 +7895,7 @@
 # | ) -> Dict[str, Any]:
 # |     if p_grid is None:
 # |         p_grid = PRIMARY_GRID_DIRECT.copy()
-# | 
+# |
 # |     fold_dir = output_dir / f"fold_{fold_id}"
 # |     fold_dir.mkdir(parents=True, exist_ok=True)
 # |     
@@ -7844,7 +7904,7 @@
 # |     marker_path = fold_dir / "completion.marker"
 # |     lambda_csv_path = fold_dir / "lambda_selection.csv"
 # |     lambda_json_path = fold_dir / "lambda_selected.json"
-# | 
+# |
 # |     splits = generate_35_5_10_splits(data_root=data_root)
 # |     split = splits[fold_id]
 # |     train_cities = split["train"]
@@ -7853,7 +7913,7 @@
 # |     model_seeds = [1, 10, 100] if not smoke else [1, 10]
 # |     B = replicates if not smoke else 20
 # |     b_val = 50 if not smoke else 5
-# | 
+# |
 # |     # 1. Select / Load Fold Lambda
 # |     valid_lambda_cache = False
 # |     if lambda_json_path.exists():
@@ -7865,7 +7925,7 @@
 # |                 valid_lambda_cache = True
 # |             else:
 # |                 print(f">>> [FOLD {fold_id}] Cached lambda_f* is stale (different config). Re-selecting...")
-# | 
+# |
 # |     if not valid_lambda_cache:
 # |         selected_lambda, selection_df = select_fold_lambda(
 # |             fold_id=fold_id,
@@ -7888,9 +7948,9 @@
 # |                 "b_val": b_val,
 # |                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
 # |             }, f, indent=2)
-# | 
+# |
 # |     print(f">>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | lambda={selected_lambda} | Workers={num_workers}")
-# | 
+# |
 # |     # Check already completed cities if resume is True
 # |     completed_cities = set()
 # |     if resume and progress_json_path.exists():
@@ -7901,11 +7961,11 @@
 # |                 print(f"    Resuming fold {fold_id}: Found {len(completed_cities)} already completed cities.")
 # |         except Exception:
 # |             completed_cities = set()
-# | 
+# |
 # |     if not resume or not raw_csv_path.exists():
 # |         with open(raw_csv_path, "w", encoding="utf-8") as f:
 # |             f.write(",".join(RAW_COLUMNS_DIRECT) + "\n")
-# | 
+# |
 # |     # Load frozen GNN models
 # |     models: Dict[int, Tuple[Any, Any]] = {}
 # |     for s in model_seeds:
@@ -7915,19 +7975,19 @@
 # |         model, scaler, _ = load_checkpoint(ckpt_path, device_str=device)
 # |         model.eval()
 # |         models[s] = (model, scaler)
-# | 
+# |
 # |     # Compute K=8 bin edges from 35 train cities for reference arm
 # |     bin_edges, K_act = compute_kbin_edges(train_cities, K=8, data_root=data_root)
 # |     assert K_act == 8 and len(bin_edges) == 9
-# | 
+# |
 # |     fold_start_time = time.perf_counter()
 # |     rows_written_total = 0
-# | 
+# |
 # |     for city_idx, city_name in enumerate(test_cities):
 # |         if city_name in completed_cities:
 # |             print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | ALREADY COMPLETED (Skipping)")
 # |             continue
-# | 
+# |
 # |         city_start = time.perf_counter()
 # |         raw_data = load_raw_city(city_name, data_root=data_root)
 # |         dist_km = raw_data.dist_km
@@ -7936,7 +7996,7 @@
 # |         n_pairs = int(inter_pos.sum())
 # |         if n_pairs == 0:
 # |             raise RuntimeError(f"Critical error: City {city_name} has 0 positive interzonal pairs!")
-# | 
+# |
 # |         t_true_support = raw_data.pair_trips.numpy()[inter_pos].astype(np.float64)
 # |         o_idx_support = raw_data.pair_o_idx.numpy()[inter_pos]
 # |         d_idx_support = raw_data.pair_d_idx.numpy()[inter_pos]
@@ -7946,12 +8006,12 @@
 # |         
 # |         n_origins_total = len(set(o_idx_support))
 # |         n_dests_total = len(set(d_idx_support))
-# | 
+# |
 # |         # Full Y_D reference distribution
 # |         bin_idx_support = np.clip(np.digitize(dist_support, bin_edges, right=True) - 1, 0, 7)
 # |         yd_full = np.bincount(bin_idx_support, weights=t_true_support, minlength=8).astype(np.float64)
 # |         yd_full /= total_trip_mass
-# | 
+# |
 # |         # Precalculate M0 and full Y_D calibrated prediction for all model seeds
 # |         seed_predictions: Dict[int, Dict[str, np.ndarray]] = {}
 # |         for s in model_seeds:
@@ -7974,7 +8034,7 @@
 # |             yd_act = yd_full * active.astype(np.float64)
 # |             act_sum = yd_act.sum()
 # |             Y_D_cond = yd_act / act_sum if act_sum > 0 else Y_hat.copy()
-# | 
+# |
 # |             w_full = np.ones(8, dtype=np.float64)
 # |             for k in range(8):
 # |                 if active[k] and Y_hat[k] > 0:
@@ -7992,7 +8052,7 @@
 # |                 "N_hat": N_hat_support,
 # |                 "t_cal_full": t_cal_full_support
 # |             }
-# | 
+# |
 # |         city_cached_data = {
 # |             "t_true": t_true_support,
 # |             "o_idx": o_idx_support,
@@ -8003,29 +8063,29 @@
 # |             "n_dests_total": n_dests_total,
 # |             "seed_predictions": seed_predictions
 # |         }
-# | 
+# |
 # |         # Divide B replicates into chunks for multiprocessing
 # |         rep_chunks = np.array_split(np.arange(B), min(num_workers, B))
 # |         task_args = [
 # |             (fold_id, city_name, chunk.tolist(), n_pairs, model_seeds, p_grid, selected_lambda, city_cached_data)
 # |             for chunk in rep_chunks if len(chunk) > 0
 # |         ]
-# | 
+# |
 # |         if num_workers > 1 and len(task_args) > 1:
 # |             with mp.Pool(processes=min(num_workers, len(task_args))) as pool:
 # |                 chunk_results = pool.map(_process_city_replicates_chunk, task_args)
 # |             city_rows = [item for sublist in chunk_results for item in sublist]
 # |         else:
 # |             city_rows = _process_city_replicates_chunk(task_args[0])
-# | 
+# |
 # |         # Append city records to raw CSV incrementally
 # |         with open(raw_csv_path, "a", encoding="utf-8") as f:
 # |             for r in city_rows:
 # |                 f.write(",".join(str(x) for x in r) + "\n")
-# | 
+# |
 # |         completed_cities.add(city_name)
 # |         rows_written_total += len(city_rows)
-# | 
+# |
 # |         # Update progress.json
 # |         with open(progress_json_path, "w", encoding="utf-8") as f:
 # |             json.dump({
@@ -8036,10 +8096,10 @@
 # |                 "protocol_version": "v1",
 # |                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
 # |             }, f, indent=2)
-# | 
+# |
 # |         city_elapsed = time.perf_counter() - city_start
 # |         print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | Pairs: {n_pairs:>7} | B={B} reps done in {city_elapsed:.2f}s (Flushed {len(city_rows)} rows)")
-# | 
+# |
 # |     # Read back raw.csv to generate per_seed, per_city, and fold_summary
 # |     fold_df = pd.read_csv(raw_csv_path)
 # |     
@@ -8062,7 +8122,7 @@
 # |     }).reset_index()
 # |     per_seed_csv_path = fold_dir / "per_seed.csv"
 # |     per_seed_df.to_csv(per_seed_csv_path, index=False)
-# | 
+# |
 # |     # 2. Per-City Aggregation: Mean over 3 model seeds -> (fold x city x p)
 # |     per_city_df = per_seed_df.groupby(["fold", "city", "p"]).agg({
 # |         "selected_lambda": "first",
@@ -8082,7 +8142,7 @@
 # |     }).reset_index()
 # |     per_city_csv_path = fold_dir / "per_city.csv"
 # |     per_city_df.to_csv(per_city_csv_path, index=False)
-# | 
+# |
 # |     # 3. Fold Summary Table
 # |     fold_summary_rows = []
 # |     for p_val in p_grid:
@@ -8097,11 +8157,11 @@
 # |             "pos_cities": int((sub["gain_direct_od"] > 0).sum()),
 # |             "match_yd_cities": int((sub["difference_direct_minus_yd"] >= 0).sum())
 # |         })
-# | 
+# |
 # |     fold_summary_json_path = fold_dir / "fold_summary.json"
 # |     with open(fold_summary_json_path, "w", encoding="utf-8") as f:
 # |         json.dump({"fold": fold_id, "selected_lambda": selected_lambda, "summary_by_p": fold_summary_rows}, f, indent=2)
-# | 
+# |
 # |     fold_summary_md_path = fold_dir / "fold_summary.md"
 # |     with open(fold_summary_md_path, "w", encoding="utf-8") as f:
 # |         f.write(f"# Fold {fold_id} Direct-OD Summary Table (N={len(test_cities)} Cities, lambda*={selected_lambda})\n\n")
@@ -8109,7 +8169,7 @@
 # |         f.write("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
 # |         for r in fold_summary_rows:
 # |             f.write(f"| **{r['p']*100:.2f}%** | {r['mean_both_cov']*100:.2f}% | +{r['mean_gain_full_yd']:.5f} | {r['mean_gain_direct_od']:+.5f} | {r['mean_diff_vs_yd']:+.5f} | {r['pos_cities']}/{r['n_cities']} | {r['match_yd_cities']}/{r['n_cities']} |\n")
-# | 
+# |
 # |     # 4. Save Run Manifest
 # |     manifest_path = fold_dir / "run_manifest.json"
 # |     with open(manifest_path, "w", encoding="utf-8") as f:
@@ -8126,7 +8186,7 @@
 # |             "per_city_rows": len(per_city_df),
 # |             "completed_at": time.strftime("%Y-%m-%d %H:%M:%S")
 # |         }, f, indent=2)
-# | 
+# |
 # |     # 5. QA Verification Before Writing completion.marker
 # |     expected_raw_rows = len(test_cities) * len(model_seeds) * B * len(p_grid)
 # |     actual_raw_rows = len(fold_df)
@@ -8134,10 +8194,10 @@
 # |     assert actual_raw_rows == expected_raw_rows, f"Fold {fold_id} raw rows {actual_raw_rows} != expected {expected_raw_rows}"
 # |     assert len(per_city_df) == len(test_cities) * len(p_grid), f"Fold {fold_id} per_city rows mismatch"
 # |     assert not fold_df.isnull().any().any(), f"Fold {fold_id} contains NaN values!"
-# | 
+# |
 # |     with open(marker_path, "w", encoding="utf-8") as f:
 # |         f.write(f"FOLD {fold_id} DIRECT-OD COMPLETED AND CERTIFIED\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-# | 
+# |
 # |     fold_total_time = time.perf_counter() - fold_start_time
 # |     print(f">>> [FOLD {fold_id} COMPLETE] Certified {actual_raw_rows} rows in {fold_total_time:.2f}s | Marker: {marker_path.name}")
 # |     
@@ -8149,28 +8209,28 @@
 # |         "per_city_rows": len(per_city_df),
 # |         "status": "PASS"
 # |     }
-# | 
-# | 
+# |
+# |
 # | def aggregate_combined_direct_od(
 # |     output_dir: Path = Path("results/direct_od_equivalence_v1"),
 # |     p_grid: List[float] = None
 # | ) -> None:
 # |     if p_grid is None:
 # |         p_grid = PRIMARY_GRID_DIRECT.copy()
-# | 
+# |
 # |     combined_dir = output_dir / "combined"
 # |     combined_dir.mkdir(parents=True, exist_ok=True)
 # |     (combined_dir / "figures").mkdir(parents=True, exist_ok=True)
-# | 
+# |
 # |     print("\n" + "=" * 85)
 # |     print("MASTER AGGREGATION & SCIENTIFIC SUMMARY (DIRECT-OD EQUIVALENCE, N=50 CITIES)")
 # |     print("=" * 85)
-# | 
+# |
 # |     all_raw_dfs = []
 # |     all_per_seed_dfs = []
 # |     all_per_city_dfs = []
 # |     fold_lambdas = {}
-# | 
+# |
 # |     for f in range(1, 6):
 # |         fold_dir = output_dir / f"fold_{f}"
 # |         marker = fold_dir / "completion.marker"
@@ -8183,33 +8243,33 @@
 # |         all_raw_dfs.append(pd.read_csv(fold_dir / "raw.csv"))
 # |         all_per_seed_dfs.append(pd.read_csv(fold_dir / "per_seed.csv"))
 # |         all_per_city_dfs.append(pd.read_csv(fold_dir / "per_city.csv"))
-# | 
+# |
 # |     raw_combined = pd.concat(all_raw_dfs, ignore_index=True)
 # |     per_seed_combined = pd.concat(all_per_seed_dfs, ignore_index=True)
 # |     per_city_combined = pd.concat(all_per_city_dfs, ignore_index=True)
-# | 
+# |
 # |     raw_combined.to_csv(combined_dir / "raw_all_folds.csv", index=False)
 # |     per_seed_combined.to_csv(combined_dir / "per_seed_all_folds.csv", index=False)
 # |     per_city_combined.to_csv(combined_dir / "per_city_all_folds.csv", index=False)
-# | 
+# |
 # |     print(f"Combined Raw Rows:      {len(raw_combined):>10} (Expected: 450,000)")
 # |     print(f"Combined Per-Seed Rows: {len(per_seed_combined):>10} (Expected: 2,250)")
 # |     print(f"Combined Per-City Rows: {len(per_city_combined):>10} (Expected: 750)")
-# | 
+# |
 # |     # Statistical Analysis across N=50 cities
 # |     summary_rows = []
 # |     raw_p_values = []
 # |     p_vals_tested = [p for p in p_grid if p > 0]
-# | 
+# |
 # |     for p_val in p_vals_tested:
 # |         sub = per_city_combined[per_city_combined.p == p_val]
 # |         gains = sub["gain_direct_od"].values
 # |         _, p_w = stats.wilcoxon(gains, alternative="greater")
 # |         raw_p_values.append(p_w)
-# | 
+# |
 # |     holm_p_vals = holm_correction(raw_p_values)
 # |     holm_dict = {p: h_p for p, h_p in zip(p_vals_tested, holm_p_vals)}
-# | 
+# |
 # |     for p_val in p_grid:
 # |         sub = per_city_combined[per_city_combined.p == p_val]
 # |         n_cities = len(sub)
@@ -8232,7 +8292,7 @@
 # |         ci_full_l, ci_full_h = fold_stratified_bootstrap(per_city_combined, "gain_full_yd", p_val)
 # |         
 # |         h_pval = holm_dict.get(p_val, 1.0) if p_val > 0 else 1.0
-# | 
+# |
 # |         summary_rows.append({
 # |             "p": p_val,
 # |             "n_cities": n_cities,
@@ -8251,35 +8311,35 @@
 # |             "match_yd_cities": match_yd_cities,
 # |             "holm_pval_benefit": h_pval
 # |         })
-# | 
+# |
 # |     summary_df = pd.DataFrame(summary_rows)
-# | 
+# |
 # |     # 1. Positive Mean Crossing
 # |     p_pos_mean = None
 # |     for r in summary_rows:
 # |         if r["mean_gain_direct_od"] > 0 and p_pos_mean is None:
 # |             p_pos_mean = r["p"]
-# | 
+# |
 # |     # 2. Statistically Supported Benefit Threshold p*_DirectBenefit
 # |     p_star_benefit = None
 # |     for r in summary_rows:
 # |         if r["holm_pval_benefit"] < 0.05 and r["ci_95_gain_direct"][0] > 0 and p_star_benefit is None:
 # |             p_star_benefit = r["p"]
-# | 
+# |
 # |     # 3. Operational Equivalence Crossing p_eq
 # |     p_eq_grid = None
 # |     p_eq_interp = None
 # |     for r in summary_rows:
 # |         if r["mean_diff_vs_yd"] >= 0 and p_eq_grid is None:
 # |             p_eq_grid = r["p"]
-# | 
+# |
 # |     for i in range(len(summary_rows) - 1):
 # |         r1, r2 = summary_rows[i], summary_rows[i+1]
 # |         d1, d2 = r1["mean_diff_vs_yd"], r2["mean_diff_vs_yd"]
 # |         if d1 <= 0 and d2 >= 0 and (d2 - d1) > 0:
 # |             p_eq_interp = r1["p"] + (-d1 / (d2 - d1)) * (r2["p"] - r1["p"])
 # |             break
-# | 
+# |
 # |     # Save summary JSON
 # |     summary_json_path = combined_dir / "summary.json"
 # |     with open(summary_json_path, "w", encoding="utf-8") as f:
@@ -8294,7 +8354,7 @@
 # |             "p_eq_interp": p_eq_interp,
 # |             "results_by_p": summary_rows
 # |         }, f, indent=2)
-# | 
+# |
 # |     # Save Markdown Table
 # |     summary_md_path = combined_dir / "summary.md"
 # |     with open(summary_md_path, "w", encoding="utf-8") as f:
@@ -8316,7 +8376,7 @@
 # |             f.write(f"• **Operational Equivalence Grid Point ($p_\\text{{eq,grid}}$):** `{pct_grid:.2f}%` of positive interzonal OD pairs  \n\n")
 # |         else:
 # |             f.write("• **Operational Equivalence Crossing:** Under the tested low-capacity direct-OD adaptation procedure, the full-$Y_D$ reconstruction gain was not matched within the prespecified reveal range up to 90% of the positive interzonal OD support.  \n\n")
-# | 
+# |
 # |         f.write("| Revealed OD Pairs ($p$) | Both Coverage | $M_0$ CPC (Unseen) | Full-$Y_D$ Gain | Direct-OD Gain | Difference vs Full $Y_D$ ($D(p)$) | 95% CI Difference | Direct Benefit Holm $p$ | Cities Direct $> M_0$ | Cities Direct $\\ge$ Full $Y_D$ |\n")
 # |         f.write("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
 # |         
@@ -8339,13 +8399,13 @@
 # |             f.write(f"Under the prespecified OD fixed-effect residual adapter, directly observing approximately **{p_eq_interp*100:.2f}%** of the positive interzonal OD support produced a mean reconstruction gain on the remaining unseen pairs comparable to that obtained from the full target-city distance-binned distribution.\n")
 # |         else:
 # |             f.write("Under the tested low-capacity direct-OD adaptation procedure, the full-$Y_D$ reconstruction gain was not matched within the prespecified reveal range up to 90% of the positive interzonal OD support. This does not imply that $Y_D$ intrinsically contains more information than 90% of the OD observations; the result is conditional on the tested adaptation operator.\n")
-# | 
+# |
 # |     print(f"Summary Markdown: {summary_md_path}")
 # |     print(f"Summary JSON:     {summary_json_path}")
-# | 
+# |
 # |     # Generate Publication Figures
 # |     generate_direct_od_figures(summary_df, per_city_combined, combined_dir, p_eq_interp, p_star_benefit)
-# | 
+# |
 # |     # Write FROZEN.marker
 # |     frozen_marker_path = output_dir / "FROZEN.marker"
 # |     with open(frozen_marker_path, "w", encoding="utf-8") as f:
@@ -8354,8 +8414,8 @@
 # |         f.write("Protocol: 50 held-out test cities across 5 disjoint folds (N=50)\n")
 # |         f.write("Evaluation Support: unseen positive interzonal pairs Omega_c^+ \\ S_p\n")
 # |         f.write(f"Replicates: 200 per city (Total: 450,000 raw calibrations)\n")
-# | 
-# | 
+# |
+# |
 # | def generate_direct_od_figures(
 # |     summary_df: pd.DataFrame, 
 # |     per_city_df: pd.DataFrame, 
@@ -8366,7 +8426,7 @@
 # |     plt.rcParams.update({'font.sans-serif': 'Helvetica', 'axes.edgecolor': '#333333', 'axes.linewidth': 0.8})
 # |     fig_dir = combined_dir / "figures"
 # |     p_vals = summary_df["p"].values * 100.0
-# | 
+# |
 # |     # Fig 1: Gain vs Reveal Fraction
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     ax.axhline(0, color="#888888", linestyle="--", alpha=0.6)
@@ -8393,7 +8453,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_1_direct_gain_vs_p.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 2: Difference D(p) Equivalence
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     ax.axhline(0, color="#333333", linestyle="-", linewidth=1.0)
@@ -8416,7 +8476,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_2_direct_equivalence_Dp.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 3: Fold-Specific D(p)
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     ax.axhline(0, color="#333333", linestyle="-", linewidth=1.0)
@@ -8434,7 +8494,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_3_fold_specific_direct_Dp.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 4: Endpoint Coverage vs p
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     cov_both = summary_df["mean_both_coverage"].values * 100.0
@@ -8453,7 +8513,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_4_endpoint_coverage_vs_p.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 5: Direct OD vs Partial YD from v2
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     ax.axhline(0, color="#888888", linestyle="--", alpha=0.6)
@@ -8472,7 +8532,7 @@
 # |                 ax.plot(v2_p, v2_gain, label="OD-Subsampled $Y_D$ (v2)", color="#2ca02c", linestyle="-.", marker="x", linewidth=1.5)
 # |         except Exception:
 # |             pass
-# | 
+# |
 # |     ax.set_xlabel("Revealed Positive Interzonal OD Pairs (%)", fontsize=11, fontweight="bold")
 # |     ax.set_ylabel("Mean Marginal Gain $\\Delta\\mathrm{CPC}_U$", fontsize=11, fontweight="bold")
 # |     ax.set_title("Direct OD-FE vs OD-Subsampled $Y_D$ Estimation", fontsize=12, fontweight="bold", pad=12)
@@ -8481,8 +8541,8 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_5_direct_vs_partialYD_comparison.png")
 # |     plt.close(fig)
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(description="Run Direct Partial-OD Information Equivalence v1")
 # |     parser.add_argument("--data_root", type=str, default="data")
@@ -8496,9 +8556,9 @@
 # |     parser.add_argument("--workers", type=int, default=8, help="Number of parallel worker processes")
 # |     parser.add_argument("--device", type=str, default="cpu")
 # |     args = parser.parse_args()
-# | 
+# |
 # |     out_p = Path(args.output_dir)
-# | 
+# |
 # |     if args.aggregate_only:
 # |         aggregate_combined_direct_od(output_dir=out_p)
 # |     else:
@@ -8522,17 +8582,17 @@
 
 # ===== BEGIN SOURCE FILE: src/experiment/run_e1.py =====
 # | """Legacy E1 experiment runner; canonical training uses run_5fold.py.
-# | 
+# |
 # | This module is retained for historical reproduction and is not part of the
 # | current canonical seed/provenance pipeline.
-# | 
+# |
 # | E1: Oracle Aggregated-Distance Existence Test (Amended Protocol v2)
 # | ==================================================================
-# | 
+# |
 # | Research Question:
 # |     Does target-city distance-binned aggregate information (Y_D^{GT,+}) provide
 # |     marginal value for OD reconstruction beyond a zero-shot gravity-informed urban GNN?
-# | 
+# |
 # | Formal Protocol (Amended Replication under Locked Protocol):
 # |   - 5-Fold Stratified City-Level Cross-Validation (35 Train / 5 Validation / 10 Held-out Test per fold).
 # |   - Split Manifest: Pre-locked at results/e1/splits_manifest_v2.json:
@@ -8557,7 +8617,7 @@
 # |       * Descriptive Coverage: All 50 out-of-fold cities.
 # |       * 95% Fold-Stratified Bootstrap CI (10,000 resamples) + Paired Wilcoxon Signed-Rank Test.
 # |       * Sample standard deviation with ddof=1 recorded across all metadata.
-# | 
+# |
 # | Artifacts Generated:
 # |   - results/e1/splits_manifest_v2.json
 # |   - results/e1/e1_per_city_results.json
@@ -8566,7 +8626,7 @@
 # |   - results/e1/tables/e1_main_table.md
 # |   - results/e1/tables/e1_per_city.md
 # | """
-# | 
+# |
 # | import json
 # | import os
 # | import platform
@@ -8574,21 +8634,21 @@
 # | import argparse
 # | import sys
 # | from pathlib import Path
-# | 
+# |
 # | if sys.platform == "win32":
 # |     try:
 # |         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 # |         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 # |     except Exception:
 # |         pass
-# | 
+# |
 # | import numpy as np
 # | from scipy import stats
 # | import torch
-# | 
+# |
 # | # Ensure repository root is in sys.path
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
+# |
 # | from src.data.city_splits import load_splits_manifest_v2, get_wrong_donors
 # | from src.data.dataset import load_city, preload_all_cities
 # | from src.data.urban_graph import build_radius_graph
@@ -8596,8 +8656,8 @@
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.training.train import train_zero_shot_model, infer_zero_shot
 # | from src.training.evaluate import compute_cpc_pair, compute_cpc_norm_pair
-# | 
-# | 
+# |
+# |
 # | def get_runtime_metadata() -> dict:
 # |     """
 # |     Collect hardware, OS, and PyTorch runtime execution metadata.
@@ -8610,7 +8670,7 @@
 # |         cpu_physical = psutil.cpu_count(logical=False)
 # |     except Exception:
 # |         cpu_physical = None
-# | 
+# |
 # |     return {
 # |         "platform": platform.platform(),
 # |         "processor": platform.processor(),
@@ -8624,8 +8684,8 @@
 # |         "omp_num_threads": os.environ.get("OMP_NUM_THREADS", "not_set"),
 # |         "mkl_num_threads": os.environ.get("MKL_NUM_THREADS", "not_set"),
 # |     }
-# | 
-# | 
+# |
+# |
 # | def configure_cpu_threads(num_threads: int | None = None) -> int:
 # |     """
 # |     Explicitly configure PyTorch CPU intra-op threads and OpenMP/MKL environment variables.
@@ -8637,9 +8697,9 @@
 # |         os.environ["OMP_NUM_THREADS"] = str(num_threads)
 # |         os.environ["MKL_NUM_THREADS"] = str(num_threads)
 # |         torch.set_num_threads(num_threads)
-# | 
+# |
 # |     return torch.get_num_threads()
-# | 
+# |
 # | # ---------------------------------------------------------------------------
 # | # Global Experiment Parameters (Pre-specified, locked before evaluation)
 # | # ---------------------------------------------------------------------------
@@ -8654,8 +8714,8 @@
 # | MANIFEST_PATH = RESULTS_DIR / "splits_manifest_v2.json"
 # | TOLERANCE   = 1e-5       # Floating-point tolerance for mass preservation & bin matching
 # | SEED        = 1          # Legacy single-seed default; canonical multi-seed runs use run_full_experiment.py
-# | 
-# | 
+# |
+# |
 # | def log_msg(msg: str = "", print_to_console: bool = True):
 # |     """Logs message with local timestamp to console (flush=True) and e1_execution.log."""
 # |     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -8674,8 +8734,8 @@
 # |             f.write((formatted if formatted else "") + "\n")
 # |     except Exception:
 # |         pass
-# | 
-# | 
+# |
+# |
 # | def build_inter_mask(cd, dist_km: np.ndarray) -> np.ndarray:
 # |     """
 # |     Construct boolean mask for interzonal candidate support Omega_c^+.
@@ -8684,8 +8744,8 @@
 # |     o = cd.pair_o_idx.numpy()
 # |     d = cd.pair_d_idx.numpy()
 # |     return (o != d) & (dist_km > 0.0)
-# | 
-# | 
+# |
+# |
 # | def safe_wilcoxon(diff: np.ndarray, alternative: str = "greater") -> tuple[float, float]:
 # |     """
 # |     Defensive non-parametric Wilcoxon signed-rank test.
@@ -8705,15 +8765,15 @@
 # |         return float(res.statistic), float(res.pvalue)
 # |     except Exception:
 # |         return 0.0, 1.0
-# | 
-# | 
+# |
+# |
 # | def compute_iqr(values: np.ndarray) -> float:
 # |     """Computes sample Interquartile Range (IQR = Q3 - Q1)."""
 # |     if len(values) == 0:
 # |         return 0.0
 # |     return float(np.percentile(values, 75) - np.percentile(values, 25))
-# | 
-# | 
+# |
+# |
 # | def run_city(
 # |     city: str,
 # |     model: torch.nn.Module,
@@ -8728,16 +8788,16 @@
 # | ) -> dict:
 # |     """
 # |     Evaluates 3 experimental conditions on a single held-out test city.
-# | 
+# |
 # |     Condition A (Zero-Shot Baseline M0):
 # |         Input: (X_c, G_c^urban, D_c). Forward pass of frozen model Theta*.
 # |         Output: T_c^(0) = E[T | T >= 1].
-# | 
+# |
 # |     Condition B (Treatment: Target Oracle Y_D):
 # |         Input: T_c^(0) and Y_{D,c}^{GT,+} (K-dim aggregate distance histogram).
 # |         Operator: Moving-bin closed-form scaling on Omega_c^+.
 # |         Output: T_c^(YD).
-# | 
+# |
 # |     Condition C (Placebo Control: Multi-Donor Wrong Y_D):
 # |         Input: T_c^(0) and Y_{D,d}^{GT,+} for all 9 other test cities in fold d != c.
 # |         Operator: Moving-bin closed-form scaling for each donor d.
@@ -8763,38 +8823,38 @@
 # |             Y_D_tgt = test_yd_cache[city]
 # |         else:
 # |             Y_D_tgt = extract_yd_kbins(dist_km, t_gt, bin_edges, inter)
-# | 
+# |
 # |     # 2. Condition A: Zero-Shot Forward Inference
 # |     T0 = infer_zero_shot(model, cd, ei, ed, device=device)
 # |     t0 = T0.numpy().astype(np.float64)
-# | 
+# |
 # |     # Compute interzonal mask and ground truth flows
 # |     n_inter = int(inter.sum())
-# | 
+# |
 # |     cpc0      = compute_cpc_pair(t_gt[inter], t0[inter])
 # |     cpc0_norm = compute_cpc_norm_pair(t_gt[inter], t0[inter])
-# | 
+# |
 # |     # 3. Condition B: Target Oracle Y_D Extraction & Calibration
 # |     if Y_D_tgt is None:
 # |         if test_yd_cache is not None and city in test_yd_cache:
 # |             Y_D_tgt = test_yd_cache[city]
 # |         else:
 # |             Y_D_tgt = extract_yd_kbins(dist_km, t_gt, bin_edges, inter)
-# | 
+# |
 # |     T_yd    = calibrate_kbins(t0, dist_km, inter, Y_D_tgt, bin_edges, q=Q_CALIB, tolerance=TOLERANCE)
 # |     cpc_yd      = compute_cpc_pair(t_gt[inter], T_yd[inter])
 # |     cpc_yd_norm = compute_cpc_norm_pair(t_gt[inter], T_yd[inter])
 # |     delta_target = float(cpc_yd - cpc0)
-# | 
+# |
 # |     # 4. Condition C: Multi-Donor Placebo Control (All 9 Wrong Donors in Test Fold)
 # |     wrong_donors = get_wrong_donors(city, test_cities)
 # |     assert len(wrong_donors) == len(test_cities) - 1, f"Expected {len(test_cities) - 1} wrong donors, got {len(wrong_donors)}"
-# | 
+# |
 # |     wrong_cpc_list = []
 # |     wrong_cpc_norm_list = []
 # |     wrong_delta_list = []
 # |     wrong_donor_details = []
-# | 
+# |
 # |     for donor in wrong_donors:
 # |         if test_city_cache is not None and donor in test_city_cache:
 # |             Y_D_wr = test_city_cache[donor]["Y_D"]
@@ -8806,12 +8866,12 @@
 # |             inter_d = build_inter_mask(cd_d, dist_d)
 # |             t_gt_d  = cd_d.pair_trips.numpy().astype(np.float64)
 # |             Y_D_wr  = extract_yd_kbins(dist_d, t_gt_d, bin_edges, inter_d)
-# | 
+# |
 # |         T_wr    = calibrate_kbins(t0, dist_km, inter, Y_D_wr, bin_edges, q=Q_CALIB, tolerance=TOLERANCE)
 # |         cpc_wr_d      = compute_cpc_pair(t_gt[inter], T_wr[inter])
 # |         cpc_wr_norm_d = compute_cpc_norm_pair(t_gt[inter], T_wr[inter])
 # |         delta_wr_d    = cpc_wr_d - cpc0
-# | 
+# |
 # |         wrong_cpc_list.append(cpc_wr_d)
 # |         wrong_cpc_norm_list.append(cpc_wr_norm_d)
 # |         wrong_delta_list.append(delta_wr_d)
@@ -8822,13 +8882,13 @@
 # |             "delta_cpc_wrong": float(delta_wr_d),
 # |             "Y_D_wrong": Y_D_wr.tolist(),
 # |         })
-# | 
+# |
 # |     # Exact arithmetic mean across all wrong donors in fold
 # |     cpc_wr_mean      = float(np.mean(wrong_cpc_list))
 # |     cpc_wr_norm_mean = float(np.mean(wrong_cpc_norm_list))
 # |     delta_wr_mean    = float(np.mean(wrong_delta_list))
 # |     delta_spec       = float(delta_target - delta_wr_mean)
-# | 
+# |
 # |     return {
 # |         "city": city,
 # |         "fold": fold_id,
@@ -8853,8 +8913,8 @@
 # |         "Y_D_target": Y_D_tgt.tolist(),
 # |         "wrong_donor_breakdown": wrong_donor_details,
 # |     }
-# | 
-# | 
+# |
+# |
 # | def fold_bootstrap(
 # |     values: np.ndarray,
 # |     fold_ids: np.ndarray,
@@ -8885,8 +8945,8 @@
 # |         float(np.percentile(boot, 100 * (1 - alpha / 2))),
 # |         boot,
 # |     )
-# | 
-# | 
+# |
+# |
 # | def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: int = 2024) -> dict:
 # |     """
 # |     Aggregates per-city results into primary statistics:
@@ -8901,25 +8961,25 @@
 # |     c0  = np.array([r["cpc_baseline"]          for r in results])
 # |     cyd = np.array([r["cpc_target_yd"]        for r in results])
 # |     cwr = np.array([r["cpc_wrong_yd"]         for r in results])
-# | 
+# |
 # |     n = len(results)
 # |     ddof = 1 if n > 1 else 0
-# | 
+# |
 # |     ci_tl, ci_th, _ = fold_bootstrap(dt, fid, seed=bootstrap_seed)
 # |     ci_wl, ci_wh, _ = fold_bootstrap(dw, fid, seed=bootstrap_seed)
 # |     ci_sl, ci_sh, _ = fold_bootstrap(ds, fid, seed=bootstrap_seed)
-# | 
+# |
 # |     _, pt = safe_wilcoxon(dt, alternative="greater")
 # |     _, pw = safe_wilcoxon(dw, alternative="greater")
 # |     _, ps = safe_wilcoxon(ds, alternative="greater")
-# | 
+# |
 # |     # --- Full 5-fold Evaluation Guard (Requires strictly complete 50 cities across Folds 1-5) ---
 # |     is_full_50_complete = bool(
 # |         n == 50
 # |         and set(fid.tolist()) == {1, 2, 3, 4, 5}
 # |         and all((fid == f).sum() == 10 for f in range(1, 6))
 # |     )
-# | 
+# |
 # |     conf_summary = None
 # |     if is_full_50_complete:
 # |         c_dt = dt
@@ -8929,14 +8989,14 @@
 # |         c_cyd = cyd
 # |         c_n = 50
 # |         c_ddof = 1
-# | 
+# |
 # |         c_ci_tl, c_ci_th, _ = fold_bootstrap(c_dt, fid, seed=bootstrap_seed)
 # |         c_ci_wl, c_ci_wh, _ = fold_bootstrap(c_dw, fid, seed=bootstrap_seed)
 # |         c_ci_sl, c_ci_sh, _ = fold_bootstrap(c_ds, fid, seed=bootstrap_seed)
 # |         _, c_pt = safe_wilcoxon(c_dt, alternative="greater")
 # |         _, c_pw = safe_wilcoxon(c_dw, alternative="greater")
 # |         _, c_ps = safe_wilcoxon(c_ds, alternative="greater")
-# | 
+# |
 # |         conf_summary = {
 # |             "status": "full_5_fold_complete",
 # |             "protocol_role": "Amended Replication under Locked Protocol (Folds 1-5, n=50)",
@@ -8984,7 +9044,7 @@
 # |             "status": "not_available",
 # |             "reason": f"Incomplete full_5_fold test set (observed {n}/50 required test cities across Folds 1-5; 10 test cities per fold required)",
 # |         }
-# | 
+# |
 # |     # --- Per-Fold Breakdown ---
 # |     per_fold = {}
 # |     for f in sorted(set(fid)):
@@ -9017,7 +9077,7 @@
 # |             "best_val_cpc": fold_manifest.get(f, {}).get("best_val_cpc") if fold_manifest else None,
 # |             "convergence_gate": fold_manifest.get(f, {}).get("convergence_gate", "—") if fold_manifest else "—",
 # |         }
-# | 
+# |
 # |     return {
 # |         "n_cities": n,
 # |         "protocol_version": "e1-v2-amended",
@@ -9072,8 +9132,8 @@
 # |         # Runtime Environment & Multi-core CPU metadata
 # |         "runtime_environment": get_runtime_metadata(),
 # |     }
-# | 
-# | 
+# |
+# |
 # | def write_tables(results: list, summary: dict, table_dir: Path | None = None):
 # |     """
 # |     Generates GitHub Markdown Tables following the Nature/PNAS reporting standard.
@@ -9088,9 +9148,9 @@
 # |     c0s = summary["cpc_baseline_std"]
 # |     is_conf = summary.get("is_full_5_fold_complete", False)
 # |     is_full = summary.get("is_full_50_complete", False)
-# | 
+# |
 # |     run_type_str = "Full 50-City Protocol" if is_full else "Exploratory / Smoke Subset"
-# | 
+# |
 # |     lines = [
 # |         f"# Table E1: Oracle Aggregated-Distance Existence Test ({run_type_str})",
 # |         "",
@@ -9110,7 +9170,7 @@
 # |         f"**Parameters**: K_move={K_MOVE} bins (pair-weighted quantile), q={Q_CALIB} (within-tolerance calibration, tolerance 10⁻⁵), max_epochs={EPOCHS}, patience={PATIENCE}, std_ddof={summary['std_ddof']}",
 # |         "",
 # |     ]
-# | 
+# |
 # |     # Section 1: Primary Pooled Benchmark (Full Out-of-Fold 50 Cities)
 # |     cov_label = "E1-A: Primary Pooled Out-of-Fold Benchmark (All Folds 1–5, n=50)" if is_full else f"E1-A: Primary Benchmark (Observed {n} Cities)"
 # |     lines.extend([
@@ -9130,7 +9190,7 @@
 # |          f"**[{sl:+.4f}, {sh:+.4f}]** | **{summary['win_rate_specificity']}** | **{summary['p_specificity']:.2e}** |"),
 # |         "",
 # |     ])
-# | 
+# |
 # |     # Section 2: Full 5-fold Sensitivity Analysis on Folds 1-5 (strictly when complete)
 # |     conf = summary.get("full_5_fold_folds_2_5")
 # |     if is_conf and conf and conf.get("status") == "full_5_fold_complete":
@@ -9161,14 +9221,14 @@
 # |             f"> *Status: NOT AVAILABLE (Observed {len([r for r in results if r['fold']>=2])}/50 test cities; Full 5-fold evaluation strictly requires complete 50 test cities across Folds 1-5, with 10 test cities per fold).* ",
 # |             "",
 # |         ])
-# | 
+# |
 # |     lines.extend([
 # |         "## E1-C: Per-Fold Independent Training & Evaluation Breakdown",
 # |         "",
 # |         "| Fold | Role | Test Cities | Best Epoch | Best Val CPC | Convergence Gate | M₀ CPC | +Target CPC | Mean ΔTarget | Mean ΔWrong (9 Avg) | Specificity Win Rate |",
 # |         "|---|---|---|---|---|---|---|---|---|---|---|",
 # |     ])
-# | 
+# |
 # |     for f_key, pf in summary.get("per_fold", {}).items():
 # |         f_num = f_key.replace("fold_", "")
 # |         b_ep = pf.get("best_epoch", "—")
@@ -9180,7 +9240,7 @@
 # |             f"{pf['cpc_baseline_mean']:.4f} | {pf['cpc_baseline_mean'] + pf['delta_target_mean']:.4f} | "
 # |             f"{pf['delta_target_mean']:+.4f} | {pf['delta_wrong_mean']:+.4f} | {pf['win_rate_specificity']} |"
 # |         )
-# | 
+# |
 # |     # Section 3: Acceptance Criteria (Dynamic gating)
 # |     if is_conf and conf and conf.get("status") == "full_5_fold_complete":
 # |         e_tl, e_th = conf["delta_cpc_target_ci_l"], conf["delta_cpc_target_ci_h"]
@@ -9206,9 +9266,9 @@
 # |             f"> *Status: PENDING FULL 50-CITY EXECUTION (Evaluated {n}/50 cities. Full 5-fold criteria will be locked upon full completion).* ",
 # |             "",
 # |         ])
-# | 
+# |
 # |     (tdir / "e1_main_table.md").write_text("\n".join(lines), encoding="utf-8")
-# | 
+# |
 # |     hdr = "| City | Fold | n_pairs | CPC₀ | CPC_target | ΔCPC_target | CPC_wrong (avg 9) | ΔCPC_wrong (avg 9) | ΔSpecificity | Donors |"
 # |     sep = "|---|---|---|---|---|---|---|---|---|---|"
 # |     rows = [hdr, sep]
@@ -9221,8 +9281,8 @@
 # |         )
 # |     (tdir / "e1_per_city.md").write_text("# E1: Complete Per-City Breakdown (50 Cities)\n\n" + "\n".join(rows) + "\n", encoding="utf-8")
 # |     print(f"  [Artifact] Generated Markdown tables in {tdir}")
-# | 
-# | 
+# |
+# |
 # | def run_e1(
 # |     smoke: bool = False,
 # |     smoke_cities: list = None,
@@ -9236,11 +9296,11 @@
 # |     t_global_start = time.time()
 # |     device = torch.device(device_str)
 # |     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-# | 
+# |
 # |     # Configure CPU Threads
 # |     active_threads = configure_cpu_threads(num_threads)
 # |     runtime_meta = get_runtime_metadata()
-# | 
+# |
 # |     # -----------------------------------------------------------------------
 # |     # STEP 1: Load Locked 5-Fold Splits Manifest v2 (35 Train / 5 Val / 10 Test)
 # |     # -----------------------------------------------------------------------
@@ -9259,30 +9319,30 @@
 # |     
 # |     log_msg("  -> Preloading all city datasets & spatial graphs into global in-memory cache...")
 # |     preload_all_cities(data_root=DATA_ROOT, build_graphs=True, radius_km=5.0)
-# | 
+# |
 # |     all_results = []
 # |     fold_manifest = {}
 # |     total_test_cities = 50 if not smoke else len(smoke_cities or ["Portland", "Denver"])
 # |     city_counter = 0
-# | 
+# |
 # |     for fold_id, split in splits.items():
 # |         t_fold_start = time.time()
 # |         train35 = split["train"]   # 35 training cities
 # |         val5    = split["val"]     # 5 validation cities
 # |         test10  = sorted(split["test"])  # 10 test cities
-# | 
+# |
 # |         run_test = test10
 # |         if smoke or smoke_cities:
 # |             target_filter = smoke_cities if smoke_cities else ["Portland", "Denver"]
 # |             run_test = [c for c in target_filter if c in test10]
 # |             if not run_test:
 # |                 continue
-# | 
+# |
 # |         fold_role = "Exploratory / Development" if fold_id == 1 else "Full 5-fold Out-of-Fold"
 # |         log_msg("-" * 75)
 # |         log_msg(f">>> [FOLD {fold_id}/5] {fold_role} | Train: {len(train35)} cities | Val: {len(val5)} cities | Test: {len(run_test)}/{len(test10)} cities")
 # |         log_msg("-" * 75)
-# | 
+# |
 # |         # -------------------------------------------------------------------
 # |         # STEP 2: Compute Pair-Weighted Quantile Bin Edges from 35 Train Cities
 # |         # -------------------------------------------------------------------
@@ -9293,7 +9353,7 @@
 # |         if K_active != K_MOVE:
 # |             raise RuntimeError(f"E1 invariant violated: Expected exactly {K_MOVE} active bins, got {K_active}")
 # |         log_msg(f"    -> Strict {K_MOVE}-bin verified. Cut points (km): {np.round(bin_edges[1:-1], 2).tolist()}")
-# | 
+# |
 # |         # -------------------------------------------------------------------
 # |         # STEP 3: Train Zero-Shot Backbone & Select Best Validation Checkpoint
 # |         # -------------------------------------------------------------------
@@ -9317,11 +9377,11 @@
 # |             fold=fold_id,
 # |             split_manifest_sha256=split_manifest_sha256,
 # |         )
-# | 
+# |
 # |         # Verify per-fold convergence gate
 # |         is_converged = bool(train_info["stopped_early"] or train_info["best_epoch"] <= (EPOCHS - 5))
 # |         conv_gate_status = "PASSED" if is_converged else "FAILED (Ceiling Hit)"
-# | 
+# |
 # |         fold_manifest[fold_id] = {
 # |             "fold_id": fold_id,
 # |             "role": fold_role,
@@ -9342,8 +9402,8 @@
 # |         }
 # |         log_msg(f"    -> [Fold {fold_id}] Frozen at best epoch {train_info['best_epoch']}/{train_info['epochs_trained']} (Validation CPC = {train_info['best_val_cpc']:.4f}) | Gate: {conv_gate_status}.")
 # |         log_msg(f"    -> [Fold {fold_id}] Checkpoint: {_ckpt_path.resolve()}")
-# | 
-# | 
+# |
+# |
 # |         # -------------------------------------------------------------------
 # |         # STEP 4: Evaluate Held-Out Test Cities (Conditions A, B, C across all 9 donors)
 # |         # -------------------------------------------------------------------
@@ -9365,7 +9425,7 @@
 # |                 "t_gt": t_gt_t,
 # |                 "Y_D": yd_t,
 # |             }
-# | 
+# |
 # |         log_msg(f"  [STEP 4/5: Fold {fold_id}] Evaluating {len(run_test)} held-out test cities with 9-donor placebo...")
 # |         for i_city, city in enumerate(run_test):
 # |             city_counter += 1
@@ -9395,10 +9455,10 @@
 # |                 f"M0={res['cpc_baseline']:.4f} -> +Target={res['cpc_target_yd']:.4f} (dCPC={d_target:+.4f}) | "
 # |                 f"+WrongAvg9={res['cpc_wrong_yd']:.4f} (dCPC={d_wrong:+.4f}) {spec_marker}"
 # |             )
-# | 
+# |
 # |         t_fold_elapsed = time.time() - t_fold_start
 # |         log_msg(f"  [Fold {fold_id} Complete] Elapsed time: {t_fold_elapsed:.1f}s")
-# | 
+# |
 # |     # -----------------------------------------------------------------------
 # |     # STEP 5: Statistical Aggregation, Verification, and Artifact Output
 # |     # -----------------------------------------------------------------------
@@ -9412,20 +9472,20 @@
 # |     }
 # |     (RESULTS_DIR / "e1_per_city_results.json").write_text(json.dumps(all_results, indent=2), encoding="utf-8")
 # |     (RESULTS_DIR / "e1_validation_manifest.json").write_text(json.dumps(val_manifest_payload, indent=2), encoding="utf-8")
-# | 
+# |
 # |     if len(all_results) < 2:
 # |         log_msg("Warning: Fewer than 2 cities evaluated; skipping statistical synthesis.")
 # |         return all_results, None
-# | 
+# |
 # |     summary = compute_summary(all_results, fold_manifest=fold_manifest, bootstrap_seed=seed)
 # |     (RESULTS_DIR / "e1_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 # |     write_tables(all_results, summary)
-# | 
+# |
 # |     t_global_elapsed = time.time() - t_global_start
 # |     is_conf = summary.get("is_full_5_fold_complete", False)
 # |     is_full = summary.get("is_full_50_complete", False)
 # |     conf = summary.get("full_5_fold_folds_2_5", {})
-# | 
+# |
 # |     log_msg("=" * 75)
 # |     log_msg(f"E1 EXECUTION SUMMARY (Total Elapsed Time: {t_global_elapsed:.1f}s)")
 # |     log_msg("=" * 75)
@@ -9436,7 +9496,7 @@
 # |     log_msg(f"  Specificity Effect (Target - Wrong_Avg9): mean = {summary['delta_specificity_mean']:+.4f} (median = {summary['delta_specificity_median']:+.4f}, IQR = {summary['delta_specificity_iqr']:.4f})")
 # |     log_msg(f"  Specificity 95% Bootstrap CI: [{summary['delta_specificity_ci_l']:+.4f}, {summary['delta_specificity_ci_h']:+.4f}]")
 # |     log_msg(f"  Specificity Win Rate: {summary['win_rate_specificity']} | Wilcoxon p = {summary['p_specificity']:.2e}")
-# | 
+# |
 # |     if is_conf and conf.get("status") == "full_5_fold_complete":
 # |         pass_ci = "PASS" if conf['ci_lower_bound_positive'] else "FAIL"
 # |         pass_sci = "PASS" if conf['specificity_ci_lower_bound_positive'] else "FAIL"
@@ -9450,10 +9510,10 @@
 # |         conf_count = len([r for r in all_results if r['fold'] >= 2])
 # |         log_msg(f"\n  CONFIRMATORY STATUS: NOT AVAILABLE (Observed {conf_count}/50 test cities; strictly requires complete 50 test cities across Folds 1-5, with 10 test cities per fold).")
 # |     log_msg("=" * 75)
-# | 
+# |
 # |     return all_results, summary
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(description="E1 Oracle Aggregated-Distance Existence Test (Amended Protocol v2)")
 # |     parser.add_argument("--smoke",  action="store_true", help="Run smoke test on Portland (Fold 4) and Denver (Fold 5)")
@@ -9470,21 +9530,21 @@
 # ===== BEGIN SOURCE FILE: src/experiment/run_experiment.py =====
 # | """
 # | Experiment Runner for Moving-Bin Calibration Framework.
-# | 
+# |
 # | Experimental Conditions per Target City:
 # |     1. M_0:                 Zero-shot baseline (pure spatial transfer)
 # |     2. M_1^{city}:          Primary moving-bin Meta calibration on Omega_c^+ (q=1.0)
 # |     3. M_1^{county}:        County-level calibration
 # |     4. M_1^{subzone}:       Subzone-level calibration
-# | 
+# |
 # | Primary Metric:
 # |     Interzonal CPC (CPC_inter) on Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}
 # | """
-# | 
+# |
 # | import numpy as np
 # | import torch
 # | from typing import Dict, Any, List
-# | 
+# |
 # | from src.data.dataset import CityData, load_city
 # | from src.data.urban_graph import build_radius_graph, build_adaptive_radius_graph, build_knn_graph
 # | from src.data.yd_extractor import (
@@ -9493,10 +9553,10 @@
 # | from src.data.trip_sampler import M_GRID
 # | from src.training.evaluate import evaluate_moving_and_full
 # | from src.training.train import infer_zero_shot
-# | 
-# | 
-# | 
-# | 
+# |
+# |
+# |
+# |
 # | def run_target_city_experiments(
 # |     model: torch.nn.Module,
 # |     city_name: str,
@@ -9511,18 +9571,18 @@
 # |     assert scaler is not None, "StandardScaler must be pre-fitted on source cities."
 # |     if bin_edges is None:
 # |         raise ValueError("bin_edges must be provided from training cities to avoid data leakage.")
-# | 
+# |
 # |     device = torch.device(device_str)
 # |     city_data = load_city(city_name, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
 # |     coords = city_data.lon_lat.numpy()
-# | 
+# |
 # |     if graph_type == "adaptive_radius":
 # |         edge_index, edge_dist, _ = build_adaptive_radius_graph(coords, scale_fraction=0.15)
 # |     elif graph_type == "radius":
 # |         edge_index, edge_dist = build_radius_graph(coords, radius_km=radius_km)
 # |     else:
 # |         edge_index, edge_dist = build_knn_graph(coords, k=knn_k)
-# | 
+# |
 # |     t_true = city_data.pair_trips.numpy().astype(np.float64)
 # |     pair_o = city_data.pair_o_idx.numpy()
 # |     pair_d = city_data.pair_d_idx.numpy()
@@ -9532,7 +9592,7 @@
 # |     n_inter_pairs = int(inter_mask.sum())
 # |     total_inter_trips = float(t_true[inter_mask].sum())
 # |     total_trips = float(t_true.sum())
-# | 
+# |
 # |     # Extract county grouping (GADM 4.1 level-2 point-in-polygon mapping)
 # |     import pandas as pd
 # |     from pathlib import Path
@@ -9548,10 +9608,10 @@
 # |     
 # |     pair_county_idx = np.array([tract_to_county[i] for i in pair_o])
 # |     assert len(pair_county_idx) == len(pair_o), "Mapping invariant failed: length mismatch after county mapping"
-# | 
+# |
 # |     from src.data.yd_extractor import extract_yd_kbins, extract_yd_kbins_grouped
 # |     from src.calibration.bin_calibration import calibrate_kbins, calibrate_kbins_grouped
-# | 
+# |
 # |     # -----------------------------------------------------------------------
 # |     # Condition M0: Pure Zero-Shot Inference
 # |     # -----------------------------------------------------------------------
@@ -9560,7 +9620,7 @@
 # |     m0_metrics = evaluate_moving_and_full(
 # |         city_data.pair_trips, t_pred_zs_tensor, city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
 # |     )
-# | 
+# |
 # |     # -----------------------------------------------------------------------
 # |     # Condition M1_city: City-Level Oracle Y_D
 # |     # -----------------------------------------------------------------------
@@ -9569,7 +9629,7 @@
 # |     m1_city_metrics = evaluate_moving_and_full(
 # |         city_data.pair_trips, torch.tensor(t_pred_city), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
 # |     )
-# | 
+# |
 # |     # -----------------------------------------------------------------------
 # |     # Condition M1_county: County-Level Oracle Y_D
 # |     # -----------------------------------------------------------------------
@@ -9578,7 +9638,7 @@
 # |     m1_county_metrics = evaluate_moving_and_full(
 # |         city_data.pair_trips, torch.tensor(t_pred_county), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
 # |     )
-# | 
+# |
 # |     # -----------------------------------------------------------------------
 # |     # Condition M1_subzone: Tract-Level (Subzone) Oracle Y_D
 # |     # -----------------------------------------------------------------------
@@ -9587,7 +9647,7 @@
 # |     m1_subzone_metrics = evaluate_moving_and_full(
 # |         city_data.pair_trips, torch.tensor(t_pred_subzone), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
 # |     )
-# | 
+# |
 # |     rho_c = float(n_inter_pairs) / (float(city_data.n_tracts) * float(city_data.n_tracts - 1)) if city_data.n_tracts > 1 else 0.0
 # |     average_flow = total_inter_trips / n_inter_pairs if n_inter_pairs > 0 else 0.0
 # |     mean_distance = float(np.mean(pair_dist_km[inter_mask])) if n_inter_pairs > 0 else 0.0
@@ -9626,9 +9686,9 @@
 # | import matplotlib.pyplot as plt
 # | import datetime
 # | import hashlib
-# | 
+# |
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 # | from src.training.train import load_checkpoint, infer_zero_shot
@@ -9636,7 +9696,7 @@
 # | from src.data.urban_graph import build_radius_graph
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.training.evaluate import evaluate_moving_and_full
-# | 
+# |
 # | def holm_bonferroni(p_values: list[float]) -> list[float]:
 # |     n = len(p_values)
 # |     sorted_indices = np.argsort(p_values)
@@ -9648,13 +9708,13 @@
 # |         prev_idx = sorted_indices[i-1]
 # |         adj_p[idx] = max(adj_p[idx], adj_p[prev_idx])
 # |     return adj_p.tolist()
-# | 
+# |
 # | def generate_file_hash(filepath: str) -> str:
 # |     h = hashlib.sha256()
 # |     with open(filepath, 'rb') as f:
 # |         h.update(f.read())
 # |     return h.hexdigest()
-# | 
+# |
 # | def run_experiment(args):
 # |     data_root = args.data_root
 # |     output_dir = Path("results/k_sensitivity_v1")
@@ -10023,7 +10083,7 @@
 # |     plt.close()
 # |     
 # |     print("Done!")
-# | 
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser()
 # |     parser.add_argument("--data_root", default="data")
@@ -10041,7 +10101,7 @@
 # | Trains and evaluates Pairwise MLP backbone (without graph convolutions)
 # | across 5-Fold cross validation to assess calibration operator transferability.
 # | """
-# | 
+# |
 # | import os
 # | os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 # | import sys
@@ -10054,9 +10114,9 @@
 # | from pathlib import Path
 # | from scipy import stats
 # | from typing import Dict, Any, List
-# | 
+# |
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_city, load_raw_city
 # | from src.data.urban_graph import build_radius_graph
@@ -10064,42 +10124,42 @@
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.training.evaluate import compute_cpc_pair
 # | from src.training.train import train_zero_shot_model, infer_zero_shot
-# | 
-# | 
+# |
+# |
 # | def fast_evaluate_city(model: torch.nn.Module, city_name: str, scaler: Any, bin_edges: np.ndarray, data_root: str = "data", device: str = "cpu") -> Dict[str, float]:
 # |     """Fast, vectorized target city evaluation for M0 and M1 (City-level Oracle)."""
 # |     raw = load_raw_city(city_name, data_root=data_root)
 # |     dist_km = raw.dist_km
 # |     inter_mask = (raw.pair_o_idx.numpy() != raw.pair_d_idx.numpy()) & (dist_km > 0.0)
 # |     t_true_inter = raw.pair_trips.numpy()[inter_mask]
-# | 
+# |
 # |     edge_index, edge_dist = build_radius_graph(raw.lon_lat, radius_km=5.0, include_self_loop=True, cache_key=f"{city_name}_tracts")
-# | 
+# |
 # |     city_data = load_city(city_name, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
 # |     t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
 # |     t_pred_zs = t_pred_zs_tensor.numpy().astype(np.float64)
-# | 
+# |
 # |     t0_inter = t_pred_zs[inter_mask]
 # |     cpc_m0 = float(compute_cpc_pair(t_true_inter, t0_inter))
-# | 
+# |
 # |     yd_target = extract_yd_kbins(dist_km, raw.pair_trips.numpy(), bin_edges, inter_mask)
 # |     t_cal = calibrate_kbins(t_pred_zs, dist_km, inter_mask, yd_target, bin_edges, q=1.0)
 # |     t1_inter = t_cal[inter_mask]
 # |     cpc_m1 = float(compute_cpc_pair(t_true_inter, t1_inter))
-# | 
+# |
 # |     return {
 # |         "m0_cpc_inter": cpc_m0,
 # |         "m1_cpc_inter": cpc_m1,
 # |         "delta_cpc": cpc_m1 - cpc_m0
 # |     }
-# | 
-# | 
+# |
+# |
 # | def run_mlp_backbone_test(args: argparse.Namespace) -> None:
 # |     data_root = args.data_root
 # |     output_dir = args.output_dir
 # |     os.makedirs(output_dir, exist_ok=True)
 # |     os.makedirs(os.path.join(output_dir, "checkpoints"), exist_ok=True)
-# | 
+# |
 # |     log_file = os.path.join(output_dir, "mlp_backbone_execution.log")
 # |     logging.basicConfig(
 # |         level=logging.INFO,
@@ -10107,7 +10167,7 @@
 # |         handlers=[logging.FileHandler(log_file), logging.StreamHandler()]
 # |     )
 # |     logger = logging.getLogger(__name__)
-# | 
+# |
 # |     splits = generate_35_5_10_splits(data_root=data_root)
 # |     manifest_path = Path(__file__).resolve().parents[2] / "results" / "e1" / "splits_manifest_v2.json"
 # |     if not manifest_path.exists():
@@ -10125,7 +10185,7 @@
 # |         seeds = args.seeds
 # |         epochs_per_fold = args.epochs
 # |         patience = args.patience
-# | 
+# |
 # |     all_mlp_results = []
 # |     mlp_json_path = Path(output_dir) / "mlp_backbone_results.json"
 # |     if mlp_json_path.exists():
@@ -10147,10 +10207,10 @@
 # |         train_cities = split["train"]
 # |         val_cities = split["val"]
 # |         test_cities = split["test"] if not args.smoke else split["test"][:2]
-# | 
+# |
 # |         # Remove previous records for this fold to allow clean overwrite
 # |         all_mlp_results = [r for r in all_mlp_results if r.get("fold") != fold_id]
-# | 
+# |
 # |         logger.info(f"\n# FOLD {fold_id}/5 (Train: {len(train_cities)}, Val: {len(val_cities)}, Test: {len(test_cities)})")
 # |         models = []
 # |         scalers = []
@@ -10202,7 +10262,7 @@
 # |             scalers.append(scaler)
 # |             
 # |         bin_edges, K_active = compute_kbin_edges(train_cities, K=8, data_root=data_root)
-# | 
+# |
 # |         # Target City Evaluation
 # |         for target_city in test_cities:
 # |             seed_results = []
@@ -10221,7 +10281,7 @@
 # |             m0_cpc_inter = float(np.mean([r["m0_cpc_inter"] for r in seed_results]))
 # |             m1_cpc_inter = float(np.mean([r["m1_cpc_inter"] for r in seed_results]))
 # |             delta_cpc = m1_cpc_inter - m0_cpc_inter
-# | 
+# |
 # |             city_res = {
 # |                 "city": target_city,
 # |                 "fold": fold_id,
@@ -10247,8 +10307,8 @@
 # |             
 # |     logger.info(f"\nSaved {len(all_mlp_results)} MLP backbone city results to {mlp_json_path}")
 # |     logger.info("Run `python src/experiment/compare_backbones.py` to compare MLP with Urban GNN.")
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(description="Pairwise MLP Backbone Evaluation Experiment")
 # |     parser.add_argument("--data_root", type=str, default="data")
@@ -10283,17 +10343,17 @@
 # | import datetime
 # | from pathlib import Path
 # | from typing import Dict, Tuple, List, Optional, Any
-# | 
+# |
 # | import numpy as np
 # | import pandas as pd
 # | import torch
 # | import matplotlib.pyplot as plt
 # | import logging
-# | 
+# |
 # | from scipy.optimize import bisect
 # | from scipy.stats import spearmanr, wilcoxon
 # | from scipy.spatial.distance import jensenshannon
-# | 
+# |
 # | def holm_correction(p_vals: List[float]) -> np.ndarray:
 # |     n = len(p_vals)
 # |     sorted_indices = np.argsort(p_vals)
@@ -10304,7 +10364,7 @@
 # |         running_max = max(running_max, p_adj)
 # |         adj_p[idx] = min(1.0, running_max)
 # |     return adj_p
-# | 
+# |
 # | sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 # | from src.data.dataset import load_city, load_raw_city
 # | from src.data.urban_graph import build_radius_graph
@@ -10313,17 +10373,17 @@
 # | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 # | from src.data.city_splits import generate_35_5_10_splits, load_splits_manifest_v2
 # | from src.experiment.run_experiment import infer_zero_shot
-# | 
+# |
 # | def evaluate_cpc(t_true_inter: np.ndarray, t_pred_inter: np.ndarray) -> float:
 # |     return compute_cpc_pair(t_true_inter, t_pred_inter)
-# | 
+# |
 # | def get_active_bins(yd: np.ndarray, eps: float = 1e-8) -> np.ndarray:
 # |     return yd > eps
-# | 
+# |
 # | def get_stable_seed(noise_seed: int, fold: int, city: str, replicate_id: int) -> int:
 # |     s = f"{noise_seed}_{fold}_{city}_{replicate_id}"
 # |     return int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16) % (2**32)
-# | 
+# |
 # | def generate_nested_noisy_yd(p_active: np.ndarray, epsilons: List[float], base_seed: int) -> Dict[float, np.ndarray]:
 # |     K_act = len(p_active)
 # |     if K_act == 1:
@@ -10381,8 +10441,8 @@
 # |             continue
 # |             
 # |     raise RuntimeError("Failed to generate valid noise direction after 10000 attempts.")
-# | 
-# | 
+# |
+# |
 # | def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, eps: float, evaluated_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
 # |     rng = np.random.RandomState(seed)
 # |     
@@ -10397,8 +10457,8 @@
 # |     boot_means = np.mean(all_samples, axis=1)
 # |         
 # |     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
-# | 
-# | 
+# |
+# |
 # | def fast_cal_metrics(
 # |     yd_tgt: np.ndarray, 
 # |     eps_req: float, 
@@ -10468,8 +10528,8 @@
 # |     js_div = float(jensenshannon(yd_tgt, yd_target)) ** 2
 # |     
 # |     return cpc, mae, rmse, spearman_val, tv_ach, js_div, stats
-# | 
-# | 
+# |
+# |
 # | def run_noise_robustness(args: argparse.Namespace) -> None:
 # |     data_root = "data"
 # |     grid_mode = getattr(args, "grid", "fine")
@@ -10643,12 +10703,18 @@
 # |         city_df.to_csv(f"{output_dir}/noise_per_city.csv", index=False)
 # |         
 # |         if not args.smoke:
-# |             generate_summary(city_df, output_dir, epsilons, nonzero_epsilons)
+# |             generate_summary(city_df, output_dir, epsilons, nonzero_epsilons, B_noise)
 # |     else:
 # |         logger.warning("No results were generated. Check checkpoints.")
 # |         
-# | 
-# | def generate_summary(city_df: pd.DataFrame, output_dir: str, epsilons: List[float], nonzero_epsilons: List[float]) -> None:
+# |
+# | def generate_summary(
+# |     city_df: pd.DataFrame,
+# |     output_dir: str,
+# |     epsilons: List[float],
+# |     nonzero_epsilons: List[float],
+# |     b_noise: int | None = None,
+# | ) -> None:
 # |     evaluation_folds = sorted(city_df.fold.unique().tolist())
 # |     eval_df = city_df[city_df.fold.isin(evaluation_folds)]
 # |     
@@ -10843,15 +10909,15 @@
 # |     manifest = {
 # |         "noise_definition": "multiplicative compositional noise on active bins, TV distance matching via bisection",
 # |         "timestamp": datetime.datetime.now().isoformat(),
-# |         "B_noise": int(city_df.replicate.nunique() - 1) if not city_df.empty else B_noise,
+# |         "B_noise": b_noise,
 # |         "epsilons": epsilons,
 # |         "eps_cross": eps_cross,
 # |         "eps_star": eps_star
 # |     }
 # |     with open(f"{output_dir}/noise_manifest.json", "w") as f:
 # |         json.dump(manifest, f, indent=2)
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser()
 # |     parser.add_argument("--b", type=int, default=1000)
@@ -10868,17 +10934,17 @@
 # | """
 # | Partial-OD Information Equivalence Experiment v2 (Final Paper Protocol)
 # | ========================================================================
-# | 
+# |
 # | Core Scientific Research Question:
 # |     Under the same frozen zero-shot model and the same production distance-bin
 # |     calibration operator, what fraction of directly observed positive interzonal
 # |     OD pairs is required to achieve reconstruction gain comparable to that
 # |     obtained from the full target-city distance-binned mobility distribution?
-# | 
+# |
 # | Primary Estimands:
 # |     1. Positive-Benefit Threshold p*_benefit (Holm p < 0.05, CI_lower > 0)
 # |     2. Operational Equivalence Crossing p_eq (where mean D(p) = Gain_OD(p) - Gain_YD(p) >= 0)
-# | 
+# |
 # | Architectural Invariants:
 # |     - 5 Folds, 50 held-out test cities (35 train / 5 val / 10 test per fold).
 # |     - Model Seeds: {1, 10, 100} on frozen Gravity-Informed Urban GNN.
@@ -10890,7 +10956,7 @@
 # |     - B = 500 Monte Carlo replicates per city.
 # |     - Exact Per-Fold Storage Structure with incremental flush and completion markers.
 # | """
-# | 
+# |
 # | import os
 # | import sys
 # | import time
@@ -10899,18 +10965,18 @@
 # | import argparse
 # | from pathlib import Path
 # | from typing import Dict, List, Tuple, Any, Optional
-# | 
+# |
 # | import numpy as np
 # | import pandas as pd
 # | from scipy import stats
 # | from scipy.spatial.distance import jensenshannon
 # | import matplotlib.pyplot as plt
 # | import torch
-# | 
+# |
 # | # Ensure repository root is on sys.path
 # | REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # | sys.path.insert(0, str(REPO_ROOT))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_city, load_cities, load_raw_city
 # | from src.data.urban_graph import build_radius_graph
@@ -10918,13 +10984,13 @@
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.training.evaluate import compute_cpc_pair
 # | from src.training.train import load_checkpoint, infer_zero_shot
-# | 
+# |
 # | PARTIAL_OD_BASE_SEED = 202608231
 # | PRIMARY_GRID_V2 = [
 # |     0.0, 0.001, 0.0025, 0.005, 0.01, 0.02, 0.05, 
 # |     0.10, 0.20, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90
 # | ]
-# | 
+# |
 # | RAW_COLUMNS = [
 # |     "fold", "city", "model_seed", "replicate_id", "p", "mask_seed",
 # |     "n_total_pairs", "n_revealed", "n_unseen", "fraction_pairs_revealed",
@@ -10935,13 +11001,13 @@
 # |     "gain_full_yd", "gain_partial_od", "difference_partial_minus_yd",
 # |     "relative_gain_vs_yd", "K", "q"
 # | ]
-# | 
-# | 
+# |
+# |
 # | def get_stable_mask_seed(base_seed: int, fold: int, city: str, replicate_id: int) -> int:
 # |     s = f"{base_seed}_{fold}_{city}_{replicate_id}"
 # |     return int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16) % (2**32)
-# | 
-# | 
+# |
+# |
 # | def holm_correction(p_vals: List[float]) -> np.ndarray:
 # |     n = len(p_vals)
 # |     if n == 0:
@@ -10954,8 +11020,8 @@
 # |         running_max = max(running_max, p_adj)
 # |         adj_p[idx] = min(1.0, running_max)
 # |     return adj_p
-# | 
-# | 
+# |
+# |
 # | def fold_stratified_bootstrap(
 # |     city_df: pd.DataFrame, 
 # |     metric_col: str, 
@@ -10971,7 +11037,7 @@
 # |         f_vals = sub[sub.fold == f][metric_col].values
 # |         if len(f_vals) > 0:
 # |             vals[f] = f_vals
-# | 
+# |
 # |     boot_means = np.empty(n_boot, dtype=np.float64)
 # |     total_cities = sum(len(v) for v in vals.values())
 # |     if total_cities == 0:
@@ -10983,10 +11049,10 @@
 # |             idx = rng.randint(0, len(arr), size=len(arr))
 # |             sample_sum += arr[idx].sum()
 # |         boot_means[b] = sample_sum / total_cities
-# | 
+# |
 # |     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
-# | 
-# | 
+# |
+# |
 # | def run_fold_partial_od(
 # |     fold_id: int,
 # |     data_root: str = "data",
@@ -11000,23 +11066,23 @@
 # | ) -> Dict[str, Any]:
 # |     if p_grid is None:
 # |         p_grid = PRIMARY_GRID_V2.copy()
-# | 
+# |
 # |     fold_dir = output_dir / f"fold_{fold_id}"
 # |     fold_dir.mkdir(parents=True, exist_ok=True)
 # |     
 # |     raw_csv_path = fold_dir / "raw.csv"
 # |     progress_json_path = fold_dir / "progress.json"
 # |     marker_path = fold_dir / "completion.marker"
-# | 
+# |
 # |     splits = generate_35_5_10_splits(data_root=data_root)
 # |     split = splits[fold_id]
 # |     train_cities = split["train"]
 # |     test_cities = split["test"] if not smoke else split["test"][:smoke_cities]
 # |     model_seeds = [1, 10, 100] if not smoke else [1, 10]
 # |     B = replicates if not smoke else 20
-# | 
+# |
 # |     print(f"\n>>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | Seeds: {model_seeds}")
-# | 
+# |
 # |     # Check already completed cities if resume is True
 # |     completed_cities = set()
 # |     if resume and progress_json_path.exists():
@@ -11027,12 +11093,12 @@
 # |                 print(f"    Resuming fold {fold_id}: Found {len(completed_cities)} already completed cities.")
 # |         except Exception:
 # |             completed_cities = set()
-# | 
+# |
 # |     # If raw.csv doesn't exist or not resuming, initialize with header
 # |     if not resume or not raw_csv_path.exists():
 # |         with open(raw_csv_path, "w", encoding="utf-8") as f:
 # |             f.write(",".join(RAW_COLUMNS) + "\n")
-# | 
+# |
 # |     # Load frozen GNN models for this fold
 # |     models: Dict[int, Tuple[Any, Any]] = {}
 # |     for s in model_seeds:
@@ -11042,20 +11108,20 @@
 # |         model, scaler, _ = load_checkpoint(ckpt_path, device_str=device)
 # |         model.eval()
 # |         models[s] = (model, scaler)
-# | 
+# |
 # |     # Compute K=8 bin edges from 35 train cities
 # |     bin_edges, K_act = compute_kbin_edges(train_cities, K=8, data_root=data_root)
 # |     if K_act != 8 or len(bin_edges) != 9:
 # |         raise RuntimeError(f"Strict 8-bin invariant failed for fold {fold_id}: K_act={K_act}")
-# | 
+# |
 # |     fold_start_time = time.perf_counter()
 # |     rows_written_total = 0
-# | 
+# |
 # |     for city_idx, city_name in enumerate(test_cities):
 # |         if city_name in completed_cities:
 # |             print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | ALREADY COMPLETED (Skipping)")
 # |             continue
-# | 
+# |
 # |         city_start = time.perf_counter()
 # |         raw_data = load_raw_city(city_name, data_root=data_root)
 # |         dist_km = raw_data.dist_km
@@ -11065,7 +11131,7 @@
 # |         n_pairs = int(inter_pos.sum())
 # |         if n_pairs == 0:
 # |             raise RuntimeError(f"Critical error: City {city_name} has 0 positive interzonal pairs!")
-# | 
+# |
 # |         t_true_support = raw_data.pair_trips.numpy()[inter_pos].astype(np.float64)
 # |         dist_support = dist_km[inter_pos]
 # |         bin_idx_support = np.clip(np.digitize(dist_support, bin_edges, right=True) - 1, 0, 7)
@@ -11074,7 +11140,7 @@
 # |         # Extract clean full Y_D on support
 # |         yd_full = np.bincount(bin_idx_support, weights=t_true_support, minlength=8).astype(np.float64)
 # |         yd_full /= total_trip_mass
-# | 
+# |
 # |         # Precalculate M0 and full Y_D calibrated prediction for all model seeds
 # |         seed_predictions: Dict[int, Dict[str, np.ndarray]] = {}
 # |         for s in model_seeds:
@@ -11099,7 +11165,7 @@
 # |             yd_act = yd_full * active.astype(np.float64)
 # |             act_sum = yd_act.sum()
 # |             Y_D_cond = yd_act / act_sum if act_sum > 0 else Y_hat.copy()
-# | 
+# |
 # |             w_full = np.ones(8, dtype=np.float64)
 # |             for k in range(8):
 # |                 if active[k] and Y_hat[k] > 0:
@@ -11119,9 +11185,9 @@
 # |                 "active": active,
 # |                 "t_cal_full": t_cal_full_support
 # |             }
-# | 
+# |
 # |         city_rows = []
-# | 
+# |
 # |         # Run Replicate Sampling
 # |         for rep_id in range(B):
 # |             mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
@@ -11138,7 +11204,7 @@
 # |                 
 # |                 if n_unseen == 0:
 # |                     continue
-# | 
+# |
 # |                 # Construct partial Y_D from revealed pairs S_p
 # |                 if n_reveal == 0:
 # |                     yd_partial = None
@@ -11162,7 +11228,7 @@
 # |                     else:
 # |                         tv_partial = np.nan
 # |                         js_partial = np.nan
-# | 
+# |
 # |                 frac_pairs_rev = float(n_reveal) / float(n_pairs)
 # |                 frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
 # |                 unseen_mass = total_trip_mass - revealed_mass
@@ -11171,7 +11237,7 @@
 # |                 # Target ground truth on unseen set U_p
 # |                 t_true_unseen = t_true_support[unseen_indices]
 # |                 sum_true_unseen = float(np.sum(t_true_unseen))
-# | 
+# |
 # |                 # Evaluate across all 3 model seeds with identical mask
 # |                 for s in model_seeds:
 # |                     preds = seed_predictions[s]
@@ -11204,12 +11270,12 @@
 # |                         
 # |                         denom_part = sum_true_unseen + float(np.sum(t_part_unseen))
 # |                         cpc_part_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_part_unseen)) / denom_part) if denom_part > 0 else 0.0
-# | 
+# |
 # |                     gain_full = float(cpc_full_unseen - cpc_m0_unseen)
 # |                     gain_part = float(cpc_part_unseen - cpc_m0_unseen)
 # |                     diff_part_minus_yd = float(gain_part - gain_full)
 # |                     rel_gain = float(gain_part / gain_full) if abs(gain_full) > 1e-8 else 1.0
-# | 
+# |
 # |                     city_rows.append((
 # |                         fold_id, city_name, s, rep_id, p_val, mask_seed,
 # |                         n_pairs, n_reveal, n_unseen, frac_pairs_rev,
@@ -11220,15 +11286,15 @@
 # |                         gain_full, gain_part, diff_part_minus_yd,
 # |                         rel_gain, 8, 1.0
 # |                     ))
-# | 
+# |
 # |         # Append city records to raw CSV incrementally
 # |         with open(raw_csv_path, "a", encoding="utf-8") as f:
 # |             for r in city_rows:
 # |                 f.write(",".join(str(x) for x in r) + "\n")
-# | 
+# |
 # |         completed_cities.add(city_name)
 # |         rows_written_total += len(city_rows)
-# | 
+# |
 # |         # Update progress.json
 # |         with open(progress_json_path, "w", encoding="utf-8") as f:
 # |             json.dump({
@@ -11239,10 +11305,10 @@
 # |                 "protocol_version": "v2",
 # |                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
 # |             }, f, indent=2)
-# | 
+# |
 # |         city_elapsed = time.perf_counter() - city_start
 # |         print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | Pairs: {n_pairs:>5} | B={B} reps done in {city_elapsed:.2f}s (Flushed {len(city_rows)} rows)")
-# | 
+# |
 # |     # Read back raw.csv to generate per_seed, per_city, and fold_summary
 # |     fold_df = pd.read_csv(raw_csv_path)
 # |     
@@ -11263,7 +11329,7 @@
 # |     }).reset_index()
 # |     per_seed_csv_path = fold_dir / "per_seed.csv"
 # |     per_seed_df.to_csv(per_seed_csv_path, index=False)
-# | 
+# |
 # |     # 2. Per-City Aggregation: Mean over 3 model seeds -> (fold x city x p)
 # |     per_city_df = per_seed_df.groupby(["fold", "city", "p"]).agg({
 # |         "fraction_pairs_revealed": "mean",
@@ -11281,7 +11347,7 @@
 # |     }).reset_index()
 # |     per_city_csv_path = fold_dir / "per_city.csv"
 # |     per_city_df.to_csv(per_city_csv_path, index=False)
-# | 
+# |
 # |     # 3. Fold Summary Table
 # |     fold_summary_rows = []
 # |     for p_val in p_grid:
@@ -11296,11 +11362,11 @@
 # |             "pos_cities": int((sub["gain_partial_od"] > 0).sum()),
 # |             "match_yd_cities": int((sub["difference_partial_minus_yd"] >= 0).sum())
 # |         })
-# | 
+# |
 # |     fold_summary_json_path = fold_dir / "fold_summary.json"
 # |     with open(fold_summary_json_path, "w", encoding="utf-8") as f:
 # |         json.dump({"fold": fold_id, "summary_by_p": fold_summary_rows}, f, indent=2)
-# | 
+# |
 # |     fold_summary_md_path = fold_dir / "fold_summary.md"
 # |     with open(fold_summary_md_path, "w", encoding="utf-8") as f:
 # |         f.write(f"# Fold {fold_id} Partial-OD Summary Table (N={len(test_cities)} Cities)\n\n")
@@ -11308,7 +11374,7 @@
 # |         f.write("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
 # |         for r in fold_summary_rows:
 # |             f.write(f"| **{r['p']*100:.2f}%** | +{r['mean_gain_full_yd']:.5f} | {r['mean_gain_partial_od']:+.5f} | {r['mean_diff_vs_yd']:+.5f} | {r['mean_tv']*100:.2f}% | {r['pos_cities']}/{r['n_cities']} | {r['match_yd_cities']}/{r['n_cities']} |\n")
-# | 
+# |
 # |     # 4. Save Run Manifest
 # |     manifest_path = fold_dir / "run_manifest.json"
 # |     with open(manifest_path, "w", encoding="utf-8") as f:
@@ -11324,7 +11390,7 @@
 # |             "per_city_rows": len(per_city_df),
 # |             "completed_at": time.strftime("%Y-%m-%d %H:%M:%S")
 # |         }, f, indent=2)
-# | 
+# |
 # |     # 5. QA Verification Before Writing completion.marker
 # |     actual_raw_rows = len(fold_df)
 # |     assert len(per_city_df) == len(test_cities) * len(p_grid), f"Fold {fold_id} per_city rows mismatch"
@@ -11334,10 +11400,10 @@
 # |     non_tv_cols = [c for c in fold_df.columns if c not in ["empirical_tv_partial_vs_full", "js_partial_vs_full"]]
 # |     assert not fold_df[non_tv_cols].isnull().any().any(), f"Fold {fold_id} contains unexpected NaN values in required fields!"
 # |     assert not fold_df[fold_df["p"] > 0]["empirical_tv_partial_vs_full"].isnull().any(), f"Fold {fold_id} contains NaN TV for p > 0!"
-# | 
+# |
 # |     with open(marker_path, "w", encoding="utf-8") as f:
 # |         f.write(f"FOLD {fold_id} COMPLETED AND CERTIFIED\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-# | 
+# |
 # |     fold_total_time = time.perf_counter() - fold_start_time
 # |     print(f">>> [FOLD {fold_id} COMPLETE] Certified {actual_raw_rows} rows in {fold_total_time:.2f}s | Marker: {marker_path.name}")
 # |     
@@ -11348,28 +11414,28 @@
 # |         "per_city_rows": len(per_city_df),
 # |         "status": "PASS"
 # |     }
-# | 
-# | 
+# |
+# |
 # | def aggregate_combined_results(
 # |     output_dir: Path = Path("results/partial_od_equivalence_v2"),
 # |     p_grid: List[float] = None
 # | ) -> None:
 # |     if p_grid is None:
 # |         p_grid = PRIMARY_GRID_V2.copy()
-# | 
+# |
 # |     combined_dir = output_dir / "combined"
 # |     combined_dir.mkdir(parents=True, exist_ok=True)
 # |     (combined_dir / "figures").mkdir(parents=True, exist_ok=True)
-# | 
+# |
 # |     print("\n" + "=" * 85)
 # |     print("MASTER AGGREGATION & SCIENTIFIC SUMMARY (COMBINING ALL 5 FOLDS, N=50 CITIES)")
 # |     print("=" * 85)
-# | 
+# |
 # |     # Check that all 5 folds have completion.marker
 # |     all_raw_dfs = []
 # |     all_per_seed_dfs = []
 # |     all_per_city_dfs = []
-# | 
+# |
 # |     for f in range(1, 6):
 # |         fold_dir = output_dir / f"fold_{f}"
 # |         marker = fold_dir / "completion.marker"
@@ -11393,15 +11459,15 @@
 # |         all_raw_dfs.append(pd.read_csv(fold_dir / "raw.csv"))
 # |         all_per_seed_dfs.append(pd.read_csv(fold_dir / "per_seed.csv"))
 # |         all_per_city_dfs.append(pd.read_csv(fold_dir / "per_city.csv"))
-# | 
+# |
 # |     raw_combined = pd.concat(all_raw_dfs, ignore_index=True)
 # |     per_seed_combined = pd.concat(all_per_seed_dfs, ignore_index=True)
 # |     per_city_combined = pd.concat(all_per_city_dfs, ignore_index=True)
-# | 
+# |
 # |     raw_combined.to_csv(combined_dir / "raw_all_folds.csv", index=False)
 # |     per_seed_combined.to_csv(combined_dir / "per_seed_all_folds.csv", index=False)
 # |     per_city_combined.to_csv(combined_dir / "per_city_all_folds.csv", index=False)
-# | 
+# |
 # |     expected_raw_rows = 50 * 3 * 500 * 15  # 15 p-levels
 # |     expected_seed_rows = 50 * 3 * 15
 # |     expected_city_rows = 50 * 15
@@ -11409,26 +11475,26 @@
 # |     assert len(raw_combined) == expected_raw_rows, f"Combined raw rows mismatch: {len(raw_combined)} != {expected_raw_rows}"
 # |     assert len(per_seed_combined) == expected_seed_rows, f"Combined seed rows mismatch"
 # |     assert len(per_city_combined) == expected_city_rows, f"Combined city rows mismatch"
-# | 
+# |
 # |     print(f"Combined Raw Rows:      {len(raw_combined):>10} (Certified)")
 # |     print(f"Combined Per-Seed Rows: {len(per_seed_combined):>10} (Certified)")
 # |     print(f"Combined Per-City Rows: {len(per_city_combined):>10} (Certified)")
-# | 
+# |
 # |     # Statistical Analysis across N=50 cities
 # |     summary_rows = []
 # |     raw_p_values = []
 # |     p_vals_tested = [p for p in p_grid if p > 0]
-# | 
+# |
 # |     # Precalculate raw Wilcoxon p-values for partial OD benefit vs M0
 # |     for p_val in p_vals_tested:
 # |         sub = per_city_combined[per_city_combined.p == p_val]
 # |         gains = sub["gain_partial_od"].values
 # |         _, p_w = stats.wilcoxon(gains, alternative="greater")
 # |         raw_p_values.append(p_w)
-# | 
+# |
 # |     holm_p_vals = holm_correction(raw_p_values)
 # |     holm_dict = {p: h_p for p, h_p in zip(p_vals_tested, holm_p_vals)}
-# | 
+# |
 # |     for p_val in p_grid:
 # |         sub = per_city_combined[per_city_combined.p == p_val]
 # |         n_cities = len(sub)
@@ -11449,7 +11515,7 @@
 # |         ci_full_l, ci_full_h = fold_stratified_bootstrap(per_city_combined, "gain_full_yd", p_val)
 # |         
 # |         h_pval = holm_dict.get(p_val, 1.0) if p_val > 0 else 1.0
-# | 
+# |
 # |         summary_rows.append({
 # |             "p": p_val,
 # |             "n_cities": n_cities,
@@ -11467,36 +11533,36 @@
 # |             "match_yd_cities": match_yd_cities,
 # |             "holm_pval_benefit": h_pval
 # |         })
-# | 
+# |
 # |     summary_df = pd.DataFrame(summary_rows)
-# | 
+# |
 # |     # Calculate 3 Key Thresholds
 # |     # 1. Positive Mean Crossing
 # |     p_pos_mean = None
 # |     for r in summary_rows:
 # |         if r["mean_gain_partial_od"] > 0 and p_pos_mean is None:
 # |             p_pos_mean = r["p"]
-# | 
+# |
 # |     # 2. Statistically Supported Benefit Threshold p*_benefit (Holm p < 0.05, CI_lower > 0)
 # |     p_star_benefit = None
 # |     for r in summary_rows:
 # |         if r["holm_pval_benefit"] < 0.05 and r["ci_95_gain_partial"][0] > 0 and p_star_benefit is None:
 # |             p_star_benefit = r["p"]
-# | 
+# |
 # |     # 3. Operational Equivalence Crossing p_eq
 # |     p_eq_grid = None
 # |     p_eq_interp = None
 # |     for r in summary_rows:
 # |         if r["mean_diff_vs_yd"] >= 0 and p_eq_grid is None:
 # |             p_eq_grid = r["p"]
-# | 
+# |
 # |     for i in range(len(summary_rows) - 1):
 # |         r1, r2 = summary_rows[i], summary_rows[i+1]
 # |         d1, d2 = r1["mean_diff_vs_yd"], r2["mean_diff_vs_yd"]
 # |         if d1 <= 0 and d2 >= 0 and (d2 - d1) > 0:
 # |             p_eq_interp = r1["p"] + (-d1 / (d2 - d1)) * (r2["p"] - r1["p"])
 # |             break
-# | 
+# |
 # |     # Save summary JSON
 # |     summary_json_path = combined_dir / "summary.json"
 # |     with open(summary_json_path, "w", encoding="utf-8") as f:
@@ -11510,7 +11576,7 @@
 # |             "p_eq_interp": p_eq_interp,
 # |             "results_by_p": summary_rows
 # |         }, f, indent=2)
-# | 
+# |
 # |     # Save Markdown Table
 # |     summary_md_path = combined_dir / "summary.md"
 # |     with open(summary_md_path, "w", encoding="utf-8") as f:
@@ -11531,7 +11597,7 @@
 # |             f.write(f"• **Operational Equivalence Grid Point ($p_\\text{{eq,grid}}$):** `{pct_grid:.2f}%` of positive interzonal OD pairs  \n\n")
 # |         else:
 # |             f.write("• **Operational Equivalence Crossing:** Full target-city $Y_D$ was not matched within the prespecified partial-OD range up to 90% of the positive interzonal OD support.  \n\n")
-# | 
+# |
 # |         f.write("| Revealed OD Pairs ($p$) | Mean Revealed Trip Mass | Mean TV to Full $Y_D$ | $M_0$ CPC (Unseen) | Full-$Y_D$ Gain | Partial-OD Gain | Difference vs Full $Y_D$ ($D(p)$) | 95% CI Difference | Partial Benefit Holm $p$ | Cities Partial $> M_0$ | Cities Partial $\\ge$ Full $Y_D$ |\n")
 # |         f.write("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
 # |         
@@ -11556,17 +11622,17 @@
 # |             f.write(f"Under the frozen support-conditioned model and the same production calibration operator, the mean reconstruction benefit provided by the full target-city $Y_D$ was matched at approximately **{p_eq_interp*100:.2f}%** of directly observed positive interzonal OD pairs.\n")
 # |         else:
 # |             f.write("Under the tested operator, directly observing up to 90% of the positive interzonal OD support did not fully match the mean reconstruction gain provided by the full target-city $Y_D$.\n")
-# | 
+# |
 # |     print(f"Summary Markdown: {summary_md_path}")
 # |     print(f"Summary JSON:     {summary_json_path}")
-# | 
+# |
 # |     # Generate 5 Publication Figures
 # |     generate_publication_figures(summary_df, per_city_combined, combined_dir, p_eq_interp, p_star_benefit)
-# | 
+# |
 # |     # Write FROZEN markers only after all QA and figure generations succeed
 # |     with open(combined_dir / "FROZEN.marker", "w", encoding="utf-8") as f:
 # |         f.write(f"MASTER 5-FOLD AGGREGATION CERTIFIED\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-# | 
+# |
 # |     frozen_marker_path = output_dir / "FROZEN.marker"
 # |     with open(frozen_marker_path, "w", encoding="utf-8") as f:
 # |         f.write("PARTIAL-OD INFORMATION EQUIVALENCE v2 PROTOCOL FROZEN\n")
@@ -11574,8 +11640,8 @@
 # |         f.write("Protocol: 50 held-out test cities across 5 disjoint folds (N=50)\n")
 # |         f.write("Evaluation Support: unseen positive interzonal pairs Omega_c^+ \\ S_p\n")
 # |         f.write(f"Replicates: 500 per city (Total: 1,125,000 raw calibrations)\n")
-# | 
-# | 
+# |
+# |
 # | def generate_publication_figures(
 # |     summary_df: pd.DataFrame, 
 # |     per_city_df: pd.DataFrame, 
@@ -11586,7 +11652,7 @@
 # |     plt.rcParams.update({'font.sans-serif': 'Helvetica', 'axes.edgecolor': '#333333', 'axes.linewidth': 0.8})
 # |     fig_dir = combined_dir / "figures"
 # |     p_vals = summary_df["p"].values * 100.0
-# | 
+# |
 # |     # Fig 1: Gain vs Reveal Fraction
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     ax.axhline(0, color="#888888", linestyle="--", alpha=0.6)
@@ -11613,7 +11679,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_1_gain_vs_p.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 2: Difference D(p) Equivalence
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     ax.axhline(0, color="#333333", linestyle="-", linewidth=1.0)
@@ -11636,7 +11702,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_2_Dp_equivalence.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 3: TV vs p
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     tvs = summary_df["mean_tv"].values * 100.0
@@ -11648,7 +11714,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_3_TV_vs_p.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 4: Revealed Mass vs Gain
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     masses = summary_df["mean_revealed_mass"].values * 100.0
@@ -11662,7 +11728,7 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_4_revealed_mass_vs_gain.png")
 # |     plt.close(fig)
-# | 
+# |
 # |     # Fig 5: Fold-Specific D(p) Auditing
 # |     fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
 # |     ax.axhline(0, color="#333333", linestyle="-", linewidth=1.0)
@@ -11680,8 +11746,8 @@
 # |     plt.tight_layout()
 # |     fig.savefig(fig_dir / "fig_5_fold_specific_Dp.png")
 # |     plt.close(fig)
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(description="Run Partial-OD Information Equivalence v2")
 # |     parser.add_argument("--data_root", type=str, default="data")
@@ -11694,9 +11760,9 @@
 # |     parser.add_argument("--aggregate_only", action="store_true", help="Only aggregate completed folds")
 # |     parser.add_argument("--device", type=str, default="cpu")
 # |     args = parser.parse_args()
-# | 
+# |
 # |     out_p = Path(args.output_dir)
-# | 
+# |
 # |     if args.aggregate_only:
 # |         aggregate_combined_results(output_dir=out_p)
 # |     else:
@@ -11732,9 +11798,9 @@
 # | import logging
 # | from pathlib import Path
 # | from scipy.stats import wilcoxon
-# | 
+# |
 # | sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 # | from src.data.dataset import load_raw_city, load_city
@@ -11743,10 +11809,10 @@
 # | from src.experiment.run_experiment import infer_zero_shot
 # | from src.training.evaluate import compute_cpc_pair
 # | from src.calibration.bin_calibration import calibrate_kbins
-# | 
+# |
 # | def get_active_bins(yd, eps=1e-8):
 # |     return yd > eps
-# | 
+# |
 # | def safe_log_ratio(p, y_hat, active_mask, delta=1e-12):
 # |     p = p.copy()
 # |     y_hat = y_hat.copy()
@@ -11761,10 +11827,10 @@
 # |     r = np.zeros_like(p)
 # |     r[active_mask] = np.log(p_active) - np.log(y_hat_active)
 # |     return r
-# | 
+# |
 # | def evaluate_cpc(t_true_inter, t_pred_inter):
 # |     return compute_cpc_pair(t_true_inter, t_pred_inter)
-# | 
+# |
 # | def run_placebo_experiment(args):
 # |     data_root = "data"
 # |     output_dir = "results/placebo_matched_v2"
@@ -11851,7 +11917,7 @@
 # |                     if not np.array_equal(p, np.arange(target_active_bin_count)):
 # |                         perms_set.add(p)
 # |                 index_perms = list(perms_set)
-# | 
+# |
 # |             for seed in model_seeds:
 # |                 logger.info(f"    Evaluating seed {seed}...")
 # |                 ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{seed}.pt")
@@ -11980,10 +12046,10 @@
 # |                         "model_target_bin_support_rate": float(model_target_bin_support_rate),
 # |                     }
 # |                     return cpc_fast, stats
-# | 
+# |
 # |                 cpc_target, stats_tgt = equivalence_test(yd_target, "target")
 # |                 delta_cpc_target = cpc_target - cpc_m0_inter
-# | 
+# |
 # |                 def build_row(cond, rep_id, donor_name, cpc_val, stats, dose, donor_stats={}):
 # |                     d_cpc = cpc_val - cpc_m0_inter
 # |                     row = {
@@ -11998,9 +12064,9 @@
 # |                     row.update(stats)
 # |                     row.update(donor_stats)
 # |                     return row
-# | 
+# |
 # |                 raw_results.append(build_row("target", 0, tc, cpc_target, stats_tgt, D_T))
-# | 
+# |
 # |                 seen_vecs = []
 # |                 p_idx = 0
 # |                 for perm_indices in index_perms:
@@ -12024,7 +12090,7 @@
 # |                     cpc_P, stats_P = equivalence_test(p_P, "permuted_bin")
 # |                     raw_results.append(build_row("permuted", p_idx, "PERMUTED", cpc_P, stats_P, D_P))
 # |                     p_idx += 1
-# | 
+# |
 # |                 w_idx = 0
 # |                 for donor_name in train_cities:
 # |                     donor_yd = train_yd_dict[donor_name]
@@ -12055,7 +12121,7 @@
 # |                     }
 # |                     raw_results.append(build_row("wrong_city", w_idx, donor_name, cpc_wrong, stats_wrong, D_D_star, d_stats))
 # |                     w_idx += 1
-# | 
+# |
 # |                 r_M = safe_log_ratio(train_mean_yd, Y_hat, active_mask, delta=epsilon)
 # |                 r_tilde_M = np.zeros_like(r_M)
 # |                 r_tilde_M[active_mask] = r_M[active_mask] - np.mean(r_M[active_mask])
@@ -12081,7 +12147,7 @@
 # |                         "donor_target_bin_overlap_rate": donor_target_bin_overlap_rate
 # |                     }
 # |                     raw_results.append(build_row("trainmean", 0, "TRAIN_MEAN", cpc_tm, stats_tm, D_M_star, d_stats))
-# | 
+# |
 # |     df = pd.DataFrame(raw_results)
 # |     df.to_csv(f"{output_dir}/matched_placebo_raw.csv", index=False)
 # |     with open(f"{output_dir}/matched_placebo_raw.jsonl", "w") as f:
@@ -12160,7 +12226,7 @@
 # |     with open(f"{output_dir}/interpretation.md", "w", encoding="utf-8") as f:
 # |         f.write("### Interpretation\n")
 # |         f.write("> Permuted-bin chỉ kiểm tra mức độ nhạy của multiplicative calibration khi phân phối mass bị gán sai giữa các bin. Nó không ước lượng giá trị thông tin thực tế của Y_D, ngay cả sau khi các kiểm định kỹ thuật đều pass.\n")
-# | 
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser()
 # |     parser.add_argument("--smoke", action="store_true")
@@ -12180,14 +12246,14 @@
 # | import torch
 # | from pathlib import Path
 # | import sys
-# | 
+# |
 # | sys.path.insert(0, ".")
 # | from src.data.dataset import load_city
 # | from src.models.zero_shot_model import ZeroShotODModel
 # | from src.training.train import load_checkpoint, infer_zero_shot
 # | from src.training.evaluate import compute_cpc_pair, compute_cpc_norm_pair
 # | from src.calibration.bin_calibration import calibrate_kbins, calibrate_kbins_grouped
-# | 
+# |
 # | def run_resolution_analysis(
 # |     city: str,
 # |     fold_id: int,
@@ -12216,10 +12282,10 @@
 # |     tract_to_county, mapping_stats = get_gadm_gid2_mapping(meta_df, repo_root)
 # |     n_counties = len(set(tract_to_county.values()))
 # |     print(f"City {city} has {n_counties} origin counties.")
-# | 
+# |
 # |     seeds = [1, 10, 100]
 # |     results = []
-# | 
+# |
 # |     for seed in seeds:
 # |         checkpoint_path = f"results/checkpoints/5fold_fold{fold_id}_seed{seed}.pt"
 # |         ckpt_file = Path(checkpoint_path)
@@ -12241,7 +12307,7 @@
 # |                 model.eval()
 # |             else:
 # |                 raise FileNotFoundError(f"Checkpoint {checkpoint_path} not found. Use --random-smoke to fallback to random weights.")
-# | 
+# |
 # |         cd = load_city(city, data_root=data_root, feature_scaler=scaler)
 # |         
 # |         from src.training.train import build_radius_graph
@@ -12284,11 +12350,11 @@
 # |             "cpc_city": cpc_city,
 # |             "cpc_county": cpc_county
 # |         })
-# | 
+# |
 # |     avg_cpc_0 = np.mean([r["cpc_0"] for r in results])
 # |     avg_cpc_city = np.mean([r["cpc_city"] for r in results])
 # |     avg_cpc_county = np.mean([r["cpc_county"] for r in results])
-# | 
+# |
 # |     print("\n=== RESULTS ===")
 # |     print(f"CPC (Zero-Shot)   : {avg_cpc_0:.4f}")
 # |     print(f"CPC (M_city)      : {avg_cpc_city:.4f}")
@@ -12304,7 +12370,7 @@
 # |         "delta_county_city": avg_cpc_county - avg_cpc_city,
 # |         "mapping_stats": mapping_stats
 # |     }
-# | 
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser()
 # |     parser.add_argument("--city", type=str, default="Dallas")
@@ -12333,7 +12399,7 @@
 # | observed sample size m in {100, 250, 500, 1000, 2500, 5000, 10000, 50000, 100000, inf},
 # | and evaluates the resulting OD reconstruction benefit delta_CPC.
 # | """
-# | 
+# |
 # | import os
 # | os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 # | import sys
@@ -12343,16 +12409,16 @@
 # | import datetime
 # | from pathlib import Path
 # | from typing import Dict, Tuple, List, Optional, Any
-# | 
+# |
 # | import numpy as np
 # | import pandas as pd
 # | import torch
 # | import matplotlib.pyplot as plt
 # | import logging
-# | 
+# |
 # | from scipy.stats import spearmanr, wilcoxon, multivariate_hypergeom
 # | from scipy.spatial.distance import jensenshannon
-# | 
+# |
 # | sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 # | from src.data.dataset import load_city, load_raw_city
 # | from src.data.urban_graph import build_radius_graph
@@ -12361,8 +12427,8 @@
 # | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 # | from src.data.city_splits import generate_35_5_10_splits, load_splits_manifest_v2
 # | from src.experiment.run_experiment import infer_zero_shot
-# | 
-# | 
+# |
+# |
 # | def holm_correction(p_vals: List[float]) -> np.ndarray:
 # |     n = len(p_vals)
 # |     if n == 0:
@@ -12375,13 +12441,13 @@
 # |         running_max = max(running_max, p_adj)
 # |         adj_p[idx] = min(1.0, running_max)
 # |     return adj_p
-# | 
-# | 
+# |
+# |
 # | def get_stable_seed(base_seed: int, fold: int, city: str, m_val: Any, replicate_id: int) -> int:
 # |     s = f"{base_seed}_{fold}_{city}_{m_val}_{replicate_id}"
 # |     return int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16) % (2**32)
-# | 
-# | 
+# |
+# |
 # | def sample_hypergeometric_yd(bin_counts: np.ndarray, m: float, size: int, base_seed: int) -> List[np.ndarray]:
 # |     """
 # |     Subsamples m trips without replacement from actual population bin counts
@@ -12400,8 +12466,8 @@
 # |     if size == 1:
 # |         draws = draws.reshape(1, -1)
 # |     return [draws[i].astype(np.float64) / float(m_int) for i in range(size)]
-# | 
-# | 
+# |
+# |
 # | def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, m_val: float, evaluated_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Tuple[float, float]:
 # |     rng = np.random.RandomState(seed)
 # |     
@@ -12416,8 +12482,8 @@
 # |     boot_means = np.mean(all_samples, axis=1)
 # |         
 # |     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
-# | 
-# | 
+# |
+# |
 # | def fast_cal_metrics(
 # |     yd_tgt: np.ndarray, 
 # |     compute_spearman: bool, 
@@ -12486,8 +12552,8 @@
 # |     js_div = float(jensenshannon(yd_tgt, yd_target)) ** 2
 # |     
 # |     return cpc, mae, rmse, spearman_val, tv_ach, js_div, stats
-# | 
-# | 
+# |
+# |
 # | def run_sampling_robustness(args: argparse.Namespace) -> None:
 # |     data_root = "data"
 # |     output_dir = getattr(args, "output_dir", None) or "results/sampling_robustness_v1"
@@ -12652,8 +12718,8 @@
 # |             generate_sampling_summary(city_df, output_dir, m_grid)
 # |     else:
 # |         logger.warning("No results were generated. Check checkpoints.")
-# | 
-# | 
+# |
+# |
 # | def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: List[float]) -> None:
 # |     evaluation_folds = sorted(city_df.fold.unique().tolist())
 # |     eval_df = city_df[city_df.fold.isin(evaluation_folds)]
@@ -12823,7 +12889,7 @@
 # |             e_star = noise_summ.get("epsilon_star_significant_benefit", e_star)
 # |     except Exception:
 # |         pass
-# | 
+# |
 # |     plt.plot(finite_m_arr, tv_means, marker="o", color="darkblue", linewidth=2, label="Empirical TV Error")
 # |     plt.fill_between(finite_m_arr, tv_los, tv_his, color="royalblue", alpha=0.25, label="95% Bootstrap CI")
 # |     plt.axhline(e_cross, color="red", linestyle="--", linewidth=1.5, label=f"Theoretical Crossover $\\epsilon_{{cross}} = {e_cross*100:.2f}\\%$")
@@ -12899,8 +12965,8 @@
 # |     }
 # |     with open(f"{output_dir}/sampling_manifest.json", "w") as f:
 # |         json.dump(manifest, f, indent=2)
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser()
 # |     parser.add_argument("--b", type=int, default=1000)
@@ -12915,24 +12981,24 @@
 # ===== BEGIN SOURCE FILE: src/experiment/run_spatial_resolution_experiment.py =====
 # | """
 # | Spatial Resolution Experiment (Origin County-Level vs. City-Level Calibration).
-# | 
+# |
 # | Evaluates whether providing finer spatial resolution in the aggregate distance distribution
 # | (Y_D^(county) conditioned on origin county vs. macro city-wide Y_D^(city)) enhances mobility
 # | prediction accuracy in heterogeneous metropolitan areas.
-# | 
+# |
 # | Key Estimands:
 # |     1. City-Level Target Gain:        Δ_city        = CPC(M_city) - CPC(M0)
 # |     2. County-Level Target Gain:      Δ_county      = CPC(M_county) - CPC(M0)
 # |     3. Spatial Resolution Gain:       Δ_resolution  = CPC(M_county) - CPC(M_city)
 # |     4. Specificity Gains:             Δ_spec_city   = CPC(M_city) - CPC(M_wrong)
 # |                                       Δ_spec_county = CPC(M_county) - CPC(M_wrong)
-# | 
+# |
 # | Invariance Properties:
 # |     - For single-county cities (n=45), M_county ≡ M_city, so Δ_resolution ≡ 0.0000 (Sanity Check).
 # |     - For multi-county cities (n=5: Atlanta, Dallas, Kansas City, New York, Tulsa),
 # |       heterogeneous origin distributions allow fine-grained spatial adaptation (Δ_resolution >= 0).
 # | """
-# | 
+# |
 # | import argparse
 # | import json
 # | import os
@@ -12943,11 +13009,11 @@
 # | import pandas as pd
 # | from scipy import stats
 # | import torch
-# | 
+# |
 # | # Ensure project root is in sys.path
 # | PROJECT_ROOT = Path(__file__).resolve().parents[2]
 # | sys.path.insert(0, str(PROJECT_ROOT))
-# | 
+# |
 # | from src.data.dataset import load_city, preload_all_cities
 # | from src.data.city_splits import load_splits_manifest_v2
 # | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins, extract_yd_kbins_grouped
@@ -12961,7 +13027,7 @@
 # |     save_checkpoint
 # | )
 # | from src.training.evaluate import compute_cpc_pair, compute_cpc_norm_pair
-# | 
+# |
 # | # Output directories & constants
 # | RESULTS_DIR = PROJECT_ROOT / "results" / "spatial_resolution"
 # | TABLES_DIR = RESULTS_DIR / "tables"
@@ -12972,8 +13038,8 @@
 # | PATIENCE = 15
 # | MIN_DELTA = 1e-4
 # | DEFAULT_SEED = 2024
-# | 
-# | 
+# |
+# |
 # | def log_msg(msg: str = "", print_to_console: bool = True):
 # |     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 # |     formatted = f"[{timestamp}] {msg}" if msg else ""
@@ -12985,8 +13051,8 @@
 # |             f.write(formatted + "\n")
 # |     except Exception:
 # |         pass
-# | 
-# | 
+# |
+# |
 # | def safe_wilcoxon(diff: np.ndarray, alternative: str = "greater") -> tuple[float, float]:
 # |     diff_clean = diff[~np.isnan(diff)]
 # |     if len(diff_clean) < 2:
@@ -12999,8 +13065,8 @@
 # |         return float(res.statistic), float(res.pvalue)
 # |     except Exception:
 # |         return 0.0, 1.0
-# | 
-# | 
+# |
+# |
 # | def fold_bootstrap(
 # |     values: np.ndarray,
 # |     fold_ids: np.ndarray,
@@ -13023,8 +13089,8 @@
 # |     if len(boot) == 0:
 # |         return 0.0, 0.0
 # |     return float(np.percentile(boot, 100 * (alpha / 2))), float(np.percentile(boot, 100 * (1 - alpha / 2)))
-# | 
-# | 
+# |
+# |
 # | def run_spatial_resolution_city(
 # |     city: str,
 # |     model: torch.nn.Module,
@@ -13125,8 +13191,8 @@
 # |         "elapsed_sec": float(elapsed),
 # |         "mapping_stats": mapping_stats,
 # |     }
-# | 
-# | 
+# |
+# |
 # | def compute_resolution_summary(results: list[dict], bootstrap_seed: int = DEFAULT_SEED) -> dict:
 # |     df = pd.DataFrame(results)
 # |     
@@ -13197,8 +13263,8 @@
 # |             "exact_zero_invariant": bool(np.allclose(single_df["delta_cpc_resolution"].values, 0.0, atol=1e-6)),
 # |         }
 # |     }
-# | 
-# | 
+# |
+# |
 # | def write_resolution_tables(results: list[dict], summary: dict):
 # |     TABLES_DIR.mkdir(parents=True, exist_ok=True)
 # |     
@@ -13208,28 +13274,28 @@
 # |     sc = summary["single_county_subset"]
 # |     
 # |     main_md = f"""# Table S1: Spatial Resolution Analysis (County-Level vs. City-Level Calibration)
-# | 
+# |
 # | > **Research Question**: Does conditioning the aggregated distance distribution $Y_D$ on origin counties ($M_{{\\text{{county}}}}$) improve zero-shot flow prediction over city-wide macro distributions ($M_{{\\text{{city}}}}$)?
 # | > **Dataset**: {summary['n_total_cities']} US Metropolitan Areas ({summary['n_single_county_cities']} Single-County, {summary['n_multi_county_cities']} Multi-County) under 5-Fold Stratified CV.
 # | > **Calibration Protocol**: $K_{{\\text{{move}}}}=8$ quantile bins, $q=1.0$, within-tolerance distribution matching.
-# | 
+# |
 # | ---
-# | 
+# |
 # | ## S1-A: Overall Comparative Performance ($n={summary['n_total_cities']}$ Cities)
-# | 
+# |
 # | | Condition / Model | Mean Interzonal CPC | Mean Gain vs $M_0$ (Δ) | 95% Bootstrap CI | City-Level Placebo Gain | City-Level Specificity Win Rate |
 # | |---|:---:|:---:|:---:|:---:|:---:|
 # | | **Zero-Shot Baseline ($M_0$)** | {p50['cpc_baseline_mean']:.4f} | — | — | — | — |
 # | | **+ City-Level Target $Y_D$ ($M_{{\\text{{city}}}}$)** | {p50['cpc_city_mean']:.4f} | {p50['delta_city_mean']:+.4f} | [{p50['delta_city_ci'][0]:+.4f}, {p50['delta_city_ci'][1]:+.4f}] | {p50['delta_spec_city_mean']:+.4f} | {p50['win_rate_spec_city']} |
 # | | **+ County-Level Target $Y_D$ ($M_{{\\text{{county}}}}$)** | **{p50['cpc_county_mean']:.4f}** | **{p50['delta_county_mean']:+.4f}** | **[{p50['delta_county_ci'][0]:+.4f}, {p50['delta_county_ci'][1]:+.4f}]** | — | — |
 # | | **City-Level Placebo ($M_{{\\text{{wrong}}}}$ 9-Donor Avg)** | {p50['cpc_wrong_mean']:.4f} | {p50['cpc_wrong_mean'] - p50['cpc_baseline_mean']:+.4f} | — | — | 0/{summary['n_total_cities']} |
-# | 
+# |
 # | ---
-# | 
+# |
 # | ## S1-B: Multi-County Metropolitan Focus ($n={summary['n_multi_county_cities']}$ Heterogeneous Cities)
-# | 
+# |
 # | In multi-county metropolitan areas, distinct origin counties exhibit heterogeneous localized trip distributions.
-# | 
+# |
 # | | City | Origin Counties | Zero-Shot $M_0$ | City-Level $M_{{\\text{{city}}}}$ | County-Level $M_{{\\text{{county}}}}$ | Resolution Gain ($\\Delta_{{\\text{{res}}}}$) | City-Level Placebo $M_{{\\text{{wrong}}}}$ |
 # | |---|:---:|:---:|:---:|:---:|:---:|:---:|
 # | """
@@ -13243,17 +13309,17 @@
 # | - Mean County-Level $M_{{\\text{{county}}}}$: **{mc['cpc_county_mean']:.4f}** (Δ = **{mc['delta_county_mean']:+.4f}**)
 # | - **Mean Spatial Resolution Gain ($\\Delta_{{\\text{{res}}}}$)**: **{mc['delta_resolution_mean']:+.4f}** (Max: **{mc['delta_resolution_max']:+.4f}**)
 # | - **Resolution Improvement Rate**: **{mc['win_rate_resolution']}**
-# | 
+# |
 # | ---
-# | 
+# |
 # | ## S1-C: Single-County Sanity Invariance ($n=45$ Single-County Cities)
-# | 
+# |
 # | For single-county cities, all tracts belong to the same origin county, meaning $M_{{\\text{{county}}}} \\equiv M_{{\\text{{city}}}}$ by definition.
 # | - **Observed Mean $\\Delta_{{\\text{{resolution}}}}$**: {sc['delta_resolution_mean']:.6f}
 # | - **Exact Mathematical Invariance**: {'✓ VERIFIED' if sc['exact_zero_invariant'] else '✗ FAILED'}
 # | """
 # |     (TABLES_DIR / "spatial_resolution_main_table.md").write_text(main_md, encoding="utf-8")
-# | 
+# |
 # |     # 2. Per-City Breakdown Table
 # |     rows = [
 # |         "| City | Fold | Counties | Multi-County? | $M_0$ CPC | $M_{\\text{city}}$ CPC | $M_{\\text{county}}$ CPC | $\\Delta_{\\text{resolution}}$ | $M_{\\text{wrong}}$ | $\\Delta_{\\text{spec, county}}$ |",
@@ -13267,8 +13333,8 @@
 # |             f"**{r['delta_cpc_resolution']:+.4f}** | {r['cpc_wrong']:.4f} | {r['delta_cpc_spec_county']:+.4f} |"
 # |         )
 # |     (TABLES_DIR / "spatial_resolution_per_city.md").write_text("# Complete Spatial Resolution Breakdown (50 Cities)\n\n" + "\n".join(rows) + "\n", encoding="utf-8")
-# | 
-# | 
+# |
+# |
 # | def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAULT_SEED, smoke: bool = False):
 # |     t_global_start = time.time()
 # |     device = torch.device(device_str)
@@ -13308,7 +13374,7 @@
 # |         
 # |         # We will collect per-seed results for each city in this fold
 # |         fold_city_seed_results = {city: [] for city in test10}
-# | 
+# |
 # |         for m_seed in ([1, 10, 100] if not smoke else [1, 10]):
 # |             ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
 # |             if not ckpt_path.exists():
@@ -13393,8 +13459,8 @@
 # |     log_msg("=" * 75)
 # |     
 # |     return all_results, summary
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     parser = argparse.ArgumentParser(description="Spatial Resolution Experiment: County vs City Calibration")
 # |     parser.add_argument("--smoke", action="store_true", help="Run quick smoke test on subset of cities")
@@ -13410,28 +13476,28 @@
 # ===== BEGIN SOURCE FILE: src/loss/ztnb.py =====
 # | """
 # | Zero-Truncated Negative Binomial (ZTNB) Likelihood and Conditional Mean Conversion.
-# | 
+# |
 # | Exact Mathematical Formulation:
 # |     Base NB Distribution:
 # |         T ~ NB(mu_nb, phi) with mean mu_nb > 0 and dispersion phi > 0.
 # |         P_NB(T=0) = (phi / (mu_nb + phi))^phi.
-# | 
+# |
 # |     Zero-Truncated NB (ZTNB):
 # |         P_ZTNB(T=t | T >= 1) = P_NB(t; mu_nb, phi) / (1 - P_NB(0; mu_nb, phi))
-# | 
+# |
 # |     Conditional Expected Flow:
 # |         E[T | T >= 1] = mu_nb / (1 - P_NB(0; mu_nb, phi))
-# | 
+# |
 # | The neural network outputs mu_nb > 0.
 # | At training time: loss is -log P_ZTNB(T_ij; mu_nb, phi).
 # | At inference time: predicted flow is \hat{T}^{ZS}_ij = E[T_ij | T_ij >= 1].
 # | """
-# | 
+# |
 # | import math
 # | import torch
 # | import torch.nn.functional as F
-# | 
-# | 
+# |
+# |
 # | def nb_log_prob(t: torch.Tensor, mu_nb: torch.Tensor, log_phi: torch.Tensor) -> torch.Tensor:
 # |     """
 # |     Log-probability of base NB(mu_nb, phi) at integer count t.
@@ -13439,12 +13505,12 @@
 # |     log_phi_safe = torch.clamp(log_phi, min=-10.0, max=10.0)
 # |     phi = torch.exp(log_phi_safe)
 # |     eps = 1e-8
-# | 
+# |
 # |     mu = mu_nb + eps
 # |     phi = phi + eps
-# | 
+# |
 # |     p_nb0 = phi / (mu + phi)  # probability parameter
-# | 
+# |
 # |     log_p = (
 # |         torch.lgamma(t + phi)
 # |         - torch.lgamma(phi)
@@ -13453,8 +13519,8 @@
 # |         + t * torch.log(1.0 - p_nb0 + eps)
 # |     )
 # |     return log_p
-# | 
-# | 
+# |
+# |
 # | def nb_log_prob_at_zero(mu_nb: torch.Tensor, log_phi: torch.Tensor) -> torch.Tensor:
 # |     """log P_NB(T=0; mu_nb, phi) = phi * log(phi / (mu_nb + phi))"""
 # |     log_phi_safe = torch.clamp(log_phi, min=-10.0, max=10.0)
@@ -13463,32 +13529,32 @@
 # |     mu = mu_nb + eps
 # |     phi = phi + eps
 # |     return phi * torch.log(phi / (mu + phi))
-# | 
-# | 
+# |
+# |
 # | def ztnb_nll(t: torch.Tensor, mu_nb: torch.Tensor, log_phi: torch.Tensor) -> torch.Tensor:
 # |     """
 # |     Exact Negative Log-Likelihood for Zero-Truncated Negative Binomial.
 # |     log P_ZTNB(T=t | T>=1) = log P_NB(t; mu_nb, phi) - log(1 - P_NB(0; mu_nb, phi))
 # |     """
 # |     assert (t >= 1).all(), "ZTNB requires all observed counts >= 1"
-# | 
+# |
 # |     log_p_nb = nb_log_prob(t, mu_nb, log_phi)
 # |     log_p_nb_0 = nb_log_prob_at_zero(mu_nb, log_phi)
-# | 
+# |
 # |     # Numerically stable log(1 - P_NB(0)) = log1p(-exp(log_p_nb_0))
 # |     log_1_minus_p0 = torch.log1p(-torch.exp(log_p_nb_0).clamp(max=1.0 - 1e-7))
-# | 
+# |
 # |     log_p_ztnb = log_p_nb - log_1_minus_p0
 # |     return -log_p_ztnb.mean()
-# | 
-# | 
+# |
+# |
 # | def nb_nll(t: torch.Tensor, mu_nb: torch.Tensor, log_phi: torch.Tensor) -> torch.Tensor:
 # |     """
 # |     Mean negative log-likelihood of unconditional Negative Binomial (sensitivity model).
 # |     """
 # |     return -nb_log_prob(t, mu_nb, log_phi).mean()
-# | 
-# | 
+# |
+# |
 # | def compute_conditional_mean(mu_nb: torch.Tensor, log_phi: torch.Tensor) -> torch.Tensor:
 # |     """
 # |     Converts base NB mean mu_nb to conditional positive mean E[T | T >= 1].
@@ -13501,35 +13567,35 @@
 # |     # Clamp 1-p0 to avoid division by zero when mu_nb is tiny
 # |     denom = torch.clamp(1.0 - p0, min=1e-6)
 # |     return mu_nb / denom
-# | 
-# | 
+# |
+# |
 # | def _run_unit_tests():
 # |     print("Running updated ZTNB unit tests...")
 # |     torch.manual_seed(0)
-# | 
+# |
 # |     # Test 1: Conditional mean is strictly > mu_nb
 # |     mu = torch.tensor([1.0, 5.0, 10.0])
 # |     log_phi = torch.tensor(0.0)
 # |     c_mean = compute_conditional_mean(mu, log_phi)
 # |     assert (c_mean > mu).all(), "Test 1 FAILED: Conditional mean must be > base mu"
 # |     print(f"  Test 1 PASS: mu={mu.tolist()} -> E[T|T>=1]={c_mean.tolist()}")
-# | 
+# |
 # |     # Test 2: NLL at t=1 is finite
 # |     t1 = torch.ones(5)
 # |     loss = ztnb_nll(t1, torch.ones(5) * 2.0, log_phi)
 # |     assert torch.isfinite(loss), "Test 2 FAILED: NLL not finite"
 # |     print(f"  Test 2 PASS: NLL at t=1 -> {loss.item():.4f}")
-# | 
+# |
 # |     # Test 3: Gradient finite as mu -> 0
 # |     mu_tiny = torch.tensor([1e-4], requires_grad=True)
 # |     loss_tiny = ztnb_nll(torch.ones(1), mu_tiny, log_phi)
 # |     loss_tiny.backward()
 # |     assert torch.isfinite(mu_tiny.grad), "Test 3 FAILED: grad not finite"
 # |     print(f"  Test 3 PASS: grad at mu=1e-4 -> {mu_tiny.grad.item():.4f}")
-# | 
+# |
 # |     print("All updated ZTNB unit tests passed.\n")
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     _run_unit_tests()
 
@@ -13539,24 +13605,24 @@
 # ===== BEGIN SOURCE FILE: src/models/decoder.py =====
 # | """
 # | Pairwise OD Decoder with Single Base Magnitude Head (ZTNB).
-# | 
+# |
 # | Input edge representation:
 # |     e_ij = [h_i, h_j, log(1 + D_ij), log(T^{grav}_ij)]
-# | 
+# |
 # | Single prediction head producing base Negative Binomial parameter via
 # | residual-gravity initialization: mu_nb_ij = softplus(log_t_grav + residual_ij).
-# | 
+# |
 # | Exact ZTNB Likelihood & Predictions:
 # |     At training: loss = -log P_ZTNB(T_ij; mu_nb_ij, phi) on positive observations in Omega_c.
 # |     At inference: expected zero-shot prediction is the conditional expectation:
 # |         \hat{T}^{ZS}_ij = E[T_ij | T_ij >= 1] = compute_conditional_mean(mu_nb_ij, log_phi).
 # | """
-# | 
+# |
 # | import torch
 # | import torch.nn as nn
 # | import torch.nn.functional as F
-# | 
-# | 
+# |
+# |
 # | class PairwiseODDecoder(nn.Module):
 # |     def __init__(
 # |         self,
@@ -13567,7 +13633,7 @@
 # |         super().__init__()
 # |         # Input: [h_i, h_j, log_d, log_t_grav] -> dim = 2 * node_dim + 2
 # |         in_dim = 2 * node_dim + 2
-# | 
+# |
 # |         self.net = nn.Sequential(
 # |             nn.Linear(in_dim, hidden_dim),
 # |             nn.LayerNorm(hidden_dim),
@@ -13578,12 +13644,12 @@
 # |             nn.Dropout(dropout),
 # |             nn.Linear(hidden_dim // 2, 1),
 # |         )
-# | 
+# |
 # |         # Zero-init final layer so the gravity prior is supplied as a log-scale decoder feature/offset 
 # |         # with a zero-initialized neural residual, yielding softplus(log_t_grav) at initialization.
 # |         nn.init.zeros_(self.net[-1].weight)
 # |         nn.init.zeros_(self.net[-1].bias)
-# | 
+# |
 # |     def forward(
 # |         self,
 # |         h_i: torch.Tensor,
@@ -13597,7 +13663,7 @@
 # |             h_j:          (E, node_dim) destination node embeddings.
 # |             log_distance: (E,) or (E, 1) log1p(distance_km).
 # |             log_t_grav:   (E,) or (E, 1) log gravity flow.
-# | 
+# |
 # |         Returns:
 # |             mu_nb: (E,) positive base mean parameter mu_nb_ij > 0.
 # |         """
@@ -13605,18 +13671,18 @@
 # |             log_distance = log_distance.unsqueeze(-1)
 # |         if log_t_grav.dim() == 1:
 # |             log_t_grav = log_t_grav.unsqueeze(-1)
-# | 
+# |
 # |         # Concatenate edge representation e_ij
 # |         e_ij = torch.cat([h_i, h_j, log_distance, log_t_grav], dim=-1)
-# | 
+# |
 # |         residual = self.net(e_ij)  # (E, 1), ~0 at init
 # |         # Residual-gravity: gravity prior serves as log-scale feature, GNN learns the deviation.
 # |         # Yields softplus(log_t_grav) at initialization.
 # |         log_mu_nb = log_t_grav + residual
 # |         mu_nb = F.softplus(log_mu_nb.squeeze(-1)) + 1e-4
 # |         return mu_nb
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     dec = PairwiseODDecoder(node_dim=32, hidden_dim=64)
 # |     h_i = torch.randn(100, 32)
@@ -13625,7 +13691,7 @@
 # |     ltg = torch.randn(100)
 # |     mu_nb = dec(h_i, h_j, ld, ltg)
 # |     print("Decoder mu_nb output shape:", mu_nb.shape, "min:", mu_nb.min().item(), "max:", mu_nb.max().item())
-# | 
+# |
 # |     # At init, residual ~ 0, so mu_nb should track softplus(log_t_grav) closely
 # |     expected = F.softplus(ltg) + 1e-4
 # |     print("Max deviation from pure gravity at init:", (mu_nb - expected).abs().max().item())
@@ -13636,33 +13702,33 @@
 # ===== BEGIN SOURCE FILE: src/models/gravity.py =====
 # | """
 # | Classical 2-parameter Physics Gravity Model Prior.
-# | 
+# |
 # | log T_ij^grav = G + log P_i + log P_j - alpha * log(D_ij)
-# | 
+# |
 # | Parameters:
 # |     G: global scale parameter (learnable scalar)
 # |     alpha: distance decay parameter (learnable scalar, initialized to ~1.0-2.0)
-# | 
+# |
 # | Both G and alpha are global trainable parameters shared across all cities in a fold,
 # | providing the physics prior baseline for cross-city transfer.
 # | """
-# | 
+# |
 # | import math
 # | import torch
 # | import torch.nn as nn
-# | 
-# | 
+# |
+# |
 # | class GravityPrior(nn.Module):
 # |     def __init__(self, init_G: float = 0.0, init_alpha: float = 1.0):
 # |         super().__init__()
 # |         # Trainable physics parameters
 # |         self.G = nn.Parameter(torch.tensor(init_G, dtype=torch.float32))
 # |         self.log_alpha = nn.Parameter(torch.tensor(math.log(init_alpha), dtype=torch.float32))
-# | 
+# |
 # |     @property
 # |     def alpha(self) -> torch.Tensor:
 # |         return torch.exp(self.log_alpha)  # ensure alpha > 0
-# | 
+# |
 # |     def forward(
 # |         self,
 # |         population_i: torch.Tensor,
@@ -13671,12 +13737,12 @@
 # |     ) -> torch.Tensor:
 # |         """
 # |         Computes log T_ij^grav for each pair.
-# | 
+# |
 # |         Args:
 # |             population_i: (E,) population of origin tract.
 # |             population_j: (E,) population of destination tract.
 # |             distance_km:  (E,) distance in km (not log).
-# | 
+# |
 # |         Returns:
 # |             log_T_grav: (E,) log-expected gravity flow.
 # |         """
@@ -13686,11 +13752,11 @@
 # |         # This floor is an explicit design choice: intrazonal log_d = log(0.1) ≈ -2.3.
 # |         # The model is trained on this behaviour; do not change without a full retrain.
 # |         log_d  = torch.log(torch.clamp(distance_km, min=0.1))
-# | 
+# |
 # |         log_t_grav = self.G + log_pi + log_pj - self.alpha * log_d
 # |         return log_t_grav
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     grav = GravityPrior()
 # |     p_i = torch.tensor([1000.0, 5000.0])
@@ -13706,23 +13772,23 @@
 # ===== BEGIN SOURCE FILE: src/models/node_encoder.py =====
 # | """
 # | Urban Graph Neural Network Node Encoder.
-# | 
+# |
 # | Learns tract representation h_i from urban features X and spatial graph G^urban:
 # |     h_i = GNN_theta(X, G^urban)
-# | 
+# |
 # | Graph structure:
 # |     G^urban is built ONLY from observable spatial geography (k-NN / radius graph).
 # |     No OD data is ever used to construct G^urban.
-# | 
+# |
 # | Architecture:
 # |     Multi-layer Graph Convolution / GAT / GraphConv with residual connections and LayerNorm.
 # | """
-# | 
+# |
 # | import torch
 # | import torch.nn as nn
 # | import torch.nn.functional as F
-# | 
-# | 
+# |
+# |
 # | class GraphConvLayer(nn.Module):
 # |     """
 # |     Message passing layer with edge distance modulation.
@@ -13735,7 +13801,7 @@
 # |         self.msg_linear = nn.Linear(in_dim + 1, out_dim)
 # |         self.self_linear = nn.Linear(in_dim, out_dim)
 # |         self.norm = nn.LayerNorm(out_dim)
-# | 
+# |
 # |     def forward(self, x: torch.Tensor, edge_index: torch.Tensor, edge_dist: torch.Tensor) -> torch.Tensor:
 # |         """
 # |         x: (N, in_dim)
@@ -13750,7 +13816,7 @@
 # |         # Message computation: [h_src, log_d]
 # |         msg_input = torch.cat([x[src], log_d], dim=-1)  # (E_graph, in_dim + 1)
 # |         msg = self.msg_linear(msg_input)  # (E_graph, out_dim)
-# | 
+# |
 # |         # Scatter mean aggregation
 # |         out = torch.zeros(x.size(0), msg.size(1), device=x.device, dtype=x.dtype)
 # |         # Degree count for mean aggregation
@@ -13765,8 +13831,8 @@
 # |         h_self = self.self_linear(x)
 # |         out = self.norm(F.relu(out + h_self))
 # |         return out
-# | 
-# | 
+# |
+# |
 # | class UrbanGNN(nn.Module):
 # |     """
 # |     Urban GNN Node Encoder that produces node embeddings h_i in R^d.
@@ -13786,14 +13852,14 @@
 # |             nn.ReLU(),
 # |             nn.Dropout(dropout),
 # |         )
-# | 
+# |
 # |         self.layers = nn.ModuleList([
 # |             GraphConvLayer(hidden_dim, hidden_dim) for _ in range(num_layers)
 # |         ])
-# | 
+# |
 # |         self.output_fc = nn.Linear(hidden_dim, out_dim)
 # |         self.dropout = nn.Dropout(dropout)
-# | 
+# |
 # |     def forward(
 # |         self,
 # |         x: torch.Tensor,
@@ -13805,7 +13871,7 @@
 # |             x:          (N, in_dim) normalized node features.
 # |             edge_index: (2, E_graph) spatial graph edges.
 # |             edge_dist:  (E_graph,) geographic distances.
-# | 
+# |
 # |         Returns:
 # |             h: (N, out_dim) node embeddings.
 # |         """
@@ -13813,10 +13879,10 @@
 # |         for layer in self.layers:
 # |             h_new = layer(h, edge_index, edge_dist)
 # |             h = h + self.dropout(h_new)  # residual connection
-# | 
+# |
 # |         h = self.output_fc(h)
 # |         return h
-# | 
+# |
 # | class MLPLayer(nn.Module):
 # |     """
 # |     A dense layer designed to have the same nominal parameter count as GraphConvLayer.
@@ -13828,7 +13894,7 @@
 # |         self.msg_equivalent = nn.Linear(in_dim + 1, out_dim)
 # |         self.self_linear = nn.Linear(in_dim, out_dim)
 # |         self.norm = nn.LayerNorm(out_dim)
-# | 
+# |
 # |     def forward(self, x: torch.Tensor) -> torch.Tensor:
 # |         # Pad with zeros to match the log(1+d) feature concatenated in GNN message passing
 # |         dummy_dist = torch.zeros(x.size(0), 1, device=x.device, dtype=x.dtype)
@@ -13836,8 +13902,8 @@
 # |         
 # |         out = self.msg_equivalent(msg_input) + self.self_linear(x)
 # |         return self.norm(F.relu(out))
-# | 
-# | 
+# |
+# |
 # | class NodeMLP(nn.Module):
 # |     """
 # |     MLP Node Encoder that produces node embeddings h_i in R^d without message passing.
@@ -13866,7 +13932,7 @@
 # |         
 # |         self.output_fc = nn.Linear(hidden_dim, out_dim)
 # |         self.dropout = nn.Dropout(dropout)
-# | 
+# |
 # |     def forward(self, x: torch.Tensor, edge_index: torch.Tensor, edge_dist: torch.Tensor) -> torch.Tensor:
 # |         """
 # |         Args:
@@ -13884,9 +13950,9 @@
 # |             h = h + self.dropout(h_new)
 # |         h = self.output_fc(h)
 # |         return h
-# | 
-# | 
-# | 
+# |
+# |
+# |
 # | if __name__ == "__main__":
 # |     gnn = UrbanGNN(in_dim=26, hidden_dim=32, out_dim=32, num_layers=2)
 # |     x = torch.randn(10, 26)
@@ -13902,7 +13968,7 @@
 # | r"""
 # | Gravity-Informed Urban-GNN Support-Conditioned Zero-Shot Model (M_0).
 # | (neuroGravity-inspired neural transferable architecture)
-# | 
+# |
 # | Mathematical Formulation:
 # |     1. Classical Gravity Prior:
 # |         T_ij^grav = exp(G_0) * P_i * P_j * D_ij^(-alpha_0)
@@ -13913,7 +13979,7 @@
 # |         where f_theta maps [h_i, h_j, log(1+D_ij), log(T_ij^grav)] to conditional mean E[T_ij | T_ij >= 1].
 # |     4. Learnable global dispersion parameter phi for ZTNB likelihood.
 # | """
-# | 
+# |
 # | import torch
 # | import torch.nn as nn
 # | from src.models.node_encoder import UrbanGNN
@@ -13921,7 +13987,7 @@
 # | from src.models.decoder import PairwiseODDecoder
 # | from src.loss.ztnb import compute_conditional_mean
 # | from src.models.node_encoder import NodeMLP
-# | 
+# |
 # | class ZeroShotMLPModel(nn.Module):
 # |     def __init__(
 # |         self,
@@ -13942,24 +14008,24 @@
 # |             num_layers=num_gnn_layers,
 # |             dropout=dropout,
 # |         )
-# | 
+# |
 # |         # 2. Gravity Prior
 # |         self.gravity_prior = GravityPrior()
-# | 
+# |
 # |         # 3. Pairwise Decoder
 # |         self.decoder = PairwiseODDecoder(
 # |             node_dim=node_out_dim,
 # |             hidden_dim=decoder_hidden_dim,
 # |             dropout=dropout,
 # |         )
-# | 
+# |
 # |         # 4. Global trainable dispersion parameter phi
 # |         self.log_phi = nn.Parameter(torch.tensor(init_log_phi, dtype=torch.float32))
-# | 
+# |
 # |     @property
 # |     def phi(self) -> torch.Tensor:
 # |         return torch.exp(self.log_phi)
-# | 
+# |
 # |     def forward(
 # |         self,
 # |         x: torch.Tensor,
@@ -13974,18 +14040,18 @@
 # |         h = self.node_encoder(x, spatial_edge_index, spatial_edge_dist)
 # |         h_o = h[pair_o_idx]
 # |         h_d = h[pair_d_idx]
-# | 
+# |
 # |         dist_km = torch.expm1(pair_distance_log1p)
 # |         pop_o = population[pair_o_idx]
 # |         pop_d = population[pair_d_idx]
 # |         log_t_grav = self.gravity_prior(pop_o, pop_d, dist_km)
-# | 
+# |
 # |         mu_nb = self.decoder(h_o, h_d, pair_distance_log1p, log_t_grav)
-# | 
+# |
 # |         if return_conditional_mean:
 # |             return compute_conditional_mean(mu_nb, self.log_phi)
 # |         return mu_nb
-# | 
+# |
 # | class ZeroShotODModel(nn.Module):
 # |     def __init__(
 # |         self,
@@ -14006,24 +14072,24 @@
 # |             num_layers=num_gnn_layers,
 # |             dropout=dropout,
 # |         )
-# | 
+# |
 # |         # 2. Gravity Prior
 # |         self.gravity_prior = GravityPrior()
-# | 
+# |
 # |         # 3. Pairwise Decoder (outputs base mean mu_nb > 0)
 # |         self.decoder = PairwiseODDecoder(
 # |             node_dim=node_out_dim,
 # |             hidden_dim=decoder_hidden_dim,
 # |             dropout=dropout,
 # |         )
-# | 
+# |
 # |         # 4. Global trainable dispersion parameter phi (phi = exp(log_phi))
 # |         self.log_phi = nn.Parameter(torch.tensor(init_log_phi, dtype=torch.float32))
-# | 
+# |
 # |     @property
 # |     def phi(self) -> torch.Tensor:
 # |         return torch.exp(self.log_phi)
-# | 
+# |
 # |     def forward(
 # |         self,
 # |         x: torch.Tensor,
@@ -14037,7 +14103,7 @@
 # |     ) -> torch.Tensor:
 # |         """
 # |         Forward pass predicting flows for candidate pairs on Omega_c.
-# | 
+# |
 # |         Args:
 # |             return_conditional_mean:
 # |                 If False (training): returns base parameter mu_nb for ZTNB likelihood.
@@ -14045,33 +14111,33 @@
 # |         """
 # |         # Step 1: Compute node embeddings from observable urban graph G^urban
 # |         h = self.node_encoder(x, spatial_edge_index, spatial_edge_dist)  # (N, d)
-# | 
+# |
 # |         # Gather origin and destination embeddings for candidate pairs
 # |         h_o = h[pair_o_idx]  # (E_pairs, d)
 # |         h_d = h[pair_d_idx]  # (E_pairs, d)
-# | 
+# |
 # |         # Step 2: Compute Physics Gravity prior
 # |         dist_km = torch.expm1(pair_distance_log1p)
 # |         pop_o = population[pair_o_idx]
 # |         pop_d = population[pair_d_idx]
 # |         log_t_grav = self.gravity_prior(pop_o, pop_d, dist_km)  # (E_pairs,)
-# | 
+# |
 # |         # Step 3: Decode pairwise flows (mu_nb > 0)
 # |         mu_nb = self.decoder(h_o, h_d, pair_distance_log1p, log_t_grav)  # (E_pairs,)
-# | 
+# |
 # |         if return_conditional_mean:
 # |             # \hat{T} = E[T | T >= 1]
 # |             return compute_conditional_mean(mu_nb, self.log_phi)
 # |         return mu_nb
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     from src.data.dataset import load_city
 # |     from src.data.urban_graph import build_knn_graph
-# | 
+# |
 # |     cd = load_city("Raleigh", "data")
 # |     ei, ed = build_knn_graph(cd.lon_lat.numpy(), k=10)
-# | 
+# |
 # |     model = ZeroShotODModel()
 # |     mu_nb = model(cd.node_features, ei, ed, cd.pair_o_idx, cd.pair_d_idx, cd.pair_distance, cd.population, return_conditional_mean=False)
 # |     t_hat = model(cd.node_features, ei, ed, cd.pair_o_idx, cd.pair_d_idx, cd.pair_distance, cd.population, return_conditional_mean=True)
@@ -14086,23 +14152,23 @@
 # ===== BEGIN SOURCE FILE: src/training/evaluate.py =====
 # | """
 # | Comprehensive Evaluation Suite on Interzonal Domain Omega_c^+ and Full Support Omega_c.
-# | 
+# |
 # | Primary Metric:
 # |     Interzonal CPC (CPC_inter) on Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}:
 # |         Evaluates the displacement flow distribution of moving commuters.
-# | 
+# |
 # | Secondary Metrics:
 # |     1. Scale-Normalized Interzonal CPC (CPC_inter_norm = 1 - TVD):
 # |         Evaluates pure structural flow geometry independent of total flow scale.
 # |     2. RMSE-log1p on Omega_c^+.
 # |     3. Pearson/Spearman correlation on Omega_c^+.
 # | """
-# | 
+# |
 # | import math
 # | import numpy as np
 # | import torch
-# | 
-# | 
+# |
+# |
 # | def compute_cpc_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes standard CPC between two non-negative 1D arrays."""
 # |     sum_min = np.sum(np.minimum(t_true, t_pred))
@@ -14110,8 +14176,8 @@
 # |     if sum_total <= 0:
 # |         return 0.0
 # |     return float(2.0 * sum_min / sum_total)
-# | 
-# | 
+# |
+# |
 # | def compute_cpc_norm_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes Scale-Normalized CPC (1 - Total Variation Distance)."""
 # |     sum_t = np.sum(t_true)
@@ -14121,15 +14187,15 @@
 # |     p_t = t_true / sum_t
 # |     p_p = t_pred / sum_p
 # |     return float(np.sum(np.minimum(p_t, p_p)))
-# | 
-# | 
+# |
+# |
 # | def compute_rmse_log1p_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes RMSE on log1p scale."""
 # |     log_t = np.log1p(np.clip(t_true, 0.0, None))
 # |     log_p = np.log1p(np.clip(t_pred, 0.0, None))
 # |     return float(np.sqrt(np.mean((log_t - log_p) ** 2)))
-# | 
-# | 
+# |
+# |
 # | def compute_pearson_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes Pearson linear correlation."""
 # |     std_t = np.std(t_true)
@@ -14138,8 +14204,8 @@
 # |         return 0.0
 # |     cov = np.mean((t_true - np.mean(t_true)) * (t_pred - np.mean(t_pred)))
 # |     return float(cov / (std_t * std_p))
-# | 
-# | 
+# |
+# |
 # | def compute_spearman_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes Spearman rank correlation of pairwise flows."""
 # |     if len(t_true) < 2 or np.std(t_true) == 0 or np.std(t_pred) == 0:
@@ -14147,12 +14213,12 @@
 # |     from scipy import stats
 # |     rho, _ = stats.spearmanr(t_true, t_pred)
 # |     return float(rho) if not np.isnan(rho) else 0.0
-# | 
-# | 
+# |
+# |
 # | def compute_rmse_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes standard RMSE."""
 # |     return float(np.sqrt(np.mean((t_true - t_pred) ** 2)))
-# | 
+# |
 # | def compute_nrmse_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes Normalized RMSE (RMSE / mean(true))."""
 # |     mean_t = np.mean(t_true)
@@ -14160,11 +14226,11 @@
 # |         return 0.0
 # |     rmse = compute_rmse_pair(t_true, t_pred)
 # |     return float(rmse / mean_t)
-# | 
+# |
 # | def compute_mae_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
 # |     """Computes Mean Absolute Error."""
 # |     return float(np.mean(np.abs(t_true - t_pred)))
-# | 
+# |
 # | def compute_inflow_outflow_cpc(t_true: np.ndarray, t_pred: np.ndarray, o_idx: np.ndarray, d_idx: np.ndarray, n_nodes: int) -> tuple[float, float]:
 # |     """Computes CPC for tract-level inflows and outflows on observed support."""
 # |     outflow_t = np.zeros(n_nodes, dtype=np.float64)
@@ -14180,7 +14246,7 @@
 # |     cpc_out = compute_cpc_pair(outflow_t, outflow_p)
 # |     cpc_in = compute_cpc_pair(inflow_t, inflow_p)
 # |     return cpc_in, cpc_out
-# | 
+# |
 # | def evaluate_moving_and_full(
 # |     t_true: torch.Tensor,
 # |     t_pred: torch.Tensor,
@@ -14198,7 +14264,7 @@
 # |     o_np = pair_o_idx.detach().cpu().numpy()
 # |     d_np = pair_d_idx.detach().cpu().numpy()
 # |     b_np = bin_labels.detach().cpu().numpy()
-# | 
+# |
 # |     if pair_distance is not None:
 # |         p_dist = pair_distance.detach().cpu().numpy()
 # |         # NOTE: pair_distance is stored as log1p(km) in CityData. The > 0.0 check is equivalent
@@ -14207,12 +14273,12 @@
 # |         inter_mask = (o_np != d_np) & (dist_log1p > 0.0)
 # |     else:
 # |         inter_mask = (o_np != d_np) & (b_np > 0)
-# | 
+# |
 # |     # All evaluations only on observed pairs!
 # |     # Primary: Interzonal Domain Omega_c^+
 # |     t_t_inter = t_t[inter_mask]
 # |     t_p_inter = t_p[inter_mask]
-# | 
+# |
 # |     cpc_inter = compute_cpc_pair(t_t_inter, t_p_inter)
 # |     rmse_log1p_inter = compute_rmse_log1p_pair(t_t_inter, t_p_inter)
 # |     rmse_inter = compute_rmse_pair(t_t_inter, t_p_inter)
@@ -14241,11 +14307,11 @@
 # |         "cpc_outflow": cpc_outflow,
 # |     }
 # |     return result
-# | 
+# |
 # | def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]:
 # |     """
 # |     DEPRECATED — Compatibility helper for raw full-pair evaluation WITHOUT interzonal filtering.
-# | 
+# |
 # |     WARNING: This function computes CPC over ALL pairs including intrazonal.
 # |     For scientific claims, use evaluate_moving_and_full() which correctly filters to Omega_c^+.
 # |     This function must NOT be used to report primary metrics in any experiment.
@@ -14272,38 +14338,45 @@
 # ===== BEGIN SOURCE FILE: src/training/train.py =====
 # | r"""
 # | Cross-City Training and Transfer Pipeline.
-# | 
+# |
 # | Stage A: Cross-city Training
 # |     Trains ZeroShotODModel on a list of source cities using ZTNB likelihood on all positive observed support (including intrazonal):
 # |         L_train = - 1 / |Omega^+_all| * sum_{(i,j) in Omega^+_all} log P_ZTNB(T_ij; mu_nb_ij, phi)
 # |     City-level losses are averaged within city and optimization proceeds city-by-city, preventing large-support cities from dominating solely through pair count.
 # |     After convergence, freezes parameters -> theta*.
-# | 
+# |
 # | Stage B: Zero-Shot Transfer Evaluation
 # |     Evaluates theta* on held-out target city, evaluating the primary reconstruction estimand on positive interzonal support (Omega_c^+):
 # |         (X^{c*}, G^{urban, c*}, D^{c*}) -> \hat{T}^{ZS} = E[T | T >= 1].
 # | """
-# | 
+# |
 # | import copy
 # | import time
 # | import datetime
 # | from pathlib import Path
 # | from typing import List, Dict, Optional, Union
-# | 
+# |
 # | import torch
 # | import torch.optim as optim
-# | 
-# | from src.data.dataset import CityData, load_cities, load_city
+# |
+# | from src.data.dataset import (
+# |     CityData,
+# |     NODE_FEATURE_COLUMNS,
+# |     get_scaler_fingerprint,
+# |     load_cities,
+# |     load_city,
+# |     validate_feature_scaler,
+# | )
 # | from src.data.urban_graph import build_radius_graph, build_knn_graph
 # | from src.models.zero_shot_model import ZeroShotODModel
 # | from src.loss.ztnb import ztnb_nll, nb_nll
 # | from src.training.evaluate import evaluate_all
-# | 
-# | 
+# |
+# |
 # | # ---------------------------------------------------------------------------
 # | # Checkpoint utilities
 # | # ---------------------------------------------------------------------------
-# | 
+# |
 # | def save_checkpoint(
 # |     path: Union[str, Path],
 # |     model: "ZeroShotODModel",
@@ -14315,7 +14388,7 @@
 # | ) -> Path:
 # |     """
 # |     Persists a trained ZeroShotODModel checkpoint to disk.
-# | 
+# |
 # |     Saved bundle contains:
 # |         - model_state_dict   : weights (best validation checkpoint)
 # |         - scaler_*           : StandardScaler statistics for feature normalization
@@ -14324,7 +14397,7 @@
 # |         - seed               : random seed used for this run (None if not set)
 # |         - run_tag            : human-readable label, e.g. "e1_fold1"
 # |         - saved_at           : ISO-8601 UTC timestamp
-# | 
+# |
 # |     Args:
 # |         path:        Full file path to write (created with parents if needed).
 # |         model:       Trained (and eval-mode) ZeroShotODModel instance.
@@ -14333,23 +14406,31 @@
 # |         hyperparams: Dict of architecture / training hyper-parameters.
 # |         seed:        Random seed (optional).
 # |         run_tag:     Short label for this run (optional).
-# | 
+# |
 # |     Returns:
 # |         Resolved Path of the saved file.
 # |     """
 # |     import numpy as _np
-# | 
+# |
 # |     path = Path(path)
 # |     path.parent.mkdir(parents=True, exist_ok=True)
-# | 
+# |
 # |     scaler_data: dict = {}
 # |     if scaler is not None and hasattr(scaler, "mean_") and scaler.mean_ is not None:
+# |         validate_feature_scaler(scaler)
 # |         scaler_data = {
 # |             "scaler_mean_":  _np.asarray(scaler.mean_,  dtype=_np.float64),
 # |             "scaler_scale_": _np.asarray(scaler.scale_, dtype=_np.float64),
 # |             "scaler_var_":   _np.asarray(scaler.var_,   dtype=_np.float64),
+# |             "scaler_n_features_in_": int(getattr(scaler, "n_features_in_", len(scaler.mean_))),
+# |             "scaler_fingerprint": get_scaler_fingerprint(scaler),
+# |             "scaler_feature_columns": list(NODE_FEATURE_COLUMNS),
 # |         }
-# | 
+# |         if hasattr(scaler, "n_samples_seen_"):
+# |             scaler_data["scaler_n_samples_seen_"] = _np.asarray(
+# |                 scaler.n_samples_seen_
+# |             ).copy()
+# |
 # |     bundle = {
 # |         "model_state_dict": model.state_dict(),
 # |         **scaler_data,
@@ -14359,11 +14440,11 @@
 # |         "run_tag":      run_tag,
 # |         "saved_at":     datetime.datetime.utcnow().isoformat() + "Z",
 # |     }
-# | 
+# |
 # |     torch.save(bundle, path)
 # |     return path.resolve()
-# | 
-# | 
+# |
+# |
 # | def load_checkpoint(
 # |     path: Union[str, Path],
 # |     device_str: str = "cpu",
@@ -14371,12 +14452,12 @@
 # | ) -> tuple:
 # |     """
 # |     Loads a checkpoint saved by save_checkpoint() and reconstructs the model and scaler.
-# | 
+# |
 # |     Args:
 # |         path:       Path to the .pt checkpoint file.
 # |         device_str: Device to map model weights onto ("cpu" or "cuda").
 # |         expected_config: Optional dictionary of hyperparams to validate against the checkpoint.
-# | 
+# |
 # |     Returns:
 # |         (model, scaler, metadata) where:
 # |             model    — ZeroShotODModel in eval mode with frozen weights
@@ -14384,13 +14465,13 @@
 # |             metadata — Full checkpoint dict (train_info, hyperparams, seed, run_tag, saved_at)
 # |     """
 # |     import numpy as _np
-# | 
+# |
 # |     path = Path(path)
 # |     if not path.exists():
 # |         raise FileNotFoundError(f"Checkpoint not found: {path}")
-# | 
+# |
 # |     bundle = torch.load(path, map_location=torch.device(device_str), weights_only=False)
-# | 
+# |
 # |     hp = bundle["hyperparams"]
 # |     if expected_config is not None:
 # |         for k, v in expected_config.items():
@@ -14398,7 +14479,7 @@
 # |                 raise ValueError(f"Checkpoint config missing key '{k}' in {path}. Expected {v}. Checkpoint may be incomplete.")
 # |             if hp[k] != v:
 # |                 raise ValueError(f"Checkpoint config mismatch in {path} for key '{k}': expected {v}, got {hp[k]}. Delete the stale checkpoint to retrain.")
-# | 
+# |
 # |     # --- Reconstruct model ---
 # |     hp = bundle["hyperparams"]
 # |     backbone = hp.get("backbone", "gnn")
@@ -14426,7 +14507,7 @@
 # |     model.eval()
 # |     for p in model.parameters():
 # |         p.requires_grad = False
-# | 
+# |
 # |     # --- Reconstruct scaler ---
 # |     scaler = None
 # |     if "scaler_mean_" in bundle:
@@ -14435,19 +14516,37 @@
 # |         scaler.mean_  = bundle["scaler_mean_"]
 # |         scaler.scale_ = bundle["scaler_scale_"]
 # |         scaler.var_   = bundle["scaler_var_"]
-# |         scaler.n_features_in_ = len(scaler.mean_)
-# | 
+# |         scaler.n_features_in_ = bundle.get("scaler_n_features_in_", len(scaler.mean_))
+# |         if "scaler_n_samples_seen_" in bundle:
+# |             scaler.n_samples_seen_ = bundle["scaler_n_samples_seen_"]
+# |         validate_feature_scaler(scaler)
+# |
+# |         expected_columns = bundle.get("scaler_feature_columns")
+# |         if expected_columns is not None and tuple(expected_columns) != NODE_FEATURE_COLUMNS:
+# |             raise ValueError(f"Checkpoint feature schema mismatch in {path}")
+# |
+# |         expected_fingerprint = bundle.get("scaler_fingerprint")
+# |         actual_fingerprint = get_scaler_fingerprint(scaler)
+# |         if expected_fingerprint is not None and actual_fingerprint != expected_fingerprint:
+# |             raise ValueError(f"Checkpoint scaler fingerprint mismatch in {path}")
+# |
 # |     metadata = {
 # |         "train_info":  bundle.get("train_info"),
 # |         "hyperparams": bundle.get("hyperparams"),
 # |         "seed":        bundle.get("seed"),
 # |         "run_tag":     bundle.get("run_tag"),
 # |         "saved_at":    bundle.get("saved_at"),
+# |         "scaler_provenance": {
+# |             "fingerprint": bundle.get("scaler_fingerprint"),
+# |             "n_features_in": bundle.get("scaler_n_features_in_"),
+# |             "n_samples_seen": bundle.get("scaler_n_samples_seen_"),
+# |             "feature_columns": bundle.get("scaler_feature_columns"),
+# |         },
 # |     }
-# | 
+# |
 # |     return model, scaler, metadata
-# | 
-# | 
+# |
+# |
 # | def train_epoch(
 # |     model: torch.nn.Module,
 # |     train_cities: List[CityData],
@@ -14459,10 +14558,10 @@
 # |     model.train()
 # |     total_loss = 0.0
 # |     num_cities = len(train_cities)
-# | 
+# |
 # |     for city_data, (edge_index, edge_dist) in zip(train_cities, city_graphs):
 # |         optimizer.zero_grad()
-# | 
+# |
 # |         x = city_data.node_features.to(device)
 # |         ei = edge_index.to(device)
 # |         ed = edge_dist.to(device)
@@ -14471,29 +14570,29 @@
 # |         p_dist = city_data.pair_distance.to(device)
 # |         pop = city_data.population.to(device)
 # |         t_true = city_data.pair_trips.to(device)
-# | 
+# |
 # |         # Training pass returns base mean mu_nb
 # |         mu_nb = model(x, ei, ed, p_o, p_d, p_dist, pop, return_conditional_mean=False)
-# | 
+# |
 # |         if loss_type == "ztnb":
 # |             loss = ztnb_nll(t_true, mu_nb, model.log_phi)
 # |         elif loss_type == "nb":
 # |             loss = nb_nll(t_true, mu_nb, model.log_phi)
 # |         else:
 # |             raise ValueError(f"Unknown loss type {loss_type}")
-# | 
+# |
 # |         if not torch.isfinite(loss):
 # |             raise FloatingPointError(f"NaN/Inf loss encountered for {city_data.city_name}. Stopping training to avoid invalid checkpoint.")
-# | 
+# |
 # |         loss.backward()
 # |         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
 # |         optimizer.step()
-# | 
+# |
 # |         total_loss += loss.item()
-# | 
+# |
 # |     return total_loss / max(num_cities, 1)
-# | 
-# | 
+# |
+# |
 # | @torch.no_grad()
 # | def infer_zero_shot(
 # |     model: torch.nn.Module,
@@ -14511,12 +14610,12 @@
 # |     p_d = city_data.pair_d_idx.to(device)
 # |     p_dist = city_data.pair_distance.to(device)
 # |     pop = city_data.population.to(device)
-# | 
+# |
 # |     # Returns E[T | T >= 1]
 # |     t_hat = model(x, ei, ed, p_o, p_d, p_dist, pop, return_conditional_mean=True)
 # |     return t_hat.cpu()
-# | 
-# | 
+# |
+# |
 # | def train_zero_shot_model(
 # |     train_city_names: List[str],
 # |     data_root: str = "data",
@@ -14550,10 +14649,10 @@
 # |     checkpoint_path: Optional[Union[str, Path]] = None,
 # |     run_tag: Optional[str] = None,
 # | ) -> tuple:
-# | 
+# |
 # |     """
 # |     Train ZeroShotODModel with AdamW, ReduceLROnPlateau, and validation-based early stopping.
-# | 
+# |
 # |     Args:
 # |         train_city_names: Cities to train on.
 # |         val_city_names:   Validation cities for early stopping. If None,
@@ -14565,25 +14664,25 @@
 # |         checkpoint_path:  If provided, saves the trained model to this path as a .pt file.
 # |                           Parent directories are created automatically.
 # |         run_tag:          Short label embedded in the checkpoint (e.g. "e1_fold1_seed2025").
-# | 
+# |
 # |     Returns:
 # |         (best_model, scaler) or (best_model, scaler, info)
 # |     """
 # |     import copy
 # |     import numpy as _np
-# | 
+# |
 # |     if seed is not None:
 # |         torch.manual_seed(seed)
 # |         torch.cuda.manual_seed_all(seed)
 # |         _np.random.seed(seed)
-# | 
+# |
 # |     device = torch.device(device_str)
-# | 
+# |
 # |     if verbose:
 # |         print(f"    [Setup] Precomputing graph structures for {len(train_city_names)} source cities onto {device}...", flush=True)
-# | 
+# |
 # |     train_cities, scaler = load_cities(train_city_names, data_root=data_root)
-# | 
+# |
 # |     # Precompute spatial graphs G^urban for training cities
 # |     city_graphs = []
 # |     for c in train_cities:
@@ -14593,7 +14692,7 @@
 # |         else:
 # |             ei, ed = build_knn_graph(coords, k=knn_k)
 # |         city_graphs.append((ei, ed))
-# | 
+# |
 # |     # Pre-move training tensors onto device to avoid repeated host-to-device transfers per epoch
 # |     train_cities_dev = [
 # |         CityData(
@@ -14612,7 +14711,7 @@
 # |         for c in train_cities
 # |     ]
 # |     city_graphs_dev = [(ei.to(device), ed.to(device)) for (ei, ed) in city_graphs]
-# | 
+# |
 # |     # Precompute device-resident structures & masks for validation cities (if provided)
 # |     val_data_on_device = []
 # |     if val_city_names:
@@ -14623,13 +14722,13 @@
 # |                 ei, ed = build_radius_graph(coords, radius_km=radius_km)
 # |             else:
 # |                 ei, ed = build_knn_graph(coords, k=knn_k)
-# | 
+# |
 # |             # Precompute interzonal mask and ground truth on device once
 # |             dist_km = _np.expm1(vc.pair_distance.numpy())
 # |             inter_cpu = (vc.pair_o_idx.numpy() != vc.pair_d_idx.numpy()) & (dist_km > 0.0)
 # |             inter_mask = torch.tensor(inter_cpu, dtype=torch.bool, device=device)
 # |             t_gt_inter = vc.pair_trips.to(device)[inter_mask]
-# | 
+# |
 # |             val_data_on_device.append({
 # |                 "x": vc.node_features.to(device),
 # |                 "ei": ei.to(device),
@@ -14643,9 +14742,9 @@
 # |                 "t_gt_sum": torch.sum(t_gt_inter),
 # |                 "has_inter": bool(inter_cpu.sum() > 0),
 # |             })
-# | 
+# |
 # |     from src.models.zero_shot_model import ZeroShotODModel, ZeroShotMLPModel
-# | 
+# |
 # |     if backbone == "mlp":
 # |         model = ZeroShotMLPModel(
 # |             node_in_dim=train_cities[0].node_features.shape[1],
@@ -14664,7 +14763,7 @@
 # |             decoder_hidden_dim=hidden_dim,
 # |             dropout=dropout,
 # |         ).to(device)
-# | 
+# |
 # |     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 # |     if val_city_names:
 # |         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -14678,16 +14777,16 @@
 # |         )
 # |     else:
 # |         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
-# | 
+# |
 # |     best_val_cpc = -float("inf")
 # |     best_epoch = epochs
 # |     best_state = None
 # |     patience_counter = 0
 # |     use_early_stopping = bool(val_city_names)
-# | 
+# |
 # |     val_history = []
 # |     loss_history = []
-# | 
+# |
 # |     start_time = time.time()
 # |     for epoch in range(1, epochs + 1):
 # |         loss_val = train_epoch(
@@ -14699,7 +14798,7 @@
 # |             device=device,
 # |         )
 # |         loss_history.append(loss_val)
-# | 
+# |
 # |         # --- Fast GPU-Vectorized Validation CPC (interzonal) ---
 # |         val_cpc_str = ""
 # |         if use_early_stopping and val_data_on_device:
@@ -14720,7 +14819,7 @@
 # |                     sum_total = item["t_gt_sum"] + torch.sum(t_hat_inter)
 # |                     cpc_val = (2.0 * sum_min / sum_total).item() if sum_total > 0 else 0.0
 # |                     val_cpcs.append(cpc_val)
-# | 
+# |
 # |             if not val_cpcs:
 # |                 raise RuntimeError(
 # |                     "All validation cities were skipped (no interzonal pairs). "
@@ -14729,10 +14828,10 @@
 # |             mean_val_cpc = float(_np.mean(val_cpcs))
 # |             val_history.append(mean_val_cpc)
 # |             val_cpc_str = f" | ValCPC: {mean_val_cpc:.4f}"
-# | 
+# |
 # |             # Step plateau scheduler on validation metric
 # |             scheduler.step(mean_val_cpc)
-# | 
+# |
 # |             # Best-model tracking
 # |             if mean_val_cpc > best_val_cpc + min_delta:
 # |                 best_val_cpc = mean_val_cpc
@@ -14743,7 +14842,7 @@
 # |                 patience_counter += 1
 # |         else:
 # |             scheduler.step()
-# | 
+# |
 # |         if verbose:
 # |             elapsed = time.time() - start_time
 # |             pat_str = f" | Patience: {patience_counter}/{patience}" if use_early_stopping else ""
@@ -14753,23 +14852,23 @@
 # |                 f"lr: {curr_lr:.1e} | phi: {model.phi.item():.3f} | {elapsed:.1f}s",
 # |                 flush=True,
 # |             )
-# | 
+# |
 # |         # --- Early stopping ---
 # |         if use_early_stopping and patience_counter >= patience:
 # |             if verbose:
 # |                 print(f"    -> Early stopping triggered at epoch {epoch} (best epoch {best_epoch}, best val CPC {best_val_cpc:.4f}).", flush=True)
 # |             break
-# | 
+# |
 # |     # Restore best checkpoint (if early stopping was used and improved)
 # |     if use_early_stopping and best_state is not None:
 # |         model.load_state_dict(best_state)
 # |         if verbose:
 # |             print(f"    -> Restored best model checkpoint (epoch={best_epoch}, val CPC={best_val_cpc:.4f}).", flush=True)
-# | 
+# |
 # |     model.eval()
 # |     for p in model.parameters():
 # |         p.requires_grad = False
-# | 
+# |
 # |     info = {
 # |         "best_epoch": best_epoch,
 # |         "best_val_cpc": best_val_cpc if use_early_stopping else None,
@@ -14778,7 +14877,7 @@
 # |         "val_cpc_history": val_history,
 # |         "train_loss_history": loss_history,
 # |     }
-# | 
+# |
 # |     # --- Persist checkpoint to disk if requested ---
 # |     if checkpoint_path is not None:
 # |         # C1: split_manifest_sha256 must be passed explicitly; raise if caller forgot.
@@ -14810,6 +14909,11 @@
 # |             # Provenance fields (C2, C1)
 # |             "fold":                  fold,
 # |             "split_manifest_sha256": split_manifest_sha256,
+# |             "scaler_fit_scope":      "training_split_only",
+# |             "scaler_weighting":      "per_tract",
+# |             "scaler_fit_cities":     sorted(train_city_names),
+# |             "scaler_fit_n_cities":   len(train_city_names),
+# |             "scaler_fit_n_rows":     int(scaler.n_samples_seen_),
 # |         }
 # |         saved_path = save_checkpoint(
 # |             path=checkpoint_path,
@@ -14822,7 +14926,7 @@
 # |         )
 # |         if verbose:
 # |             print(f"    -> Checkpoint saved: {saved_path}", flush=True)
-# | 
+# |
 # |     if return_info:
 # |         return model, scaler, info
 # |     return model, scaler
@@ -14840,32 +14944,32 @@
 # |     4. Model checkpoint save and reload consistency for backbone='mlp'.
 # |     5. Table 7 Backbone Robustness summary output validity.
 # | """
-# | 
+# |
 # | import os
 # | import tempfile
 # | import torch
 # | import numpy as np
 # | from pathlib import Path
-# | 
+# |
 # | from src.models.node_encoder import UrbanGNN, NodeMLP, MLPLayer, GraphConvLayer
 # | from src.models.zero_shot_model import ZeroShotODModel, ZeroShotMLPModel
 # | from src.training.train import save_checkpoint, load_checkpoint
 # | from src.loss.ztnb import ztnb_nll
-# | 
-# | 
+# |
+# |
 # | def test_parameter_count_parity():
 # |     """T1: MLPLayer and GraphConvLayer have identical learnable parameter counts."""
 # |     hidden_dim = 64
 # |     gnn_layer = GraphConvLayer(in_dim=hidden_dim, out_dim=hidden_dim)
 # |     mlp_layer = MLPLayer(in_dim=hidden_dim, out_dim=hidden_dim)
-# | 
+# |
 # |     gnn_params = sum(p.numel() for p in gnn_layer.parameters() if p.requires_grad)
 # |     mlp_params = sum(p.numel() for p in mlp_layer.parameters() if p.requires_grad)
-# | 
+# |
 # |     assert gnn_params == mlp_params, f"Parameter mismatch: GNN={gnn_params} vs MLP={mlp_params}"
 # |     print("✓ Test 1 Passed: Exact parameter parity between MLPLayer and GraphConvLayer.")
-# | 
-# | 
+# |
+# |
 # | def test_node_mlp_forward_and_backward():
 # |     """T2: NodeMLP produces correct embedding shapes and supports backprop."""
 # |     N = 25
@@ -14874,18 +14978,18 @@
 # |     x = torch.randn(N, in_dim, requires_grad=True)
 # |     dummy_edge_index = torch.zeros((2, 10), dtype=torch.long)
 # |     dummy_edge_dist = torch.zeros(10, dtype=torch.float32)
-# | 
+# |
 # |     mlp_encoder = NodeMLP(in_dim=in_dim, hidden_dim=hidden_dim, out_dim=hidden_dim, num_layers=2)
 # |     h = mlp_encoder(x, dummy_edge_index, dummy_edge_dist)
-# | 
+# |
 # |     assert h.shape == (N, hidden_dim)
 # |     loss = h.sum()
 # |     loss.backward()
 # |     assert x.grad is not None
 # |     assert torch.isfinite(x.grad).all()
 # |     print("✓ Test 2 Passed: NodeMLP forward shape and gradients are valid.")
-# | 
-# | 
+# |
+# |
 # | def test_zero_shot_mlp_model():
 # |     """T3: ZeroShotMLPModel forward pass, conditional mean, and loss computation."""
 # |     N = 20
@@ -14898,29 +15002,29 @@
 # |     pair_dist = torch.rand(E) * 2.0
 # |     pop = torch.rand(N) * 5000.0 + 100.0
 # |     t_true = torch.randint(1, 100, (E,)).float()
-# | 
+# |
 # |     model = ZeroShotMLPModel(node_in_dim=26, node_hidden_dim=64, node_out_dim=64, num_gnn_layers=2)
 # |     
 # |     mu_nb = model(x, edge_index, edge_dist, pair_o, pair_d, pair_dist, pop, return_conditional_mean=False)
 # |     assert mu_nb.shape == (E,)
 # |     assert (mu_nb > 0).all()
-# | 
+# |
 # |     cond_mean = model(x, edge_index, edge_dist, pair_o, pair_d, pair_dist, pop, return_conditional_mean=True)
 # |     assert cond_mean.shape == (E,)
 # |     assert (cond_mean > 0).all()
-# | 
+# |
 # |     loss = ztnb_nll(t_true, mu_nb, model.log_phi)
 # |     assert torch.isfinite(loss)
 # |     print("✓ Test 3 Passed: ZeroShotMLPModel forward pass and ZTNB loss computation are valid.")
-# | 
-# | 
+# |
+# |
 # | def test_mlp_checkpoint_save_and_load():
 # |     """T4: Checkpoint save and load correctly identifies and restores ZeroShotMLPModel."""
 # |     with tempfile.TemporaryDirectory() as tmpdir:
 # |         ckpt_path = Path(tmpdir) / "test_mlp.pt"
 # |         model = ZeroShotMLPModel(node_in_dim=26, node_hidden_dim=32, node_out_dim=32, decoder_hidden_dim=32, num_gnn_layers=2)
 # |         scaler = None
-# | 
+# |
 # |         save_checkpoint(
 # |             path=ckpt_path,
 # |             model=model,
@@ -14933,14 +15037,14 @@
 # |                 "backbone": "mlp",
 # |             }
 # |         )
-# | 
+# |
 # |         loaded_model, _, info = load_checkpoint(ckpt_path, device_str="cpu")
 # |         assert isinstance(loaded_model, ZeroShotMLPModel)
 # |         assert info["train_info"]["epoch"] == 10
 # |         assert info["train_info"]["val_cpc"] == 0.725
 # |         print("✓ Test 4 Passed: Checkpoint save/load for backbone='mlp' functions correctly.")
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     print("Running Backbone Test Suite...")
 # |     test_parameter_count_parity()
@@ -14956,7 +15060,7 @@
 # | """
 # | 20 Mandatory Scientific Contract Gates for Direct Partial-OD Information Equivalence v1.
 # | """
-# | 
+# |
 # | import sys
 # | import os
 # | import json
@@ -14965,10 +15069,10 @@
 # | import pandas as pd
 # | from pathlib import Path
 # | from typing import Dict, List, Any
-# | 
+# |
 # | REPO_ROOT = Path(__file__).resolve().parent.parent
 # | sys.path.insert(0, str(REPO_ROOT))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_raw_city, load_city
 # | from src.training.evaluate import compute_cpc_pair
@@ -14979,8 +15083,8 @@
 # |     apply_od_fe_prediction, select_fold_lambda, holm_correction,
 # |     fold_stratified_bootstrap
 # | )
-# | 
-# | 
+# |
+# |
 # | def test_contract_1_split_integrity():
 # |     """CONTRACT 1: 5 folds, 35 train, 5 val, 10 test, 50 unique test cities."""
 # |     splits = generate_35_5_10_splits(data_root="data")
@@ -14992,8 +15096,8 @@
 # |         assert len(split["test"]) == 10
 # |         all_test.extend(split["test"])
 # |     assert len(all_test) == 50 and len(set(all_test)) == 50
-# | 
-# | 
+# |
+# |
 # | def test_contract_2_checkpoint_integrity():
 # |     """CONTRACT 2: 15 GNN checkpoints exist, loadable, scaler feature dim=26."""
 # |     for f in range(1, 6):
@@ -15002,8 +15106,8 @@
 # |             assert p.exists(), f"Missing checkpoint {p}"
 # |             model, scaler, meta = load_checkpoint(p, device_str="cpu")
 # |             assert scaler.mean_.shape[0] == 26
-# | 
-# | 
+# |
+# |
 # | def test_contract_3_lambda_selection_leakage():
 # |     """CONTRACT 3: Lambda selection strictly uses validation cities; zero test cities present."""
 # |     splits = generate_35_5_10_splits(data_root="data")
@@ -15013,8 +15117,8 @@
 # |         assert val_set.isdisjoint(test_set)
 # |         # Check that select_fold_lambda receives val_cities only
 # |         assert len(val_set) == 5
-# | 
-# | 
+# |
+# |
 # | def test_contract_4_lambda_determinism():
 # |     """CONTRACT 4: Lambda selection is deterministic for given fold and validation set."""
 # |     candidates = LAMBDA_CANDIDATES
@@ -15027,8 +15131,8 @@
 # |     # Tie-breaker should pick larger lambda (10.0 over 1.0)
 # |     best_row = scores.sort_values(by=["validation_mean_cpc", "lambda"], ascending=[False, False]).iloc[0]
 # |     assert best_row["lambda"] == 10.0
-# | 
-# | 
+# |
+# |
 # | def test_contract_5_mask_partition():
 # |     """CONTRACT 5: S_p and U_p are strictly disjoint and partition Omega_c^+."""
 # |     raw = load_raw_city("Austin", data_root="data")
@@ -15041,8 +15145,8 @@
 # |         U_p = set(perm[n_rev:])
 # |         assert S_p.isdisjoint(U_p)
 # |         assert len(S_p | U_p) == n_pairs
-# | 
-# | 
+# |
+# |
 # | def test_contract_6_nested_masks():
 # |     """CONTRACT 6: S_p1 is a subset of S_p2 for p1 < p2."""
 # |     n_pairs = 1000
@@ -15050,8 +15154,8 @@
 # |     masks = [set(perm[:int(np.round(p * n_pairs))]) for p in PRIMARY_GRID_DIRECT]
 # |     for i in range(len(masks) - 1):
 # |         assert masks[i].issubset(masks[i+1])
-# | 
-# | 
+# |
+# |
 # | def test_contract_7_same_masks_across_seeds():
 # |     """CONTRACT 7: Seeds 1, 10, 100 receive identical mask permutation."""
 # |     for f in range(1, 6):
@@ -15059,8 +15163,8 @@
 # |         perm1 = np.random.RandomState(seed_val).permutation(2000)
 # |         perm2 = np.random.RandomState(seed_val).permutation(2000)
 # |         assert np.array_equal(perm1, perm2)
-# | 
-# | 
+# |
+# |
 # | def test_contract_8_no_unseen_truth_in_fitting_mutation():
 # |     """CONTRACT 8: Mutating true flows on unseen set U_p does NOT affect adapter predictions."""
 # |     o_idx = np.array([0, 1, 2, 0, 1, 2])
@@ -15082,8 +15186,8 @@
 # |     pred2 = apply_od_fe_prediction(o_idx, d_idx, t0, a2, b2)
 # |     
 # |     assert np.allclose(pred1, pred2, atol=1e-12)
-# | 
-# | 
+# |
+# |
 # | def test_contract_9_revealed_truth_positive_control():
 # |     """CONTRACT 9: Mutating revealed truth on S_p DOES change adapter predictions (positive control)."""
 # |     o_idx = np.array([0, 1, 2, 0, 1, 2])
@@ -15102,8 +15206,8 @@
 # |     pred2 = apply_od_fe_prediction(o_idx, d_idx, t0, a2, b2)
 # |     
 # |     assert not np.allclose(pred1, pred2, atol=1e-4)
-# | 
-# | 
+# |
+# |
 # | def test_contract_10_no_yd_in_direct_arm():
 # |     """CONTRACT 10: fit_od_fe_adapter and apply_od_fe_prediction do not take Y_D or bin_edges."""
 # |     import inspect
@@ -15113,8 +15217,8 @@
 # |     for p in ["yd", "yd_target", "bin_edges", "K", "q"]:
 # |         assert p not in fit_params
 # |         assert p not in apply_params
-# | 
-# | 
+# |
+# |
 # | def test_contract_11_p0_anchor():
 # |     """CONTRACT 11: p=0% anchor produces zero gain (M1_direct == M0)."""
 # |     t0 = np.array([10.0, 20.0, 30.0])
@@ -15128,8 +15232,8 @@
 # |     assert np.allclose(pred, t0, atol=1e-12)
 # |     gain = compute_cpc_pair(t_true, pred) - compute_cpc_pair(t_true, t0)
 # |     assert abs(gain) < 1e-12
-# | 
-# | 
+# |
+# |
 # | def test_contract_12_adapter_convergence():
 # |     """CONTRACT 12: OD-FE adapter converges within 100 iterations on complex synthetic topology."""
 # |     np.random.seed(42)
@@ -15145,8 +15249,8 @@
 # |     assert conv is True
 # |     assert iters < 100
 # |     assert np.isfinite(a).all() and np.isfinite(b).all()
-# | 
-# | 
+# |
+# |
 # | def test_contract_13_sparse_endpoint_handling():
 # |     """CONTRACT 13: Unobserved origins and destinations receive exactly zero residual effect."""
 # |     num_nodes = 5
@@ -15160,8 +15264,8 @@
 # |     # Nodes 3 and 4 never appeared in S_p
 # |     assert a[3] == 0.0 and a[4] == 0.0
 # |     assert b[0] == 0.0 and b[3] == 0.0 and b[4] == 0.0
-# | 
-# | 
+# |
+# |
 # | def test_contract_14_finite_and_non_negative_prediction():
 # |     """CONTRACT 14: Predictions are finite, non-negative, and well-behaved."""
 # |     o_idx = np.array([0, 1, 2])
@@ -15173,8 +15277,8 @@
 # |     pred = apply_od_fe_prediction(o_idx, d_idx, t0, a, b)
 # |     assert np.isfinite(pred).all()
 # |     assert (pred >= 0.0).all()
-# | 
-# | 
+# |
+# |
 # | def test_contract_15_mass_conservation():
 # |     """CONTRACT 15: Total predicted mass is strictly preserved: sum(T_direct) == sum(T0)."""
 # |     o_idx = np.array([0, 1, 2, 0, 1])
@@ -15185,8 +15289,8 @@
 # |     
 # |     pred = apply_od_fe_prediction(o_idx, d_idx, t0, a, b)
 # |     assert abs(pred.sum() - t0.sum()) / t0.sum() < 1e-8
-# | 
-# | 
+# |
+# |
 # | def test_contract_16_no_revealed_scoring():
 # |     """CONTRACT 16: Scoring is executed strictly on unseen pairs U_p."""
 # |     n_pairs = 100
@@ -15196,8 +15300,8 @@
 # |     U_p = perm[n_rev:]
 # |     for idx in U_p:
 # |         assert idx not in S_p
-# | 
-# | 
+# |
+# |
 # | def test_contract_17_row_schema_and_columns():
 # |     """CONTRACT 17: RAW_COLUMNS_DIRECT contains all required fields."""
 # |     required = [
@@ -15209,8 +15313,8 @@
 # |     ]
 # |     for col in required:
 # |         assert col in RAW_COLUMNS_DIRECT
-# | 
-# | 
+# |
+# |
 # | def test_contract_18_hierarchical_aggregation():
 # |     """CONTRACT 18: Replicate mean -> Seed mean -> City level calculation matches mathematical definition."""
 # |     df = pd.DataFrame([
@@ -15222,8 +15326,8 @@
 # |     per_seed = df.groupby(["fold", "city", "model_seed", "p"])["gain_direct_od"].mean().reset_index()
 # |     per_city = per_seed.groupby(["fold", "city", "p"])["gain_direct_od"].mean().reset_index()
 # |     assert per_city["gain_direct_od"].values[0] == 0.025
-# | 
-# | 
+# |
+# |
 # | def test_contract_19_raw_to_summary_reproduction():
 # |     """CONTRACT 19: Tests Holm correction and bootstrap on city level data."""
 # |     city_df = pd.DataFrame({
@@ -15233,8 +15337,8 @@
 # |     })
 # |     low, high = fold_stratified_bootstrap(city_df, "gain_direct_od", 0.1, n_boot=100)
 # |     assert 0.001 <= low <= high <= 0.005
-# | 
-# | 
+# |
+# |
 # | def test_contract_20_stale_claim_scan():
 # |     """CONTRACT 20: Script has zero stale or prohibited phrasing."""
 # |     script_path = Path("src/experiment/run_direct_od_equivalence_v1.py")
@@ -15248,8 +15352,8 @@
 # |     ]
 # |     for p in prohibited:
 # |         assert p not in text, f"Prohibited phrase '{p}' found in script!"
-# | 
-# | 
+# |
+# |
 # | def run_all_direct_od_contracts():
 # |     print("=" * 85)
 # |     print("DIRECT PARTIAL-OD EQUIVALENCE v1 — 20 SCIENTIFIC CONTRACT GATES")
@@ -15291,8 +15395,8 @@
 # |     print(f"DIRECT-OD CONTRACT: {passed}/20 PASS")
 # |     print("=" * 85)
 # |     return passed == 20
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     success = run_all_direct_od_contracts()
 # |     sys.exit(0 if success else 1)
@@ -15305,17 +15409,17 @@
 # | Unit and Contract Tests for Noise Robustness Module (run_noise_robustness.py).
 # | Executable directly with standard python (no pytest dependency required).
 # | """
-# | 
+# |
 # | import os
 # | import sys
 # | import unittest
 # | import numpy as np
 # | import pandas as pd
 # | from pathlib import Path
-# | 
+# |
 # | # Ensure root directory is in sys.path
 # | sys.path.insert(0, str(Path(__file__).resolve().parent))
-# | 
+# |
 # | from src.experiment.run_noise_robustness import (
 # |     holm_correction,
 # |     get_stable_seed,
@@ -15324,10 +15428,10 @@
 # |     fast_cal_metrics,
 # |     generate_summary,
 # | )
-# | 
-# | 
+# |
+# |
 # | class TestNoiseRobustness(unittest.TestCase):
-# | 
+# |
 # |     def test_get_stable_seed_determinism(self):
 # |         """Verify sha256 stable seed is strictly deterministic."""
 # |         s1 = get_stable_seed(20260822, 1, "Atlanta", 42)
@@ -15336,14 +15440,14 @@
 # |         self.assertEqual(s1, s2)
 # |         self.assertNotEqual(s1, s3)
 # |         self.assertTrue(0 <= s1 < 2**32)
-# | 
+# |
 # |     def test_generate_nested_noisy_yd(self):
 # |         """Verify nested noisy Y_D preserves active simplex and exact TV distances."""
 # |         p_active = np.array([0.30, 0.25, 0.20, 0.15, 0.07, 0.03])
 # |         p_active = p_active / p_active.sum()
 # |         epsilons = [0.0, 0.05, 0.10, 0.20]
 # |         seed = 42
-# | 
+# |
 # |         noisy_dict = generate_nested_noisy_yd(p_active, epsilons, seed)
 # |         
 # |         self.assertEqual(set(noisy_dict.keys()), set(epsilons))
@@ -15359,7 +15463,7 @@
 # |             
 # |             achieved_tv = 0.5 * float(np.sum(np.abs(p_eps - p_active)))
 # |             self.assertAlmostEqual(achieved_tv, eps, places=6, msg=f"TV distance mismatch for eps={eps}")
-# | 
+# |
 # |     def test_holm_correction(self):
 # |         """Verify Holm-Bonferroni step-down multiple testing correction."""
 # |         raw_p = [0.01, 0.04, 0.03]
@@ -15369,7 +15473,7 @@
 # |         expected = np.array([0.03, 0.06, 0.06])
 # |         np.testing.assert_allclose(adj_p, expected, atol=1e-6)
 # |         self.assertTrue(np.all(adj_p <= 1.0))
-# | 
+# |
 # |     def test_fast_cal_metrics(self):
 # |         """Verify fast vectorized M1 calibration mathematics and mass preservation."""
 # |         N = 10000
@@ -15408,7 +15512,7 @@
 # |         self.assertTrue(mae >= 0.0)
 # |         self.assertTrue(rmse >= 0.0)
 # |         self.assertAlmostEqual(tv_ach, 0.0, places=8)
-# | 
+# |
 # |     def test_fold_stratified_bootstrap(self):
 # |         """Verify 2D vectorized fold-stratified bootstrap confidence intervals."""
 # |         rows = []
@@ -15423,7 +15527,7 @@
 # |         df = pd.DataFrame(rows)
 # |         ci_lo, ci_hi = fold_stratified_bootstrap(df, "delta_cpc_mean", 0.05, [2, 3, 4, 5], n_boot=1000)
 # |         self.assertTrue(0.035 <= ci_lo <= ci_hi <= 0.065)
-# | 
+# |
 # |     def test_generate_summary_artifacts(self):
 # |         """Verify summary reports and visual figures export cleanly."""
 # |         output_dir = "results/test_noise_summary"
@@ -15455,8 +15559,8 @@
 # |         self.assertTrue((Path(output_dir) / "fig_noise_dose_response.png").exists())
 # |         self.assertTrue((Path(output_dir) / "fig_noise_harm_rate.png").exists())
 # |         self.assertTrue((Path(output_dir) / "fig_noise_by_city.png").exists())
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     unittest.main()
 
@@ -15467,7 +15571,7 @@
 # | """
 # | 20 Mandatory Scientific Contract & Code Quality Gates for Partial-OD Information Equivalence v2.
 # | """
-# | 
+# |
 # | import sys
 # | import os
 # | import json
@@ -15476,10 +15580,10 @@
 # | import pandas as pd
 # | from pathlib import Path
 # | from typing import Dict, List, Any
-# | 
+# |
 # | REPO_ROOT = Path(__file__).resolve().parent.parent
 # | sys.path.insert(0, str(REPO_ROOT))
-# | 
+# |
 # | from src.data.city_splits import generate_35_5_10_splits
 # | from src.data.dataset import load_raw_city, load_city
 # | from src.calibration.bin_calibration import calibrate_kbins
@@ -15489,8 +15593,8 @@
 # |     PARTIAL_OD_BASE_SEED, PRIMARY_GRID_V2, RAW_COLUMNS,
 # |     get_stable_mask_seed, holm_correction, fold_stratified_bootstrap
 # | )
-# | 
-# | 
+# |
+# |
 # | def test_contract_1_split_integrity():
 # |     """CONTRACT 1: 5 folds, 35 train, 5 val, 10 test, 50 unique test cities."""
 # |     splits = generate_35_5_10_splits(data_root="data")
@@ -15503,8 +15607,8 @@
 # |         all_test.extend(split["test"])
 # |     assert len(all_test) == 50
 # |     assert len(set(all_test)) == 50
-# | 
-# | 
+# |
+# |
 # | def test_contract_2_checkpoint_integrity():
 # |     """CONTRACT 2: All 15 GNN checkpoints exist, loadable, scaler feature dim=26."""
 # |     for f in range(1, 6):
@@ -15513,8 +15617,8 @@
 # |             assert p.exists(), f"Missing checkpoint {p}"
 # |             model, scaler, meta = load_checkpoint(p, device_str="cpu")
 # |             assert scaler.mean_.shape[0] == 26, f"Scaler dim {scaler.mean_.shape[0]} != 26"
-# | 
-# | 
+# |
+# |
 # | def test_contract_3_mask_partition():
 # |     """CONTRACT 3: S_p and U_p are strictly disjoint and partition Omega_c^+."""
 # |     raw = load_raw_city("Austin", data_root="data")
@@ -15529,8 +15633,8 @@
 # |         U_p = set(perm[n_rev:])
 # |         assert S_p.isdisjoint(U_p)
 # |         assert len(S_p | U_p) == n_pairs
-# | 
-# | 
+# |
+# |
 # | def test_contract_4_nested_masks():
 # |     """CONTRACT 4: S_p1 is a subset of S_p2 for p1 < p2 across all 15 grid levels."""
 # |     n_pairs = 1000
@@ -15539,8 +15643,8 @@
 # |     masks = [set(perm[:int(np.round(p * n_pairs))]) for p in PRIMARY_GRID_V2]
 # |     for i in range(len(masks) - 1):
 # |         assert masks[i].issubset(masks[i+1])
-# | 
-# | 
+# |
+# |
 # | def test_contract_5_same_masks_across_model_seeds():
 # |     """CONTRACT 5: Bitwise identical permutations for seeds 1, 10, 100."""
 # |     for f in range(1, 6):
@@ -15549,8 +15653,8 @@
 # |         perm2 = np.random.RandomState(seed_val).permutation(5000)
 # |         perm3 = np.random.RandomState(seed_val).permutation(5000)
 # |         assert np.array_equal(perm1, perm2) and np.array_equal(perm2, perm3)
-# | 
-# | 
+# |
+# |
 # | def test_contract_6_no_revealed_pair_scoring():
 # |     """CONTRACT 6: Evaluation indices on unseen set contain zero overlap with S_p."""
 # |     n_pairs = 10000
@@ -15561,8 +15665,8 @@
 # |         U_p = perm[n_rev:]
 # |         for idx in U_p:
 # |             assert idx not in S_p
-# | 
-# | 
+# |
+# |
 # | def test_contract_7_p0_anchor():
 # |     """CONTRACT 7: p=0% anchor produces zero gain (M1_partial == M0)."""
 # |     t_true = np.array([10.0, 20.0, 30.0, 40.0])
@@ -15570,8 +15674,8 @@
 # |     cpc_m0 = compute_cpc_pair(t_true, t0)
 # |     cpc_part = cpc_m0 # By contract definition at p=0
 # |     assert cpc_part - cpc_m0 == 0.0
-# | 
-# | 
+# |
+# |
 # | def test_contract_8_p100_estimator_identity():
 # |     """CONTRACT 8: p=100% reveal produces partial Y_D equal to full Y_D within 1e-12."""
 # |     raw = load_raw_city("Atlanta", data_root="data")
@@ -15588,8 +15692,8 @@
 # |     yd_p100 = np.bincount(bin_idx[all_idx], weights=t_true[all_idx], minlength=8).astype(np.float64)
 # |     yd_p100 /= yd_p100.sum()
 # |     assert np.allclose(yd_full, yd_p100, atol=1e-12)
-# | 
-# | 
+# |
+# |
 # | def test_contract_9_real_production_calibration_equivalence():
 # |     """CONTRACT 9: Fast calibration matches production calibrate_kbins across multiple Y_D scenarios."""
 # |     dist_km = np.array([1.5, 4.0, 8.5, 13.0, 18.0, 25.0, 32.0, 45.0, 60.0])
@@ -15621,7 +15725,7 @@
 # |         yd_act = yd * active.astype(np.float64)
 # |         act_sum = yd_act.sum()
 # |         Y_D_cond = yd_act / act_sum if act_sum > 0 else Y_hat.copy()
-# | 
+# |
 # |         w = np.ones(8, dtype=np.float64)
 # |         for k in range(8):
 # |             if active[k] and Y_hat[k] > 0:
@@ -15633,8 +15737,8 @@
 # |         
 # |         assert np.allclose(t_ref, t_fast, atol=1e-10, rtol=1e-10)
 # |         assert abs(cpc_ref - cpc_fast) < 1e-10
-# | 
-# | 
+# |
+# |
 # | def test_contract_10_mass_conservation():
 # |     """CONTRACT 10: Production calibration preserves total interzonal mass."""
 # |     dist_km = np.array([2.0, 5.0, 10.0, 15.0, 25.0])
@@ -15645,8 +15749,8 @@
 # |     
 # |     t_cal = calibrate_kbins(t0, dist_km, inter_mask, yd, bin_edges, q=1.0)
 # |     assert abs(t_cal.sum() - t0.sum()) < 1e-6
-# | 
-# | 
+# |
+# |
 # | def test_contract_11_no_truth_leakage_mutation():
 # |     """CONTRACT 11: True flows in revealed or unseen set mutating after Y_D estimation does not affect predictions."""
 # |     t0_unseen = np.array([10.0, 20.0, 30.0, 40.0])
@@ -15668,8 +15772,8 @@
 # |     pred_2 = t0_unseen * s[bin_idx_unseen]
 # |     assert np.array_equal(pred_1, pred_2)
 # |     assert np.isfinite(pred_2).all()
-# | 
-# | 
+# |
+# |
 # | def test_contract_12_raw_schema_and_columns():
 # |     """CONTRACT 12: RAW_COLUMNS list contains all required schema keys."""
 # |     required = [
@@ -15684,15 +15788,15 @@
 # |     ]
 # |     for col in required:
 # |         assert col in RAW_COLUMNS
-# | 
-# | 
+# |
+# |
 # | def test_contract_13_fold_row_count_integrity():
 # |     """CONTRACT 13: Verifies expected rows calculation for 10 cities, 3 seeds, 500 reps, 15 p."""
 # |     expected_fold_raw = 10 * 3 * 500 * 15
 # |     assert expected_fold_raw == 225000
 # |     assert 5 * expected_fold_raw == 1125000
-# | 
-# | 
+# |
+# |
 # | def test_contract_14_hierarchical_aggregation_logic():
 # |     """CONTRACT 14: Step 1 replicate mean -> Step 2 seed mean matches mathematical definition."""
 # |     df = pd.DataFrame([
@@ -15708,16 +15812,16 @@
 # |     # Step 2: Seed mean per city
 # |     per_city = per_seed.groupby(["fold", "city", "p"])["gain_partial_od"].mean().reset_index()
 # |     assert per_city["gain_partial_od"].values[0] == 0.025
-# | 
-# | 
+# |
+# |
 # | def test_contract_15_statistical_unit_integrity():
 # |     """CONTRACT 15: Statistical unit is strictly 50 cities across 5 folds."""
 # |     splits = generate_35_5_10_splits(data_root="data")
 # |     assert len(splits) == 5
 # |     cities = [c for s in splits.values() for c in s["test"]]
 # |     assert len(cities) == 50 and len(set(cities)) == 50
-# | 
-# | 
+# |
+# |
 # | def test_contract_16_raw_to_summary_reproduction():
 # |     """CONTRACT 16: Tests fold stratified bootstrap and Holm correction functions."""
 # |     city_df = pd.DataFrame({
@@ -15727,8 +15831,8 @@
 # |     })
 # |     low, high = fold_stratified_bootstrap(city_df, "gain_partial_od", 0.1, n_boot=100)
 # |     assert 0.001 <= low <= high <= 0.005
-# | 
-# | 
+# |
+# |
 # | def test_contract_17_resume_idempotency():
 # |     """CONTRACT 17: Progress JSON correctly stores completed cities list."""
 # |     prog = {
@@ -15740,8 +15844,8 @@
 # |     }
 # |     assert len(prog["completed_cities"]) == 2
 # |     assert "El_Paso" in prog["remaining_cities"]
-# | 
-# | 
+# |
+# |
 # | def test_contract_18_stable_reproducibility():
 # |     """CONTRACT 18: Hash seed generator is deterministic and collision-free."""
 # |     h1 = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, 1, "Austin", 42)
@@ -15749,8 +15853,8 @@
 # |     h3 = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, 1, "Austin", 43)
 # |     assert h1 == h2
 # |     assert h1 != h3
-# | 
-# | 
+# |
+# |
 # | def test_contract_19_failure_injection():
 # |     """CONTRACT 19: Missing checkpoint or 0 pairs raises RuntimeError in runner."""
 # |     from src.experiment.run_partial_od_equivalence_v2 import run_fold_partial_od
@@ -15761,8 +15865,8 @@
 # |     except (KeyError, RuntimeError, Exception):
 # |         raised = True
 # |     assert raised
-# | 
-# | 
+# |
+# |
 # | def test_contract_20_stale_wording_scan():
 # |     """CONTRACT 20: Script has zero stale or prohibited phrasing."""
 # |     script_path = Path("src/experiment/run_partial_od_equivalence_v2.py")
@@ -15776,8 +15880,8 @@
 # |     ]
 # |     for p in prohibited:
 # |         assert p not in text, f"Prohibited phrase '{p}' found in script!"
-# | 
-# | 
+# |
+# |
 # | def run_all_partial_od_v2_contracts():
 # |     print("=" * 85)
 # |     print("PARTIAL-OD INFORMATION EQUIVALENCE v2 — 20 SCIENTIFIC CONTRACT GATES")
@@ -15819,10 +15923,104 @@
 # |     print(f"PARTIAL-OD v2 CONTRACT: {passed}/20 PASS")
 # |     print("=" * 85)
 # |     return passed == 20
-# | 
-# | 
+# |
+# |
 # | if __name__ == "__main__":
 # |     success = run_all_partial_od_v2_contracts()
 # |     sys.exit(0 if success else 1)
 
 # ===== END SOURCE FILE: tests/test_partial_od_equivalence_v2_contract.py =====
+
+
+# ===== BEGIN SOURCE FILE: tests/test_scaler_pipeline.py =====
+# | import numpy as np
+# | import pytest
+# | import torch
+# | from sklearn.preprocessing import StandardScaler
+# |
+# | from src.data.dataset import (
+# |     NODE_FEATURE_COLUMNS,
+# |     get_scaler_fingerprint,
+# |     load_cities,
+# |     load_city,
+# |     validate_feature_scaler,
+# | )
+# | from src.models.zero_shot_model import ZeroShotMLPModel
+# | from src.training.train import load_checkpoint, save_checkpoint
+# |
+# |
+# | def test_scaler_input_guards():
+# |     with pytest.raises(ValueError, match="At least one training city"):
+# |         load_cities([], data_root="data")
+# |
+# |     with pytest.raises(ValueError, match="must be unique"):
+# |         load_cities(["Raleigh", "Raleigh"], data_root="data")
+# |
+# |     _, scaler = load_cities(["Raleigh", "Denver"], data_root="data")
+# |     with pytest.raises(ValueError, match="either feature_scaler or fit_scaler"):
+# |         load_city(
+# |             "Raleigh",
+# |             data_root="data",
+# |             feature_scaler=scaler,
+# |             fit_scaler=True,
+# |         )
+# |
+# |
+# | def test_scaler_schema_validation():
+# |     malformed = StandardScaler()
+# |     malformed.mean_ = np.zeros(25)
+# |     malformed.var_ = np.ones(25)
+# |     malformed.scale_ = np.ones(25)
+# |     malformed.n_features_in_ = 25
+# |
+# |     with pytest.raises(ValueError, match=r"expected \(26,\)"):
+# |         validate_feature_scaler(malformed)
+# |
+# |
+# | def test_checkpoint_scaler_provenance_and_tamper_detection(tmp_path):
+# |     rng = np.random.default_rng(7)
+# |     scaler = StandardScaler().fit(
+# |         rng.normal(size=(31, len(NODE_FEATURE_COLUMNS)))
+# |     )
+# |     model = ZeroShotMLPModel(
+# |         node_in_dim=26,
+# |         node_hidden_dim=8,
+# |         node_out_dim=8,
+# |         decoder_hidden_dim=8,
+# |         num_gnn_layers=1,
+# |     )
+# |     checkpoint = tmp_path / "model.pt"
+# |     save_checkpoint(
+# |         checkpoint,
+# |         model,
+# |         scaler,
+# |         train_info={},
+# |         hyperparams={
+# |             "node_in_dim": 26,
+# |             "hidden_dim": 8,
+# |             "num_gnn_layers": 1,
+# |             "backbone": "mlp",
+# |         },
+# |     )
+# |
+# |     _, loaded_scaler, metadata = load_checkpoint(checkpoint)
+# |     assert np.array_equal(loaded_scaler.mean_, scaler.mean_)
+# |     assert loaded_scaler.n_samples_seen_ == 31
+# |     assert metadata["scaler_provenance"]["fingerprint"] == get_scaler_fingerprint(scaler)
+# |     assert metadata["scaler_provenance"]["feature_columns"] == list(NODE_FEATURE_COLUMNS)
+# |
+# |     bundle = torch.load(checkpoint, map_location="cpu", weights_only=False)
+# |     bundle["scaler_mean_"][0] += 1.0
+# |     torch.save(bundle, checkpoint)
+# |     with pytest.raises(ValueError, match="scaler fingerprint mismatch"):
+# |         load_checkpoint(checkpoint)
+# |
+# |
+# | def test_existing_checkpoint_scaler_backward_compatibility():
+# |     for checkpoint in (
+# |         "results/checkpoints/5fold_fold1_seed1.pt",
+# |         "results/checkpoints/mlp_fold1_seed1.pt",
+# |     ):
+# |         _, scaler, _ = load_checkpoint(checkpoint)
+# |         validate_feature_scaler(scaler)
+# ===== END SOURCE FILE: tests/test_scaler_pipeline.py =====

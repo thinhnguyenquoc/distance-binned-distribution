@@ -68,6 +68,8 @@ ROAD_COLS = [
     "motorway_length", "primary_length",
 ]
 
+NODE_FEATURE_COLUMNS = tuple(CENSUS_COLS + POI_COLS + ROAD_COLS)
+
 
 # ---------------------------------------------------------------------------
 # Data class
@@ -241,6 +243,33 @@ def get_scaler_fingerprint(scaler: Optional[object]) -> Optional[str]:
     return f"unfitted_{id(scaler)}"
 
 
+def validate_feature_scaler(scaler: object) -> None:
+    """Validate that a fitted scaler is safe for the fixed node-feature schema."""
+    expected_features = len(NODE_FEATURE_COLUMNS)
+    for attribute in ("mean_", "var_", "scale_"):
+        if not hasattr(scaler, attribute):
+            raise ValueError(f"Feature scaler is not fitted: missing {attribute}")
+        values = np.asarray(getattr(scaler, attribute), dtype=np.float64)
+        if values.shape != (expected_features,):
+            raise ValueError(
+                f"Feature scaler {attribute} has shape {values.shape}; "
+                f"expected ({expected_features},)"
+            )
+        if not np.isfinite(values).all():
+            raise ValueError(f"Feature scaler {attribute} contains NaN or Inf")
+
+    if np.any(np.asarray(scaler.var_) < 0.0):
+        raise ValueError("Feature scaler var_ contains negative values")
+    if np.any(np.asarray(scaler.scale_) <= 0.0):
+        raise ValueError("Feature scaler scale_ must be strictly positive")
+
+    n_features = getattr(scaler, "n_features_in_", expected_features)
+    if int(n_features) != expected_features:
+        raise ValueError(
+            f"Feature scaler expects {n_features} features; expected {expected_features}"
+        )
+
+
 def clear_city_cache() -> None:
     """Flushes both raw and normalized in-memory city dataset caches."""
     global _RAW_CITY_CACHE, _CITY_DATA_CACHE
@@ -332,6 +361,11 @@ def load_city(
     Returns:
         CityData instance.
     """
+    if feature_scaler is not None and fit_scaler:
+        raise ValueError("Pass either feature_scaler or fit_scaler=True, not both")
+    if feature_scaler is not None:
+        validate_feature_scaler(feature_scaler)
+
     scaler_key = get_scaler_fingerprint(feature_scaler)
     resolved_root = str(Path(data_root).resolve())
     cache_key = (city_name, resolved_root, scaler_key)
@@ -390,12 +424,18 @@ def load_cities(
     """
     from sklearn.preprocessing import StandardScaler
 
+    if not city_names:
+        raise ValueError("At least one training city is required to fit the feature scaler")
+    if len(city_names) != len(set(city_names)):
+        raise ValueError("Training city names must be unique when fitting the feature scaler")
+
     # First pass: collect raw features from memory cache
     raw_list = [load_raw_city(name, data_root=data_root, use_cache=use_cache) for name in city_names]
     all_X = [r.X_raw for r in raw_list]
 
     scaler = StandardScaler()
     scaler.fit(np.concatenate(all_X, axis=0))
+    validate_feature_scaler(scaler)
     scaler_key = get_scaler_fingerprint(scaler)
     resolved_root = str(Path(data_root).resolve())
 

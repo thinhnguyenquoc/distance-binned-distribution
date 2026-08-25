@@ -1,0 +1,18 @@
+{
+  "experiment": "empirical_sampling_robustness",
+  "timestamp": "2026-08-25T07:44:28.748735",
+  "m_grid": [
+    100,
+    250,
+    500,
+    1000,
+    2500,
+    5000,
+    10000,
+    50000,
+    100000,
+    "inf"
+  ],
+  "m_cross": 500,
+  "m_star": 1000
+}

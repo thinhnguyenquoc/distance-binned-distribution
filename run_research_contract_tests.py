@@ -118,7 +118,11 @@ def test_gate_2_data_leakage():
     finally:
         StandardScaler.fit = original_fit
         
-    assert len(fitted_row_counts) > 0, "Scaler fit was never called!"
+    expected_train_rows = sum(load_raw_city(city, data_root="data").n_tracts for city in train35)
+    assert fitted_row_counts == [expected_train_rows], (
+        "Scaler must be fit exactly once using only the Fold 1 training rows: "
+        f"expected {[expected_train_rows]}, observed {fitted_row_counts}"
+    )
     
     # 2. Bin edges computed strictly from train cities
     bin_edges, K_act = compute_kbin_edges(train35, K=8, data_root="data")
@@ -1137,23 +1141,39 @@ def test_gate_53_runner_provenance_wiring():
 
 
 def test_gate_54_scaler_reproduction_all_folds():
-    from src.data.dataset import load_raw_city
+    from sklearn.preprocessing import StandardScaler
+    from src.data.dataset import get_scaler_fingerprint, load_raw_city
 
     splits = generate_35_5_10_splits(data_root="data")
+    fold_fingerprints = []
     for fold_id, split in splits.items():
         matrices = [load_raw_city(city, data_root="data").X_raw for city in split["train"]]
         matrix = np.concatenate(matrices, axis=0).astype(np.float64)
-        expected_mean = matrix.mean(axis=0)
-        expected_scale = matrix.std(axis=0)
-        expected_scale[expected_scale == 0.0] = 1.0
+        independent_scaler = StandardScaler().fit(matrix)
+        fold_fingerprints.append(get_scaler_fingerprint(independent_scaler))
+        transformed = independent_scaler.transform(matrix)
+        assert np.allclose(transformed.mean(axis=0), 0.0, atol=1e-12, rtol=0.0)
+        assert np.allclose(transformed.std(axis=0), 1.0, atol=1e-12, rtol=0.0)
+
+        checkpoint_stats = []
         for checkpoint in [
             *[_find_result_file(f"checkpoints/5fold_fold{fold_id}_seed{seed}.pt") for seed in [1, 10, 100]],
             *[_find_result_file(f"checkpoints/mlp_fold{fold_id}_seed{seed}.pt") for seed in [1, 10, 100]],
         ]:
             bundle = torch.load(checkpoint, map_location="cpu", weights_only=False)
-            assert np.allclose(bundle["scaler_mean_"], expected_mean, atol=1e-10, rtol=0.0)
-            assert np.allclose(bundle["scaler_scale_"], expected_scale, atol=1e-10, rtol=0.0)
-    return True, "Independent train-only scaler mean/scale matches all 5 folds and 3 seeds"
+            assert np.array_equal(bundle["scaler_mean_"], independent_scaler.mean_)
+            assert np.array_equal(bundle["scaler_var_"], independent_scaler.var_)
+            assert np.array_equal(bundle["scaler_scale_"], independent_scaler.scale_)
+            checkpoint_stats.append((bundle["scaler_mean_"], bundle["scaler_scale_"]))
+
+        reference_mean, reference_scale = checkpoint_stats[0]
+        assert all(
+            np.array_equal(mean, reference_mean) and np.array_equal(scale, reference_scale)
+            for mean, scale in checkpoint_stats[1:]
+        ), f"Fold {fold_id} scaler differs across seeds or backbones"
+
+    assert len(set(fold_fingerprints)) == 5, "Expected a distinct train-only scaler for each fold"
+    return True, "Independent train-only scaler exactly matches all folds, seeds, and backbones"
 
 
 def test_gate_55_existing_checkpoint_internal_provenance():
