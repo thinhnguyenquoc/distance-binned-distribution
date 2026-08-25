@@ -113,8 +113,7 @@ class UrbanGNN(nn.Module):
 
 class MLPLayer(nn.Module):
     """
-    A dense layer designed to have the exact same parameter count as GraphConvLayer 
-    to ensure a fair capacity comparison between GNN and MLP backbones.
+    A dense layer designed to have the same nominal parameter count as GraphConvLayer.
     """
     def __init__(self, in_dim: int, out_dim: int):
         super().__init__()
@@ -154,7 +153,7 @@ class NodeMLP(nn.Module):
             nn.Dropout(dropout),
         )
         
-        # Use MLPLayer to strictly maintain parameter parity with GraphConvLayer
+        # Use MLPLayer to maintain nominal parameter-count parity with GraphConvLayer.
         self.layers = nn.ModuleList([
             MLPLayer(hidden_dim, hidden_dim) for _ in range(num_layers)
         ])

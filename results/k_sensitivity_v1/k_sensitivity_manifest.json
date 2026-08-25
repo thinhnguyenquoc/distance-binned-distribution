@@ -37,6 +37,6 @@
   "q_policy": "q=1.0 fixed",
   "noise_level": 0.0,
   "checkpoint_hashes": {},
-  "code_hash_version": "d431a9ddd475514787e56c1705282cf4bb193806313de501ed6dece8a6608de0",
-  "run_timestamp": "2026-08-24T16:11:09.211520"
+  "code_hash_version": "44d3cd6858636dd519849d0e7e35c75934877714eda55272e97d978c9255886c",
+  "run_timestamp": "2026-08-25T07:15:15.758017"
 }

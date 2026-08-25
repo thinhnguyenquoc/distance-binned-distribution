@@ -24,6 +24,15 @@ from src.experiment.compute_qstar import analyze_qstar
 from src.training.train import load_checkpoint
 
 
+def _write_json_atomic(path: Path, payload: dict) -> None:
+    temporary_path = path.with_suffix(path.suffix + ".tmp")
+    with open(temporary_path, "w", encoding="utf-8") as output_file:
+        json.dump(payload, output_file, indent=2)
+        output_file.flush()
+        os.fsync(output_file.fileno())
+    os.replace(temporary_path, path)
+
+
 def run_5fold_experiment(
     data_root: str = "data",
     meta_prior_dir: str = "meta_prior",
@@ -38,17 +47,25 @@ def run_5fold_experiment(
     loss_type: str = "ztnb",
     backbone: str = "gnn",
     num_trip_seeds: int = 20,
+    seeds: list[int] | None = None,
     folds_to_run: list[int] | None = None,
     device_str: str | None = None,
 ):
     os.makedirs(output_dir, exist_ok=True)
     splits = generate_35_5_10_splits(data_root=data_root)
+    manifest_path = Path(__file__).resolve().parents[2] / "results" / "e1" / "splits_manifest_v2.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Missing locked split manifest: {manifest_path}")
+    with open(manifest_path, "r", encoding="utf-8") as manifest_file:
+        split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
 
     if device_str is None:
         device_str = "cuda" if torch.cuda.is_available() else "cpu"
 
     if folds_to_run is None:
         folds_to_run = [1, 2, 3, 4, 5]
+    if seeds is None:
+        seeds = [1, 10, 100]
 
     print("=" * 85)
     print("STARTING 5-FOLD CROSS-VALIDATION (MOVING-BIN CALIBRATION FRAMEWORK)")
@@ -59,14 +76,30 @@ def run_5fold_experiment(
 
     out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
     out_file = Path(output_dir) / out_file_name
+    run_signature = {
+        "backbone": backbone,
+        "seeds": list(seeds),
+        "folds": list(folds_to_run),
+        "epochs_per_fold": epochs_per_fold,
+        "hidden_dim": hidden_dim,
+        "num_gnn_layers": num_gnn_layers,
+        "graph_type": graph_type,
+        "radius_km": radius_km,
+        "knn_k": knn_k,
+        "loss_type": loss_type,
+        "split_manifest_sha256": split_manifest_sha256,
+    }
 
     all_city_results = []
     if out_file.exists():
         try:
             with open(out_file, "r") as f:
                 prev_json = json.load(f)
-                all_city_results = prev_json.get("city_level_results", [])
-                print(f"Loaded {len(all_city_results)} existing city records from {out_file}.")
+                if prev_json.get("experiment_config", {}).get("run_signature") == run_signature:
+                    all_city_results = prev_json.get("city_level_results", [])
+                    print(f"Loaded {len(all_city_results)} existing city records from {out_file}.")
+                else:
+                    print(f"Ignoring stale result artifact with mismatched run signature: {out_file}")
         except Exception:
             all_city_results = []
 
@@ -80,9 +113,6 @@ def run_5fold_experiment(
         val_cities = split["val"]
         test_cities = split["test"]
 
-        # Remove old records for this fold to ensure clean incremental update
-        all_city_results = [r for r in all_city_results if r.get("fold") != fold_id]
-
         print("\n" + "#" * 85)
         print(f"FOLD {fold_id}/5: Training on {len(train_cities)} cities -> Testing on {len(test_cities)} held-out cities")
         print(f"Validation cities: {val_cities}")
@@ -92,11 +122,9 @@ def run_5fold_experiment(
         fold_start = time.time()
         models = []
         scalers = []
-        seeds = [1, 10, 100]
-        
         for seed_idx, seed in enumerate(seeds):
             _ckpt_dir  = Path(output_dir) / "checkpoints"
-            _ckpt_name = f"5fold_fold{fold_id}_seed{seed}.pt" if backbone == "gnn" else f"5fold_{backbone}_fold{fold_id}_seed{seed}.pt"
+            _ckpt_name = f"5fold_fold{fold_id}_seed{seed}.pt" if backbone == "gnn" else f"{backbone}_fold{fold_id}_seed{seed}.pt"
             _ckpt_path = _ckpt_dir / _ckpt_name
             
             expected_config = {
@@ -112,7 +140,13 @@ def run_5fold_experiment(
             }
             if _ckpt_path.exists():
                 print(f"--- Found existing checkpoint {_ckpt_path}. Loading... ---")
-                model, scaler, _ = load_checkpoint(_ckpt_path, device_str=device_str, expected_config=expected_config)
+                model, scaler, metadata = load_checkpoint(_ckpt_path, device_str=device_str, expected_config=expected_config)
+                checkpoint_hp = metadata.get("hyperparams", {})
+                assert metadata.get("seed") == seed, f"Checkpoint seed mismatch in {_ckpt_path}"
+                assert checkpoint_hp.get("fold") == fold_id, f"Checkpoint fold mismatch in {_ckpt_path}"
+                assert checkpoint_hp.get("split_manifest_sha256") == split_manifest_sha256, (
+                    f"Checkpoint split manifest mismatch in {_ckpt_path}"
+                )
                 model.eval()
             else:
                 print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) [Backbone: {backbone.upper()}] ---")
@@ -135,6 +169,8 @@ def run_5fold_experiment(
                     checkpoint_path=_ckpt_path,
                     run_tag=f"5fold_{backbone}_fold{fold_id}_seed{seed}",
                     seed=seed,
+                    fold=fold_id,
+                    split_manifest_sha256=split_manifest_sha256,
                 )
             models.append(model)
             scalers.append(scaler)
@@ -147,8 +183,12 @@ def run_5fold_experiment(
         bin_edges, K_active = compute_kbin_edges(train_cities, K=8, data_root=data_root)
 
         # Stage B: Target City Evaluation
-        fold_city_results = []
+        fold_city_results = [r for r in all_city_results if r.get("fold") == fold_id]
+        completed_cities = {r.get("city") for r in fold_city_results}
         for target_city in test_cities:
+            if target_city in completed_cities:
+                print(f"  -> Reusing saved result: {target_city}")
+                continue
             print(f"  -> Evaluating: {target_city:<18}", end="", flush=True)
             t0 = time.time()
             
@@ -198,6 +238,17 @@ def run_5fold_experiment(
 
             print(f" | M0: {m0_c:.4f} | M1_city: {m1_city:.4f} (d={avg_res['delta_city']:+.4f}) | M1_county: {m1_county:.4f} (d={avg_res['delta_county']:+.4f}) | M1_subzone: {m1_sub:.4f} (d={avg_res['delta_subzone']:+.4f}) | {time.time() - t0:.1f}s")
 
+            _write_json_atomic(out_file, {
+                "experiment_config": {
+                    **run_signature,
+                    "total_cities_evaluated": len(all_city_results),
+                    "total_runtime_sec": time.time() - start_total_time,
+                    "run_signature": run_signature,
+                },
+                "rq1_delta_r": analyze_delta_r(all_city_results),
+                "city_level_results": all_city_results,
+            })
+
         fold_summaries[f"fold_{fold_id}"] = {
             "test_cities": test_cities,
             "mean_delta_city": float(sum(r["delta_city"] for r in fold_city_results) / max(1, len(fold_city_results))),
@@ -222,8 +273,8 @@ def run_5fold_experiment(
             "rq1_delta_r": temp_delta_r,
             "city_level_results": all_city_results,
         }
-        with open(out_file, "w") as f:
-            json.dump(temp_results, f, indent=2)
+        temp_results["experiment_config"]["run_signature"] = run_signature
+        _write_json_atomic(out_file, temp_results)
 
     # Cross-city Statistical Aggregation (Final)
     delta_r_analysis = analyze_delta_r(all_city_results)
@@ -246,8 +297,8 @@ def run_5fold_experiment(
 
     out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
     out_file = Path(output_dir) / out_file_name
-    with open(out_file, "w") as f:
-        json.dump(final_results, f, indent=2)
+    final_results["experiment_config"]["run_signature"] = run_signature
+    _write_json_atomic(out_file, final_results)
 
     print("\n" + "=" * 85)
     print("FINAL SUMMARY: UNIFIED RESOLUTION CALIBRATION (CITY / COUNTY / SUBZONE)")

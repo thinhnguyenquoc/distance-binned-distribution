@@ -71,6 +71,11 @@ def run_mlp_backbone_test(args: argparse.Namespace) -> None:
     logger = logging.getLogger(__name__)
 
     splits = generate_35_5_10_splits(data_root=data_root)
+    manifest_path = Path(__file__).resolve().parents[2] / "results" / "e1" / "splits_manifest_v2.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Missing locked split manifest: {manifest_path}")
+    with open(manifest_path, "r", encoding="utf-8") as manifest_file:
+        split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
     
     if args.smoke:
         folds_to_run = [2]
@@ -152,6 +157,8 @@ def run_mlp_backbone_test(args: argparse.Namespace) -> None:
                     checkpoint_path=_ckpt_path,
                     run_tag=f"mlp_fold{fold_id}_seed{seed}",
                     seed=seed,
+                    fold=fold_id,
+                    split_manifest_sha256=split_manifest_sha256,
                 )
             models.append(model)
             scalers.append(scaler)

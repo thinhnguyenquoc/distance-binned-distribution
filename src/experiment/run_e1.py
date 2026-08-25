@@ -1,4 +1,8 @@
-"""
+"""Legacy E1 experiment runner; canonical training uses run_5fold.py.
+
+This module is retained for historical reproduction and is not part of the
+current canonical seed/provenance pipeline.
+
 E1: Oracle Aggregated-Distance Existence Test (Amended Protocol v2)
 ==================================================================
 
@@ -126,7 +130,7 @@ RESULTS_DIR = Path("results/e1")
 LOG_FILE    = RESULTS_DIR / "e1_execution.log"
 MANIFEST_PATH = RESULTS_DIR / "splits_manifest_v2.json"
 TOLERANCE   = 1e-5       # Floating-point tolerance for mass preservation & bin matching
-SEED        = 3000       # Fixed random seed (Version 3.0) for deterministic training initialization
+SEED        = 1          # Legacy single-seed default; canonical multi-seed runs use run_full_experiment.py
 
 
 def log_msg(msg: str = "", print_to_console: bool = True):
@@ -727,6 +731,8 @@ def run_e1(
     log_msg(f"    - OpenMP / MKL Threads: OMP={runtime_meta['omp_num_threads']}, MKL={runtime_meta['mkl_num_threads']}")
     log_msg(f"[STEP 1/5] Loading locked splits manifest v2 from {MANIFEST_PATH}...")
     splits = load_splits_manifest_v2(str(MANIFEST_PATH), data_root=DATA_ROOT)
+    with open(MANIFEST_PATH, "r", encoding="utf-8") as manifest_file:
+        split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
     
     log_msg("  -> Preloading all city datasets & spatial graphs into global in-memory cache...")
     preload_all_cities(data_root=DATA_ROOT, build_graphs=True, radius_km=5.0)
@@ -769,7 +775,7 @@ def run_e1(
         # STEP 3: Train Zero-Shot Backbone & Select Best Validation Checkpoint
         # -------------------------------------------------------------------
         log_msg(f"  [STEP 3/5: Fold {fold_id}] Training backbone model (max_epochs={EPOCHS}, patience={PATIENCE}, min_delta={MIN_DELTA})...")
-        _ckpt_seed = seed + fold_id
+        _ckpt_seed = seed
         _ckpt_dir  = RESULTS_DIR / "checkpoints"
         _ckpt_path = _ckpt_dir / f"fold{fold_id}_seed{_ckpt_seed}.pt"
         model, scaler, train_info = train_zero_shot_model(
@@ -785,6 +791,8 @@ def run_e1(
             seed=_ckpt_seed,
             checkpoint_path=_ckpt_path,
             run_tag=f"e1_fold{fold_id}_seed{_ckpt_seed}",
+            fold=fold_id,
+            split_manifest_sha256=split_manifest_sha256,
         )
 
         # Verify per-fold convergence gate

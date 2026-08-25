@@ -1,5 +1,5 @@
 """
-Compare Urban GNN and Pairwise MLP backbones across 5 Folds (N=50 cities) and Confirmatory Set (n=40 cities).
+Compare Urban GNN and Pairwise MLP backbones across the locked 5-fold evaluation (N=50 cities).
 Reads results from `results/5fold_results.json` and `results/mlp_backbone_results.json`.
 """
 
