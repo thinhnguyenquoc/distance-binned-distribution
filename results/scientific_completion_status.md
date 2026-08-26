@@ -7,7 +7,7 @@
 | 3 | E1-v2 9-donor specificity | highest-priority missing argument | complete | full 50-city E1-v2 specificity complete | `python src/experiment/run_e1_specificity_from_checkpoints.py --resume --device cpu` |
 | 4 | Matched placebo robustness | robustness on canonical checkpoints | complete | 50 rows present | `python src/experiment/run_placebo_matched_v2.py --b 1000` |
 | 5 | Partial-OD equivalence v2 | information-equivalence main arm | complete | partial-OD v2 combined summary present | `python src/experiment/run_partial_od_equivalence_v2.py --resume --device cpu` |
-| 6 | Direct-OD equivalence v1 | strong comparison arm if needed optional | missing | direct-OD v1 combined summary missing | `python src/experiment/run_direct_od_equivalence_v1.py --resume --workers 8 --device cpu` |
+| 6 | Direct-OD equivalence v1 | strong comparison arm if needed optional | complete | direct-OD v1 combined summary present (450k calibrations, 50 cities) | `python src/experiment/run_direct_od_equivalence_v1.py --resume --workers 8 --device cpu` |
 | 7 | Spatial-resolution summary | summary from existing frozen checkpoints/results | complete | spatial-resolution summary present | `python src/experiment/run_spatial_resolution_experiment.py --device cpu` |
 | 8 | Convergence pilot | appendix only optional | optional | appendix-only; run only if requested | `python src/experiment/run_convergence_pilot.py` |
 | 9 | Real-observation test | requires independent mobility aggregate source optional | blocked | blocked until an independent mobility aggregate source is available | - |

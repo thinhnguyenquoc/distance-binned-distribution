@@ -7,14 +7,13 @@
     "Denver",
     "Kansas_City",
     "Miami",
-    "Philadelphia"
-  ],
-  "remaining_cities": [
+    "Philadelphia",
     "San_Jose",
     "Tucson",
     "Wichita"
   ],
-  "rows_written": 63000,
+  "remaining_cities": [],
+  "rows_written": 90000,
   "protocol_version": "v1",
-  "timestamp": "2026-08-26 13:17:52"
+  "timestamp": "2026-08-26 13:20:05"
 }
