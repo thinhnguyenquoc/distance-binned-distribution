@@ -24,7 +24,7 @@ from src.calibration.bin_calibration import calibrate_kbins
 from src.data.city_splits import load_splits_manifest_v2
 from src.data.dataset import load_city, load_raw_city
 from src.data.urban_graph import build_radius_graph
-from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
+from src.data.yd_extractor import compute_equal_width_kbin_edges, compute_kbin_edges, extract_yd_kbins
 from src.experiment.run_backbone_robustness import fit_gravity_parameters
 from src.training.evaluate import compute_cpc_pair
 from src.training.train import infer_zero_shot, load_checkpoint
@@ -202,9 +202,12 @@ def run_diagnostic(
     output_path: Path = DEFAULT_OUTPUT,
     device_str: str = "cpu",
     backbone: str = "gnn",
+    binning: str = "quantile",
 ) -> dict[str, Any]:
     if backbone not in {"gnn", "mlp", "gravity"}:
         raise ValueError(f"Unsupported checkpoint backbone: {backbone}")
+    if binning not in {"quantile", "equal_width"}:
+        raise ValueError(f"Unsupported binning: {binning}")
     manifest_path = Path("results/e1/splits_manifest_v2.json")
     splits = load_splits_manifest_v2(str(manifest_path), data_root=data_root)
     per_seed: list[dict[str, Any]] = []
@@ -213,7 +216,8 @@ def run_diagnostic(
 
     for fold in range(1, 6):
         split = splits[fold]
-        bin_edges, k_active = compute_kbin_edges(split["train"], K=K_MOVE, data_root=data_root)
+        edge_builder = compute_kbin_edges if binning == "quantile" else compute_equal_width_kbin_edges
+        bin_edges, k_active = edge_builder(split["train"], K=K_MOVE, data_root=data_root)
         if k_active != K_MOVE:
             raise RuntimeError(f"Expected K_active={K_MOVE}, got {k_active} in fold {fold}")
         if backbone == "gravity":
@@ -260,7 +264,7 @@ def run_diagnostic(
     payload = {
         "diagnostic": "intra-bin allocation quality vs M1 city-oracle gain",
         "interpretation": "mechanistic evidence; not a causal claim",
-        "protocol": {"backbone": backbone, "folds": [1, 2, 3, 4, 5], "seeds": [] if backbone == "gravity" else CANONICAL_SEEDS, "K": K_MOVE, "statistical_unit": "city"},
+        "protocol": {"backbone": backbone, "binning": binning, "folds": [1, 2, 3, 4, 5], "seeds": [] if backbone == "gravity" else CANONICAL_SEEDS, "K": K_MOVE, "statistical_unit": "city"},
         "fold_parameters": fold_parameters,
         "correlations": {
             "d_pre_tv_vs_delta_cpc": correlation(d_pre),
@@ -282,7 +286,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--backbone", choices=["gnn", "mlp", "gravity"], default="gnn")
+    parser.add_argument("--binning", choices=["quantile", "equal_width"], default="quantile")
     args = parser.parse_args()
-    result = run_diagnostic(args.data_root, args.output, args.device, args.backbone)
+    result = run_diagnostic(args.data_root, args.output, args.device, args.backbone, args.binning)
     print(json.dumps(result["correlations"], indent=2))
     print(json.dumps(result["rank_invariance"], indent=2))

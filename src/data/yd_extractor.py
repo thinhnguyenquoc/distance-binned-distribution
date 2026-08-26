@@ -282,6 +282,38 @@ def compute_kbin_edges(
     return edges, K_active
 
 
+def compute_equal_width_kbin_edges(
+    train_city_names: list,
+    K: int = 8,
+    data_root: str = "data",
+) -> tuple:
+    """Compute K equal-width moving-distance bins from training-city distances.
+
+    The final bin is an overflow bin so test-city distances above the training
+    maximum remain covered without using test data to define the edges.
+    """
+    from src.data.dataset import load_raw_city
+
+    max_distance = 0.0
+    for city_name in train_city_names:
+        raw = load_raw_city(city_name, data_root=data_root)
+        origins = raw.pair_o_idx.numpy()
+        destinations = raw.pair_d_idx.numpy()
+        inter = (origins != destinations) & (raw.dist_km > 0.0)
+        if inter.any():
+            max_distance = max(max_distance, float(np.max(raw.dist_km[inter])))
+
+    if max_distance <= 0.0:
+        raise ValueError("No positive interzonal distances found in training cities")
+
+    width = max_distance / K
+    edges = np.concatenate([
+        np.arange(K, dtype=np.float64) * width,
+        [np.inf],
+    ])
+    return edges, K
+
+
 def extract_yd_kbins(
     dist_km: np.ndarray,
     trips: np.ndarray,
