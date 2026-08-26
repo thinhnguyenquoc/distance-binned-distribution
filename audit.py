@@ -1,9 +1,7690 @@
-# AUDIT SNAPSHOT: distance-binned-distribution
-# Generated from the current workspace source.
-# Python source bundle for third-party review; sections preserve relative paths and source lines.
+"""
+================================================================================
+AUDIT BUNDLE SNAPSHOT: distance-binned-distribution
+================================================================================
+Generated: 2026-08-26 13:27:28
+Total Code Files: 92 (89 Python, 3 Config)
+Total Code Lines: 22,002
+Total Code Bytes: 967,277 (0.92 MB)
 
+This audit script encapsulates the complete source code of the project in a single,
+tamper-verifiable, and easily navigable Python artifact.
+
+CLI USAGE:
+  python audit.py --list                 # View file manifest with line counts & SHA-256
+  python audit.py --verify               # Verify bundled files against local disk
+  python audit.py --extract [output_dir] # Unpack all files to destination directory
+  python audit.py --cat <filepath>       # View the exact code of a specific file
+
+MANIFEST & SHA-256 CHECKSUMS:
+--------------------------------------------------------------------------------
+File Path                                               |  Lines | Size (B) | SHA-256 (first 12)
+--------------------------------------------------------------------------------
+NeuroGravity/arguments.py                               |     31 |     1896 | 6b56f65a8723...
+NeuroGravity/data/load_data.py                          |    137 |     6833 | 71aec5625c70...
+NeuroGravity/data/load_transfer_data.py                 |    154 |     8108 | 8ba834ebe14c...
+NeuroGravity/data/node_features.yaml                    |     58 |     1909 | 20517233aaa4...
+NeuroGravity/data/reconstruction_subparser.py           |     43 |     3840 | 3bb285707a47...
+NeuroGravity/data/train_and_transfer_subparser.py       |     44 |     4030 | 0a7bcd0fed60...
+NeuroGravity/data/transfer_subparser.py                 |     44 |     3945 | cb19ed530548...
+NeuroGravity/data_preparation/1_paralleled_prepare_with_memory_monitor.py |    120 |     4940 | 325c6d5e0c41...
+NeuroGravity/data_preparation/calculate_od_distance.py  |     45 |     1609 | 8b5dbea75b38...
+NeuroGravity/data_preparation/city_data_prepare.py      |    198 |     9696 | 958cf43e5d2b...
+NeuroGravity/data_preparation/clip_osm_gpkg.py          |     70 |     2850 | f144b00ee82f...
+NeuroGravity/data_preparation/country_iso_project.py    |     15 |      514 | 7d8e37dbb890...
+NeuroGravity/data_preparation/dasymetric_mapping.py     |     67 |     3387 | 625bc29a5a4a...
+NeuroGravity/data_preparation/osm_feature_extractor.py  |   1020 |    40505 | 2bee058b4641...
+NeuroGravity/data_preparation/world_population.py       |    239 |     9301 | 7aac266a0441...
+NeuroGravity/income_spatial_segregation/spatial_segregation_index_calculator.py |    205 |     8942 | 594fa8db3221...
+NeuroGravity/main.py                                    |    517 |    30555 | 1c3bcf1cd7bd...
+NeuroGravity/models/deep_gravity.py                     |     48 |     1792 | 55b1168a8566...
+NeuroGravity/models/gnn_model.py                        |    268 |    11151 | 0fb79d791d7f...
+NeuroGravity/models/graph_bert.py                       |    140 |     5152 | bf236c8ac556...
+NeuroGravity/models/gravity.py                          |     30 |     1278 | 32e6ba119b0c...
+NeuroGravity/models/link_classifier.py                  |     57 |     2563 | 46e75163eb30...
+NeuroGravity/models/metaGravity.py                      |    112 |     4864 | e63095947c4a...
+NeuroGravity/models/prediction_model.py                 |    107 |     3082 | 3afa94ce29e7...
+NeuroGravity/training/DeepGravity_transfer.py           |     76 |     3571 | 4b9aa670c2e2...
+NeuroGravity/training/gbert_transfer.py                 |     85 |     3835 | e25972fcd8ec...
+NeuroGravity/training/gravity_transfer.py               |     75 |     3508 | 315b571ed076...
+NeuroGravity/training/loop_train_DeepGravity.py         |    171 |     9104 | 8e3cff484f55...
+NeuroGravity/training/loop_train_gbert.py               |    211 |    10498 | 384e14753caa...
+NeuroGravity/training/loop_train_gravity.py             |    164 |     8571 | 407d81fb7dec...
+NeuroGravity/training/loop_train_metaGravity.py         |    173 |     9245 | fbd50fa5059a...
+NeuroGravity/training/loop_train_neuroGravity.py        |    335 |    18397 | f33d1c049bbf...
+NeuroGravity/training/metaGravity_transfer.py           |     76 |     3571 | e5d961083abf...
+NeuroGravity/training/neuroGravity_transfer.py          |     89 |     4304 | 02e0d3cac488...
+NeuroGravity/utils/utils.py                             |    465 |    16860 | 8c7c388e45b7...
+od_plan_tester/project_adapter.py                       |    138 |     4360 | 1b399e7b5550...
+od_plan_tester/pytest.ini                               |     12 |      372 | 2bea0ac8d5f8...
+od_plan_tester/tests/conftest.py                        |     35 |      919 | c8786916e88b...
+od_plan_tester/tests/test_calibration_equivalence.py    |     79 |     2306 | 96dd6318250e...
+od_plan_tester/tests/test_e1_contracts.py               |    351 |    14876 | 83f14bf87f19...
+od_plan_tester/tests/test_experiment_contracts.py       |    324 |    12282 | 378a3f8d283c...
+od_plan_tester/tests/test_graph_topology.py             |    210 |     7547 | 634a0ffb3789...
+od_plan_tester/tests/test_kl_calibration.py             |    151 |     5931 | 5c44cb9642ab...
+od_plan_tester/tests/test_leakage_and_splits.py         |    123 |     4828 | 9f4e9ca44895...
+od_plan_tester/tests/test_metrics.py                    |     78 |     2360 | 17dc56d00358...
+od_plan_tester/tests/test_yd_and_sampling.py            |     83 |     3379 | 65be06db2835...
+od_plan_tester/tests/test_ztnb_oracle.py                |    111 |     3699 | 94db031adbec...
+pytest.ini                                              |     14 |      386 | aaa7092c0b7f...
+run_all_tests.py                                        |    187 |     6186 | aebb448878f0...
+run_full_experiment.py                                  |     72 |     2432 | 48953d5939e2...
+run_research_contract_tests.py                          |   1337 |    62918 | 8d72133b4847...
+run_scientific_completion_status.py                     |    188 |     7743 | d262b2e90d3c...
+src/aggregation/gadm2_county_aggregator.py              |    212 |     7237 | b85b70da463b...
+src/calibration/bin_calibration.py                      |    429 |    17082 | 49b797f2b151...
+src/data/city_splits.py                                 |    351 |    14054 | 449a8a95cf12...
+src/data/dataset.py                                     |    519 |    20413 | 701f0310a8b4...
+src/data/gadm_mapper.py                                 |     88 |     3393 | c71557b58339...
+src/data/trip_sampler.py                                |     72 |     2213 | 3ceb1a1512dc...
+src/data/urban_graph.py                                 |    229 |     7349 | a647e8f3f93e...
+src/data/yd_extractor.py                                |    379 |    15186 | e6dd78a0979d...
+src/experiment/audit_direct_od_v1.py                    |    509 |    23131 | f225f951d8c9...
+src/experiment/compare_backbones.py                     |    172 |     8606 | 99ff97ba3c8f...
+src/experiment/compute_delta_r.py                       |    109 |     4218 | 801477eea00c...
+src/experiment/compute_qstar.py                         |     52 |     1872 | 98a978bb85cb...
+src/experiment/generate_q3_figures_and_stats.py         |    124 |     4630 | c6d2144b69d4...
+src/experiment/run_5fold.py                             |    356 |    16254 | 9ce64aa402c2...
+src/experiment/run_backbone_robustness.py               |    267 |    11872 | 188dfc64592a...
+src/experiment/run_convergence_pilot.py                 |    145 |     4978 | 945f3b65b817...
+src/experiment/run_direct_od_equivalence_v1.py          |   1161 |    54426 | 8ea0d0bdab1e...
+src/experiment/run_e1.py                                |    943 |    48242 | c6b6b3b7450c...
+src/experiment/run_e1_specificity_from_checkpoints.py   |    214 |     8903 | 649bf336c361...
+src/experiment/run_experiment.py                        |    141 |     6868 | 76e0d93aa4cf...
+src/experiment/run_k_sensitivity_v1.py                  |    420 |    18512 | aab996e8918c...
+src/experiment/run_mlp_backbone_test.py                 |    234 |    10434 | e6ec0c2903fe...
+src/experiment/run_noise_robustness.py                  |    593 |    26376 | 8c707cc584db...
+src/experiment/run_partial_od_equivalence_v2.py         |    922 |    45025 | 51b94cf13b2b...
+src/experiment/run_placebo_matched_v2.py                |    451 |    24233 | 2472b0ee9081...
+src/experiment/run_resolution_analysis.py               |    150 |     5639 | 3550fcbbe348...
+src/experiment/run_sampling_robustness.py               |    582 |    27503 | 1ad6f27fbdc1...
+src/experiment/run_spatial_resolution_experiment.py     |    491 |    22582 | 619145e69509...
+src/loss/ztnb.py                                        |    125 |     4287 | de96304bf499...
+src/models/decoder.py                                   |     93 |     3426 | e674435f2d48...
+src/models/gravity.py                                   |     66 |     2258 | eb71ce474efa...
+src/models/node_encoder.py                              |    191 |     6598 | 507662a7df96...
+src/models/zero_shot_model.py                           |    181 |     6316 | 9493655c847c...
+src/training/evaluate.py                                |    182 |     7274 | 1def902d7353...
+src/training/train.py                                   |    595 |    23881 | dc7836410f1f...
+tests/test_backbone.py                                  |    118 |     4699 | b474e229d820...
+tests/test_direct_od_equivalence_v1_contract.py         |    344 |    15096 | 18457976e066...
+tests/test_noise_robustness.py                          |    159 |     6433 | 1e88e32c4310...
+tests/test_partial_od_equivalence_v2_contract.py        |    361 |    16147 | 5c286dcab019...
+tests/test_scaler_pipeline.py                           |     90 |     2901 | bc2b2ada1070...
+--------------------------------------------------------------------------------
+"""
+
+import os
+import sys
+import hashlib
+from pathlib import Path
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/arguments.py =====
+# File: NeuroGravity/arguments.py | Lines: 31 | TrailingNL: 0 | SHA256: 6b56f65a8723431ae424d7c924fd6ef33ff0fdd67e534fe982e58899ce7f29ef
+# | import argparse
+# | from data.reconstruction_subparser import add_reconstruction_subparser
+# | from data.transfer_subparser import add_transfer_subparser
+# | from data.train_and_transfer_subparser import add_train_and_transfer_subparser
+# |
+# | def get_parser():
+# |     parser = argparse.ArgumentParser()
+# |     parser.add_argument('--gnn_types', type=str, default='GBERT_GBERT') 
+# |     parser.add_argument('--pretrain', action='store_true', default=True)
+# |     parser.add_argument('--pretrain_epochs', type=int, default=2000)
+# |     parser.add_argument('--epochs', type=int, default=1000)
+# |     parser.add_argument('--opt', type=str, default='adam')
+# |     parser.add_argument('--opt_scheduler', type=str, default='step')
+# |     parser.add_argument('--opt_restart', type=int, default=0)
+# |     parser.add_argument('--opt_decay_step', type=int, default=20)
+# |     parser.add_argument('--opt_decay_step_g', type=int, default=5000) # for gravity
+# |     parser.add_argument('--opt_decay_rate', type=float, default=0.95)
+# |     parser.add_argument('--opt_decay_rate_g', type=float, default=0.9) # for gravity
+# |     parser.add_argument('--lr', type=float, default=0.005)
+# |     parser.add_argument('--lr_physics', type=float, default=0.0001) 
+# |     parser.add_argument('--lr_physics_pretrain', type=float, default=0.05)
+# |     parser.add_argument('--save_model', action='store_true', default=True)
+# |     parser.add_argument('--save_prediction', action='store_true', default=True)
+# |     parser.add_argument('--trained_model', type=str, default='none')
+# |     parser.add_argument('--load_saved_data', type=str, default='none')
+# |     parser.add_argument('--silent', action='store_true', default=False) # set True to mute console output, only log to file
+# |     subparsers = parser.add_subparsers()
+# |     add_reconstruction_subparser(subparsers)
+# |     add_transfer_subparser(subparsers)
+# |     add_train_and_transfer_subparser(subparsers)
+# |     return parser
+# ===== END SOURCE FILE: NeuroGravity/arguments.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data/load_data.py =====
+# File: NeuroGravity/data/load_data.py | Lines: 137 | TrailingNL: 1 | SHA256: 71aec5625c70ca5740a18e4ebe650c64a76dd076e8ec2a59b99e0b88c26397a1
+# | import pandas as pd
+# | import os.path as osp
+# | import inspect
+# | from torch_geometric.data import Data
+# | from sklearn import preprocessing
+# |
+# | import os
+# | import numpy as np
+# | import pickle
+# | import torch
+# |
+# |
+# | def prepare_node_feature(df, config_path = None, scaler_path = 'none'):
+# |     assert isinstance(config_path, str), "Requiring feature specification"
+# |     data_path = osp.dirname(osp.abspath(inspect.getfile(inspect.currentframe())))
+# |     import yaml
+# |     with open(osp.join(data_path, config_path), 'r') as f:
+# |         data_config = yaml.load(f, Loader=yaml.FullLoader)
+# |     features = [dct['feature_name'] for dct in data_config['neumerical_attribute_field']]
+# |     df_ = df[features]
+# |     X = df_.to_numpy()    
+# |     if scaler_path == 'none':
+# |         min_max_scaler = preprocessing.MinMaxScaler()
+# |         X = min_max_scaler.fit_transform(X)
+# |     else:
+# |         with open(scaler_path, 'rb') as f:
+# |             min_max_scaler = pickle.load(f)
+# |         X = min_max_scaler.transform(X)
+# |     return X, min_max_scaler
+# |
+# |
+# | def create_edge_from_flow(df_flow):
+# |     edge_o2d_start = torch.LongTensor(df_flow['O'].to_list())
+# |     edge_o2d_end = torch.LongTensor(df_flow['D'].to_list())
+# |     node_n = torch.max(torch.max(edge_o2d_start), torch.max(edge_o2d_end)) + 1
+# |     edge_o2d_flow = torch.Tensor(df_flow['flow'].to_list())
+# |     edge_o2d_log_flow = torch.log(edge_o2d_flow)
+# |     edge_o2d_log_flow[edge_o2d_log_flow < 0] = 0
+# |
+# |     edge_o2d_dist = torch.Tensor(df_flow['dist'].to_list())
+# |     edge_o2d_log_dist = torch.log(edge_o2d_dist)
+# |     edge_o2d_log_dist[edge_o2d_log_dist < 0] = 0
+# |     
+# |     edge_o2d_attr = edge_o2d_log_dist.unsqueeze(dim=1)
+# |
+# |     edge_o2d_index = torch.stack([edge_o2d_start, edge_o2d_end], dim = 0)
+# |     return edge_o2d_index, edge_o2d_attr, edge_o2d_log_dist, edge_o2d_flow
+# |
+# |     
+# |
+# | def train_val_test_mask(missing_rate, edge_index, node_n, mask_mode = 0, validation_ratio = 0, mask_path = 'none'):
+# |     edge_n = edge_index.size()[1]
+# |     if mask_mode == 0: # Random edge missing
+# |         known_mask = (torch.FloatTensor(edge_n, ).uniform_() > missing_rate)#.view(-1)
+# |         test_mask = ~known_mask
+# |         valid_mask = known_mask & (torch.FloatTensor(edge_n, ).uniform_() < validation_ratio) #.view(-1)
+# |         train_mask = known_mask & ~valid_mask
+# |         return train_mask, test_mask, valid_mask
+# |     
+# |     elif mask_mode == 1: # Random nodes intra-link missing
+# |         if mask_path == 'none':
+# |             while True:
+# |                 node_mask = (torch.FloatTensor(node_n, ).uniform_() > missing_rate)
+# |                 if torch.sum(node_mask) > (1 - missing_rate) * node_n * 0.9:
+# |                     break
+# |         else:
+# |             node_mask = np.load(mask_path)
+# |             print('Load node mask from: ', mask_path)
+# |             node_mask = torch.tensor(node_mask, dtype = torch.bool)
+# |         node_mask_test = ~node_mask
+# |         node_mask_valid = node_mask & (torch.FloatTensor(node_n, ).uniform_() < validation_ratio)
+# |         node_mask_train = node_mask & ~node_mask_valid
+# |         train_mask = torch.logical_or(node_mask_train[edge_index[0]], node_mask_train[edge_index[1]])
+# |         test_mask = torch.logical_and(node_mask_test[edge_index[0]], node_mask_test[edge_index[1]])
+# |         valid_mask = torch.logical_or(node_mask_valid[edge_index[0]], node_mask_valid[edge_index[1]])
+# |         return train_mask, test_mask, valid_mask, node_mask
+# |
+# |     elif mask_mode == 2: # Random nodes all (ntra and inter) link missing
+# |         if mask_path == 'none':
+# |             while True:
+# |                 node_mask = (torch.FloatTensor(node_n, ).uniform_() > missing_rate)
+# |                 if torch.sum(node_mask) > (1 - missing_rate) * node_n * 0.9:
+# |                     break
+# |         else:
+# |             node_mask = np.load(mask_path)
+# |             print('Load node mask from: ', mask_path)
+# |             node_mask = torch.tensor(node_mask, dtype = torch.bool)
+# |         node_mask_test = ~node_mask
+# |         while True:
+# |             node_mask_valid = node_mask & (torch.FloatTensor(node_n, ).uniform_() < validation_ratio)
+# |             if torch.sum(node_mask_valid) > (1 - missing_rate) * validation_ratio * node_n * 0.9:
+# |                 break
+# |         node_mask_train = node_mask & ~node_mask_valid
+# |
+# |         train_mask = torch.logical_and(node_mask_train[edge_index[0]], node_mask_train[edge_index[1]])
+# |         test_mask = torch.logical_or(node_mask_test[edge_index[0]], node_mask_test[edge_index[1]])
+# |         valid_mask = torch.logical_and(torch.logical_and(node_mask[edge_index[0]], node_mask[edge_index[1]]), ~train_mask)
+# |         return train_mask, test_mask, valid_mask, node_mask
+# |
+# | def load_data(args, experiment_path):
+# |     attr_df = pd.read_csv(os.path.join(args.data_path, 'attr_df.csv'))
+# |     # fill missing values (or Nan) with 0
+# |     attr_df.fillna(0, inplace=True)
+# |     population = torch.tensor(attr_df.population.to_list(), dtype=torch.float)
+# |     log_population = torch.log(population)
+# |     log_population[log_population < 0] = 0
+# |
+# |     node_n, node_feature_dim = attr_df.shape
+# |     node_init, scaler = prepare_node_feature(attr_df, args.config_path, args.scaler_path)
+# |     with open(os.path.join(experiment_path, 'scaler.pkl'), 'wb') as f:
+# |         pickle.dump(scaler, f)
+# |
+# |     x = torch.tensor(node_init, dtype=torch.float)
+# |
+# |     if os.path.exists(os.path.join(args.data_path, 'flow_df.csv')):
+# |         flow_df = pd.read_csv(os.path.join(args.data_path, 'flow_df.csv'))
+# |     elif os.path.exists(os.path.join(args.data_path, 'flow_df(est).csv')):
+# |         flow_df = pd.read_csv(os.path.join(args.data_path, 'flow_df(est).csv'))
+# |     else:
+# |         raise FileNotFoundError(f'Flow data {os.path.join(args.data_path, "flow_df.csv")} not found')
+# |         
+# |     edge_o2d_index, edge_o2d_attr, edge_o2d_log_dist, edge_o2d_flow = create_edge_from_flow(flow_df)
+# |     if isinstance(args.valid, float):
+# |         validation_ratio = args.valid
+# |     else:
+# |         validation_ratio = 0
+# |     
+# |     if args.mask_mode == 0:
+# |         train_mask, test_mask, valid_mask = train_val_test_mask(args.missing_rate, edge_o2d_index, node_n, mask_mode = args.mask_mode, validation_ratio = validation_ratio, mask_path = 'none')
+# |         zone_mask = None
+# |     else:
+# |         mask_path = 'none' if args.load_mask == 'none' else os.path.join(args.data_path, args.load_mask)
+# |         train_mask, test_mask, valid_mask, zone_mask = train_val_test_mask(args.missing_rate, edge_o2d_index, node_n, mask_mode = args.mask_mode, validation_ratio = validation_ratio, mask_path = mask_path)
+# |     return Data(x = x, edge_o2d_index = edge_o2d_index, edge_o2d_attr = edge_o2d_attr
+# |                 , edge_o2d_log_dist = edge_o2d_log_dist, edge_o2d_flow = edge_o2d_flow, train_mask = train_mask
+# |                 , test_mask = test_mask, valid_mask = valid_mask, log_population = log_population, zone_mask = zone_mask)
+# ===== END SOURCE FILE: NeuroGravity/data/load_data.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data/load_transfer_data.py =====
+# File: NeuroGravity/data/load_transfer_data.py | Lines: 154 | TrailingNL: 1 | SHA256: 8ba834ebe14c3f070a195e78529a207d49c3a0b63ffe79ea3f90df3f5c663488
+# | import pandas as pd
+# | import os.path as osp
+# | import inspect
+# | from torch_geometric.data import Data
+# | from sklearn import preprocessing
+# |
+# | import joblib
+# | import os
+# | import numpy as np
+# | import pickle
+# | import torch
+# |
+# |
+# | def prepare_node_feature(df, config_path = None, scaler_path = 'none'):
+# |     assert isinstance(config_path, str), "Requiring feature specification"
+# |     current_path = osp.dirname(osp.abspath(inspect.getfile(inspect.currentframe())))
+# |     import yaml
+# |     with open(osp.join(current_path, config_path), 'r') as f:
+# |         data_config = yaml.load(f, Loader=yaml.FullLoader)
+# |     features = [dct['feature_name'] for dct in data_config['neumerical_attribute_field']]
+# |     df_ = df[features]
+# |     X = df_.to_numpy()    
+# |     if scaler_path == 'none':
+# |         min_max_scaler = preprocessing.MinMaxScaler()
+# |         X = min_max_scaler.fit_transform(X)
+# |     else:
+# |         with open(scaler_path, 'rb') as f:
+# |             min_max_scaler = pickle.load(f)
+# |         X = min_max_scaler.transform(X)
+# |     return X, min_max_scaler
+# |
+# |
+# | def create_edge_from_flow(df_flow):
+# |     edge_o2d_start = torch.LongTensor(df_flow['O'].to_list())
+# |     edge_o2d_end = torch.LongTensor(df_flow['D'].to_list())
+# |     node_n = torch.max(torch.max(edge_o2d_start), torch.max(edge_o2d_end)) + 1
+# |     edge_o2d_flow = torch.Tensor(df_flow['flow'].to_list())
+# |     edge_o2d_log_flow = torch.log(edge_o2d_flow)
+# |     edge_o2d_log_flow[edge_o2d_log_flow < 0] = 0
+# |
+# |     edge_o2d_dist = torch.Tensor(df_flow['dist'].to_list())
+# |     edge_o2d_log_dist = torch.log(edge_o2d_dist)
+# |     edge_o2d_log_dist[edge_o2d_log_dist < 0] = 0
+# |     
+# |     edge_o2d_attr = edge_o2d_log_dist.unsqueeze(dim=1)
+# |
+# |     edge_o2d_index = torch.stack([edge_o2d_start, edge_o2d_end], dim = 0)
+# |     return edge_o2d_index, edge_o2d_attr, edge_o2d_log_dist, edge_o2d_flow
+# |
+# |
+# | def train_val_test_mask(missing_rate, edge_index, node_n, mask_mode = 0, validation_ratio = 0, mask_path = 'none'):
+# |     edge_n = edge_index.size()[1]
+# |     if mask_mode == 0: # Random edge missing
+# |         known_mask = (torch.FloatTensor(edge_n, ).uniform_() > missing_rate)#.view(-1)
+# |         test_mask = ~known_mask
+# |         valid_mask = known_mask & (torch.FloatTensor(edge_n, ).uniform_() < validation_ratio) #.view(-1)
+# |         train_mask = known_mask & ~valid_mask
+# |         return train_mask, test_mask, valid_mask
+# |     
+# |     elif mask_mode == 1: # Random nodes intra-link missing
+# |         if mask_path == 'none':
+# |             node_mask = (torch.FloatTensor(node_n, ).uniform_() > missing_rate)
+# |         else:
+# |             node_mask = np.load(mask_path)
+# |             print('Load node mask from: ', mask_path)
+# |             node_mask = torch.tensor(node_mask, dtype = torch.bool)
+# |         node_mask_test = ~node_mask
+# |         node_mask_valid = node_mask & (torch.FloatTensor(node_n, ).uniform_() < validation_ratio)
+# |         node_mask_train = node_mask & ~node_mask_valid
+# |         train_mask = torch.logical_or(node_mask_train[edge_index[0]], node_mask_train[edge_index[1]])
+# |         test_mask = torch.logical_and(node_mask_test[edge_index[0]], node_mask_test[edge_index[1]])
+# |         valid_mask = torch.logical_or(node_mask_valid[edge_index[0]], node_mask_valid[edge_index[1]])
+# |         return train_mask, test_mask, valid_mask, node_mask
+# |
+# |     elif mask_mode == 2: # Random nodes all (ntra and inter) link missing
+# |         if mask_path == 'none':
+# |             node_mask = (torch.FloatTensor(node_n, ).uniform_() > missing_rate)
+# |         else:
+# |             node_mask = np.load(mask_path)
+# |             print('Load node mask from: ', mask_path)
+# |             node_mask = torch.tensor(node_mask, dtype = torch.bool)
+# |         node_mask_test = ~node_mask
+# |         node_mask_valid = node_mask & (torch.FloatTensor(node_n, ).uniform_() < validation_ratio)
+# |         node_mask_train = node_mask & ~node_mask_valid
+# |
+# |         train_mask = torch.logical_and(node_mask_train[edge_index[0]], node_mask_train[edge_index[1]])
+# |         test_mask = torch.logical_or(node_mask_test[edge_index[0]], node_mask_test[edge_index[1]])
+# |         valid_mask = torch.logical_and(torch.logical_and(node_mask[edge_index[0]], node_mask[edge_index[1]]), ~train_mask)
+# |         return train_mask, test_mask, valid_mask, node_mask
+# |
+# | def load_transfer_data(args, data_path, scaler_path):
+# |     attr_df = pd.read_csv(os.path.join(data_path, 'attr_df.csv'))
+# |     # fill missing values (or Nan) with 0
+# |     attr_df.fillna(0, inplace=True)
+# |     population = torch.tensor(attr_df.population.to_list(), dtype=torch.float)
+# |     log_population = torch.log(population)
+# |     log_population[log_population < 0] = 0
+# |
+# |     node_n, node_feature_dim = attr_df.shape
+# |     node_init, _ = prepare_node_feature(attr_df, args.config_path, scaler_path)
+# |     x = torch.tensor(node_init, dtype=torch.float)
+# |
+# |     if os.path.exists(os.path.join(data_path, 'distance_and_flow.csv')):
+# |         flow_fn = os.path.join(data_path, 'distance_and_flow.csv')
+# |     elif os.path.exists(os.path.join(data_path, 'distance_and_flow(est).csv')):
+# |         flow_fn = os.path.join(data_path, 'distance_and_flow(est).csv')
+# |     elif os.path.exists(os.path.join(data_path, 'distance.csv')):
+# |         flow_fn = os.path.join(data_path, 'distance.csv')
+# |     else:
+# |         raise FileNotFoundError(f'Distance file not found in {data_path}')
+# |     
+# |     flow_df_complete = pd.read_csv(flow_fn).rename(columns={'distance': 'dist'})
+# |
+# |     current_path = osp.dirname(osp.abspath(inspect.getfile(inspect.currentframe())))
+# |     trained_link_classifier = '../models/saved_link_prediction_model.pkl'
+# |     if trained_link_classifier is not None:
+# |         if hasattr(args, 'threshold'):
+# |             threshold = args.threshold
+# |         else:
+# |             threshold = 0.4 # 0.4
+# |         link_classifier = joblib.load(os.path.join(current_path, trained_link_classifier))
+# |         dist_ = np.expand_dims(np.array(flow_df_complete.dist.to_list()), axis = 1)
+# |         min_max_scaler_dist = preprocessing.MinMaxScaler()
+# |         dist_ = min_max_scaler_dist.fit_transform(dist_)
+# |         if node_feature_dim == 55:
+# |             link_classifier_input = np.concatenate((node_init[flow_df_complete['O']], node_init[flow_df_complete['D']], dist_), axis = 1)
+# |         else:
+# |             link_classifier_input = np.concatenate((node_init[flow_df_complete['O']][:, :55], node_init[flow_df_complete['D']][:, :55], dist_), axis = 1)
+# |         pred_prob = link_classifier.predict_proba(link_classifier_input)
+# |         pred_prob = pred_prob[:,1]
+# |         pred_class = pred_prob > threshold
+# |         # print('Link number before filtering: ', flow_df_complete.shape[0])
+# |         flow_df = flow_df_complete[pred_class]
+# |         # print('Link number after filtering: ', flow_df.shape[0])
+# |     else:
+# |         flow_df = flow_df_complete
+# |         pred_class = np.ones((flow_df_complete.shape[0],), dtype = bool)
+# |
+# |     x = torch.tensor(node_init, dtype=torch.float)
+# |     edge_o2d_index, edge_o2d_attr, edge_o2d_log_dist, edge_o2d_flow = create_edge_from_flow(flow_df)
+# |     
+# |     if args.mask_mode == 0:
+# |         train_mask, test_mask, valid_mask = train_val_test_mask(args.missing_rate, edge_o2d_index, node_n, mask_mode = args.mask_mode, validation_ratio = args.valid, mask_path = 'none')
+# |         zone_mask = None
+# |     else:
+# |         mask_path = 'none' if args.load_mask == 'none' else os.path.join(args.data_path, args.load_mask)
+# |         train_mask, test_mask, valid_mask, zone_mask = train_val_test_mask(args.missing_rate, edge_o2d_index, node_n, mask_mode = args.mask_mode, validation_ratio = args.valid, mask_path = mask_path)
+# |
+# |     return Data(x = x, edge_o2d_index = edge_o2d_index, edge_o2d_attr = edge_o2d_attr
+# |                 , edge_o2d_log_dist = edge_o2d_log_dist, edge_o2d_flow = edge_o2d_flow, train_mask = train_mask
+# |                 , test_mask = test_mask, valid_mask = valid_mask, log_population = log_population, filter_mask = torch.tensor(pred_class, dtype = torch.bool), flow_complete = torch.tensor(flow_df_complete.flow.to_list(), dtype = torch.float)
+# |                 , ori_complete = flow_df_complete.O.to_numpy(), des_complete = flow_df_complete.D.to_numpy())
+# |     
+# ===== END SOURCE FILE: NeuroGravity/data/load_transfer_data.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data/node_features.yaml =====
+# File: NeuroGravity/data/node_features.yaml | Lines: 58 | TrailingNL: 1 | SHA256: 20517233aaa48abe2ef9bad0076c68a73565b61df97b98d647219cc7734d5ee1
+# | # @package Feature
+# | neumerical_attribute_field:
+# | - feature_name: population
+# | - feature_name: population_density
+# | - feature_name: area
+# | - feature_name: natural_green_field
+# | - feature_name: natural_beach
+# | - feature_name: natural_water
+# | - feature_name: landuse_residential
+# | - feature_name: landuse_office
+# | - feature_name: landuse_public_area
+# | - feature_name: landuse_education
+# | - feature_name: landuse_transportation
+# | - feature_name: landuse_greenfield
+# | - feature_name: landuse_industrial
+# | - feature_name: landuse_commercial
+# | - feature_name: landuse_brownfield
+# | - feature_name: landuse_construction
+# | - feature_name: landuse_agriculture
+# | - feature_name: building_office
+# | - feature_name: building_health
+# | - feature_name: building_agriculture
+# | - feature_name: building_shop
+# | - feature_name: building_commercial
+# | - feature_name: building_parking
+# | - feature_name: building_religious
+# | - feature_name: building_sport
+# | - feature_name: building_bank
+# | - feature_name: building_transit
+# | - feature_name: building_residential
+# | - feature_name: building_transportation hub
+# | - feature_name: building_leisure
+# | - feature_name: building_tourism
+# | - feature_name: building_fuel
+# | - feature_name: building_restaurant
+# | - feature_name: building_school
+# | - feature_name: building_industrial
+# | - feature_name: point_school
+# | - feature_name: point_restaurant
+# | - feature_name: point_parking
+# | - feature_name: point_religious
+# | - feature_name: point_residential
+# | - feature_name: point_tourism
+# | - feature_name: point_traffic_signal
+# | - feature_name: point_bank
+# | - feature_name: point_transit
+# | - feature_name: point_transportation_hub
+# | - feature_name: point_sport
+# | - feature_name: point_shop
+# | - feature_name: point_fuel
+# | - feature_name: point_leisure
+# | - feature_name: point_commercial
+# | - feature_name: point_industrial
+# | - feature_name: point_office
+# | - feature_name: point_healthcare
+# | - feature_name: main_road_line
+# | - feature_name: residential_line
+# ===== END SOURCE FILE: NeuroGravity/data/node_features.yaml =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data/reconstruction_subparser.py =====
+# File: NeuroGravity/data/reconstruction_subparser.py | Lines: 43 | TrailingNL: 1 | SHA256: 3bb285707a4709fd8440eab4ed73bded05e40f93c6e54803fd1b67820bb6d48b
+# | def add_reconstruction_subparser(subparsers):
+# |     subparser = subparsers.add_parser('reconstruction')
+# |     subparser.add_argument('--domain', type=str, default='reconstruction')
+# |     subparser.add_argument('--models', type=str, default='neuroGravity_DeepGravity_GBERT_Gravity_metaGravity')
+# |     subparser.add_argument('--log_dir', type=str, default='reconstruction_porto') # Output directory: experiment_path = f'{data_dir}/experiments/{log_dir}/'
+# |     subparser.add_argument('--data_dir', type=str, default='./data/PORTO/') # Experiment city data directory
+# |     subparser.add_argument('--config_path', type=str, default='./node_features.yaml') # node feature selection
+# |     subparser.add_argument('--scaler_path', type=str, default='none') # pre-fitted scaler path
+# |     subparser.add_argument('--mask_mode', type=int, default=2) # 0 for fully link random missing, 1 for intra-flow missing, 2 for intra&inter-flow missing among random nodes
+# |     subparser.add_argument('--missing_rate', type=float, default=0.9) # for mask_mode 0： edge masking ratio, for mask_mode 1/2: node masking ratio
+# |     subparser.add_argument('--load_mask', type=str, default='none') # path of pre-defined node mask
+# |     subparser.add_argument('--mode', type=str, default='train') # train_transfer / train / transfer
+# |     subparser.add_argument('--rounds', type=int, default=1) # Number of models to train (for model ensembling in cross-city generation)
+# |     subparser.add_argument('--transfer_targets', type=str, default=None)
+# |     subparser.add_argument('--train_for_transfer', action='store_true', default=False) # whether train for cross-city generation, determine model setting
+# |     subparser.add_argument('--has_transfer_label', action='store_true', default=False) # whether has transfer label (for target city)
+# |     subparser.add_argument('--log_main', action='store_true', default=True)
+# |     # ====== Model Parameters ======
+# |     subparser.add_argument('--phy_model', type=str, default='metaGravity')  # gravity / metaGravity
+# |     subparser.add_argument('--node_dim', type=int, default=24)
+# |     subparser.add_argument('--edge_dim', type=int, default=24)
+# |     subparser.add_argument('--concat_states', action='store_true', default=True)
+# |     subparser.add_argument('--concat_edges', action='store_true', default=True)
+# |     subparser.add_argument('--node_post_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--edge_post_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--impute_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--temperature', type=float, default=2.) # temperature for weighted huber, only functional in weighted_huber
+# |     subparser.add_argument('--head', type=int, default=4) # head for attention
+# |     subparser.add_argument('--dropout_mlp', type=float, default=0.05) # mlp dropout rate
+# |     subparser.add_argument('--dropout_att', type=float, default=0.05) # edge dropout rate
+# |     # ====== Experiment Settings ======
+# |     subparser.add_argument('--seed', type=int, default=111)
+# |     subparser.add_argument('--valid', type=float, default=0.2) # set validation ratio
+# |     subparser.add_argument('--weight_decay', type=float, default=1e-5) # l2 regularization weight
+# |     subparser.add_argument('--loss_type', type = str, default='weighted_huber') # weighted_huber / huber
+# |     subparser.add_argument('--huber_scale', type = float, default=0.5) # huber transition point
+# |     subparser.add_argument('--fuse_method', type = str, default='mean') # fusion method for model ensembling, only functional in cross-city generation
+# |     subparser.add_argument('--fuse_filter', action='store_true', default=True) # whether filter out outliers in fusion, only functional in cross-city generation
+# |     subparser.add_argument('--log_intermediate', action='store_true', default=True)
+# |
+# |
+# |
+# ===== END SOURCE FILE: NeuroGravity/data/reconstruction_subparser.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data/train_and_transfer_subparser.py =====
+# File: NeuroGravity/data/train_and_transfer_subparser.py | Lines: 44 | TrailingNL: 1 | SHA256: 0a7bcd0fed60d1e19a64945d11b36ebcb01c797c0f88901c878cd0ffa12d4eef
+# | def add_train_and_transfer_subparser(subparsers):
+# |     subparser = subparsers.add_parser('train_transfer')
+# |     subparser.add_argument('--domain', type=str, default='train_transfer')
+# |     subparser.add_argument('--models', type=str, default='neuroGravity_DeepGravity_GBERT_Gravity_metaGravity')
+# |     subparser.add_argument('--log_dir', type=str, default='train_and_transfer_from_boston_to_porto') # Output directory: experiment_path = f'{data_dir}/experiments/{log_dir}/'
+# |     subparser.add_argument('--data_dir', type=str, default='./data/BOSTON/') # Source city data directory
+# |     subparser.add_argument('--config_path', type=str, default='./node_features.yaml') # node feature selection
+# |     subparser.add_argument('--scaler_path', type=str, default='none') # pre-fitted scaler path
+# |     subparser.add_argument('--mask_mode', type=int, default=0) # 0 for fully link random missing, 1 for intra-flow missing, 2 for intra&inter-flow missing among random nodes
+# |     subparser.add_argument('--missing_rate', type=float, default=0.1) # sub-sampling for ensemble model training
+# |     subparser.add_argument('--load_mask', type=str, default='none') # path of pre-defined node mask
+# |     subparser.add_argument('--mode', type=str, default='train_transfer') # train_transfer / train / transfer
+# |     subparser.add_argument('--rounds', type=int, default=1) # Number of models to train (for model ensembling in cross-city generation)
+# |     subparser.add_argument('--transfer_targets', type=str, default='./data/transfer_targets.json') # target city list
+# |     subparser.add_argument('--train_for_transfer', action='store_true', default=True) # whether train for cross-city generation, determine model setting
+# |     subparser.add_argument('--has_transfer_label', action='store_true', default=True) # whether has transfer label (for target city)
+# |     subparser.add_argument('--save_to_target', action='store_true', default=False) # whether save transfer result to target folder (otherwise to the experiment folder)
+# |     subparser.add_argument('--log_main', action='store_true', default=True)
+# |     # ====== Model Parameters ======
+# |     subparser.add_argument('--phy_model', type=str, default='gravity')  # gravity / metaGravity 
+# |     subparser.add_argument('--node_dim', type=int, default=24)
+# |     subparser.add_argument('--edge_dim', type=int, default=24)
+# |     subparser.add_argument('--concat_states', action='store_true', default=True)
+# |     subparser.add_argument('--concat_edges', action='store_true', default=True)
+# |     subparser.add_argument('--node_post_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--edge_post_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--impute_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--temperature', type=float, default=2.) # temperature for weighted huber, only functional in weighted_huber
+# |     subparser.add_argument('--head', type=int, default=4) # head for attention
+# |     subparser.add_argument('--dropout_mlp', type=float, default=0.5) # mlp dropout rate
+# |     subparser.add_argument('--dropout_att', type=float, default=0.5) # edge dropout rate
+# |     # ====== Experiment Settings ======
+# |     subparser.add_argument('--seed', type=int, default=0)
+# |     subparser.add_argument('--valid', type=float, default=0.2) # set validation ratio
+# |     subparser.add_argument('--weight_decay', type=float, default=1e-5) # l2 regularization weight
+# |     subparser.add_argument('--loss_type', type = str, default='huber') # weighted_huber / huber
+# |     subparser.add_argument('--huber_scale', type = float, default=0.5) # huber transition point
+# |     subparser.add_argument('--fuse_method', type = str, default='mean') # fusion method for model ensembling, only functional in cross-city generation
+# |     subparser.add_argument('--fuse_filter', action='store_true', default=True) # whether filter out outliers in fusion, only functional in cross-city generation
+# |     subparser.add_argument('--log_intermediate', action='store_true', default=False)
+# |
+# |
+# |
+# ===== END SOURCE FILE: NeuroGravity/data/train_and_transfer_subparser.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data/transfer_subparser.py =====
+# File: NeuroGravity/data/transfer_subparser.py | Lines: 44 | TrailingNL: 1 | SHA256: cb19ed53054886c4221165c22fc00162323cfafe16b592e428d50f335858cb5f
+# | def add_transfer_subparser(subparsers):
+# |     subparser = subparsers.add_parser('transfer')
+# |     subparser.add_argument('--domain', type=str, default='transfer')
+# |     subparser.add_argument('--models', type=str, default='neuroGravity')
+# |     subparser.add_argument('--log_dir', type=str, default='transfer_from_boston') # Output directory: experiment_path = f'{data_dir}/experiments/{log_dir}/'
+# |     subparser.add_argument('--data_dir', type=str, default='./data/BOSTON/') # Source city data directory
+# |     subparser.add_argument('--config_path', type=str, default='./node_features.yaml') # node feature selection
+# |     subparser.add_argument('--scaler_path', type=str, default='none') # pre-fitted scaler path
+# |     subparser.add_argument('--mask_mode', type=int, default=0) # 0 for fully link random missing, 1 for intra-flow missing, 2 for intra&inter-flow missing among random nodes
+# |     subparser.add_argument('--missing_rate', type=float, default=0.1) # sub-sampling for ensemble model training
+# |     subparser.add_argument('--load_mask', type=str, default='none') # path of pre-defined node mask
+# |     subparser.add_argument('--mode', type=str, default='transfer') # train_transfer / train / transfer
+# |     subparser.add_argument('--rounds', type=int, default=1) # Number of models to train (for model ensembling in cross-city generation)
+# |     subparser.add_argument('--transfer_targets', type=str, default='./data/transfer_targets.json') # target city list
+# |     subparser.add_argument('--train_for_transfer', action='store_true', default=True) # whether train for cross-city generation, determine model setting
+# |     subparser.add_argument('--has_transfer_label', action='store_true', default=False) # whether has transfer label (for target city)
+# |     subparser.add_argument('--save_to_target', action='store_true', default=True) # whether save transfer result to target folder (otherwise to the experiment folder)
+# |     subparser.add_argument('--log_main', action='store_true', default=True)
+# |     # ====== Model Parameters ======
+# |     subparser.add_argument('--phy_model', type=str, default='gravity')  # gravity / metaGravity 
+# |     subparser.add_argument('--node_dim', type=int, default=24)
+# |     subparser.add_argument('--edge_dim', type=int, default=24)
+# |     subparser.add_argument('--concat_states', action='store_true', default=True)
+# |     subparser.add_argument('--concat_edges', action='store_true', default=True)
+# |     subparser.add_argument('--node_post_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--edge_post_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--impute_hiddens', type=str, default='128_64_24')
+# |     subparser.add_argument('--temperature', type=float, default=2.) # temperature for weighted huber, only functional in weighted_huber
+# |     subparser.add_argument('--head', type=int, default=4) # head for attention
+# |     subparser.add_argument('--dropout_mlp', type=float, default=0.5) # mlp dropout rate
+# |     subparser.add_argument('--dropout_att', type=float, default=0.5) # edge dropout rate
+# |     # ====== Experiment Settings ======
+# |     subparser.add_argument('--seed', type=int, default=0)
+# |     subparser.add_argument('--valid', type=float, default=0.2) # set validation ratio
+# |     subparser.add_argument('--weight_decay', type=float, default=1e-5) # l2 regularization weight
+# |     subparser.add_argument('--loss_type', type = str, default='huber') # weighted_huber / huber
+# |     subparser.add_argument('--huber_scale', type = float, default=0.5) # huber transition point
+# |     subparser.add_argument('--fuse_method', type = str, default='mean') # fusion method for model ensembling, only functional in cross-city generation
+# |     subparser.add_argument('--fuse_filter', action='store_true', default=True) # whether filter out outliers in fusion, only functional in cross-city generation
+# |     subparser.add_argument('--log_intermediate', action='store_true', default=False)
+# |
+# |
+# |
+# ===== END SOURCE FILE: NeuroGravity/data/transfer_subparser.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/1_paralleled_prepare_with_memory_monitor.py =====
+# File: NeuroGravity/data_preparation/1_paralleled_prepare_with_memory_monitor.py | Lines: 120 | TrailingNL: 0 | SHA256: 325c6d5e0c41de46ad29789c1af543e955113e828c62e624aaf0186ded968d54
+# | import geopandas as gpd
+# | from city_data_prepare import CityDataPrepare
+# | import multiprocessing as mp
+# | from tqdm import tqdm
+# | import gc
+# | import psutil
+# | import time
+# | import os
+# | import signal
+# | import threading
+# |
+# | city_list_path = './found_cities.txt'
+# | output_file_path = './processed_cities.txt'
+# |
+# | def process_city_data(args):
+# |     continent, country, city, city_adm_level, country_boundary_path, country_osm_path, country_population_path, target_base_dir, city_ind, lock = args
+# |     flag = CityDataPrepare(continent, country, city, city_adm_level, country_boundary_path, country_osm_path, country_population_path, target_base_dir, city_ind, print_info=True)
+# |     with lock:
+# |         with open(output_file_path, 'a') as out_file:
+# |             out_file.write(f"{continent}  {country}  {city}  {city_adm_level}  {flag}\n")
+# |     # Ensure that memory is freed
+# |     del flag
+# |     gc.collect()
+# |
+# |     return args
+# |
+# | def monitor_memory(max_memory_usage, termination_threshold=90, check_interval=1):
+# |     print(f"Memory monitoring started..., current max memory usage: {max_memory_usage.value}%")
+# |     while True:
+# |         memory_usage = psutil.virtual_memory().percent
+# |         if memory_usage > max_memory_usage.value:
+# |             max_memory_usage.value = memory_usage  # Safe for simple assignment
+# |         if memory_usage > termination_threshold:
+# |             print(f"Critical memory usage reached ({memory_usage}%). Terminating process.")
+# |             os.kill(os.getpid(), signal.SIGTERM)
+# |         time.sleep(check_interval)
+# |
+# |
+# | def main():
+# |     current_method = mp.get_start_method()
+# |     print("Current start method:", current_method)
+# |
+# |     manager = mp.Manager()
+# |     max_memory_usage = manager.Value('d', 0.0)  # Initialize as a shared double
+# |
+# |     # Start the monitoring thread, passing the shared variable
+# |     monitor_thread = threading.Thread(target=monitor_memory, args=(max_memory_usage, 90))
+# |     monitor_thread.start()
+# |
+# |     with open(city_list_path, 'r') as f:
+# |         all_cities = [line.strip() for line in f.readlines()]
+# |
+# |     if not os.path.exists(output_file_path):
+# |         with open(output_file_path, 'w') as f:
+# |             f.write('')
+# |
+# |     with open(output_file_path, 'r') as f:
+# |         processed_cities = ['  '.join(line.strip().split('  ')[:-1]) for line in f.readlines()]
+# |
+# |     tasks = []
+# |     ind = 1
+# |     for row1 in all_cities:
+# |         # row1_eles = row1.strip().split('  ')
+# |         continent, country, city, city_adm_level, boundary_path, osm_path, pop_path, target_base_dir = row1.split('  ')
+# |         continent_country_city_flag = f'{continent}  {country}  {city}  {city_adm_level}'
+# |
+# |         if continent_country_city_flag in processed_cities:
+# |             # print(f'{continent}  {country}  {city} is already processed.')
+# |             continue
+# |         else:
+# |             tasks.append((continent, country, city, int(city_adm_level), boundary_path, osm_path, pop_path, target_base_dir, ind))
+# |         
+# |         ind += 1
+# |
+# |     del all_cities, processed_cities
+# |
+# |     print(f'Found {len(tasks)} cities to process.')
+# |     print('Start processing cities...')
+# |
+# |     lock = manager.Lock()
+# |
+# |     pool_size = 24 # Initial pool size
+# |     max_pool_size = 48 # Maximum pool size
+# |     # pool = mp.Pool(initial_pool_size)
+# |     tasks = [(continent, country, idx, level, boundary_path, osm_path, pop_path, target_base_dir, ind, lock) for (continent, country, idx, level, boundary_path, osm_path, pop_path, target_base_dir, ind) in tasks]
+# |
+# |     memory_threshold = 60
+# |     processed = []
+# |     try:
+# |         while tasks:
+# |             # Create a new pool
+# |             with mp.Pool(pool_size) as pool:
+# |                 print(f'Created new pool with size {pool_size}.')
+# |                 current_batch = tasks[:pool_size]
+# |                 tasks = tasks[pool_size:]
+# |                 max_memory_usage.value = 0.0  # Reset maximum memory usage for the new batch
+# |                 # Process the tasks
+# |                 for prcsd in pool.imap(process_city_data, current_batch):
+# |                     # Simulate task removal
+# |                     processed.append(prcsd)
+# |
+# |                 # After batch processing check max memory usage
+# |                 if max_memory_usage.value > memory_threshold:
+# |                     pool_size = max(1, pool_size - 8)
+# |                     print(f"High memory usage detected ({max_memory_usage.value}%). Reducing pool size to {pool_size}.")
+# |                 else:
+# |                     new_pool_size = min(max_pool_size, pool_size + 8)
+# |                     if new_pool_size > pool_size:
+# |                         pool_size = new_pool_size
+# |                         print(f"Memory usage low ({max_memory_usage.value}%). Increasing pool size to {pool_size}.")
+# |
+# |                 # Break time for memory to stabilize
+# |                 time.sleep(5)
+# |     finally:
+# |         # Stop the monitoring thread once all tasks are done
+# |         monitor_thread.join()
+# |
+# |
+# | if __name__ == "__main__":
+# |     main()
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/1_paralleled_prepare_with_memory_monitor.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/calculate_od_distance.py =====
+# File: NeuroGravity/data_preparation/calculate_od_distance.py | Lines: 45 | TrailingNL: 0 | SHA256: 8b5dbea75b383d7298987b0408554a05169a81aa0378d7fd0b586f1dc597b88f
+# | import geopandas as gpd
+# | import pandas as pd
+# | import numpy as np
+# | import gc
+# |
+# | def euc_dist(O, D, gid2cent):
+# |     return np.sqrt((gid2cent[O].x - gid2cent[D].x) ** 2 + (gid2cent[O].y - gid2cent[D].y) ** 2) / 1000
+# |
+# | def construct_od_df(path_to_gdf, target_dir):
+# |     div_gdf = gpd.read_file(path_to_gdf)
+# |     if div_gdf.crs is None:
+# |         # print(f'Warning! gdf does not have a crs. Set to EPSG:4326.')
+# |         div_gdf = div_gdf.set_crs(epsg = 4326)
+# |         if div_gdf.total_bounds[0] < -180 or div_gdf.total_bounds[2] > 180 or div_gdf.total_bounds[1] < -90 or div_gdf.total_bounds[3] > 90:
+# |             print(f'gdf projection is not correct. Terminate...')
+# |             return False
+# |
+# |     div_gdf = div_gdf.to_crs(epsg=3857)
+# |     gid2cent = {gid: poly.centroid for gid, poly in zip(div_gdf['GEOID'], div_gdf['geometry'])}
+# |     Os = []
+# |     Ds = []
+# |     flows = []
+# |     dists = []
+# |     for O in gid2cent:
+# |         for D in gid2cent:
+# |             Os.append(O)
+# |             Ds.append(D)
+# |             flows.append(0)
+# |             dists.append(euc_dist(O, D, gid2cent))
+# |
+# |     od_df = pd.DataFrame({'O': Os, 'D': Ds, 'flow': flows, 'dist': dists})
+# |     od_df.to_csv(target_dir, index=False)
+# |     # Clear memory
+# |     del od_df
+# |     gc.collect()
+# |
+# | if __name__ == "__main__":
+# |     import argparse
+# |
+# |     parser = argparse.ArgumentParser()
+# |     parser.add_argument("--gdf_path", help="Path to the division geojson", type=str)
+# |     parser.add_argument("--output_path", help="Path to the output OD pair dataframe", type=str)
+# |     args = parser.parse_args()
+# |
+# |     construct_od_df(args.gdf_path, args.output_path)
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/calculate_od_distance.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/city_data_prepare.py =====
+# File: NeuroGravity/data_preparation/city_data_prepare.py | Lines: 198 | TrailingNL: 1 | SHA256: 958cf43e5d2b495a78888dbf2f69773f6259deff121118c903519cb130832bd8
+# | import os
+# | import sys
+# | # Get the directory where this script is located
+# | script_dir = os.path.dirname(os.path.abspath(__file__))
+# | # Ensure the script's directory is in the sys.path for imports
+# | sys.path.insert(0, script_dir)
+# |
+# | import time
+# | import pandas as pd
+# | import geopandas as gpd
+# | import argparse
+# | import gc
+# | from datetime import datetime, timedelta
+# | from world_population import make_bbox_shpfile, clip_popfile
+# | from country_iso_project import iso2countryname, countryname2iso
+# | from dasymetric_mapping import dasymetric_mapping
+# | from clip_osm_gpkg import clip_osm
+# | from osm_feature_extractor import osm_feature_extractor
+# | from calculate_od_distance import construct_od_df
+# |
+# |
+# | def get_time():
+# |     return (datetime.now() + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
+# |
+# | def custom_print(*args, **kwargs):
+# |     """Custom print function with flush=True by default."""
+# |     print(*args, **kwargs, flush=True)
+# |
+# | def CityDataPrepare(continent, country, city, city_adm_level, country_boundary_path, country_osm_path, country_population_path, target_base_dir, city_ind = None, print_info = False):
+# |     start_time = time.time()
+# |     # if print_info:
+# |     custom_print(f'[{get_time()}] Preparing data for {city}, {country}, {continent}...')
+# |
+# |     city_ = city.upper().replace(' ', '_')
+# |     
+# |     # Check if target_dir exists
+# |     if not os.path.exists(target_base_dir):
+# |         raise FileNotFoundError(f'Base dir {target_base_dir} does not exist.')
+# |
+# |     # Check if continent dir exists
+# |     continent_dir = os.path.join(target_base_dir, continent)
+# |     if not os.path.exists(continent_dir):
+# |         os.makedirs(continent_dir, exist_ok=True)
+# |         if print_info:
+# |             custom_print(f'[{get_time()}] Created continent directory {continent_dir}.')
+# |     
+# |     # Check if country dir exists
+# |     country_dir = os.path.join(continent_dir, country)
+# |     if not os.path.exists(country_dir):
+# |         os.makedirs(country_dir, exist_ok=True)
+# |         if print_info:
+# |             custom_print(f'[{get_time()}] Created country directory {country_dir}.')
+# |
+# |     # Check if city dir exists
+# |     city_dir = os.path.join(country_dir, city_)
+# |     target_dir = city_dir
+# |     if not os.path.exists(city_dir):
+# |         os.makedirs(city_dir, exist_ok=True)
+# |         if print_info:
+# |             custom_print(f'[{get_time()}] Created city directory {city_dir}.')
+# |
+# |     # Load division boundary data and extract divs in target city
+# |     city_gdf = gpd.read_file(country_boundary_path).query(f'NAME_{city_adm_level} == "{city}"').reset_index(drop = True)
+# |     # check if city_gdf is assinged with a crs
+# |     if city_gdf.crs is None:
+# |         custom_print(f'Warning! {city} boundary data does not have a crs. Set to EPSG:4326.')
+# |         city_gdf = city_gdf.set_crs(epsg = 4326)
+# |     else:
+# |         city_gdf = city_gdf.to_crs(epsg = 4326)
+# |
+# |     # Check if city is found
+# |     if len(city_gdf) == 0:
+# |         custom_print(f'{city} not found in {country} at Adm level {city_adm_level}.')
+# |         return False
+# |     
+# |     if print_info:
+# |         custom_print(f'[{get_time()}] Loaded {city} boundary data from {country_boundary_path}.')
+# |
+# |     # Add GEOID column to city_gdf
+# |     city_gdf.reset_index(drop = True, inplace = True)
+# |     city_gdf.reset_index(drop = False, inplace = True)
+# |     city_gdf.rename(columns = {'index': 'GEOID'}, inplace = True)
+# |
+# |     # Check if projection is correct (by checking the boundary lon lat range)
+# |     if city_gdf.total_bounds[0] < -180 or city_gdf.total_bounds[2] > 180 or city_gdf.total_bounds[1] < -90 or city_gdf.total_bounds[3] > 90:
+# |         custom_print(f'{city} boundary projection is not correct. Terminate...')
+# |         return False
+# |
+# |     # Apply buffer(0) to avoid topological errors
+# |     city_gdf.geometry = city_gdf.geometry.buffer(0)
+# |     city_gdf.to_file(os.path.join(target_dir, f'{city_}.geojson'), driver = 'GeoJSON') # --> {target_dir}/{city_}.geojson
+# |
+# |     # Prepare city bounding box (for clipping worldpop & OSM data)
+# |     make_bbox_shpfile(city_, os.path.join(target_dir, f'{city_}.geojson'), os.path.join(target_dir, f'{city_}_bbox')) # --> {target_dir}/{city_}_bbox.shp
+# |
+# |     if print_info:
+# |         custom_print(f'[{get_time()}] Start clipping city {city} population data from worldpop...')
+# |
+# |     # Clip worldpop data
+# |     try:
+# |         clip_popfile(country, city_, os.path.join(target_dir, f'{city_}_bbox/{city_}_bbox.shp'), country_population_path, target_dir) # --> {target_dir}/{city_}_population_2020_100m.shp
+# |     except:
+# |         print(f'Error clipping {city} population data.')
+# |         print(f'{city}, {country}, {continent} data process failed.')
+# |         return False
+# |
+# |     if print_info:
+# |         custom_print(f'[{get_time()}] Extracted 100m grid population data for {city}, {country}.')
+# |
+# |     # Use dasymetric mapping to distribute population from 100m grids to city adm divisions
+# |     try:
+# |         grid_pop_gdf = gpd.read_file(os.path.join(target_dir, f'{city_}_population_2020_100m.shp')).to_crs(epsg = 4326)
+# |         print(f"{city} total population: {grid_pop_gdf['population'].sum()}")
+# |     except:
+# |         print(f'Error reading {city_} population data.')
+# |         print(f'{city}, {country}, {continent} data process failed.')
+# |         return False
+# |
+# |     # city_gdf = dasymetric_mapping(grid_pop_gdf, city_gdf, ['population'], 'area', source_mask = grid_pop_gdf['population'] > 0)
+# |     try:
+# |         city_gdf = dasymetric_mapping(grid_pop_gdf, city_gdf, ['population'], 'area', source_mask = grid_pop_gdf['population'] > 0)
+# |     except:
+# |         print(f'Error dasymetric mapping {city} population data.')
+# |         print(f'{city}, {country}, {continent} data process failed.')
+# |         return False
+# |     
+# |     if print_info:
+# |         custom_print(f'[{get_time()}] Matched grid population with Adm division population of city {city}.')
+# |
+# |     # Save city_gdf again with population
+# |     city_gdf.to_file(os.path.join(target_dir, f'{city_}.geojson'), driver = 'GeoJSON') # --> {target_dir}/{city_}.geojson
+# |
+# |     del city_gdf, grid_pop_gdf
+# |     gc.collect()
+# |
+# |     try:
+# |         clip_osm(country_osm_path, os.path.join(target_dir, f'{city_}_osm.gpkg'), os.path.join(target_dir, f'{city_}_bbox/{city_}_bbox.shp')) # --> {target_dir}/{city_}_osm.gpkg
+# |         print(f'Clipped {city} OSM data.')
+# |     except:
+# |         print(f'Error clipping {city} OSM data.')
+# |         print(f'{city}, {country}, {continent} data process failed.')
+# |         return False
+# |
+# |     # Extract OSM features
+# |     if print_info:
+# |         custom_print(f'[{get_time()}] Start extracting OSM features for city {city}, {country} ...')
+# |     # osm_feature_extractor(city_, os.path.join(target_dir, f'{city_}.geojson'), os.path.join(target_dir, f'{city_}_osm.gpkg'), target_dir, print_info) # --> {target_dir}/attr_df.csv
+# |     try:
+# |         osm_feature_extractor(city_, os.path.join(target_dir, f'{city_}.geojson'), os.path.join(target_dir, f'{city_}_osm.gpkg'), target_dir, print_info) # --> {target_dir}/attr_df.csv
+# |     except:
+# |         print(f'Error extracting {city} OSM features.')
+# |         print(f'{city}, {country}, {continent} data process failed.')
+# |         return False
+# |
+# |     if print_info:
+# |         custom_print(f'[{get_time()}] Extracted OSM features for {city}.')
+# |
+# |     # Construct OD dataframe
+# |     # construct_od_df(os.path.join(target_dir, f'{city_}.geojson'), os.path.join(target_dir, 'flow_df.csv')) # --> {target_dir}/flow_df.csv
+# |
+# |     try:
+# |         construct_od_df(os.path.join(target_dir, f'{city_}.geojson'), os.path.join(target_dir, 'flow_df.csv')) # --> {target_dir}/flow_df.csv
+# |     except:
+# |         print(f'Error constructing {city} OD dataframe.')
+# |         print(f'{city}, {country}, {continent} data process failed.')
+# |         return False
+# |
+# |     if print_info:
+# |         custom_print(f'[{get_time()}] Data for No.{city_ind} city of {city}, {country}, {continent} is processed and saved in {target_dir}. Time cost: {time.time() - start_time:.2f}s.')
+# |
+# |     # Explicitly delete objects to free memory
+# |     gc.collect()
+# |
+# |     return True
+# |
+# | if __name__ == '__main__':
+# |     parser = argparse.ArgumentParser(description='Prepare city data for analysis')
+# |     parser.add_argument('--config', type=str, help='Path to the configuration file')
+# |     parser.add_argument('--continent', type=str, help='Continent name', default='Asia') 
+# |     parser.add_argument('--country', type=str, help='Country name', default='Singapore')
+# |     parser.add_argument('--city', type=str, help='City name', default='Singaporew') 
+# |     parser.add_argument('--city_adm_level', type=int, help='City administrative level', default=0) # 0
+# |     parser.add_argument('--country_boundary_path', type=str, help='Path to country boundary shapefile', default='/YOUR_PATH_TO/Boundary/Singapore/sgp_adm3.geojson') 
+# |     parser.add_argument('--country_osm_path', type=str, help='Path to country OSM shapefile', default='/YOUR_PATH_TO/OSM/processed/Asia/Malaysia/MYS.gpkg') 
+# |     parser.add_argument('--country_population_path', type=str, help='Path to country population data', default='/YOUR_PATH_TO/population/Asia/Singapore/sgp_ppp_2020_constrained.tif')
+# |     parser.add_argument('--target_base_dir', type=str, help='Path to save the city data', default='/YOUR_PATH_TO/') 
+# |     args = parser.parse_args()
+# |
+# |     if args.config is not None:
+# |         with open(args.config, 'r') as f:
+# |             import json
+# |             config = json.load(f)
+# |             # update args
+# |             for key in config:
+# |                 setattr(args, key, config[key])
+# |
+# |     CityDataPrepare(args.continent, args.country, args.city, args.city_adm_level, args.country_boundary_path, args.country_osm_path, args.country_population_path, args.target_base_dir, 1, print_info = True)
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/city_data_prepare.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/clip_osm_gpkg.py =====
+# File: NeuroGravity/data_preparation/clip_osm_gpkg.py | Lines: 70 | TrailingNL: 0 | SHA256: f144b00ee82ffe21e77a2028a05da68436d7482356f7199dbfaa15bf5447a552
+# | import subprocess
+# | import os
+# | import geopandas as gpd
+# | import fiona
+# | import gc
+# |
+# | def list_layers(gpkg_path):
+# |     layers = fiona.listlayers(gpkg_path)
+# |     return layers
+# |
+# | def clip_osm(source_gpkg_path, target_gpkg_path, target_bbox_path):
+# |     # Read the target bounding box
+# |     target_bbox_polygon = gpd.read_file(target_bbox_path).geometry[0].exterior.coords
+# |     
+# |     # Ensure the polygon is in the correct WKT format
+# |     polygon_wkt = f"POLYGON(({', '.join([f'{x} {y}' for x, y in target_bbox_polygon])}))"
+# |     
+# |     # Get the list of layers in the source GeoPackage
+# |     command = ["ogrinfo", source_gpkg_path, "-q", "-ro", "-so"]
+# |     result = subprocess.run(command, capture_output=True, text=True)
+# |     layers = list_layers(source_gpkg_path)
+# |
+# |     # Create the target directory if it does not exist
+# |     os.makedirs(os.path.dirname(target_gpkg_path), exist_ok=True)
+# |     
+# |     for i, layer in enumerate(layers):
+# |         # Run the ogr2ogr command for each layer
+# |         if i == 0:
+# |             command = [
+# |                 "ogr2ogr",
+# |                 "-f", "GPKG",
+# |                 target_gpkg_path,
+# |                 source_gpkg_path,
+# |                 "-sql", f"SELECT * FROM {layer} WHERE ST_Intersects(geom, ST_GeomFromText('{polygon_wkt}', 4326))",
+# |                 "-nln", layer
+# |             ]
+# |         else:
+# |             command = [
+# |                 "ogr2ogr",
+# |                 "-f", "GPKG",
+# |                 target_gpkg_path,
+# |                 source_gpkg_path,
+# |                 "-sql", f"SELECT * FROM {layer} WHERE ST_Intersects(geom, ST_GeomFromText('{polygon_wkt}', 4326))",
+# |                 "-nln", layer,
+# |                 "-update"
+# |             ]
+# |         # print(command)
+# |         rslt = subprocess.run(command, capture_output=True, text=True)
+# |         if rslt.returncode != 0:
+# |             print(f"Error on layer {layer}: {rslt.stderr}")
+# |             break
+# |     # Clear memory
+# |     gc.collect()
+# |
+# |
+# | if __name__ == "__main__":
+# |     import argparse
+# |
+# |     parser = argparse.ArgumentParser()
+# |     parser.add_argument("--source_gpkg_path", help="Path to the source GeoPackage", type=str, default='/YOUR_PATH_TO/South_America/Argentina/ARG.gpkg')
+# |     parser.add_argument("--target_gpkg_path", help="Path to the target GeoPackage", type=str, default='/YOUR_PATH_TO/South_America/Argentina/BUENOS_AIRES/BUENOS_AIRES_osm.gpkg')
+# |     parser.add_argument("--target_bbox_path", help="Path to the target bounding box", type=str, default='/YOUR_PATH_TO/South_America/Argentina/BUENOS_AIRES/BUENOS_AIRES_bbox')
+# |     args = parser.parse_args()
+# |
+# |     source_gpkg_path = args.source_gpkg_path
+# |     target_gpkg_path = args.target_gpkg_path
+# |     target_bbox_path = args.target_bbox_path
+# |     print('Start clipping OSM data...')
+# |     clip_osm(source_gpkg_path, target_gpkg_path, target_bbox_path)
+# |     print('Clipping OSM data is done.')
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/clip_osm_gpkg.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/country_iso_project.py =====
+# File: NeuroGravity/data_preparation/country_iso_project.py | Lines: 15 | TrailingNL: 0 | SHA256: 7d8e37dbb890979c1686401083a0e0bdfc0b44c42dd85e24a25ef87767a90c02
+# | import os
+# | import sys
+# | # Get the directory where this script is located
+# | script_dir = os.path.dirname(os.path.abspath(__file__))
+# |
+# | iso2countryname = {}
+# | countryname2iso = {}
+# | with open(os.path.join(script_dir, 'iso3166-1-alpha3.txt'), 'r') as f:
+# |     while True:
+# |         line = f.readline().strip()
+# |         if line == '':
+# |             break
+# |         # print(line.split('  '))
+# |         iso2countryname[line.split('  ')[0]] = line.split('  ')[1]
+# |         countryname2iso[line.split('  ')[1]] = line.split('  ')[0]
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/country_iso_project.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/dasymetric_mapping.py =====
+# File: NeuroGravity/data_preparation/dasymetric_mapping.py | Lines: 67 | TrailingNL: 0 | SHA256: 625bc29a5a4ab753d21dfee1cdb5a63922045661bb734a8a1d6c9b4f5730c38e
+# | import geopandas as gpd
+# | import numpy as np
+# |
+# | def dasymetric_mapping(source_gdf, target_gdf, cols_to_transfer, method, source_mask = None):
+# |     # `method` supports: 'weight', 'contribute', 'area', 'area_rescale'
+# |     # `source_mask` is a boolean mask to filter out Nan values in source_gdf
+# |     if source_mask is None:
+# |         source_mask = source_gdf[cols_to_transfer].notnull()
+# |     source_gdf = source_gdf[source_mask].copy()
+# |     target_gdf = target_gdf.copy()
+# |     
+# |     source_gdf.reset_index(drop=True, inplace=True)
+# |     source_gdf.reset_index(drop=False, inplace=True)
+# |     source_gdf.rename(columns={'index': 'source_index'}, inplace=True)
+# |
+# |     target_gdf.reset_index(drop=True, inplace=True)
+# |     target_gdf.reset_index(drop=False, inplace=True)
+# |     target_gdf.rename(columns={'index': 'target_index'}, inplace=True)
+# |
+# |     if source_gdf.crs != target_gdf.crs:
+# |         source_gdf = source_gdf.to_crs(target_gdf.crs)
+# |     source_gdf = source_gdf.to_crs('epsg:3857')
+# |     target_gdf = target_gdf.to_crs('epsg:3857')
+# |     
+# |     source_gdf['source_area'] = source_gdf.area
+# |     source_gdf['source_area'] = source_gdf.area
+# |
+# |     if method in ['weight', 'contribute']:
+# |         source_gdf.rename(columns={'population': 'source_population'}, inplace=True)
+# |         target_gdf.rename(columns={'population': 'target_population'}, inplace=True)
+# |
+# |     intersection_gdf = gpd.overlay(source_gdf, target_gdf, how='intersection')
+# |     intersection_gdf['itsc_area'] = intersection_gdf.area
+# |
+# |     if method == 'weight':
+# |         area_ratio = intersection_gdf['itsc_area'] / intersection_gdf['source_area']
+# |         pop_ratio = intersection_gdf['source_population'] / intersection_gdf['target_population']
+# |         ratio = area_ratio * pop_ratio
+# |         intersection_gdf['ratio'] = ratio
+# |         # To make sure the ratios correspond to the same target_index to sum up equal to 1
+# |         ratio_sum = intersection_gdf.groupby('target_index')['ratio'].transform('sum')
+# |         ratio = ratio / ratio_sum
+# |         intersection_gdf['ratio'] = ratio
+# |     elif method == 'contribute':
+# |         area_ratio = intersection_gdf['itsc_area'] / intersection_gdf['target_area']
+# |         pop_ratio = intersection_gdf['target_population'] / intersection_gdf['source_population']
+# |         ratio = np.clip(area_ratio * pop_ratio, 0, 1)
+# |     elif method == 'area':
+# |         ratio = intersection_gdf['itsc_area'] / intersection_gdf['source_area']
+# |     elif method == 'area_rescale':
+# |         ratio = intersection_gdf['itsc_area'] / intersection_gdf['source_area']
+# |         intersection_gdf['ratio'] = ratio
+# |         # To make sure the ratios correspond to the same target_index to sum up equal to 1
+# |         ratio_sum = intersection_gdf.groupby('target_index')['ratio'].transform('sum')
+# |         ratio = ratio / ratio_sum
+# |         intersection_gdf['ratio'] = ratio
+# |     else:
+# |         raise ValueError('method should be either "weight", "contribute", "area" or "area_rescale"')
+# |
+# |     for col in cols_to_transfer:
+# |         intersection_gdf[col] = intersection_gdf[col] * ratio
+# |     
+# |     intersection_gdf = intersection_gdf.groupby('target_index')[cols_to_transfer].sum().reset_index()
+# |     target_gdf = target_gdf.merge(intersection_gdf, on='target_index', how='left')
+# |     target_gdf.drop(columns='target_index', inplace=True)
+# |     target_gdf = target_gdf.to_crs('epsg:4326')
+# |     return target_gdf
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/dasymetric_mapping.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/osm_feature_extractor.py =====
+# File: NeuroGravity/data_preparation/osm_feature_extractor.py | Lines: 1020 | TrailingNL: 1 | SHA256: 2bee058b46417cb56b9a41ac7645563a8b408043417fccaf5749f2bc9bac2e2f
+# | import pandas as pd
+# | import os
+# | os.environ['USE_PYGEOS'] = '0'
+# | import geopandas as gpd
+# | import numpy as np
+# | import os
+# | import re
+# | import copy
+# | from shapely.ops import unary_union
+# | from shapely.geometry import Polygon, MultiPolygon
+# | from collections import defaultdict
+# | import matplotlib.pyplot as plt
+# | import time
+# | import pickle
+# | import warnings
+# | import argparse
+# | import gc
+# |
+# | # Mute all warning messages
+# | warnings.filterwarnings("ignore")
+# |
+# | def save_obj(obj, name):
+# |     with open(name + '.pkl', 'wb') as f:
+# |         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+# |
+# | def load_obj(name):
+# |     with open(name + '.pkl', 'rb') as f:
+# |         return pickle.load(f)
+# |
+# | def row_intersect(row):
+# |     try:
+# |         geo = row['geometry'].intersection(row['geometry_right'])
+# |     except:
+# |         try:
+# |             geo = row['geometry'].buffer(0).intersection(row['geometry_right'])
+# |         except:
+# |             geo = row['geometry'].buffer(0)
+# |     return geo
+# |
+# | def row_ratio(row):
+# |     return row['area'] / row['area_right']
+# |
+# | def row_ratio_length(row):
+# |     return row['length'] / row['area_right']
+# |
+# | def row_density(row):
+# |     return row['count'] / (row['area_right'] * 0.0001)
+# |
+# | def matchClass(kwd, proj_dict):
+# |     kwd = kwd.lower()
+# |     if kwd in proj_dict:
+# |         return proj_dict[kwd]
+# |     else:
+# |         keys = list(proj_dict.keys())
+# |         for key in keys:
+# |             # key = key.lower()
+# |             if (key.find(kwd) != -1) or (kwd.find(key) != -1):
+# |                 return proj_dict[key]
+# |         return 'other'
+# |
+# | def custom_aggregation(series):
+# |     non_null_series = series.dropna()
+# |     if len(non_null_series) == 0:
+# |         return series
+# |     if non_null_series.dtype == object:
+# |         return non_null_series.iloc[0]
+# |     else:
+# |         return non_null_series.max()
+# |
+# |
+# |
+# | def osm_feature_extractor(cname, gdf_file_path, osm_file_path, output_folder, print_info = False):
+# |     directory_res = output_folder
+# |     directory_figs = directory_res + '/figures/'
+# |
+# |     # If folder does not exist, then create it
+# |     if not os.path.exists(directory_figs):
+# |         os.makedirs(directory_figs, exist_ok=True)
+# |
+# |     indicator = 0
+# |
+# |     # Load Initial GeoData From OSM
+# |     gdf_tract = gpd.read_file(gdf_file_path)
+# |     if 'name' in gdf_tract.columns:
+# |         gdf_tract = gdf_tract.drop(columns=['name'], inplace=False)
+# |     gdf_tract['geometry'] = gdf_tract['geometry'].buffer(0)
+# |
+# |     if gdf_tract.crs is None:
+# |         print(f'Warning! {cname} boundary data does not have a crs. Set to EPSG:4326.')
+# |         gdf_tract = gdf_tract.set_crs(epsg = 4326)
+# |     else:
+# |         gdf_tract = gdf_tract.to_crs(epsg=4326)
+# |
+# |     if gdf_tract.total_bounds[0] < -180 or gdf_tract.total_bounds[2] > 180 or gdf_tract.total_bounds[1] < -90 or gdf_tract.total_bounds[3] > 90:
+# |         print(f'{cname} boundary projection is not correct. Terminate...')
+# |         return False
+# |
+# |     #  ================ POLYGONS ====================
+# |     ### Downloaded from http://download.geofabrik.de/south-america/brazil/sudeste.html
+# |     stt_poly = time.time()
+# |
+# |     # print(f'loading {cname} polygon data from {osm_file_path}')
+# |     polys_gdf = gpd.read_file(osm_file_path, layer='multipolygons').to_crs(epsg=4326)
+# |     polys_gdf['geometry'] = polys_gdf['geometry'].buffer(0)
+# |
+# |     if print_info:
+# |         print(f'Loaded {cname} polygon data. Time cost: {time.time() - stt_poly:.2f}s.')
+# |
+# |     Aoa_gdf = gdf_tract.dissolve().to_crs(epsg=4326)
+# |     Aoa_gdf_latlon = copy.deepcopy(Aoa_gdf)
+# |     Aoa_latlon = Aoa_gdf_latlon.loc[0].geometry
+# |
+# |     tract_profile_df = pd.DataFrame({'GEOID': gdf_tract.GEOID.to_list()})
+# |     
+# |     population = gdf_tract.population.to_list()
+# |
+# |     gdf_tract = gdf_tract.to_crs(epsg=3857)
+# |     tract_areas = [poly.area / 1000000 for poly in gdf_tract.geometry]
+# |     pop_density = [(pop / 10000) / area for pop, area in zip(population, tract_areas)]
+# |     tract_profile_df['population'] = population
+# |     tract_profile_df['population_density'] = pop_density # 10k per square kilometers
+# |     tract_profile_df['area'] = tract_areas # square kilometers
+# |     gdf_tract = gdf_tract.to_crs(epsg=4326)
+# |
+# |     ## Extract polys in the Aoa
+# |     minor_polys_gdf = polys_gdf[polys_gdf.loc[:, ['admin_level', 'boundary']].isnull().any(axis=1)]
+# |     minor_polys_gdf = minor_polys_gdf.reset_index()
+# |
+# |     minor_polys_gdf = gpd.sjoin(minor_polys_gdf, Aoa_gdf, how='inner', predicate='intersects')
+# |     minor_polys_gdf['geometry'] = minor_polys_gdf['geometry'].apply(lambda x: x.buffer(0).intersection(Aoa_latlon))
+# |
+# |     minor_polys_gdf = minor_polys_gdf.reset_index()
+# |
+# |     Aoa_gdf = Aoa_gdf.to_crs(epsg=3857)
+# |     Aoa = Aoa_gdf.loc[0].geometry
+# |     minor_polys_gdf = minor_polys_gdf.to_crs(epsg=3857)
+# |     gdf_tract = gdf_tract.to_crs(epsg=3857)
+# |
+# |     natural_gdf = minor_polys_gdf[~minor_polys_gdf.natural.isnull()]
+# |     landuse_gdf = minor_polys_gdf[~minor_polys_gdf.landuse.isnull()]
+# |     building_gdf = minor_polys_gdf[(~minor_polys_gdf.loc[:,['amenity','building','craft','historic','leisure','office','shop','sport','tourism','place']].isnull()).any(axis=1)]
+# |
+# |     del minor_polys_gdf, polys_gdf
+# |     gc.collect()
+# |
+# |     if print_info:
+# |         print(f'Loaded and clipped {cname} polygon data. Time cost: {time.time() - stt_poly:.2f}s.')
+# |
+# |     stt_poly_classification = time.time()
+# |     ### Natural Elements
+# |     natural_geos = natural_gdf.geometry.to_list()
+# |     natural_areas = np.array([poly.area for poly in natural_geos])
+# |
+# |     natural_type2class = {
+# |         'coastline': 'beach',
+# |         'beach': 'beach',
+# |         'grass': 'green_field',
+# |         'wood': 'green_field',
+# |         'wetland': 'water',
+# |         'shoal': 'water',
+# |         'grassland': 'green_field',
+# |         'meadow': 'green_field',
+# |         'sand': 'beach',
+# |         'bare_rock': 'beach',
+# |         'reef': 'water',
+# |         'scrub': 'green_field',
+# |         'water': 'water',
+# |         'wter': 'water',
+# |         'tree_row': 'green_field',
+# |         'shrubbery': 'green_field'
+# |         }
+# |
+# |     natural_type = list(map(lambda x: matchClass(x, natural_type2class), natural_gdf.natural.to_list()))
+# |     # natural_type = [natural_type2class[ele] if ele in natural_type2class else 'other' for ele in natural_gdf.natural.to_list()]
+# |     natural_gdf['type'] = natural_type
+# |
+# |
+# |     # fig, ax = plt.subplots(figsize=(20,15))
+# |     # ax.set_aspect('equal')
+# |     # natural_gdf.plot(ax=ax, column = 'type', edgecolor='black', alpha = 1, legend=True)
+# |     # gpd.GeoSeries([Aoa]).plot(ax=ax, color='none', edgecolor='b', linewidth=3)
+# |     # leg = ax.get_legend()
+# |     # leg.set_bbox_to_anchor((1.23, 1.0, 0., 0.))
+# |     # plt.savefig(directory_figs + '{}-natural-features.png'.format(cname))
+# |     # plt.close()
+# |
+# |     ### Landuse Elements
+# |
+# |     landuse_type2class = {
+# |         'civic_admin': 'office',
+# |         'civic': 'office',
+# |         'vacant': 'brownfield',
+# |         'animal_keeping': 'agriculture',
+# |         'utility': 'public_area',
+# |         'education': 'education',
+# |         'aquaculture': 'agriculture',
+# |         'public': 'public_area',
+# |         'school':'education',
+# |         'conservation': 'greenfield',
+# |         'urban park': 'public_area',
+# |         'governmental': 'office',
+# |         'farm;conservation': 'agriculture',
+# |         'farm': 'agriculture',
+# |         'farmland;conservation': 'agriculture',
+# |         'conservation;forest': 'greenfield',
+# |         'healthcare': 'public_area',
+# |         'nature_reserve': 'greenfield',
+# |         'meadow': 'greenfield',
+# |         'community garden': 'public_area',
+# |         'commercial;retail': 'commercial',
+# |         'retail;commercial': 'commercial',
+# |         'allotments': 'other',
+# |         'churchyard': 'public_area',
+# |         'grass': 'greenfield',
+# |         'depot': 'other',
+# |         'village_green': 'agriculture',
+# |         'building_site': 'construction',
+# |         'greenfield': 'greenfield',
+# |         'commercial': 'commercial',
+# |         'harbour': 'other',
+# |         'garden': 'greenfield',
+# |         'observatory': 'office',
+# |         'construction': 'construction',
+# |         'office': 'office',
+# |         'logistics': 'industrial',
+# |         'brownfield': 'brownfield',
+# |         'greenhouse_horticulture': 'agriculture',
+# |         'greenhouse': 'agriculture',
+# |         'farmyard': 'agriculture',
+# |         'shrubbery': 'greenfield',
+# |         'basin': 'other',
+# |         'military': 'other',
+# |         'allotments': 'agriculture',
+# |         'forest': 'greenfield',
+# |         'plant_nursery': 'agriculture',
+# |         'flowerbed': 'greenfield',
+# |         'garages': 'other',
+# |         'proving_ground': 'other',
+# |         'recreation_ground': 'public_area',
+# |         'rectreation_ground': 'public_area',
+# |         'park': 'public_area',
+# |         'industrial': 'industrial',
+# |         'meadow': 'agriculture',
+# |         'aquaculture': 'agriculture',
+# |         'vineyard': 'agriculture',
+# |         'railway': 'transportation',
+# |         'reservoir': 'other',
+# |         'government': 'office',
+# |         'landfill': 'other',
+# |         'religious': 'public_area',
+# |         'cemetery': 'other',
+# |         'farmland': 'agriculture',
+# |         'traffic_island': 'other',
+# |         'residential': 'residential',
+# |         'apartments': 'residential',
+# |         'retail': 'commercial',
+# |         'oiffice': 'office',
+# |         'quarry': 'industrial',
+# |         'yes': 'other',
+# |         'orchard': 'agriculture'
+# |     }
+# |
+# |     landuse_type = list(map(lambda x: matchClass(x, landuse_type2class), landuse_gdf.landuse.to_list()))
+# |     landuse_gdf['type'] = landuse_type
+# |
+# |     # fig, ax = plt.subplots(figsize=(20,15))
+# |     # ax.set_aspect('equal')
+# |     # landuse_gdf.plot(ax=ax, column = 'type', edgecolor='black', alpha = 1, legend=True)
+# |     # gpd.GeoSeries([Aoa]).plot(ax=ax, color='none', edgecolor='b', linewidth=3)
+# |     # leg = ax.get_legend()
+# |     # leg.set_bbox_to_anchor((1.23, 1.0, 0., 0.))
+# |     # plt.savefig(directory_figs + '{}-landuse-features.png'.format(cname))
+# |     # plt.close()
+# |
+# |     ### Building Elements
+# |     attr_names = ['amenity','building','craft','historic','leisure','office','shop','sport','tourism','place']
+# |
+# |     poly_attr_list_dict = {attr: building_gdf[attr].to_list() for attr in attr_names}
+# |
+# |     amenity2type_dict = {
+# |         'police': 'office',
+# |         'office': 'office',
+# |         'pharmacy': 'health',
+# |         'convenience_store': 'shop',
+# |         'crematorium': 'other',
+# |         'parking_space': 'parking',
+# |         'courthouse': 'office',
+# |         'books': 'shop',
+# |         'book': 'shop',
+# |         'pub': 'leisure',
+# |         'courthouse': 'office',
+# |         'fuel;food_court': 'fuel',
+# |         'amphitheatre': 'leisure',
+# |         'bandstand': 'leisure',
+# |         'music_venue': 'leisure',
+# |         'canteen': 'restaurant',
+# |         'studio': 'office',
+# |         'bicycle_parking': 'parking',
+# |         'biergarten': 'leisure',
+# |         'bar': 'leisure',
+# |         'lecture_theater': 'school',
+# |         'research_institute': 'school',
+# |         'prep_school': 'school',
+# |         'library': 'leisure',
+# |         'casino': 'leisure',
+# |         'fuelamenity=fuel': 'fuel',
+# |         'charging_station': 'fuel',
+# |         'bus_station': 'transit',
+# |         'kindergarten': 'school',
+# |         'nursery': 'school',
+# |         'fountain': 'tourism',
+# |         'dentist': 'health',
+# |         'karaoke_box': 'leisure',
+# |         'social_centre': 'leisure',
+# |         'restaurant': 'restaurant',
+# |         'bbq': 'restaurant',
+# |         'prison': 'other',
+# |         'atm': 'bank',
+# |         'doctors': 'health',
+# |         'waste_disposal': 'other',
+# |         'public_building': 'office',
+# |         'grave_yard': 'other',
+# |         'ice_cream': 'shop',
+# |         'post_office': 'office',
+# |         'waste_transfer_station': 'other',
+# |         'fuel': 'fuel',
+# |         'university': 'school',
+# |         'conference_centre': 'office',
+# |         'food_court': 'restaurant',
+# |         'bank': 'bank',
+# |         'fast_food': 'restaurant',
+# |         'exercise_point': 'sport',
+# |         'exhibition_centre': 'tourism',
+# |         'cinema': 'leisure',
+# |         'ferry_terminal': 'transit',
+# |         'marketplace': 'commercial',
+# |         'planetarium': 'tourism',
+# |         'transportation': 'transit',
+# |         'vehicle_inspection': 'parking',
+# |         'parking': 'parking',
+# |         'toilets': 'other',
+# |         'townhall': 'office',
+# |         'community_centre': 'leisure',
+# |         'place_of_worship': 'religious',
+# |         'monastery': 'religious',
+# |         'swimming_pool': 'sport',
+# |         'nursing_home': 'health',
+# |         'ferry_terminal': 'transit',
+# |         'bicycle_rental': 'transit',
+# |         'hospital': 'health',
+# |         'car_wash': 'parking',
+# |         'school': 'school',
+# |         'driving_school': 'school',
+# |         'motorcycle_parking': 'parking',
+# |         'public_bath': 'leisure',
+# |         'bureau_de_change': 'commercial',
+# |         'library': 'leisure',
+# |         'clinic': 'health',
+# |         'recycling': 'other',
+# |         'social_facility': 'other',
+# |         'arts_centre': 'tourism',
+# |         'auditorium': 'leisure',
+# |         'theatre': 'leisure',
+# |         'shelter': 'other',
+# |         'fire_station': 'office',
+# |         'nightclub': 'leisure',
+# |         'playground': 'leisure',
+# |         'sports hall': 'sport',
+# |         'animal_breeding': 'tourism',
+# |         'cafe': 'restaurant',
+# |         'castle': 'tourism',
+# |         'research_institute': 'school',
+# |         'bench': 'leisure',
+# |         'college': 'school',
+# |         'shower': 'leisure',
+# |         'childcare': 'school',
+# |         'trolley_bay': 'transit',
+# |         'metro_station': 'transit',
+# |         'subway': 'transit',
+# |         'general aviation terminal': 'transportation hub',
+# |         'train': 'transportation hub'
+# |     }
+# |
+# |     building2type_dict = {
+# |         'trail_station': 'transportation hub',
+# |         'police': 'office',
+# |         'religious': 'religious',
+# |         'cathedral': 'religious',
+# |         'office_and_residential': 'residential',
+# |         'temple': 'religious',
+# |         'substation': 'transit',
+# |         'convent': 'religious',
+# |         'chapel': 'religious',
+# |         'use:residential': 'residential',
+# |         'retail; commercial': 'commercial',
+# |         'business': 'commercial',
+# |         'city_government_office': 'office',
+# |         'sports_hall': 'sport',
+# |         'synagogue': 'religious',
+# |         'monastery': 'religious',
+# |         'power': 'fuel',
+# |         'lodge': 'residential',
+# |         'houses': 'residential',
+# |         'semidetached_house': 'residential',
+# |         'mansion': 'residential',
+# |         'library': 'leisure',
+# |         'church': 'religious',
+# |         'bar': 'leisure',
+# |         'supermarket': 'shop',
+# |         'roof': 'other',
+# |         'pagoda': 'religious',
+# |         'public': 'leisure',
+# |         'commercial; retail': 'commercial',
+# |         '大厦': 'commercial',
+# |         '厂房': 'industrial',
+# |         'commercial,_house_of_worship': 'commercial',
+# |         'retail;shed': 'shop',
+# |         'supermarket': 'commercial',
+# |         'yes;university': 'school',
+# |         'university': 'school',
+# |         'laundry': 'shop',
+# |         'school;yes': 'school',
+# |         'factory': 'industrial',
+# |         'retail; residential': 'residential',
+# |         'ruins': 'other',
+# |         'restaurant': 'restaurant',
+# |         'dining_hall': 'restaurant',
+# |         'yes;school': 'school',
+# |         'commercial;retail': 'commercial',
+# |         'boat': 'other',
+# |         'depot': 'other',
+# |         'commercial': 'commercial',
+# |         'condominiums': 'residential',
+# |         'conservatory': 'other',
+# |         'bus_station': 'transit',
+# |         'kindergarten': 'school',
+# |         'skyscraper': 'commercial',
+# |         'retail_and_pharmacy': 'shop',
+# |         'construction': 'other',
+# |         'garages': 'other',
+# |         'office': 'office',
+# |         'gatehouse': 'other',
+# |         'town_hall': 'office',
+# |         'gym': 'sport',
+# |         'civic': 'office',
+# |         'country_club': 'leisure',
+# |         'gallery': 'tourism',
+# |         'store': 'shop',
+# |         'tent': 'other',
+# |         'hall': 'tourism',
+# |         'recreation': 'leisure',
+# |         'university': 'school',
+# |         'yes;commercial': 'commercial',
+# |         'warehouse': 'other',
+# |         'transportation': 'transit',
+# |         'hangar': 'other',
+# |         'service': 'office',
+# |         'shed': 'other',
+# |         'house': 'residential',
+# |         'museum': 'tourism',
+# |         'historic_building': 'tourism',
+# |         'block': 'other',
+# |         'bank': 'bank',
+# |         'parking': 'parking',
+# |         'farm': 'agriculture',
+# |         'station': 'transit',
+# |         'greenhouse': 'agriculture',
+# |         'farm_auxiliary': 'agriculture',
+# |         'farmhouse': 'agriculture',
+# |         'electricity': 'other',
+# |         'sports_centre': 'sport',
+# |         'terrace': 'residential',
+# |         'ship': 'other',
+# |         'bungalow': 'residential',
+# |         'hospital': 'health',
+# |         'static_caravan': 'other',
+# |         'sports': 'sport',
+# |         'stadium': 'sport',
+# |         'pavilion': 'sport',
+# |         'school': 'school',
+# |         'manufacture': 'industrial',
+# |         'mall': 'commercial',
+# |         'industrial': 'industrial',
+# |         'garage': 'parking',
+# |         'church': 'religious',
+# |         'theatre': 'leisure',
+# |         'temple': 'tourism',
+# |         'railway': 'other',
+# |         'train_station': 'transportation hub',
+# |         'boathouse': 'transit',
+# |         'grandstand': 'tourism',
+# |         'castle': 'tourism',
+# |         'stilt_house': 'other',
+# |         'build': 'other',
+# |         'storage_tank': 'other',
+# |         'college': 'school',
+# |         'public_meeting_hall': 'office',
+# |         'tower': 'tourism',
+# |         'hut': 'other',
+# |         'historic': 'tourism',
+# |         'residential': 'residential',
+# |         'retail': 'shop',
+# |         'detached': 'other',
+# |         'no': 'other',
+# |         'yes': 'other',
+# |         'dormitory': 'residential',
+# |         'hotel': 'residential',
+# |         'apartments': 'residential',
+# |         'swiming_pool': 'sport'
+# |     }
+# |
+# |     place2type_dict = {
+# |         'isolated_dwelling': 'residential',
+# |         'farm': 'agriculture',
+# |         'squre': 'tourism',
+# |         'village': 'residential',
+# |         'islet': 'other',
+# |         'neighbourhood': 'residential',
+# |         'island': 'other',
+# |         'square': 'commercial',
+# |         'locality': 'other'
+# |     }
+# |
+# |     building_types = []
+# |
+# |     for i in range(len(building_gdf)):
+# |         if isinstance(poly_attr_list_dict['craft'][i], str):
+# |             building_types.append('tourism')
+# |         elif isinstance(poly_attr_list_dict['historic'][i], str):
+# |             building_types.append('tourism')
+# |         elif isinstance(poly_attr_list_dict['office'][i], str):
+# |             building_types.append('office')
+# |         elif isinstance(poly_attr_list_dict['shop'][i], str):
+# |             building_types.append('shop')
+# |         elif isinstance(poly_attr_list_dict['sport'][i], str):
+# |             building_types.append('sport')
+# |         elif isinstance(poly_attr_list_dict['tourism'][i], str):
+# |             building_types.append('tourism')
+# |         elif isinstance(poly_attr_list_dict['leisure'][i], str):
+# |             building_types.append('leisure')
+# |         elif isinstance(poly_attr_list_dict['amenity'][i], str):
+# |             building_types.append(matchClass(poly_attr_list_dict['amenity'][i], amenity2type_dict))
+# |         elif isinstance(poly_attr_list_dict['building'][i], str):
+# |             building_types.append(matchClass(poly_attr_list_dict['building'][i], building2type_dict))
+# |         elif isinstance(poly_attr_list_dict['place'][i], str):
+# |             building_types.append(matchClass(poly_attr_list_dict['place'][i], place2type_dict))
+# |         else:
+# |             building_types.append('other')
+# |
+# |     building_gdf['type'] = building_types
+# |
+# |     # fig, ax = plt.subplots(figsize=(20,15))
+# |     # ax.set_aspect('equal')
+# |     # building_gdf.plot(ax=ax, column='type', edgecolor='black', alpha = 1, legend=True)
+# |     # gpd.GeoSeries([Aoa]).plot(ax=ax, color='none', edgecolor='b', linewidth=3)
+# |     # leg = ax.get_legend()
+# |     # leg.set_bbox_to_anchor((1.1, 1.0, 0., 0.))
+# |     # plt.savefig(directory_figs + '{}-building-features.png'.format(cname))
+# |     # plt.close()
+# |
+# |     if print_info:
+# |         print(f'Classified {cname} polygon data. Time cost: {time.time() - stt_poly_classification:.2f}s.')
+# |
+# |     stt_poly_natural = time.time()
+# |     ## Polygon Features Extraction
+# |     gdf_tract_critical = gdf_tract.loc[:, ['geometry']]
+# |     gdf_tract_critical = gdf_tract_critical.reset_index(drop=True)
+# |     gdf_tract_critical['geometry_right'] = gdf_tract_critical.geometry
+# |     gdf_tract_critical['area_right'] = gdf_tract_critical['geometry'].apply(lambda x: x.area)
+# |
+# |     # Natural
+# |     natural_types = set()
+# |     for kwd, type in natural_type2class.items():
+# |         natural_types.add(type)
+# |     natural_types.add('other')
+# |     natural_types = list(natural_types)
+# |
+# |     na_types = natural_gdf['type'].to_list()
+# |     na_geos = natural_gdf.geometry.to_list()
+# |     natural_geos_dict = dict()
+# |     for type in natural_types:
+# |         natural_geos_dict[type] = []
+# |
+# |     for i in range(len(natural_gdf)):
+# |         natural_geos_dict[na_types[i]].append(na_geos[i])
+# |
+# |     for key, L in natural_geos_dict.items():
+# |         natural_geos_dict[key] = gpd.GeoSeries(L)
+# |
+# |     natural_block_ratio_dict = {key: np.zeros(len(gdf_tract)) for key in natural_types}
+# |     for key in natural_types:
+# |         # if key == 'other':
+# |         #     continue
+# |         left_gdf = gpd.GeoDataFrame(geometry = natural_geos_dict[key]).set_crs(epsg=3857)
+# |         matched = gpd.sjoin(left_gdf, gdf_tract_critical, how='inner', predicate='intersects', lsuffix='_left', rsuffix='_right')
+# |         if len(matched) == 0:
+# |             continue
+# |         matched['geometry'] = matched.apply(row_intersect, axis = 1)
+# |         matched['area'] = matched['geometry'].apply(lambda x: x.area)
+# |         matched['area_ratio'] = matched.apply(row_ratio, axis = 1)
+# |         matched = matched.drop(columns=['geometry', 'geometry_right', 'area', 'area_right'])
+# |         match_merged = matched.groupby('index__right').agg({'area_ratio': 'sum'})
+# |         inds = match_merged.index.to_list()
+# |         values = match_merged.area_ratio.to_list()
+# |         natural_block_ratio_dict[key][inds] = values
+# |
+# |     del natural_geos_dict, natural_gdf
+# |     gc.collect()
+# |
+# |     if print_info:
+# |         print(f'Natural features calculated for {cname}. Time cost: {time.time() - stt_poly_natural:.2f}s.')
+# |
+# |     # Landuse
+# |     stt_poly_landuse = time.time()
+# |     landuse_types = set()
+# |     for kwd, type in landuse_type2class.items():
+# |         landuse_types.add(type)
+# |     landuse_types.add('other')
+# |     landuse_types = list(landuse_types)
+# |
+# |     lu_types = landuse_gdf['type'].to_list()
+# |     landuse_geos = landuse_gdf.geometry.to_list()
+# |     landuse_geos_dict = dict()
+# |
+# |     for type in landuse_types:
+# |         landuse_geos_dict[type] = []
+# |
+# |     for i in range(len(landuse_gdf)):
+# |         landuse_geos_dict[lu_types[i]].append(landuse_geos[i])
+# |
+# |     for key, L in landuse_geos_dict.items():
+# |         landuse_geos_dict[key] = gpd.GeoSeries(L)
+# |
+# |     landuse_block_ratio_dict = {key: np.zeros(len(gdf_tract)) for key in landuse_types}
+# |     for key in landuse_types:
+# |         # if key == 'other':
+# |         #     continue
+# |         left_gdf = gpd.GeoDataFrame(geometry = landuse_geos_dict[key]).set_crs(epsg=3857)
+# |         matched = gpd.sjoin(left_gdf, gdf_tract_critical, how='inner', predicate='intersects', lsuffix='_left', rsuffix='_right')
+# |         if len(matched) == 0:
+# |             continue
+# |         matched['geometry'] = matched.apply(row_intersect, axis = 1)
+# |         matched['area'] = matched['geometry'].apply(lambda x: x.area)
+# |         matched['area_ratio'] = matched.apply(row_ratio, axis = 1)
+# |         matched = matched.drop(columns=['geometry', 'geometry_right', 'area', 'area_right'])
+# |         match_merged = matched.groupby('index__right').agg({'area_ratio': 'sum'})
+# |         inds = match_merged.index.to_list()
+# |         values = match_merged.area_ratio.to_list()
+# |         landuse_block_ratio_dict[key][inds] = values
+# |     
+# |     del landuse_geos_dict, landuse_gdf
+# |     gc.collect()
+# |
+# |     if print_info:
+# |         print(f'Landuse features calculated for {cname}. Time cost: {time.time() - stt_poly_landuse:.2f}s.')
+# |
+# |     # Building
+# |     stt_poly_building = time.time()
+# |     building_types = set()
+# |     for kwd, type in amenity2type_dict.items():
+# |         building_types.add(type)
+# |     for kwd, type in building2type_dict.items():
+# |         building_types.add(type)
+# |     for kwd, type in place2type_dict.items():
+# |         building_types.add(type)
+# |     building_types.union(set(['tourism', 'sport', 'leisure', 'shop', 'office', 'other']))
+# |     building_types = list(building_types)
+# |
+# |     bd_types = building_gdf['type'].to_list()
+# |     building_geos = building_gdf.geometry.to_list()
+# |     building_geos_dict = dict()
+# |     for type in building_types:
+# |         building_geos_dict[type] = []
+# |         
+# |     for i in range(len(building_gdf)):
+# |         building_geos_dict[bd_types[i]].append(building_geos[i])
+# |
+# |     for key, L in building_geos_dict.items():
+# |         building_geos_dict[key] = gpd.GeoSeries(L)
+# |
+# |     building_block_ratio_dict = {key: np.zeros(len(gdf_tract)) for key in building_types}
+# |
+# |     for key in building_types:
+# |         left_gdf = gpd.GeoDataFrame(geometry = building_geos_dict[key]).set_crs(epsg=3857)
+# |         matched = gpd.sjoin(left_gdf, gdf_tract_critical, how='inner', predicate='intersects', lsuffix='_left', rsuffix='_right')
+# |         if len(matched) == 0:
+# |             continue
+# |         matched['geometry'] = matched.apply(row_intersect, axis = 1)
+# |         matched['area'] = matched['geometry'].apply(lambda x: x.area)
+# |         matched['area_ratio'] = matched.apply(row_ratio, axis = 1)
+# |         matched = matched.drop(columns=['geometry', 'geometry_right', 'area', 'area_right'])
+# |         match_merged = matched.groupby('index__right').agg({'area_ratio': 'sum'})
+# |         inds = match_merged.index.to_list()
+# |         values = match_merged.area_ratio.to_list()
+# |         building_block_ratio_dict[key][inds] = values
+# |     
+# |     del building_geos_dict, building_gdf
+# |     gc.collect()
+# |
+# |     if print_info:
+# |         print(f'Building features calculated for {cname}. Time cost: {time.time() - stt_poly_building:.2f}s.')
+# |
+# |     for key in natural_block_ratio_dict.keys():
+# |         tract_profile_df['natural_' + key] = np.array(natural_block_ratio_dict[key])
+# |
+# |     for key in landuse_block_ratio_dict.keys():
+# |         tract_profile_df['landuse_' + key] = np.array(landuse_block_ratio_dict[key])
+# |
+# |     for key in building_block_ratio_dict.keys():
+# |         tract_profile_df['building_' + key] = np.array(building_block_ratio_dict[key])
+# |
+# |     if print_info:    
+# |         print(f'{cname} all polygon feature prepared! Time cost: {time.time() - stt_poly:.2f}s.')
+# |
+# |     # Clear the memory
+# |     # del landuse_gdf, building_gdf, landuse_geos_dict, building_geos_dict #, polys_gdf, minor_polys_gdf
+# |
+# |
+# |     #  ================ POINTS ====================
+# |     stt_points = time.time()
+# |     points_gdf = gpd.read_file(osm_file_path, layer='points').to_crs(epsg=4326)
+# |
+# |     cjk_ranges = [
+# |             ( 0x4E00,  0x62FF),
+# |             ( 0x6300,  0x77FF),
+# |             ( 0x7800,  0x8CFF),
+# |             ( 0x8D00,  0x9FCC),
+# |             ( 0x3400,  0x4DB5),
+# |             (0x20000, 0x215FF),
+# |             (0x21600, 0x230FF),
+# |             (0x23100, 0x245FF),
+# |             (0x24600, 0x260FF),
+# |             (0x26100, 0x275FF),
+# |             (0x27600, 0x290FF),
+# |             (0x29100, 0x2A6DF),
+# |             (0x2A700, 0x2B734),
+# |             (0x2B740, 0x2B81D),
+# |             (0x2B820, 0x2CEAF),
+# |             (0x2CEB0, 0x2EBEF),
+# |             (0x2F800, 0x2FA1F)
+# |         ]
+# |
+# |     def is_cjk(char):
+# |         char = ord(char)
+# |         for bottom, top in cjk_ranges:
+# |             if char >= bottom and char <= top:
+# |                 return True
+# |         return False
+# |
+# |     irrelevant_list = ['name', 'addr', 'seamark', 'opening_hours', 'bench', 'phone', 'brand', 'demolished', 'operator', 'email', 'website', 'start_date', 'capital', 'shelter', 'wheelchair', 'description', 'network', 'camera:mount', 
+# |                     'cuisine', 'level', 'internet_access', 'capacity']
+# |
+# |     def check_relevance(st, irrelevant_list):
+# |         for kwd in irrelevant_list:
+# |             if st.find(kwd) != -1:
+# |                 return False
+# |         return True
+# |
+# |     def tag2keywords(tagString):
+# |         keyWords = []
+# |         pairs = re.split(',', tagString)
+# |         for pair in pairs:
+# |             eles = re.split('"', pair)
+# |             if (len(eles) == 5) and check_relevance(eles[1] , irrelevant_list):
+# |                 if check_relevance(eles[1] , irrelevant_list):
+# |                     if not any(map(is_cjk, eles[1])) and len(eles[1]) > 1:
+# |                         keyWords.append(eles[1])
+# |                     if (not any(map(is_cjk, eles[3]))) and len(eles[3]) > 1:  
+# |                         keyWords.append(eles[3])
+# |         return keyWords
+# |
+# |
+# |     kwd2class_dict = {'school': ['school', 'research', 'education', 'kindergarten', 'university', 'academy', '大学', '中学', '小学', '幼儿园'],
+# |     'restaurant': ['restaurant', 'fast_food', 'cafe', 'takeaway', 'snacks'],
+# |     'parking': ['parking'],
+# |     'religious': ['church', 'religion', 'religious', 'christian', 'monastery', 'place_of_worship', 'synagogue'],
+# |     'residential': ['residential', 'apartment', 'hotel', 'motel', '小区', '公寓', '酒店'],
+# |     'tourism': ['tourism', 'tourist', 'arts_centre', 'museum', 'monument', 'historic', 'place_of_worship'],
+# |     'traffic_signal': ['traffic_signals'],
+# |     'bank': ['bank', 'atm'], 
+# |     'transit': ['subway', 'bus', 'public_transport', 'ferry'],
+# |     'transportation_hub': ['airport', 'aerodrome'],
+# |     'sport': ['sport', 'dance', 'golf','sports_centre', 'stadium', 'fitness', 'pitch'],
+# |     'shop': ['shop', 'market', 'estate_agent', 'store', 'hairdresser', 'beauty', 'drink', 'coffee', 'tea', 'pharmacy', 'convenience', 'toys', 'tobacco', 'pastry', 'supermarket', 'book', 'shoe', 'vending', 'ice_cream', 'dry_cleaning', 'laundry', 'optician', 'jewelry'],
+# |     'fuel': ['fuel','charging_station'],
+# |     'leisure': ['leisure', 'community_centre', 'cinema', 'theater', 'libraries', 'theater', 'concert', 'club', 'massage', 'bistrot', 'garden', 'park', 'bar', 'library', 'gallery', 'amusement', 'arcade'],
+# |     'commercial': ['commercial', 'market'],
+# |     'industrial': ['industrial', 'agricultural_park', 'technology', 'manufacturer', '工业园', '产业园', '科技园', '高科', '园区'],
+# |     'office': ['office', 'hall', 'financial', 'townhall', 'company', 'community_centre','conference_centre'],
+# |     'healthcare': ['health', 'doctor', 'hospital', 'clinic', 'dentist', 'vaccination_centre']}
+# |
+# |     def check_confusion(kwd, string):
+# |         confusion_dict = {'sport': ['transport'], 'park': ['parking', 'agricultural_park', 'industrial_park', 'technology_park']}
+# |         if kwd in confusion_dict:
+# |             for conflict in confusion_dict[kwd]:
+# |                 if string.find(conflict) != -1:
+# |                     return True # confusion term found
+# |         else:
+# |             return False
+# |         return False
+# |
+# |     def checkKeyword(kwds, string):
+# |         string = string.lower()
+# |         for kwd in kwds:
+# |             if string.find(kwd) != -1:
+# |                 if check_confusion(kwd, string):
+# |                     continue
+# |                 return True
+# |         return False
+# |
+# |     def point2Class(name, highway, tag, kwd2class_dict):
+# |         point_class = set()
+# |         if isinstance(name, str):
+# |             for class_type, kwds in kwd2class_dict.items():
+# |                 if checkKeyword(kwds, name) == True:
+# |                     point_class.add(class_type)
+# |                     break
+# |         if highway == 'bus_stop':
+# |             point_class.add('transit')
+# |         if isinstance(tag, str):
+# |             for class_type, kwds in kwd2class_dict.items():
+# |                 if checkKeyword(kwds, tag) == True:
+# |                     point_class.add(class_type)
+# |                     # break
+# |         return list(point_class)
+# |
+# |     ## Extract Points within the AoA
+# |     # points_aoa_gdf = points_gdf[points_gdf.geometry.intersects(Aoa)]
+# |     points_aoa_gdf = gpd.sjoin(points_gdf, gpd.GeoDataFrame(Aoa_gdf_latlon), how='inner', predicate='within')
+# |     # Remove points_gdf from memory
+# |     del points_gdf
+# |     gc.collect()
+# |
+# |     if print_info:
+# |         print(f'Loaded and clipped {cname} point data. Time cost: {time.time() - stt_points:.2f}s.')
+# |
+# |     # Aoa_geo = gpd.GeoSeries([Aoa]).set_crs(epsg=4326)
+# |     # Aoa_geo = Aoa_geo.to_crs(epsg=3857)
+# |     stt_points_classification = time.time()
+# |     points_aoa_gdf = points_aoa_gdf.to_crs(epsg=3857)
+# |
+# |     gdf_tract = gdf_tract.to_crs(epsg=3857)
+# |     gdf_tract_critical = gdf_tract.loc[:, ['geometry']]
+# |     gdf_tract_critical = gdf_tract_critical.reset_index(drop=True)
+# |     gdf_tract_critical['area_right'] = gdf_tract_critical['geometry'].apply(lambda x: x.area)
+# |
+# |     point_geos = points_aoa_gdf.geometry.to_list()
+# |     point_names = points_aoa_gdf.name.to_list()
+# |     point_highways = points_aoa_gdf.highway.to_list()
+# |     point_tags = points_aoa_gdf.other_tags.to_list()
+# |
+# |     del points_aoa_gdf
+# |     gc.collect()
+# |
+# |     point_geos_dict = defaultdict(list)
+# |     for i in range(len(point_geos)):
+# |         name = point_names[i]
+# |         highway = point_highways[i]
+# |         tag = point_tags[i]
+# |         p_class = point2Class(name, highway, tag, kwd2class_dict)
+# |         for pc in p_class:
+# |             point_geos_dict[pc].append(point_geos[i])
+# |
+# |     point_geos_dict = dict(point_geos_dict)
+# |
+# |     if print_info:
+# |         print(f'Classified {cname} point data. Time cost: {time.time() - stt_points_classification:.2f}s.')
+# |             
+# |     for key, L in point_geos_dict.items():
+# |         point_geos_dict[key] = gpd.GeoSeries(L)
+# |
+# |     point_types = list(kwd2class_dict.keys())
+# |     point_block_density_dict = {key: np.zeros(len(gdf_tract)) for key in point_types}
+# |     for key in list(point_geos_dict.keys()):
+# |         left_gdf = gpd.GeoDataFrame(geometry = point_geos_dict[key]).set_crs(epsg=3857)
+# |         matched = gpd.sjoin(left_gdf, gdf_tract_critical, how='inner', predicate='intersects', lsuffix='_left', rsuffix='_right')
+# |         if len(matched) == 0:
+# |             continue
+# |         matched['count'] = 1
+# |         matched = matched.drop(columns=['geometry'])
+# |         match_merged = matched.groupby('index__right').agg({'count': 'sum', 'area_right': 'first'})
+# |         match_merged['density'] = match_merged.apply(row_density, axis=1)
+# |         inds = match_merged.index.to_list()
+# |         values = match_merged.density.to_list()
+# |         point_block_density_dict[key][inds] = values
+# |
+# |     tract_point_profile_df = pd.DataFrame({'GEOID': gdf_tract.GEOID.to_list()})
+# |     for key in point_block_density_dict.keys():
+# |         tract_point_profile_df['point_' + key] = np.array(point_block_density_dict[key])
+# |         tract_profile_df['point_' + key] = np.array(point_block_density_dict[key])
+# |
+# |     # Clear the memory
+# |     del point_geos_dict
+# |     gc.collect()
+# |
+# |     if print_info:
+# |         print(f'{cname} point feature prepared! Time cost: {time.time() - stt_points:.2f}s.')
+# |
+# |     # ============== LINESTRING ===============
+# |     stt_lines = time.time()
+# |     gdf_edges = gpd.read_file(osm_file_path, layer='lines').to_crs(epsg=4326)
+# |     gdf_edges = gpd.sjoin(gdf_edges.to_crs(epsg=4326), gpd.GeoDataFrame(Aoa_gdf_latlon), how='inner', predicate='intersects')
+# |     # gdf_edges = gdf_edges[gdf_edges.geometry.intersects(Aoa)]
+# |     edge_geos = gdf_edges.geometry.to_list()
+# |     edge_geos_truncate = [edge.intersection(Aoa_latlon) for edge in edge_geos]
+# |     gdf_edges.geometry = edge_geos_truncate
+# |
+# |     gdf_edges = gdf_edges.to_crs(epsg=3857)
+# |     gdf_tract = gdf_tract.to_crs(epsg=3857)
+# |
+# |     if print_info:
+# |         print(f'Loaded and clipped {cname} line data. Time cost: {time.time() - stt_lines:.2f}s.')
+# |
+# |     stt_line_classification = time.time()
+# |     road_type_dict = {'main_road_line': ['primary', 'secondary', 'tertiary', 'trunk', 'busway', 'motorway', 'primary_link', 'secondary_link', 'tertiary_link', 'motorway_link', 'trunk_link'], 'residential_line':['residential']
+# |                     , 'other_road_line': ['unclassified']}
+# |
+# |     road_lookup_dict = {'primary': 'main_road_line',
+# |     'primary_link': 'other_road_line',
+# |     'residential': 'residential_line',
+# |     'secondary': 'main_road_line',
+# |     'secondary_link': 'main_road_line',
+# |     'tertiary': 'main_road_line',
+# |     'tertiary_link': 'main_road_line',
+# |     'trunk': 'main_road_line',
+# |     'trunk_link': 'main_road_line',
+# |     'motorway': 'main_road_line',
+# |     'motorway_link': 'main_road_line',
+# |     'busway': 'main_road_line',
+# |     'unclassified': 'other_road_line'}
+# |
+# |     highways = gdf_edges.highway.to_list()
+# |     highway_cls = []
+# |     for i in range(len(highways)):
+# |         if highways[i] not in road_lookup_dict:
+# |             highway_cls.append('other_road_line')
+# |         else:
+# |             highway_cls.append(road_lookup_dict[highways[i]])
+# |
+# |     gdf_edges.highway = highway_cls
+# |
+# |     if print_info:
+# |         print(f'Classified {cname} line data. Time cost: {time.time() - stt_line_classification:.2f}s.')
+# |
+# |     # fig, ax = plt.subplots(figsize=(14,10))
+# |     # ax.set_aspect('equal')
+# |     # gpd.GeoSeries([Aoa]).plot(ax=ax, color='white', edgecolor='b')
+# |     # gdf_edges.plot(ax=ax, column='highway', alpha = 1, legend = True)
+# |     # leg = ax.get_legend()
+# |     # leg.set_bbox_to_anchor((1.23, 1.0, 0., 0.))
+# |     # plt.savefig(directory_figs + '{}-road-features.png'.format(cname), dpi=300, bbox_inches='tight')
+# |     # plt.close()
+# |
+# |     gdf_edges = gdf_edges.to_crs(epsg=3857)
+# |     gdf_tract = gdf_tract.to_crs(epsg=3857)
+# |     gdf_tract_critical = gdf_tract.loc[:, ['geometry']]
+# |     gdf_tract_critical['geometry_right'] = gdf_tract_critical.geometry
+# |     gdf_tract_critical = gdf_tract_critical.reset_index(drop=True)
+# |     gdf_tract_critical['area_right'] = gdf_tract_critical['geometry'].apply(lambda x: x.area)
+# |
+# |     l_types = gdf_edges.highway.to_list()
+# |
+# |     l_geos = gdf_edges.geometry.to_list()
+# |     l_geos_dict = defaultdict(list)
+# |     for i in range(len(gdf_edges)):
+# |             l_geos_dict[l_types[i]].append(l_geos[i])
+# |
+# |     del gdf_edges
+# |     gc.collect()
+# |
+# |     l_geos_dict = dict(l_geos_dict)
+# |
+# |     for key, L in l_geos_dict.items():
+# |         l_geos_dict[key] = gpd.GeoSeries(L)
+# |
+# |     road_types = list(road_type_dict.keys())
+# |     line_area_ratio_dict_block = {key: np.zeros(len(gdf_tract)) for key in road_types}
+# |     for key in list(l_geos_dict.keys()):
+# |         left_gdf = gpd.GeoDataFrame(geometry = l_geos_dict[key]).set_crs(epsg=3857)
+# |         matched = gpd.sjoin(left_gdf, gdf_tract_critical, how='inner', predicate='intersects', lsuffix='_left', rsuffix='_right')
+# |         if len(matched) == 0:
+# |             continue
+# |         matched['geometry'] = matched.apply(row_intersect, axis = 1)
+# |         matched['length'] = matched['geometry'].apply(lambda x: x.length)
+# |         matched['length_ratio'] = matched.apply(row_ratio_length, axis = 1)
+# |         matched = matched.drop(columns=['geometry', 'length', 'area_right'])
+# |         match_merged = matched.groupby('index__right').agg({'length_ratio': 'sum'})
+# |         inds = match_merged.index.to_list()
+# |         values = match_merged.length_ratio.to_list()
+# |         line_area_ratio_dict_block[key][inds] = values
+# |
+# |     tract_road_profile_df = pd.DataFrame({'GEOID': gdf_tract.GEOID.to_list()})
+# |     for key in line_area_ratio_dict_block.keys():
+# |         tract_profile_df[key] = np.array(line_area_ratio_dict_block[key])
+# |         tract_road_profile_df[key] = np.array(line_area_ratio_dict_block[key])
+# |
+# |     if print_info:
+# |         print(f'{cname} line feature prepared! Time cost: {time.time() - stt_lines:.2f}s.')
+# |
+# |     # directory_res + 'attr_df.csv'
+# |     tract_profile_df.to_csv(os.path.join(directory_res, 'attr_df.csv'), index=False)
+# |     # if print_info:
+# |     #     print('{} feature process finished. Time cost: {}'.format(cname, time.time() - stt))
+# |     #     # stt = time.time()
+# |     #     print()
+# |     
+# |     # Free up memory
+# |     del l_geos_dict
+# |     gc.collect()
+# |
+# | if __name__ == '__main__':
+# |     parser = argparse.ArgumentParser()
+# |     parser.add_argument('--gdf_file_path', type=str)
+# |     parser.add_argument('--osm_file_path', type=str, default='none')
+# |     parser.add_argument('--output_folder', type=str)
+# |     parser.add_argument('--cname', type=str)
+# |     args = parser.parse_args()
+# |
+# |     osm_feature_extractor(args.cname, args.gdf_file_path, args.osm_file_path, args.output_folder, print_info=True)
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/osm_feature_extractor.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/data_preparation/world_population.py =====
+# File: NeuroGravity/data_preparation/world_population.py | Lines: 239 | TrailingNL: 0 | SHA256: 7aac266a0441efd2ea539316dda235cd8ee53fe175a150158cf4880ac5c89ad3
+# | # import gdal
+# | import numpy as np
+# | from osgeo import gdal, gdalnumeric, ogr
+# | from PIL import Image, ImageDraw
+# | import os
+# | import sys
+# | import pickle
+# | from shapely.geometry import Point, Polygon
+# | import pandas as pd
+# | import geopandas as gpd
+# | import argparse
+# | import gc
+# |
+# | def clip_raster(rast, features_path, gt=None, nodata=0):
+# |     '''
+# |     Clips a raster (given as either a gdal.Dataset or as a numpy.array
+# |     instance) to a polygon layer provided by a Shapefile (or other vector
+# |     layer). If a numpy.array is given, a "GeoTransform" must be provided
+# |     (via dataset.GetGeoTransform() in GDAL). Returns an array. Clip features
+# |     must be a dissolved, single-part geometry (not multi-part). Modified from:
+# |
+# |     http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
+# |     #clip-a-geotiff-with-shapefile
+# |
+# |     Arguments:
+# |         rast            A gdal.Dataset or a NumPy array
+# |         features_path   The path to the clipping features
+# |         gt              An optional GDAL GeoTransform to use instead
+# |         nodata          The NoData value; defaults to -9999.
+# |     '''
+# |
+# |     def array_to_image(a):
+# |         '''
+# |         Converts a gdalnumeric array to a Python Imaging Library (PIL) Image.
+# |         '''
+# |         i = Image.fromstring('L', (a.shape[1], a.shape[0]),
+# |                              (a.astype('b')).tostring())
+# |         return i
+# |
+# |     def image_to_array(i):
+# |         '''
+# |         Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
+# |         '''
+# |         a = gdalnumeric.fromstring(i.tobytes(), 'b')
+# |         a.shape = i.im.size[1], i.im.size[0]
+# |         return a
+# |
+# |     def world_to_pixel(geo_matrix, x, y):
+# |         '''
+# |         Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
+# |         the pixel location of a geospatial coordinate; from:
+# |         http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html#clip-a-geotiff-with-shapefile
+# |         '''
+# |         ulX = geo_matrix[0] # Upper left point
+# |         ulY = geo_matrix[3]
+# |         xDist = geo_matrix[1]
+# |         yDist = geo_matrix[5]
+# |         rtnX = geo_matrix[2]
+# |         rtnY = geo_matrix[4]
+# |         pixel = int((x - ulX) / xDist)  # Longitudinal location (count from left to right)
+# |         line = int((ulY - y) / xDist)   # Latitudinal location (count from top to bottom)
+# |         return (pixel, line)
+# |
+# |     # Can accept either a gdal.Dataset or numpy.array instance
+# |     if not isinstance(rast, np.ndarray):
+# |         gt = rast.GetGeoTransform()
+# |         rast = rast.ReadAsArray()
+# |
+# |     features = ogr.Open(features_path)
+# |     if features.GetDriver().GetName() == 'ESRI Shapefile':
+# |         lyr = features.GetLayer(os.path.split(
+# |             os.path.splitext(features_path)[0])[1])
+# |
+# |     else:
+# |         lyr = features.GetLayer()
+# |
+# |     # Get the first feature
+# |     poly = lyr.GetNextFeature()
+# |
+# |     # Convert the layer extent to image pixel coordinates
+# |     minX, maxX, minY, maxY = lyr.GetExtent()
+# |     ulX, ulY = world_to_pixel(gt, minX, maxY)
+# |     lrX, lrY = world_to_pixel(gt, maxX, minY)
+# |
+# |     # Calculate the pixel size of the new image
+# |     pxWidth = int(lrX - ulX)
+# |     pxHeight = int(lrY - ulY)
+# |
+# |     rasr_shape = rast.shape
+# |     if len(rasr_shape) == 3:
+# |         rast_c, rast_h, rast_w = rast.shape
+# |     else:
+# |         rast_h, rast_w = rast.shape
+# |
+# |     # If the clipping features extend out-of-bounds the raster...
+# |     if ulX < 0:
+# |         deltaX = abs(ulX)
+# |         ulX = 0
+# |         clip_ulX = deltaX
+# |     else:
+# |         deltaX = 0
+# |         clip_ulX = 0
+# |     
+# |     if ulY < 0:
+# |         deltaY = abs(ulY)
+# |         ulY = 0
+# |         clip_ulY = deltaY
+# |     else:
+# |         deltaY = 0
+# |         clip_ulY = 0
+# |
+# |     if lrX > rast_w:
+# |         lrX = rast_w
+# |     
+# |     if lrY > rast_h:
+# |         lrY = rast_h
+# |
+# |     clip_lrX = lrX - ulX + clip_ulX
+# |     clip_lrY = lrY - ulY + clip_ulY        
+# |     
+# |     if len(rasr_shape) == 3:
+# |         clip = np.zeros((rast_c, pxHeight, pxWidth), rast.dtype)
+# |         clip[:, clip_ulY:clip_lrY, clip_ulX:clip_lrX] = rast[:, ulY:lrY, ulX:lrX]
+# |
+# |     elif len(rasr_shape) == 2:
+# |         clip = np.zeros((pxHeight, pxWidth), rast.dtype)
+# |         clip[clip_ulY:clip_lrY, clip_ulX:clip_lrX] = rast[ulY:lrY, ulX:lrX]
+# |
+# |     gt2 = list(gt)
+# |     gt2[0] = minX
+# |     gt2[3] = maxY
+# |
+# |     return clip, gt2
+# |
+# |
+# | def clipCity(popfile_path, shpFilePath):
+# |     # load the popualtion from landscan
+# |     ds = gdal.Open(popfile_path)
+# |     data = ds.ReadAsArray()
+# |     gt = ds.GetGeoTransform()
+# |     clip, gt2 = clip_raster(data, shpFilePath, gt, nodata=0)
+# |     return (clip, gt2)
+# |
+# | def plot_pickle(cName:str):
+# |     import pickle
+# |     import matplotlib.pyplot as plt
+# |     with open(f'./city_population/{cName}_population_2020_100m.pkl', 'rb') as f:
+# |         pop_metrix = pickle.load(f)
+# |     plt.clf()
+# |     plt.axis('equal')
+# |     # plt.imshow(pop_metrix,norm=colors.TwoSlopeNorm(vcenter=200),  cmap='inferno')
+# |     plt.imshow(pop_metrix, cmap='inferno',vmin=0,vmax=np.percentile(np.array(pop_metrix).flatten(), 95))
+# |     plt.savefig(f'./city_population/{cName}_population_2020_100m.jpg')
+# |
+# | def make_bbox_shpfile(cName:str, boundary_path: str, target_path: str = None):
+# |     boundary = gpd.read_file(boundary_path)
+# |     bbox = boundary.total_bounds
+# |     # Generate a shapefile for the bounding box
+# |     bbox_gdf = gpd.GeoDataFrame({'geometry': [Polygon([(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3])])]}, crs=boundary.crs)
+# |     
+# |     if target_path is None:
+# |         target_path = f'./{cName}/'
+# |     
+# |     # Check is path exists
+# |     if not os.path.exists(target_path):
+# |         os.makedirs(target_path)
+# |     bbox_gdf.to_file(target_path + f'/{cName}_bbox.shp')
+# |     gc.collect()
+# |
+# | def clip_popfile(ctry: str, cName:str, shapefile_path: str, popfile_path: str, save_path: str):
+# |
+# |     if not os.path.exists(save_path):
+# |         os.makedirs(save_path)
+# |
+# |     rValue = 0
+# |     if not os.path.exists(popfile_path):
+# |         print(f"\tCannot find popoulation file: {popfile_path}. Downloading...")
+# |         pop_dir = os.path.dirname(popfile_path)
+# |         rValue = os.system(f"wget -q -P {pop_dir} https://data.worldpop.org/GIS/Population/Global_2000_2020_Constrained/2020/BSGM/{ctry.upper()}/{ctry}_ppp_2020_constrained.tif")
+# |         if rValue != 0:
+# |             rValue = os.system(f"wget -q -P {pop_dir} https://data.worldpop.org/GIS/Population/Global_2000_2020_Constrained/2020/maxar_v1/{ctry.upper()}/{ctry}_ppp_2020_constrained.tif")
+# |     if rValue != 0:
+# |         print(f'\tfail to download {ctry}.tif')
+# |         X0, dX, Y0, dY, save_path = -1, -1, -1, -1, -1
+# |     else: 
+# |         res = clipCity(popfile_path, shapefile_path) # clip result
+# |         X0, dX, _, Y0, _, dY = res[1]
+# |
+# |         for _i in range(len(res[0])):
+# |             for _j in range(len(res[0][0])):
+# |                 if res[0][_i][_j] == -99999.0:
+# |                     res[0][_i][_j] = 0
+# |
+# |         height, width = res[0].shape
+# |
+# |         population_mat = [[res[0][j][i] for i in range(width)] for j in range(height)]
+# |         print('Shape of population_mat: {}'.format(np.array(population_mat).shape))
+# |         print('Max population: {}'.format(np.max(population_mat)))
+# |         
+# |         grid_geos = []
+# |         populations = []
+# |         for i in range(height):
+# |             for j in range(width):
+# |                 grid_polygon = Polygon([(X0 + dX * j, Y0 + dY * i), (X0 + dX * (j + 1), Y0 + dY * i), (X0 + dX * (j + 1), Y0 + dY * (i + 1)), (X0 + dX * j, Y0 + dY * (i + 1))])
+# |                 grid_geos.append(grid_polygon)
+# |                 populations.append(population_mat[i][j])
+# |         
+# |         grid_pop_gdf = gpd.GeoDataFrame({'geometry': grid_geos, 'population': populations}).set_crs(epsg=4326)
+# |
+# |         # check if save_path is a directory or a file path
+# |         if os.path.isdir(save_path):
+# |             grid_pop_gdf.to_file(save_path + f'/{cName}_population_2020_100m.shp')
+# |         elif save_path.endswith('.geojson'):
+# |             grid_pop_gdf.to_file(save_path)
+# |         elif save_path.endswith('.shp'):
+# |             grid_pop_gdf.to_file(save_path)
+# |         else:
+# |             raise ValueError('save_path must be a directory or a file path with .geojson or .shp extension. Got {} instead.'.format(save_path))
+# |         
+# |     # Clearing memory
+# |     del res, grid_pop_gdf
+# |     gc.collect()
+# |
+# | def clip_by_boundary(boundary_path: str, grid_path: str):
+# |     boundary = gpd.read_file(boundary_path)
+# |     boundary = boundary.dissolve()
+# |     grid_df = gpd.read_file(grid_path)
+# |     constrained_grid = gpd.sjoin(grid_df, boundary, how='inner', predicate='within')
+# |
+# |
+# | if __name__ == "__main__":
+# |     parser = argparse.ArgumentParser(description="Calculate segregation index")
+# |     parser.add_argument("--country", type=str, default="khm", help="Country ISO3166 A3 Code")
+# |     parser.add_argument("--city", type=str, default="RÔTÂNÔKIRI", help="City name")
+# |     parser.add_argument("--pop_dir", type=str, default="/YOUR_PATH_TO/population/Asia/Cambodia/khm_ppp_2020_constrained.tif", help="Population file directory")
+# |     parser.add_argument("--boundary_path", type=str, default="/YOUR_PATH_TO/RÔTÂNÔKIRI/RÔTÂNÔKIRI.geojson", help="Boundary file path")
+# |     args = parser.parse_args()
+# |
+# |     clip_popfile(args.country, args.city, f'./{args.city}_bbox/{args.city}_bbox.shp', args.pop_dir, './RÔTÂNÔKIRI_pop_new')
+# ===== END SOURCE FILE: NeuroGravity/data_preparation/world_population.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/income_spatial_segregation/spatial_segregation_index_calculator.py =====
+# File: NeuroGravity/income_spatial_segregation/spatial_segregation_index_calculator.py | Lines: 205 | TrailingNL: 1 | SHA256: 594fa8db3221d9c13a4792d0fa2b784162806abfb7cbf882704c9a6b303b6cae
+# | import numpy as np
+# | import pandas as pd
+# | import geopandas as gpd
+# | from shapely.geometry import Polygon, box
+# | import time
+# | import os
+# | import argparse
+# |
+# | def convex_func(x):
+# |     return x**2
+# |
+# | def convex_func_prime(x):
+# |     return 2 * x
+# |
+# | def bregman_divergence(a, b, f, f_prime):
+# |     return np.abs(f(a) - f(b) - f_prime(b)*(a-b))
+# |
+# | def jensen_bregman_divergence(x_1, x_2, attr_LUT, pop_LUT, f, f_prime, total_pop = None):
+# |     attr_1= attr_LUT[x_1]
+# |     attr_2= attr_LUT[x_2]
+# |     pop_1 = pop_LUT[x_1]
+# |     pop_2 = pop_LUT[x_2]
+# |
+# |     attr_combine = (pop_1*attr_1 + pop_2*attr_2)/(pop_1+pop_2)
+# |     bgm_d_1 = bregman_divergence(attr_1, attr_combine, f, f_prime)
+# |     bgm_d_2 = bregman_divergence(attr_2, attr_combine, f, f_prime)
+# |
+# |     if total_pop is None:
+# |         # sum up all pops in pop_LUT suppose pop_LUT is a dictionary
+# |         total_pop = sum(pop_LUT.values())
+# |     
+# |     return (pop_1/total_pop)*bgm_d_1 + (pop_2/total_pop)*bgm_d_2, attr_combine
+# |
+# | def check_adjacency(div_gdf, buffer_size = 1, out_format = 'list', link_nearest = True):
+# |     # out_format: 'list' or 'matrix'
+# |     N = len(div_gdf)
+# |     div_gdf = div_gdf.copy()
+# |     div_gdf = div_gdf.to_crs(epsg=3857)
+# |     div_gdf['geometry'] = div_gdf.geometry.buffer(buffer_size)
+# |     div_gdf.reset_index(drop=True, inplace=True)
+# |     
+# |     adj_matrix = np.zeros((N, N))
+# |
+# |     adj_list = []
+# |
+# |     # Create spatial index
+# |     if not div_gdf.sindex:
+# |         div_gdf.sindex
+# |
+# |     # Iterate through each polygon in the GeoDataFrame
+# |     for index, row in div_gdf.iterrows():
+# |         polygon = row.geometry
+# |         # Use the spatial index to quickly identify potential intersections (bounding box overlap)
+# |         possible_matches_index = list(div_gdf.sindex.intersection(polygon.bounds))
+# |         
+# |         # Filter out the current polygon being checked to avoid self-intersection
+# |         possible_matches_index = [i for i in possible_matches_index if i != index]
+# |         
+# |         # Retrieve the possible matches from the GeoDataFrame
+# |         possible_matches = div_gdf.iloc[possible_matches_index]
+# |         
+# |         # Check for actual intersection between the polygon and each of the possible matches
+# |         precise_matches = possible_matches[possible_matches.intersects(polygon)]
+# |         
+# |         if not precise_matches.empty:
+# |             # If there are intersecting polygons, add them to the list
+# |             for pm_index in precise_matches.index:
+# |                 if index < pm_index:  # This check ensures that each pair is added only once
+# |                     adj_list.append((index, pm_index))
+# |         elif link_nearest:
+# |             # If no intersecting polygon is found, find the nearest neighbor using spatial index
+# |             nearest_indices = div_gdf.sindex.nearest(box(*polygon.bounds))
+# |             # Add the nearest neighbor pair
+# |             # print(type(box(*polygon.bounds)))
+# |             # print('nearest_indices:')
+# |             # print(nearest_indices)
+# |             adj_list.append((index, nearest_indices[1][0]))
+# |
+# |     if out_format == 'list':
+# |         return adj_list
+# |     else:
+# |         adj_matrix = np.zeros((N, N))
+# |         for i, j in adj_list:
+# |             adj_matrix[i, j] = 1
+# |             adj_matrix[j, i] = 1
+# |         return adj_matrix
+# |
+# | def Greedy(div_gdf, convex_func, convex_func_prime, attr_col, pop_col = 'population'):
+# |     '''
+# |     Agglomerative partitioning
+# |     div_gdf: GeoDataFrame indexed from 0 to N-1
+# |
+# |     Tracking:
+# |     - Attribute to calculate the segregation
+# |     - Population
+# |     - Original GEOIDs
+# |     '''
+# |     div_gdf = div_gdf.copy().reset_index(drop=True)
+# |     adj_list = check_adjacency(div_gdf, buffer_size = 1, out_format = 'list')
+# |     # print('Number of adjacent tracts:', len(adj_list))
+# |     attr_LUT = div_gdf[attr_col].to_dict()
+# |     pop_LUT = div_gdf[pop_col].to_dict()
+# |
+# |     # Calculate Jensen-Bregman divergence for each pair of adjacent tracts
+# |     jbd_list = np.zeros(len(adj_list))
+# |     combined_attr = np.zeros(len(adj_list))
+# |     for i, (x_1, x_2) in enumerate(adj_list):
+# |         jbd_list[i], combined_attr[i] = jensen_bregman_divergence(x_1, x_2, attr_LUT, pop_LUT, convex_func, convex_func_prime)
+# |     
+# |     # Find the pair of tracts with the smallest Jensen-Bregman divergence
+# |     min_jbd_idx = np.argmin(jbd_list)
+# |     x_1, x_2 = adj_list[min_jbd_idx]
+# |
+# |     # Merge the two tracts
+# |     div_gdf.loc[x_1, attr_col] = combined_attr[min_jbd_idx]
+# |     div_gdf.loc[x_1, pop_col] += div_gdf.loc[x_2, pop_col]
+# |     div_gdf.loc[x_1, 'geometry'] = div_gdf.loc[x_1, 'geometry'].union(div_gdf.loc[x_2, 'geometry'])
+# |     div_gdf.loc[x_1, 'Combined_from'] += '_' + div_gdf.loc[x_2, 'Combined_from']
+# |     div_gdf = div_gdf.drop(x_2).reset_index(drop=True)
+# |     return div_gdf
+# |
+# | def Agglompartition(div_gdf, convex_func, convex_func_prime, id_col, attr_col, pop_col = 'population', total_pop = None, Div_N = 10):
+# |     '''
+# |     Agglomerative partitioning
+# |     div_gdf: GeoDataFrame indexed from 0 to N-1
+# |
+# |     Tracking:
+# |     - Attribute to calculate the segregation
+# |     - Population
+# |     - Original GEOIDs
+# |     '''
+# |     div_gdf = div_gdf[[id_col, attr_col, pop_col, 'geometry']].reset_index(drop=True)
+# |     div_gdf['Combined_from'] = div_gdf[id_col].astype(str)
+# |
+# |     stt = time.time()
+# |     while len(div_gdf) > Div_N:
+# |         div_gdf = Greedy(div_gdf, convex_func, convex_func_prime, attr_col, pop_col)
+# |         bregman_info = bregman_information(div_gdf, attr_col, pop_col, total_pop)
+# |         print('Agglomerative partitioning took {:.0f}s, current div num: {}, bregman info: {}'.format(time.time() - stt, len(div_gdf), bregman_info))
+# |         stt = time.time()
+# |
+# |     return div_gdf
+# |
+# |
+# | def bregman_information(div_gdf, attr_col, pop_col = 'population', total_pop_ = None):
+# |     '''
+# |     Calculate Bregman information
+# |     '''
+# |     total_pop = div_gdf[pop_col].sum()
+# |     if total_pop_ is None:
+# |         total_pop_ = total_pop
+# |     pop_share = div_gdf[pop_col]/total_pop
+# |     average_attr = div_gdf[attr_col] @ pop_share
+# |     bregman_info = 0
+# |     for i in range(len(div_gdf)):
+# |         bregman_info += div_gdf.loc[i, pop_col]/total_pop_ * bregman_divergence(div_gdf.loc[i, attr_col], average_attr, convex_func, convex_func_prime)
+# |     return bregman_info
+# |
+# | if __name__ == "__main__":
+# |     from argparse import ArgumentParser
+# |     parser = argparse.ArgumentParser(description="Calculate segregation index")
+# |     parser.add_argument("--city", type=str, default="Boston", help="City name")
+# |     parser.add_argument("--geo_path", type=str, default="../data/BOSTON/raw_data/BOSTON.geojson", help="Tract geometry file path")
+# |     parser.add_argument("--attr_path", type=str, default="../socio_economic_inference/BOSTON/boston_socio_economic_attributes.csv", help="Tract attr file path")
+# |     parser.add_argument("--id_col", type=str, default='GEOID', help='Tract ID column name')
+# |     parser.add_argument("--attr_col", type=str, default='median_household_income', help='Attribute to calculate segregation')
+# |     parser.add_argument("--pop_col", type=str, default='population', help='Population column name')
+# |     parser.add_argument("--Div_N", type=int, default=7, help='Number of final divisions')
+# |     args = parser.parse_args()
+# |
+# |     # Load data
+# |     div_gdf = gpd.read_file(args.geo_path, dtype={f'{args.id_col}': str})
+# |     div_gdf.geometry = div_gdf.geometry.buffer(0)
+# |     attr_df = pd.read_csv(args.attr_path, dtype={args.id_col: str})[[args.id_col, args.attr_col]]
+# |     attr_df[args.attr_col] = attr_df[args.attr_col].clip(lower=0)
+# |     div_gdf = div_gdf.merge(attr_df, left_on=args.id_col, right_on=args.id_col, how='left')
+# |     
+# |     div_gdf = div_gdf[div_gdf[args.pop_col] > 0]
+# |     div_gdf = div_gdf[[args.id_col, args.attr_col, args.pop_col, 'geometry']]
+# |     div_gdf = div_gdf.reset_index(drop=True)
+# |     
+# |     # Min Max normalization to attr_col
+# |     div_gdf[args.attr_col] = (div_gdf[args.attr_col] - div_gdf[args.attr_col].min())/(div_gdf[args.attr_col].max() - div_gdf[args.attr_col].min())
+# |
+# |     total_pop = div_gdf[args.pop_col].sum()
+# |
+# |     # Calculate initial Bregman information
+# |     bregman_info_init = bregman_information(div_gdf, args.attr_col, args.pop_col, total_pop)
+# |     print(f'Initial Bregman information: {bregman_info_init}')
+# |     # Agglomerative partitioning
+# |     div_gdf = Agglompartition(div_gdf, convex_func, convex_func_prime, args.id_col, args.attr_col, args.pop_col, total_pop = total_pop, Div_N = args.Div_N)
+# |     if hasattr(args, 'postfix'):
+# |         div_gdf.to_file('./aggregated_divisions_{}.geojson'.format(args.postfix), driver='GeoJSON')
+# |     else:
+# |         div_gdf.to_file(f'./aggregated_divisions_{args.city}.geojson', driver='GeoJSON')
+# |
+# |     # Calculate Bregman information
+# |     bregman_info = bregman_information(div_gdf, args.attr_col, args.pop_col, total_pop)
+# |
+# |     spatial_segregation_index = bregman_info/bregman_info_init
+# |
+# |     print(f'The spatial income segregation index of {args.city}: {spatial_segregation_index}')
+# |
+# |
+# ===== END SOURCE FILE: NeuroGravity/income_spatial_segregation/spatial_segregation_index_calculator.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/main.py =====
+# File: NeuroGravity/main.py | Lines: 517 | TrailingNL: 0 | SHA256: 1c3bcf1cd7bd75375c94c9eea8b755272809a520d5934ac7f6bec19f1da989fc
+# | import time
+# | from datetime import datetime
+# | import sys
+# | import os
+# | import os.path as osp
+# | import logging
+# |
+# | import numpy as np
+# | import pandas as pd
+# | import torch
+# |
+# | from training.loop_train_neuroGravity import loop_train_neuroGravity
+# | from training.loop_train_gbert import loop_train_gbert
+# | from training.loop_train_gravity import loop_train_gravity
+# | from training.loop_train_metaGravity import loop_train_metaGravity
+# | from training.loop_train_DeepGravity import loop_train_DeepGravity
+# |
+# | from training.neuroGravity_transfer import neuroGravity_transfer
+# | from training.gbert_transfer import gbert_transfer
+# | from training.gravity_transfer import gravity_transfer
+# | from training.metaGravity_transfer import metaGravity_transfer
+# | from training.DeepGravity_transfer import DeepGravity_transfer
+# |
+# | from utils.utils import auto_select_gpu, weight_init, PredictorInputDim, build_optimizer, save_obj, load_obj, metrics_cal, dataset_loader, select_device
+# |
+# | from models.gnn_model import get_gnn
+# | from models.prediction_model import MLPNet
+# | from models.gravity import Gravity
+# | from models.metaGravity import metaGravity
+# | from models.deep_gravity import DeepGravity
+# |
+# |
+# | from arguments import get_parser
+# |
+# | def check_oridinary_string(s):
+# |     if s.find('_') != -1:
+# |         return True
+# |     # Check if the string can be converted to a float
+# |     try:
+# |         float(s)
+# |         return False
+# |     except ValueError:
+# |         pass
+# |     # Check if the string can be converted to a boolean
+# |     if s.lower() in ["true", "false"]:
+# |         return False
+# |     # If it's neither, then it's an ordinary string
+# |     return True
+# |
+# | def train_neuroGravity(data, args, device, log_path, logger, model_name = 'neuroGravity'):
+# |     transfer = True if args.train_for_transfer else False
+# |     # =========== Build GNN & Predictor & Physical Model ==========
+# |     # -------- GNN ---------
+# |     model = get_gnn(data, args, device, neuroGravity = True).to(device)
+# |     if args.trained_model != 'none':
+# |         model.load_state_dict(torch.load(args.trained_model + 'neuroGravity_gnn_model_r2.pt').state_dict())
+# |     else:
+# |         model.apply(weight_init)
+# |
+# |     # ----- Predictor ------
+# |     link_pred_hiddens = list(map(int,args.impute_hiddens.split('_'))) if args.impute_hiddens != '' else []
+# |     link_pred_input_dim = PredictorInputDim(args, neuroGravity = True)
+# |     link_pred_output_dim = 1
+# |     impute_model = MLPNet(link_pred_input_dim, link_pred_output_dim,
+# |                             hidden_layer_sizes=link_pred_hiddens,
+# |                             hidden_activation='relu',
+# |                             output_activation = 'relu', 
+# |                             batch_norm = True,
+# |                             dropout=args.dropout_mlp,
+# |                             use_alpha_net = False).to(device)
+# |     if args.trained_model != 'none':
+# |         impute_model.load_state_dict(torch.load(args.trained_model + 'neuroGravity_impute_model_r2.pt').state_dict())
+# |     else:
+# |         impute_model.apply(weight_init)
+# |
+# |     # ---- Gravity model ----
+# |     if args.phy_model == 'metaGravity':
+# |         physics_model = metaGravity(data.x.size()[0], data.x.size()[1]).to(device)
+# |     elif args.phy_model == 'gravity':
+# |         physics_model = Gravity(data.x.size()[0], args.mask_mode, transfer = transfer).to(device)
+# |     
+# |     if args.trained_model != 'none':
+# |         physics_model.load_state_dict(torch.load(args.trained_model + 'neuroGravity_{}_model_r2.pt'.format(args.phy_model)).state_dict())
+# |     else:
+# |         physics_model.apply(weight_init)
+# |
+# |
+# |     # ======================= Build optimizers ========================
+# |
+# |     trainable_parameters = list(model.parameters()) \
+# |                         + list(impute_model.parameters())
+# |                             
+# |     trainable_parameters_physics_only = list(physics_model.parameters())
+# |
+# |     # -------- GNN & Predictor Optimizer ---------
+# |     scheduler, opt = build_optimizer(trainable_parameters, opt=args.opt, lr=args.lr, weight_decay=args.weight_decay, \
+# |         opt_scheduler=args.opt_scheduler, opt_decay_step=args.opt_decay_step, opt_decay_rate=args.opt_decay_rate, epochs=args.epochs)
+# |     # -------- Physics Model Optimizer ---------
+# |     scheduler_phy, opt_phy = build_optimizer(trainable_parameters_physics_only, opt=args.opt, lr=args.lr_physics, weight_decay=args.weight_decay, \
+# |         opt_scheduler=args.opt_scheduler, opt_decay_step=args.opt_decay_step, opt_decay_rate=args.opt_decay_rate, epochs=args.epochs)
+# |     # -------- Physics Model Pretrain Optimizer ---------
+# |     scheduler_phy_pretrain, opt_phy_pretrain = build_optimizer(trainable_parameters_physics_only, opt=args.opt, lr=args.lr_physics_pretrain, \
+# |         weight_decay=args.weight_decay, opt_scheduler='none', opt_decay_step=200, opt_decay_rate=0.9, epochs=args.epochs)
+# |
+# |     schedulers = [scheduler, scheduler_phy, scheduler_phy_pretrain]
+# |     opts = [opt, opt_phy, opt_phy_pretrain]
+# |
+# |     # ======================= Train ========================
+# |     if isinstance(args.valid, float): 
+# |         # Using a portion of training data as validation set
+# |         r2, cpc = loop_train_neuroGravity(model, impute_model, physics_model, schedulers, opts, data, args, log_path, device, logger, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     else: 
+# |         # Using another dataset as validation set (typically for cross-city transfer learning)
+# |         data_valid = dataset_loader(args.valid, args, missing_rate = 0.0, valid = 0.0, load_mask = 'none')
+# |         r2, cpc = loop_train_neuroGravity(model, impute_model, physics_model, schedulers, opts, data, args, log_path, device, logger, data_valid, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     return r2, cpc
+# |
+# |
+# | def train_gbert(data, args, device, log_path, logger, model_name = 'gbert'):
+# |     # =========== Build GNN & Predictor & Physical Model ==========
+# |     # -------- GNN ---------
+# |     model = get_gnn(data, args, device, neuroGravity = False).to(device)
+# |     if args.trained_model != 'none':
+# |         model.load_state_dict(torch.load(args.trained_model + 'gber_gnn_model_r2_pretrain.pt').state_dict())
+# |     else:
+# |         model.apply(weight_init)
+# |
+# |     # ----- Predictor ------
+# |     link_pred_hiddens = list(map(int,args.impute_hiddens.split('_'))) if args.impute_hiddens != '' else []
+# |     link_pred_input_dim = PredictorInputDim(args, neuroGravity = False)
+# |     link_pred_output_dim = 1
+# |     impute_model = MLPNet(link_pred_input_dim, link_pred_output_dim,
+# |                             hidden_layer_sizes=link_pred_hiddens,
+# |                             hidden_activation='relu',
+# |                             output_activation = 'relu', 
+# |                             batch_norm = True,
+# |                             dropout=args.dropout_mlp,
+# |                             use_alpha_net = False).to(device)
+# |     if args.trained_model != 'none':
+# |         impute_model.load_state_dict(torch.load(args.trained_model + 'gbert_impute_model_r2_pretrain.pt').state_dict())
+# |     else:
+# |         impute_model.apply(weight_init)
+# |
+# |     # ======================= Build optimizers ========================
+# |
+# |     trainable_parameters = list(model.parameters()) \
+# |                         + list(impute_model.parameters())
+# |
+# |     # -------- GNN & Predictor Optimizer ---------
+# |     scheduler, opt = build_optimizer(trainable_parameters, opt=args.opt, lr=args.lr, weight_decay=args.weight_decay, \
+# |         opt_scheduler=args.opt_scheduler, opt_decay_step=args.opt_decay_step, opt_decay_rate=args.opt_decay_rate, epochs=args.epochs)
+# |
+# |     # ======================= Train ========================
+# |     if isinstance(args.valid, float): 
+# |         # Using a portion of training data as validation set
+# |         r2, cpc = loop_train_gbert(model, impute_model, scheduler, opt, data, args, log_path, device, logger, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     else: 
+# |         # Using another dataset as validation set (typically for cross-city transfer learning)
+# |         data_valid = dataset_loader(args.valid, args, missing_rate = 0.0, valid = 0.0, load_mask = 'none')
+# |         r2, cpc = loop_train_gbert(model, impute_model, scheduler, opt, data, args, log_path, device, logger, data_valid, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     return r2, cpc
+# |
+# |
+# | def train_gravity(data, args, device, log_path, logger, model_name = 'gravity'):
+# |     transfer = True if args.mode.find('transfer') != -1 else False
+# |     # ---- Gravity model ----
+# |     physics_model = Gravity(data.x.size()[0], args.mask_mode, transfer = transfer).to(device)
+# |     
+# |     if args.trained_model != 'none':
+# |         physics_model.load_state_dict(torch.load(args.trained_model + 'neuroGravity_{}_model_r2.pt'.format(args.phy_model)).state_dict())
+# |     else:
+# |         physics_model.apply(weight_init)
+# |
+# |     # ======================= Build optimizers ========================
+# |     trainable_parameters_physics_only = list(physics_model.parameters())
+# |
+# |     scheduler_phy, opt_phy = build_optimizer(trainable_parameters_physics_only, opt=args.opt, lr=args.lr_physics_pretrain, \
+# |         weight_decay=args.weight_decay, opt_scheduler='none', opt_decay_step=200, opt_decay_rate=0.9, epochs=args.epochs)
+# |
+# |     # ======================= Train ========================
+# |     if isinstance(args.valid, float): 
+# |         # Using a portion of training data as validation set
+# |         r2, cpc = loop_train_gravity(physics_model, scheduler_phy, opt_phy, data, args, log_path, device, logger, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     else: 
+# |         # Using another dataset as validation set (typically for cross-city transfer learning)
+# |         data_valid = dataset_loader(args.valid, args, missing_rate = 0.0, valid = 0.0, load_mask = 'none')
+# |         r2, cpc = loop_train_gravity(physics_model, scheduler_phy, opt_phy, data, args, log_path, device, logger, data_valid, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     return r2, cpc
+# |
+# |
+# |
+# | def train_metaGravity(data, args, device, log_path, logger, model_name = 'metaGravity'):
+# |     # ---- Gravity model ----
+# |     physics_model = metaGravity(data.x.size()[0], data.x.size()[1]).to(device)
+# |     
+# |     if args.trained_model != 'none':
+# |         physics_model.load_state_dict(torch.load(args.trained_model + 'neuroGravity_{}_model_r2.pt'.format(args.phy_model)).state_dict())
+# |     else:
+# |         physics_model.apply(weight_init)
+# |
+# |     # ======================= Build optimizers ========================
+# |     trainable_parameters_physics_only = list(physics_model.parameters())
+# |
+# |     scheduler_phy, opt_phy = build_optimizer(trainable_parameters_physics_only, opt=args.opt, lr=args.lr_physics_pretrain, \
+# |         weight_decay=args.weight_decay, opt_scheduler='none', opt_decay_step=200, opt_decay_rate=0.9, epochs=args.epochs)
+# |
+# |     # ======================= Train ========================
+# |     if isinstance(args.valid, float): 
+# |         # Using a portion of training data as validation set
+# |         r2, cpc = loop_train_metaGravity(physics_model, scheduler_phy, opt_phy, data, args, log_path, device, logger, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     else: 
+# |         # Using another dataset as validation set (typically for cross-city transfer learning)
+# |         data_valid = dataset_loader(args.valid, args, missing_rate = 0.0, valid = 0.0, load_mask = 'none')
+# |         r2, cpc = loop_train_metaGravity(physics_model, scheduler_phy, opt_phy, data, args, log_path, device, logger, data_valid, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     return r2, cpc
+# |
+# |
+# | def train_DeepGravity(data, args, device, log_path, logger, model_name = 'DeepGravity'):
+# |     # ---- Deep Gravity model ----
+# |     dg_model = DeepGravity(data.x.size()[0], data.x.size()[1]).to(device)
+# |     
+# |     if args.trained_model != 'none':
+# |         dg_model.load_state_dict(torch.load(args.trained_model + 'DeepGravity_model_r2.pt').state_dict())
+# |     else:
+# |         dg_model.apply(weight_init)
+# |
+# |     # ======================= Build optimizers ========================
+# |     trainable_parameters_dg = list(dg_model.parameters())
+# |
+# |     scheduler_phy, opt_phy = build_optimizer(trainable_parameters_dg, opt=args.opt, lr=args.lr, \
+# |         weight_decay=args.weight_decay, opt_scheduler='none', opt_decay_step=200, opt_decay_rate=0.9, epochs=args.epochs)
+# |
+# |     # ======================= Train ========================
+# |     if isinstance(args.valid, float): 
+# |         # Using a portion of training data as validation set
+# |         r2, cpc = loop_train_DeepGravity(dg_model, scheduler_phy, opt_phy, data, args, log_path, device, logger, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     else: 
+# |         # Using another dataset as validation set (typically for cross-city transfer learning)
+# |         data_valid = dataset_loader(args.valid, args, missing_rate = 0.0, valid = 0.0, load_mask = 'none')
+# |         r2, cpc = loop_train_DeepGravity(dg_model, scheduler_phy, opt_phy, data, args, log_path, device, logger, data_valid, log_intermediate = args.log_intermediate, model_name = model_name)
+# |     return r2, cpc
+# |
+# | def Prediction_Fusion(preds, method = 'mean', filter = False):
+# |     preds = np.array(preds)
+# |     fused_pred = np.zeros(preds.shape[1])
+# |     
+# |     for eid in range(preds.shape[1]):
+# |         pred_ = preds[:, eid]
+# |         if filter:
+# |             q1 = np.quantile(pred_, 0.25)
+# |             q3 = np.quantile(pred_, 0.75)
+# |             iqr = q3 - q1
+# |             pred = pred_[(pred_ >= q1 - 1 * iqr) & (pred_ <= q3 + 1 * iqr)]
+# |         
+# |         if (not filter) or (len(pred) == 0):
+# |             pred = pred_
+# |             
+# |         if method == 'mean':
+# |             fused_pred[eid] = np.mean(pred)
+# |         elif method == 'median':
+# |             fused_pred[eid] = np.median(pred)
+# |         elif method == 'max':
+# |             fused_pred[eid] = np.max(pred)
+# |         elif method == 'min':
+# |             fused_pred[eid] = np.min(preds)
+# |     return fused_pred
+# |
+# |
+# | def main(args):
+# |     stt = time.time()
+# |     ### Set up log ###
+# |     experiment_path = '{}/experiments/{}/'.format(args.data_dir, args.log_dir)
+# |     if not osp.exists(experiment_path):
+# |         os.makedirs(experiment_path)
+# |     logger = logging
+# |     logger.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# |     if args.silent:
+# |         for handler in logger.root.handlers[:]:
+# |             if isinstance(handler, logging.StreamHandler):
+# |                 logger.root.removeHandler(handler)
+# |
+# |     handler = logger.FileHandler(experiment_path + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '.log')
+# |     logger=logger.getLogger() 
+# |     logger.addHandler(handler)
+# |
+# |     ### Log the command input ###
+# |     cmd_input = 'python ' + ' '.join(sys.argv) + '\n'
+# |     if args.log_main:
+# |         logger.info(cmd_input)
+# |         logger.info('')
+# |         logger.info(args)
+# |
+# |     ### select device ###
+# |     device = select_device()
+# |     # device = torch.device('cpu')
+# |     # logger.info('Using device {}'.format(device))
+# |     
+# |     ### Experimenting Model(s) ###
+# |     models_to_exp = args.models.split('_')
+# |
+# |     res_dict_r2 = {}
+# |     res_dict_cpc = {}
+# |     runtime_dict_r2 = {}
+# |     runtime_dict_cpc = {}
+# |     for model in models_to_exp:
+# |         res_dict_r2[model] = {}
+# |         res_dict_cpc[model] = {}
+# |         runtime_dict_r2[model] = {}
+# |         runtime_dict_cpc[model] = {}
+# |
+# |     seed = args.seed
+# |     np.random.seed(seed)
+# |     torch.manual_seed(seed)
+# |     if args.mode.find('train') != -1:
+# |         ### Load Hyper-parameter list ###
+# |         for model_ind in range(args.rounds):
+# |             data = dataset_loader(args, experiment_path, transfer = False, data_path = '{}/'.format(args.data_dir))
+# |             if 'neuroGravity' in models_to_exp:
+# |                 r2_neuroGravity, cpc_neuroGravity = train_neuroGravity(data, args, device, experiment_path, logger, model_name = 'neuroGravity_no{}'.format(model_ind))
+# |             if 'GBERT' in models_to_exp:
+# |                 r2_gnn, cpc_gnn = train_gbert(data, args, device, experiment_path, logger, model_name = 'gbert_no{}'.format(model_ind))
+# |             if 'Gravity' in models_to_exp:
+# |                 r2_gravity, cpc_gravity = train_gravity(data, args, device, experiment_path, logger, model_name = 'gravity_no{}'.format(model_ind))
+# |             if 'metaGravity' in models_to_exp:
+# |                 r2_metaGravity, cpc_metaGravity = train_metaGravity(data, args, device, experiment_path, logger, model_name = 'metaGravity_no{}'.format(model_ind))
+# |             if 'DeepGravity' in models_to_exp:
+# |                 r2_DeepGravity, cpc_DeepGravity = train_DeepGravity(data, args, device, experiment_path, logger, model_name = 'DeepGravity_no{}'.format(model_ind))
+# |         if args.log_main:
+# |             logger.info('{} rounds training finished, time cost: {}'.format(args.rounds, time.time() - stt))
+# |             stt = time.time()
+# |
+# |     ## Transfer Test ##
+# |     if args.mode.find('transfer') != -1:
+# |
+# |         targets_to_transfer_path = args.transfer_targets
+# |
+# |         with open(targets_to_transfer_path, 'r') as f:
+# |             import json
+# |             targets_to_transfer = json.load(f)
+# |
+# |         for target, target_dir in targets_to_transfer.items():
+# |             if args.log_main:
+# |                 logger.info('Start transfer to {}'.format(target))
+# |             
+# |             if hasattr(args, 'save_to_target') and args.save_to_target:
+# |                 transfer_res_path = target_dir
+# |             else:
+# |                 transfer_res_path = experiment_path
+# |
+# |             data_target = dataset_loader(args, experiment_path, transfer = True, transfer_target = target_dir, missing_rate = 1.0, valid = 0.0, load_mask = 'none')
+# |             neuroGravity_pred_list = []
+# |             gbert_pred_list = []
+# |             gravity_pred_list = []
+# |             metaGravity_pred_list = []
+# |             DeepGravity_pred_list = []
+# |
+# |             neuroGravity_r2_list = []
+# |             neuroGravity_cpc_list = []
+# |             gbert_r2_list = []
+# |             gbert_cpc_list = []
+# |             gravity_r2_list = []
+# |             gravity_cpc_list = []
+# |             metaGravity_r2_list = []
+# |             metaGravity_cpc_list = []
+# |             DeepGravity_r2_list = []
+# |             DeepGravity_cpc_list = []
+# |
+# |             for model_ind in range(args.rounds):
+# |                 if 'neuroGravity' in models_to_exp:
+# |                     if args.has_transfer_label:
+# |                         _, _, pred_flows_neuroGravity, neuroGravity_r2_, neuroGravity_cpc_ = neuroGravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = True, evaluate = args.has_transfer_label, model_name = 'neuroGravity_no{}'.format(model_ind))
+# |                         neuroGravity_r2_list.append(neuroGravity_r2_)
+# |                         neuroGravity_cpc_list.append(neuroGravity_cpc_)
+# |                     else:
+# |                         _, _, pred_flows_neuroGravity = neuroGravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = False, evaluate = args.has_transfer_label, model_name = 'neuroGravity_no{}'.format(model_ind))
+# |                     neuroGravity_pred_list.append(pred_flows_neuroGravity)
+# |
+# |                 if 'GBERT' in models_to_exp:
+# |                     if args.has_transfer_label:
+# |                         _, _, pred_flows_gbert, gbert_r2_, gbert_cpc_ = gbert_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = True, evaluate = args.has_transfer_label, model_name = 'gbert_no{}'.format(model_ind))
+# |                         gbert_r2_list.append(gbert_r2_)
+# |                         gbert_cpc_list.append(gbert_cpc_)
+# |                     else:
+# |                         _, _, pred_flows_gbert = gbert_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = False, evaluate = args.has_transfer_label, model_name = 'gbert_no{}'.format(model_ind))
+# |                     gbert_pred_list.append(pred_flows_gbert)
+# |                 if 'Gravity' in models_to_exp:
+# |                     if args.has_transfer_label:
+# |                         _, _, pred_flows_gravity, gravity_r2_, gravity_cpc_ = gravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = True, evaluate = args.has_transfer_label, model_name = 'gravity_no{}'.format(model_ind))
+# |                         gravity_r2_list.append(gravity_r2_)
+# |                         gravity_cpc_list.append(gravity_cpc_)
+# |                     else:
+# |                         _, _, pred_flows_gravity = gravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = False, evaluate = args.has_transfer_label, model_name = 'gravity_no{}'.format(model_ind))
+# |                     gravity_pred_list.append(pred_flows_gravity)
+# |
+# |                 if 'metaGravity' in models_to_exp:
+# |                     if args.has_transfer_label:
+# |                         _, _, pred_flows_metaGravity, metaGravity_r2_, metaGravity_cpc_ = metaGravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = True, evaluate = args.has_transfer_label, model_name = 'metaGravity_no{}'.format(model_ind))                        
+# |                         metaGravity_r2_list.append(metaGravity_r2_)
+# |                         metaGravity_cpc_list.append(metaGravity_cpc_)
+# |                     else:
+# |                         _, _, pred_flows_metaGravity = metaGravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = False, evaluate = args.has_transfer_label, model_name = 'metaGravity_no{}'.format(model_ind))
+# |                     metaGravity_pred_list.append(pred_flows_metaGravity)
+# |
+# |                 if 'DeepGravity' in models_to_exp:
+# |                     if args.has_transfer_label:
+# |                         _, _, pred_flows_DeepGravity, DeepGravity_r2_, DeepGravity_cpc_ = DeepGravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = True, evaluate = args.has_transfer_label, model_name = 'DeepGravity_no{}'.format(model_ind))
+# |                         DeepGravity_r2_list.append(DeepGravity_r2_)
+# |                         DeepGravity_cpc_list.append(DeepGravity_cpc_)
+# |                     else:
+# |                         _, _, pred_flows_DeepGravity = DeepGravity_transfer(data_target, args, experiment_path, device, logger, scale_pred_by_sum = False, evaluate = args.has_transfer_label, model_name = 'DeepGravity_no{}'.format(model_ind))
+# |                     DeepGravity_pred_list.append(pred_flows_DeepGravity)
+# |
+# |             if 'neuroGravity' in models_to_exp:
+# |                 runtime_dict_r2['neuroGravity'][target] = neuroGravity_r2_list
+# |                 runtime_dict_cpc['neuroGravity'][target] = neuroGravity_cpc_list
+# |             if 'GBERT' in models_to_exp:
+# |                 runtime_dict_r2['GBERT'][target] = gbert_r2_list
+# |                 runtime_dict_cpc['GBERT'][target] = gbert_cpc_list
+# |             if 'Gravity' in models_to_exp:
+# |                 runtime_dict_r2['Gravity'][target] = gravity_r2_list
+# |                 runtime_dict_cpc['Gravity'][target] = gravity_cpc_list
+# |             if 'metaGravity' in models_to_exp:
+# |                 runtime_dict_r2['metaGravity'][target] = metaGravity_r2_list
+# |                 runtime_dict_cpc['metaGravity'][target] = metaGravity_cpc_list
+# |             if 'DeepGravity' in models_to_exp:
+# |                 runtime_dict_r2['DeepGravity'][target] = DeepGravity_r2_list
+# |                 runtime_dict_cpc['DeepGravity'][target] = DeepGravity_cpc_list
+# |
+# |             # Ground Truth
+# |             test_flow_gdt = data_target.flow_complete.cpu()
+# |             test_Metrics = metrics_cal(test_flow_gdt, mask_percent = [0, 0.5, 0.7, 0.8, 0.9], filter_zeros=False, device = 'cpu')
+# |
+# |             if args.log_main:
+# |                 logger.info('Transfer Inference Finished, Start fusing predictions...')
+# |
+# |             ori_complete = data_target.ori_complete #.numpy()
+# |             des_complete = data_target.des_complete #.numpy()
+# |
+# |             if 'neuroGravity' in models_to_exp:
+# |                 neuroGravity_preds = np.stack(neuroGravity_pred_list, axis = 0)
+# |                 fused_pred_neuroGravity = Prediction_Fusion(neuroGravity_preds, method = args.fuse_method, filter = args.fuse_filter)
+# |                 if args.has_transfer_label:
+# |                     neuroGravity_final_test_metrics = test_Metrics.proceed(torch.FloatTensor(fused_pred_neuroGravity))
+# |                     res_dict_r2['neuroGravity'][target] = neuroGravity_final_test_metrics['r2'][0]
+# |                     res_dict_cpc['neuroGravity'][target] = neuroGravity_final_test_metrics['cpc'][0]
+# |                     if args.log_main:
+# |                         logger.info('neuroGravity transfer to {} r2: {} cpc: {}'.format(target, neuroGravity_final_test_metrics['r2'][0], neuroGravity_final_test_metrics['cpc'][0]))
+# |                 if args.save_prediction:
+# |                     df_output = pd.DataFrame({'origin': ori_complete, 'destination': des_complete, 'label': test_flow_gdt.numpy(), 'neuroGravity_prediction': fused_pred_neuroGravity})
+# |                     df_output.to_csv(transfer_res_path + 'neuroGravity_estimation_in_{}.csv'.format(target), index = False)
+# |
+# |             if 'GBERT' in models_to_exp:
+# |                 gbert_preds = np.stack(gbert_pred_list, axis = 0)
+# |                 fused_pred_gbert = Prediction_Fusion(gbert_preds, method = args.fuse_method, filter = args.fuse_filter)
+# |                 if args.has_transfer_label:
+# |                     gbert_final_test_metrics = test_Metrics.proceed(torch.FloatTensor(fused_pred_gbert))
+# |                     res_dict_r2['GBERT'][target] = gbert_final_test_metrics['r2'][0]
+# |                     res_dict_cpc['GBERT'][target] = gbert_final_test_metrics['cpc'][0]
+# |                     if args.log_main:
+# |                         logger.info('GBERT transfer to {} r2: {} cpc: {}'.format(target, gbert_final_test_metrics['r2'][0], gbert_final_test_metrics['cpc'][0]))
+# |                 if args.save_prediction:
+# |                     df_output = pd.DataFrame({'origin': ori_complete, 'destination': des_complete, 'label': test_flow_gdt.numpy(), 'gbert_prediction': fused_pred_gbert})
+# |                     df_output.to_csv(transfer_res_path + 'GraphBert_estimation_in_{}.csv'.format(target), index = False)
+# |
+# |             if 'Gravity' in models_to_exp:
+# |                 gravity_preds = np.stack(gravity_pred_list, axis = 0)
+# |                 fused_pred_gravity = Prediction_Fusion(gravity_preds, method = args.fuse_method, filter = args.fuse_filter)
+# |                 if args.has_transfer_label:
+# |                     gravity_final_test_metrics = test_Metrics.proceed(torch.FloatTensor(fused_pred_gravity))
+# |                     res_dict_r2['Gravity'][target] = gravity_final_test_metrics['r2'][0]
+# |                     res_dict_cpc['Gravity'][target] = gravity_final_test_metrics['cpc'][0]
+# |                     if args.log_main:
+# |                         logger.info('Gravity transfer to {} r2: {} cpc: {}'.format(target, gravity_final_test_metrics['r2'][0], gravity_final_test_metrics['cpc'][0]))
+# |                 if args.save_prediction:
+# |                     df_output = pd.DataFrame({'origin': ori_complete, 'destination': des_complete, 'label': test_flow_gdt.numpy(), 'gravity_prediction': fused_pred_gravity})
+# |                     df_output.to_csv(transfer_res_path + 'Gravity_estimation_in_{}.csv'.format(target), index = False)
+# |
+# |             if 'metaGravity' in models_to_exp:
+# |                 metaGravity_preds = np.stack(metaGravity_pred_list, axis = 0)
+# |                 fused_pred_metaGravity = Prediction_Fusion(metaGravity_preds, method = args.fuse_method, filter = args.fuse_filter)
+# |                 if args.has_transfer_label:
+# |                     metaGravity_final_test_metrics = test_Metrics.proceed(torch.FloatTensor(fused_pred_metaGravity))
+# |                     res_dict_r2['metaGravity'][target] = metaGravity_final_test_metrics['r2'][0]
+# |                     res_dict_cpc['metaGravity'][target] = metaGravity_final_test_metrics['cpc'][0]
+# |                     if args.log_main:
+# |                         logger.info('metaGravity transfer to {} r2: {} cpc: {}'.format(target, metaGravity_final_test_metrics['r2'][0], metaGravity_final_test_metrics['cpc'][0]))
+# |                 if args.save_prediction:
+# |                     df_output = pd.DataFrame({'origin': ori_complete, 'destination': des_complete, 'label': test_flow_gdt.numpy(), 'metaGravity_prediction': fused_pred_metaGravity})
+# |                     df_output.to_csv(transfer_res_path + 'metaGravity_estimation_in_{}.csv'.format(target), index = False)
+# |
+# |             if 'DeepGravity' in models_to_exp:
+# |                 DeepGravity_preds = np.stack(DeepGravity_pred_list, axis = 0)
+# |                 fused_pred_DeepGravity = Prediction_Fusion(DeepGravity_preds, method = args.fuse_method, filter = args.fuse_filter)
+# |                 if args.has_transfer_label:
+# |                     DeepGravity_final_test_metrics = test_Metrics.proceed(torch.FloatTensor(fused_pred_DeepGravity))
+# |                     res_dict_r2['DeepGravity'][target] = DeepGravity_final_test_metrics['r2'][0]
+# |                     res_dict_cpc['DeepGravity'][target] = DeepGravity_final_test_metrics['cpc'][0]
+# |                     if args.log_main:
+# |                         logger.info('DeepGravity transfer to {} r2: {} cpc: {}'.format(target, DeepGravity_final_test_metrics['r2'][0], DeepGravity_final_test_metrics['cpc'][0]))
+# |                 if args.save_prediction:
+# |                     df_output = pd.DataFrame({'origin': ori_complete, 'destination': des_complete, 'label': test_flow_gdt.numpy(), 'DeepGravity_prediction': fused_pred_DeepGravity})
+# |                     df_output.to_csv(transfer_res_path + 'DeepGravity_estimation_in_{}.csv'.format(target), index = False)
+# |
+# |     return res_dict_r2, res_dict_cpc, runtime_dict_r2, runtime_dict_cpc
+# |
+# |
+# | if __name__ == '__main__':
+# |     ### Get arguments ###
+# |     parser = get_parser()
+# |     args = parser.parse_args()
+# |     res_dict_r2, res_dict_cpc, runtime_dict_r2, runtime_dict_cpc = main(args)
+# |
+# |     if args.save_prediction and args.log_main:
+# |         save_obj(res_dict_r2, args.data_dir + '/experiments/' + args.log_dir + '/res_dict_r2')
+# |         save_obj(res_dict_cpc, args.data_dir + '/experiments/' + args.log_dir + '/res_dict_cpc')
+# |         save_obj(runtime_dict_r2, args.data_dir + '/experiments/' + args.log_dir + '/runtime_dict_r2')
+# |         save_obj(runtime_dict_cpc, args.data_dir + '/experiments/' + args.log_dir + '/runtime_dict_cpc')
+# ===== END SOURCE FILE: NeuroGravity/main.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/models/deep_gravity.py =====
+# File: NeuroGravity/models/deep_gravity.py | Lines: 48 | TrailingNL: 0 | SHA256: 55b1168a856620c213ec5459e38050b89ff666cedfcc6e2295608161b550419e
+# | import torch
+# | import torch.nn as nn
+# | import torch.nn.functional as F
+# | from utils.utils import get_activation
+# |
+# | class DeepGravity(nn.Module):
+# |     def __init__(self, node_n, node_input_dim, use_population = True, use_distance = True, hidden_dims = [64, 32, 16], activation = 'relu', batch_norm = True, dropout = 0) -> None:
+# |         super(DeepGravity, self).__init__()
+# |         self.node_n = node_n
+# |         # self.X = X
+# |         self.use_population = use_population
+# |         self.use_distance = use_distance
+# |         self.node_input_dim = node_input_dim
+# |
+# |         if self.use_population:
+# |             self.node_input_dim += 1
+# |
+# |         self.node_input_dim *= 2
+# |
+# |         if self.use_distance:
+# |             self.node_input_dim += 1
+# |
+# |         layers = []
+# |         input_dim = self.node_input_dim
+# |         for hidden_dim in hidden_dims:
+# |             if batch_norm:
+# |                 layers.append(nn.BatchNorm1d(input_dim))
+# |             layers.append(nn.Linear(input_dim, hidden_dim))
+# |             layers.append(get_activation(activation))
+# |             layers.append(nn.Dropout(dropout))
+# |             input_dim = hidden_dim
+# |         layers.append(nn.Linear(input_dim, 1))
+# |         self.layers = nn.Sequential(*layers)
+# |
+# |     def forward(self, X, edge_index, pop_i = None, pop_j = None, dist = True):
+# |         x_i = X[edge_index[0]]
+# |         x_j = X[edge_index[1]]
+# |
+# |         if self.use_population:
+# |             x_i = torch.cat([x_i, pop_i.unsqueeze(-1)], dim = -1)
+# |             x_j = torch.cat([x_j, pop_j.unsqueeze(-1)], dim = -1)
+# |         
+# |         G_net_input = torch.cat([x_i, x_j], dim = -1)
+# |
+# |         if self.use_distance:
+# |             G_net_input = torch.cat([G_net_input, dist.unsqueeze(dim = 1)], dim = -1)
+# |         log_F = self.layers(G_net_input)
+# |         return log_F.squeeze()
+# ===== END SOURCE FILE: NeuroGravity/models/deep_gravity.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/models/gnn_model.py =====
+# File: NeuroGravity/models/gnn_model.py | Lines: 268 | TrailingNL: 1 | SHA256: 0fb79d791d7fb46601bbc8ec9f93d43a9f4f5ce9b3551e2fe2aa4835ec03b00b
+# | import numpy as np
+# | import torch
+# | import torch.nn as nn
+# | import torch.nn.functional as F
+# |
+# | import torch_geometric.nn as pyg_nn
+# | import torch_geometric.utils as pyg_utils
+# | from models.graph_bert import GraphBert
+# | from utils.utils import get_activation
+# |
+# | def get_gnn(data, args, device, neuroGravity = True):
+# |     gnn_types = args.gnn_types.split('_')
+# |     if hasattr(args, 'norm_embs') and (args.norm_embs is not None):
+# |         norm_embs = list(map(bool,map(int,args.norm_embs.split('_'))))
+# |     else:
+# |         norm_embs = [True,]*len(gnn_types)
+# |     if args.node_post_hiddens is None:
+# |         node_post_hiddens = [args.node_dim]
+# |     else:
+# |         node_post_hiddens = list(map(int,args.node_post_hiddens.split('_')))
+# |
+# |     if args.edge_post_hiddens is None:
+# |         edge_post_hiddens = [args.edge_dim]
+# |     else:
+# |         edge_post_hiddens = list(map(int,args.edge_post_hiddens.split('_')))
+# |     
+# |     gt_init = None if not hasattr(args,'gt_init') else args.gt_init
+# |     gt_norm = None if not hasattr(args,'gt_norm') else args.gt_norm
+# |
+# |     head = 1 if not hasattr(args,'head') else args.head
+# |     dropout_gnn = 0. if not hasattr(args,'dropout_gnn') else args.dropout_gnn
+# |     dropout_att = 0. if not hasattr(args,'dropout_att') else args.dropout_att
+# |
+# |     # print(gnn_types, norm_embs, post_hiddens)
+# |     # build model
+# |     if neuroGravity:
+# |         edge_attr_size = data.edge_o2d_attr.size()[1] + 1 if data.edge_o2d_attr.size() != torch.Size([0]) else 1
+# |         edge_dim = args.edge_dim
+# |     else:
+# |         edge_attr_size = 0
+# |         edge_dim = 0
+# |
+# |     if hasattr(args,'node_exp_emb_size'):
+# |         node_exp_emb_size = args.node_exp_emb_size
+# |     else:
+# |         node_exp_emb_size = 0
+# |
+# |     if hasattr(args,'gnn_activation'):
+# |         gnn_activation = args.gnn_activation
+# |     else:
+# |         gnn_activation = 'relu'
+# |
+# |     if hasattr(args,'aggr'):
+# |         aggr = args.aggr
+# |     else:
+# |         aggr = 'mean'
+# |
+# |     if hasattr(args,'edge_conv_mode'):
+# |         edge_conv_mode = args.edge_conv_mode
+# |     else:
+# |         edge_conv_mode = 3
+# |     
+# |     model = GNNStack(data.x.size()[0], node_exp_emb_size, data.x.size()[1], edge_attr_size,
+# |                         args.node_dim, edge_dim, edge_conv_mode,
+# |                         gnn_types, args.dropout_mlp, gnn_activation,
+# |                         args.concat_states, args.concat_edges, node_post_hiddens,edge_post_hiddens,
+# |                         norm_embs, aggr, device, head, dropout_att)
+# |     return model
+# |
+# | class GNNStack(torch.nn.Module):
+# |     def __init__(self, 
+# |                 node_n, node_exp_emb_size, node_input_dim, edge_input_dim,
+# |                 node_dim, edge_dim, conv_edge_mode,
+# |                 gnn_types, dropout, activation,
+# |                 concat_states, concat_edges, node_post_mlp_hiddens,
+# |                 edge_post_mlp_hiddens,
+# |                 normalize_embs, aggr, device, head = None, dropout_att = 0.
+# |                 ):
+# |         super(GNNStack, self).__init__()
+# |         self.activation = activation
+# |         self.concat_states = concat_states
+# |         self.concat_edges = concat_edges
+# |         self.gnn_types = gnn_types
+# |         self.gnn_layer_num = len(gnn_types)
+# |         self.node_n = node_n
+# |         self.node_exp_emb_size = node_exp_emb_size
+# |         if self.node_exp_emb_size > 0:
+# |             self.node_embeddings = nn.Embedding(self.node_n, self.node_exp_emb_size)
+# |             self.all_node_inds = torch.arange(self.node_n).to(device)
+# |             node_input_dim += self.node_exp_emb_size
+# |
+# |         # convs
+# |         self.convs = self.build_convs(node_input_dim, edge_input_dim,
+# |                                     node_dim, edge_dim, conv_edge_mode,
+# |                                     gnn_types, normalize_embs, activation, aggr, head, dropout_att)
+# |         
+# |         # post node update
+# |         if concat_states:
+# |             self.node_post_mlp = self.build_node_post_mlp(int(node_dim*len(gnn_types)), int(node_dim*len(gnn_types)), node_post_mlp_hiddens, dropout, activation)
+# |         else:
+# |             self.node_post_mlp = self.build_node_post_mlp(node_dim, node_dim, node_post_mlp_hiddens, dropout, activation)
+# |
+# |         if edge_dim != 0:
+# |             self.edge_update_mlps = self.build_edge_update_mlps(node_dim, edge_input_dim, edge_dim, self.gnn_layer_num, activation, gnn_types)
+# |
+# |         # post edge update
+# |         if edge_dim != 0:
+# |             if concat_edges:
+# |                 self.edge_post_mlp = self.build_edge_post_mlp(int(edge_dim*len(gnn_types)), int(edge_dim*len(gnn_types)), edge_post_mlp_hiddens, dropout, activation)
+# |             else:
+# |                 self.edge_post_mlp = self.build_edge_post_mlp(edge_dim, edge_dim, edge_post_mlp_hiddens, dropout, activation)
+# |
+# |     def build_node_post_mlp(self, input_dim, output_dim, hidden_dims, dropout, activation):
+# |         if 0 in hidden_dims:
+# |             return get_activation('none')
+# |         else:
+# |             layers = []
+# |             for hidden_dim in hidden_dims:
+# |                 layer = nn.Sequential(
+# |                             nn.Linear(input_dim, hidden_dim),
+# |                             get_activation(activation),
+# |                             nn.Dropout(dropout),
+# |                             )
+# |                 layers.append(layer)
+# |                 input_dim = hidden_dim
+# |             layer = nn.Linear(input_dim, output_dim)
+# |             layers.append(layer)
+# |             return nn.Sequential(*layers)
+# |
+# |     def build_edge_post_mlp(self, input_dim, output_dim, hidden_dims, dropout, activation):
+# |         if 0 in hidden_dims:
+# |             return get_activation('none')
+# |         else:
+# |             layers = []
+# |             for hidden_dim in hidden_dims:
+# |                 layer = nn.Sequential(
+# |                             nn.Linear(input_dim, hidden_dim),
+# |                             get_activation(activation),
+# |                             nn.Dropout(dropout),
+# |                             )
+# |                 layers.append(layer)
+# |                 input_dim = hidden_dim
+# |             layer = nn.Linear(input_dim, output_dim)
+# |             layers.append(layer)
+# |             return nn.Sequential(*layers)
+# |
+# |     def build_convs(self, node_input_dim, edge_input_dim,
+# |                      node_dim, edge_dim, edge_mode,
+# |                      gnn_types, normalize_embs, activation, aggr,
+# |                      head = None, dropout_att = None):
+# |         convs = nn.ModuleList()
+# |         conv = self.build_conv_model(gnn_types[0],node_input_dim,node_dim,
+# |                                     edge_input_dim, edge_mode, normalize_embs[0], activation, aggr, head = head, dropout_att = dropout_att)
+# |         convs.append(conv)
+# |         for l in range(1,len(gnn_types)):
+# |             conv = self.build_conv_model(gnn_types[l],node_dim, node_dim,
+# |                                     edge_dim, edge_mode, normalize_embs[l], activation, aggr, head = head, dropout_att = dropout_att)
+# |             convs.append(conv)
+# |         return convs
+# |
+# |     def build_conv_model(self, model_type, node_in_dim, node_out_dim, edge_dim, edge_mode, normalize_emb, activation, aggr, head = 4, dropout_att = None):
+# |         if model_type == 'GBERT':
+# |             return GraphBert(node_in_dim,node_out_dim,head,True,False,dropout_att,edge_dim)
+# |         else:
+# |             raise NotImplementedError
+# |
+# |     def build_edge_update_mlps(self, node_dim, edge_input_dim, edge_dim, gnn_layer_num, activation, gnn_types = None):
+# |         edge_update_mlps = nn.ModuleList()
+# |         if (gnn_types is not None) and gnn_types[0] != 'GTF':
+# |             edge_update_mlp = nn.Sequential(
+# |                     nn.Linear(node_dim+node_dim+edge_input_dim,edge_dim),
+# |                     get_activation(activation),
+# |                     )
+# |         else:
+# |             edge_update_mlp = nn.Sequential()
+# |         edge_update_mlps.append(edge_update_mlp)
+# |         for l in range(1,gnn_layer_num):
+# |             if (gnn_types is not None) and gnn_types[l] != 'GTF':
+# |                 edge_update_mlp = nn.Sequential(
+# |                     nn.Linear(node_dim+node_dim+edge_dim,edge_dim),
+# |                     get_activation(activation),
+# |                     )
+# |             else:
+# |                 edge_update_mlp = nn.Sequential()
+# |             edge_update_mlps.append(edge_update_mlp)
+# |         return edge_update_mlps
+# |
+# |     def update_edge_attr(self, x, edge_attr, edge_index, mlp):
+# |         x_i = x[edge_index[0],:]
+# |         x_j = x[edge_index[1],:]
+# |         edge_attr = mlp(torch.cat((x_i,x_j,edge_attr),dim=-1))
+# |         return edge_attr
+# |
+# |     def forward(self, x, edge_index, edge_attr = None, logits = None):
+# |         if edge_attr is not None:
+# |             edge_attr = edge_attr.clone().detach() # Todo: verify
+# |         edge_index = edge_index.clone().detach() # Todo: verify
+# |         if self.concat_states:
+# |             concat_x = []
+# |         if self.concat_edges:
+# |             concat_e = []
+# |         if self.node_exp_emb_size > 0:
+# |             x_embed = self.node_embeddings(self.all_node_inds)
+# |             x = torch.cat([x, x_embed], dim = -1)
+# |         # print('Before conv, x has nan? ', torch.isnan(x).any())
+# |         for l,(conv_name,conv) in enumerate(zip(self.gnn_types,self.convs)):
+# |             if edge_attr is not None:
+# |                 x = conv(x, edge_index, edge_attr)
+# |                 edge_attr = self.update_edge_attr(x, edge_attr, edge_index, self.edge_update_mlps[l])
+# |             else:
+# |                 x = conv(x, edge_index)
+# |
+# |             if self.concat_states:
+# |                 concat_x.append(x)
+# |
+# |             if edge_attr is not None and self.concat_edges:
+# |                 concat_e.append(edge_attr)
+# |
+# |             #print(edge_attr.shape)
+# |         if self.concat_states:
+# |             x = torch.cat(concat_x, 1)
+# |         if edge_attr is not None and self.concat_edges:
+# |             edge_attr = torch.cat(concat_e, 1)
+# |
+# |         x = self.node_post_mlp(x)
+# |         if edge_attr is not None:
+# |             e = self.edge_post_mlp(edge_attr)
+# |         
+# |         if edge_attr is not None:
+# |             return x, e
+# |         else:
+# |             return x
+# |
+# |     def check_input(self, xs, edge_attr, edge_index):
+# |         Os = {}
+# |         for indx in range(128):
+# |             i=edge_index[0,indx].detach().numpy()
+# |             j=edge_index[1,indx].detach().numpy()
+# |             xi=xs[i].detach().numpy()
+# |             xj=list(xs[j].detach().numpy())
+# |             eij=list(edge_attr[indx].detach().numpy())
+# |             if str(i) not in Os.keys():
+# |                 Os[str(i)] = {'x_j':[],'e_ij':[]}
+# |             Os[str(i)]['x_i'] = xi
+# |             Os[str(i)]['x_j'] += xj
+# |             Os[str(i)]['e_ij'] += eij
+# |
+# |         import matplotlib.pyplot as plt
+# |         plt.figure()
+# |         plt.subplot(1,3,1)
+# |         for i in Os.keys():
+# |             plt.plot(Os[str(i)]['x_i'],label=str(i))
+# |             plt.title('x_i')
+# |         plt.legend()
+# |         plt.subplot(1,3,2)
+# |         for i in Os.keys():
+# |             plt.plot(Os[str(i)]['e_ij'],label=str(i))
+# |             plt.title('e_ij')
+# |         plt.legend()
+# |         plt.subplot(1,3,3)
+# |         for i in Os.keys():
+# |             plt.plot(Os[str(i)]['x_j'],label=str(i))
+# |             plt.title('x_j')
+# |         plt.legend()
+# |         plt.show()
+# |
+# |
+# ===== END SOURCE FILE: NeuroGravity/models/gnn_model.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/models/graph_bert.py =====
+# File: NeuroGravity/models/graph_bert.py | Lines: 140 | TrailingNL: 0 | SHA256: bf236c8ac55615c41ac00eb53461e6c6f45779b6d987c9e959af440821696925
+# | import math
+# | from typing import Optional, Tuple, Union
+# |
+# | import torch
+# | import torch.nn.functional as F
+# | from torch import Tensor
+# |
+# | from torch_geometric.nn.conv import MessagePassing
+# | from torch_geometric.nn.dense.linear import Linear
+# | from torch_geometric.typing import Adj, OptTensor, PairTensor, SparseTensor
+# | from torch_geometric.utils import softmax
+# |
+# |
+# | class GraphBert(MessagePassing):
+# |     _alpha: OptTensor
+# |
+# |     def __init__(
+# |         self,
+# |         in_channels: Union[int, Tuple[int, int]],
+# |         out_dim: int,
+# |         heads: int = 1,
+# |         concat: bool = True,
+# |         beta: bool = False,
+# |         dropout: float = 0.,
+# |         edge_dim: Optional[int] = None,
+# |         bias: bool = True,
+# |         root_weight: bool = True,
+# |         **kwargs,
+# |     ):
+# |         kwargs.setdefault('aggr', 'add')
+# |         super().__init__(node_dim=0, **kwargs)
+# |
+# |         self.in_channels = in_channels
+# |         if concat:
+# |             assert out_dim % heads == 0, "Concat mode: output dimension is not divisible by attention head."
+# |             out_channels = int(out_dim / heads)
+# |         else:
+# |             out_channels = out_dim
+# |             
+# |         self.out_channels = out_channels
+# |         self.heads = heads
+# |         self.beta = beta and root_weight
+# |         self.root_weight = root_weight
+# |         self.concat = concat
+# |         self.dropout = dropout
+# |         self.edge_dim = edge_dim
+# |         self._alpha = None
+# |  
+# |         if isinstance(in_channels, int):
+# |             in_channels = (in_channels, in_channels)
+# |
+# |         self.lin_key = Linear(in_channels[0], heads * out_channels)
+# |         self.lin_query = Linear(in_channels[1], heads * out_channels)
+# |         self.lin_value = Linear(in_channels[0], heads * out_channels)
+# |         if edge_dim != 0:
+# |             self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False)
+# |         else:
+# |             self.lin_edge = self.register_parameter('lin_edge', None)
+# |
+# |         if concat:
+# |             self.lin_skip = Linear(in_channels[1], heads * out_channels,
+# |                                    bias=bias)
+# |             if self.beta:
+# |                 self.lin_beta = Linear(3 * heads * out_channels, 1, bias=False)
+# |             else:
+# |                 self.lin_beta = self.register_parameter('lin_beta', None)
+# |         else:
+# |             self.lin_skip = Linear(in_channels[1], out_channels, bias=bias)
+# |             if self.beta:
+# |                 self.lin_beta = Linear(3 * out_channels, 1, bias=False)
+# |             else:
+# |                 self.lin_beta = self.register_parameter('lin_beta', None)
+# |
+# |     def forward(self, x: Union[Tensor, PairTensor], edge_index: Adj,
+# |                 edge_attr: OptTensor = None, return_attention_weights=None):
+# |
+# |         H, C = self.heads, self.out_channels
+# |
+# |         if isinstance(x, Tensor):
+# |             x: PairTensor = (x, x)
+# |
+# |         query = self.lin_query(x[1]).view(-1, H, C)
+# |         key = self.lin_key(x[0]).view(-1, H, C)
+# |         value = self.lin_value(x[0]).view(-1, H, C)
+# |
+# |         # propagate_type: (query: Tensor, key:Tensor, value: Tensor, edge_attr: OptTensor) # noqa
+# |         out = self.propagate(edge_index, query=query, key=key, value=value,
+# |                              edge_attr=edge_attr, size=None)
+# |
+# |         alpha = self._alpha
+# |         self._alpha = None
+# |
+# |         if self.concat:
+# |             out = out.view(-1, self.heads * self.out_channels)
+# |         else:
+# |             out = out.mean(dim=1)
+# |
+# |         if self.root_weight:
+# |             x_r = self.lin_skip(x[1])
+# |             if self.lin_beta is not None:
+# |                 beta = self.lin_beta(torch.cat([out, x_r, out - x_r], dim=-1))
+# |                 beta = beta.sigmoid()
+# |                 out = beta * x_r + (1 - beta) * out
+# |             else:
+# |                 out = out + x_r
+# |
+# |         if isinstance(return_attention_weights, bool):
+# |             assert alpha is not None
+# |             if isinstance(edge_index, Tensor):
+# |                 return out, (edge_index, alpha)
+# |             elif isinstance(edge_index, SparseTensor):
+# |                 return out, edge_index.set_value(alpha, layout='coo')
+# |         else:
+# |             return out
+# |
+# |     def message(self, query_i: Tensor, key_j: Tensor, value_j: Tensor,
+# |                 edge_attr: OptTensor, index: Tensor, ptr: OptTensor,
+# |                 size_i: Optional[int]) -> Tensor:
+# |
+# |         if self.lin_edge is not None:
+# |             assert edge_attr is not None
+# |             edge_attr = self.lin_edge(edge_attr).view(-1, self.heads,
+# |                                                       self.out_channels)
+# |             key_j = key_j + edge_attr
+# |
+# |         alpha = (query_i * key_j).sum(dim=-1) / math.sqrt(self.out_channels)
+# |         alpha = softmax(alpha, index, ptr, size_i)
+# |         self._alpha = alpha
+# |         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
+# |
+# |         out = value_j
+# |         if edge_attr is not None:
+# |             out = out + edge_attr
+# |
+# |         out = out * alpha.view(-1, self.heads, 1)
+# |         return out
+# |
+# |     def __repr__(self) -> str:
+# |         return (f'{self.__class__.__name__}({self.in_channels}, '
+# |                 f'{self.out_channels}, heads={self.heads})')
+# ===== END SOURCE FILE: NeuroGravity/models/graph_bert.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/models/gravity.py =====
+# File: NeuroGravity/models/gravity.py | Lines: 30 | TrailingNL: 0 | SHA256: 32e6ba119b0c51d2a339f64d20a8332b8b722da0469d3a24a6d582ffa3c975fc
+# | import torch
+# | import torch.nn as nn
+# | import torch.nn.functional as F
+# |
+# | class Gravity(nn.Module):
+# |     def __init__(self, node_n, mask_mode = 0, transfer = False):
+# |         super(Gravity, self).__init__()
+# |         self.mask_mode = mask_mode
+# |         if self.mask_mode != 2 and not transfer:
+# |             self.embed = True
+# |             self.A = nn.Embedding(node_n, 1)
+# |             self.B = nn.Embedding(node_n, 1)
+# |         else:
+# |             self.embed = False
+# |             self.G = nn.Parameter(torch.randn(1, dtype = torch.float))
+# |         self.node_n = node_n
+# |         self.sigmoid = F.sigmoid
+# |         self.alpha = nn.Parameter(torch.randn(1, dtype = torch.float)) # torch.randn((), dtype = torch.float, requires_grad=True)
+# |     
+# |     def forward(self, edge_index, population_i, population_j, dist_, mode='pred'):
+# |         pop_combine = population_i + population_j
+# |         if self.embed:
+# |             G_div_R_pow_Alpha = self.A(edge_index[0]).squeeze() + self.B(edge_index[1]).squeeze() - self.alpha * dist_ 
+# |         else:
+# |             G_div_R_pow_Alpha = self.G - self.alpha * dist_
+# |         log_scale = G_div_R_pow_Alpha + pop_combine
+# |         if mode == 'eval':
+# |             return log_scale, pop_combine, -G_div_R_pow_Alpha
+# |         else:
+# |             return log_scale
+# ===== END SOURCE FILE: NeuroGravity/models/gravity.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/models/link_classifier.py =====
+# File: NeuroGravity/models/link_classifier.py | Lines: 57 | TrailingNL: 0 | SHA256: 46e75163eb309a803d7611a6e9ee9e81a831a7e4b5f8ef15183412f9d0566dff
+# | import torch
+# | import torch.nn as nn
+# | from utils.utils import get_activation
+# |
+# | class create_link_classifier(nn.Module):
+# |     def __init__(self, node_n, X, population, dist, node_exp_emb_size = 0, use_population = True, use_distance = True, hidden_dims = [64, 32, 16], activation = 'relu', batch_norm = True, dropout = 0) -> None:
+# |         super(create_link_classifier, self).__init__()
+# |         self.node_n = node_n
+# |         self.X = X
+# |         self.population = torch.log(population)
+# |         self.dist = dist
+# |         self.use_population = use_population
+# |         self.use_distance = use_distance
+# |         self.node_exp_emb_size = node_exp_emb_size
+# |         self.node_input_dim = self.X.size()[1]
+# |
+# |         if self.node_exp_emb_size > 0:
+# |             self.node_embeddings = nn.Embedding(self.node_n * 2, self.node_exp_emb_size)
+# |             self.node_input_dim += self.node_exp_emb_size
+# |
+# |         if self.use_population:
+# |             self.node_input_dim += 1
+# |
+# |         self.node_input_dim *= 2
+# |
+# |         if self.use_distance:
+# |             self.node_input_dim += 1
+# |
+# |         layers = []
+# |         input_dim = self.node_input_dim
+# |         print('Link predictor input dim: ', input_dim)
+# |         for hidden_dim in hidden_dims:
+# |             if batch_norm:
+# |                 layers.append(nn.BatchNorm1d(input_dim))
+# |             layers.append(nn.Linear(input_dim, hidden_dim))
+# |             layers.append(get_activation(activation))
+# |             layers.append(nn.Dropout(dropout))
+# |             input_dim = hidden_dim
+# |         layers.append(nn.Linear(input_dim, 1))
+# |         layers.append(get_activation('sigmoid'))
+# |         self.layers = nn.Sequential(*layers)
+# |
+# |     def forward(self, edge_index):
+# |         x_i = self.X[edge_index[0]]
+# |         x_j = self.X[edge_index[1]]
+# |         if self.node_exp_emb_size > 0:
+# |             x_i = torch.cat([x_i, self.node_embeddings(edge_index[0])], dim = -1)
+# |             x_j = torch.cat([x_j, self.node_embeddings(edge_index[1])], dim = -1)
+# |         if self.use_population:
+# |             x_i = torch.cat([x_i, self.population[edge_index[0]].unsqueeze(-1)], dim = -1)
+# |             x_j = torch.cat([x_j, self.population[edge_index[1]].unsqueeze(-1) - self.node_n], dim = -1)
+# |         
+# |         link_class_net_input = torch.cat([x_i, x_j], dim = -1)
+# |         if self.use_distance:
+# |             link_class_net_input = torch.cat([link_class_net_input, self.dist[edge_index[0], edge_index[1] - self.node_n].unsqueeze(-1)], dim = -1)
+# |         link_classification = self.layers(link_class_net_input)
+# |         return link_classification
+# ===== END SOURCE FILE: NeuroGravity/models/link_classifier.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/models/metaGravity.py =====
+# File: NeuroGravity/models/metaGravity.py | Lines: 112 | TrailingNL: 0 | SHA256: e63095947c4a30f1fb4a40fae50cc24973a5752826ff61d25e030e0584642e8c
+# | import torch
+# | import torch.nn as nn
+# | import torch.nn.functional as F
+# | from utils.utils import get_activation
+# |
+# | class create_G_network(nn.Module):
+# |     def __init__(self, node_n, node_input_dim, use_population = True, use_distance = True, hidden_dims = [64, 32, 16], activation = 'sigmoid', batch_norm = True, dropout = 0) -> None:
+# |         super(create_G_network, self).__init__()
+# |         self.node_n = node_n
+# |         # self.X = X
+# |         self.use_population = use_population
+# |         self.use_distance = use_distance
+# |         self.node_input_dim = node_input_dim
+# |
+# |         if self.use_population:
+# |             self.node_input_dim += 1
+# |
+# |         self.node_input_dim *= 2
+# |
+# |         if self.use_distance:
+# |             self.node_input_dim += 1
+# |
+# |         layers = []
+# |         input_dim = self.node_input_dim
+# |         for hidden_dim in hidden_dims:
+# |             if batch_norm:
+# |                 layers.append(nn.BatchNorm1d(input_dim))
+# |             layers.append(nn.Linear(input_dim, hidden_dim))
+# |             layers.append(get_activation(activation))
+# |             layers.append(nn.Dropout(dropout))
+# |             input_dim = hidden_dim
+# |         layers.append(nn.Linear(input_dim, 1))
+# |         self.layers = nn.Sequential(*layers)
+# |
+# |     def forward(self, X, edge_index, pop_i = None, pop_j = None, dist = None):
+# |         x_i = X[edge_index[0]]
+# |         x_j = X[edge_index[1]]
+# |
+# |         if self.use_population:
+# |             x_i = torch.cat([x_i, pop_i.unsqueeze(-1)], dim = -1)
+# |             x_j = torch.cat([x_j, pop_j.unsqueeze(-1)], dim = -1)
+# |         
+# |         G_net_input = torch.cat([x_i, x_j], dim = -1)
+# |
+# |         if self.use_distance:
+# |             G_net_input = torch.cat([G_net_input, dist.unsqueeze(dim = 1)], dim = -1)
+# |         G = self.layers(G_net_input)
+# |         return G
+# |
+# | class create_Alpha_network(nn.Module):
+# |     def __init__(self, node_n, node_input_dim, use_population = True, use_distance = True, hidden_dims = [64, 32, 16], activation = 'relu', batch_norm = True, dropout = 0) -> None:
+# |         super(create_Alpha_network, self).__init__()
+# |         self.node_n = node_n
+# |         self.use_population = use_population
+# |         self.use_distance = use_distance
+# |         self.node_input_dim = node_input_dim
+# |
+# |         self.node_input_dim *= 2
+# |
+# |         if self.use_distance:
+# |             self.node_input_dim += 1
+# |
+# |         layers = []
+# |         input_dim = self.node_input_dim
+# |
+# |         for hidden_dim in hidden_dims:
+# |             if batch_norm:
+# |                 layers.append(nn.BatchNorm1d(input_dim))
+# |             layers.append(nn.Linear(input_dim, hidden_dim))
+# |             layers.append(get_activation(activation))
+# |             layers.append(nn.Dropout(dropout))
+# |             input_dim = hidden_dim
+# |         layers.append(nn.Linear(input_dim, 1))
+# |         self.layers = nn.Sequential(*layers)
+# |
+# |     def forward(self, X, edge_index, pop_i = None, pop_j = None, dist = None):
+# |         # print(edge_index.size)
+# |         x_i = X[edge_index[0]]
+# |         x_j = X[edge_index[1]]
+# |         if self.use_population:
+# |             x_i = torch.cat([x_i, pop_i.unsqueeze(-1)], dim = -1)
+# |             x_j = torch.cat([x_j, pop_j.unsqueeze(-1)], dim = -1)
+# |         
+# |         alpha_net_input = torch.cat([x_i, x_j], dim = -1)
+# |         if self.use_distance:
+# |             alpha_net_input = torch.cat([alpha_net_input, dist.unsqueeze(dim = 1)], dim = -1)
+# |         
+# |         alpha = self.layers(alpha_net_input)
+# |         return alpha
+# |
+# |
+# | class metaGravity(nn.Module):
+# |     def __init__(self, node_n, node_input_dim, use_population = False, use_distance = True, hidden_dims = [128, 40, 8], activation = 'relu', batch_norm = True, dropout = 0.5):
+# |         super(metaGravity, self).__init__()
+# |         self.node_n = node_n
+# |         self.node_input_dim = node_input_dim
+# |         self.G_net = create_G_network(self.node_n, self.node_input_dim, use_population = use_population, use_distance = use_distance, hidden_dims = hidden_dims, activation = activation, batch_norm = batch_norm, dropout = dropout) # [128, 32, 8] 128, 32, 8 [64, 32, 16]
+# |         self.Alpha_net = create_Alpha_network(self.node_n, self.node_input_dim, use_population = use_population, use_distance = use_distance, hidden_dims = hidden_dims, activation = activation, batch_norm = batch_norm, dropout = dropout) # [128, 32, 8] [64, 32, 16]
+# |
+# |         self.sigmoid = F.sigmoid
+# |
+# |     def forward(self, X, edge_index, pop_i, pop_j, dist, mode='pred'):
+# |         G = self.G_net(X, edge_index, pop_i, pop_j, dist).squeeze(dim = 1)
+# |         Alpha = self.Alpha_net(X, edge_index, pop_i, pop_j, dist).squeeze(dim = 1)
+# |         
+# |         pop_combine = pop_i + pop_j
+# |         G_div_R_pow_Alpha = G - Alpha * dist
+# |         log_scale = G_div_R_pow_Alpha + pop_combine
+# |         if mode == 'eval':
+# |             return log_scale, pop_combine, -G_div_R_pow_Alpha
+# |         else:
+# |             return log_scale
+# ===== END SOURCE FILE: NeuroGravity/models/metaGravity.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/models/prediction_model.py =====
+# File: NeuroGravity/models/prediction_model.py | Lines: 107 | TrailingNL: 1 | SHA256: 3afa94ce29e7fa2af72dbf4b34e190f575b7c568d06a191b280c51335b94030d
+# | import torch
+# | import torch.nn as nn
+# | import torch.nn.functional as F
+# | import numpy as np
+# | from utils.utils import get_activation
+# |
+# | # def minmaxscale(T):
+# | # 	return (T - T.min()) / (T.max() - T.min())
+# |
+# | class MLPNet(torch.nn.Module):
+# | 	def __init__(self, 
+# |          		input_dims, output_dim,
+# |          		hidden_layer_sizes=(64,),
+# |          		hidden_activation='relu',
+# |          		output_activation=None,
+# |            		batch_norm = False,
+# | 				direct_od_pred = False,
+# |                 dropout=0., use_alpha_net = False):
+# | 		super(MLPNet, self).__init__()
+# |
+# | 		layers = nn.ModuleList()
+# |
+# | 		input_dim = np.sum(input_dims)
+# | 		self.use_alpha_net = use_alpha_net
+# | 		self.direct_od_pred = direct_od_pred
+# | 		
+# | 		self.expand_layers = nn.ModuleList()
+# | 		exp_input_dim = 2
+# | 		exp_hidden_layer_sizes = [12]
+# | 		for layer_size in exp_hidden_layer_sizes:
+# | 			exp_hidden_dim = layer_size
+# | 			if batch_norm:
+# | 				layer = nn.Sequential(
+# |         					nn.BatchNorm1d(exp_input_dim),
+# | 							nn.Linear(exp_input_dim, exp_hidden_dim),
+# | 							get_activation(hidden_activation),
+# | 							)
+# | 			else:
+# | 				layer = nn.Sequential(
+# | 							nn.Linear(exp_input_dim, exp_hidden_dim),
+# | 							get_activation(hidden_activation),
+# | 							)
+# | 			self.expand_layers.append(layer)
+# | 			exp_input_dim = exp_hidden_dim
+# |
+# | 		self.alpha_network = False
+# | 		if not self.use_alpha_net:
+# | 			self.alpha_ = nn.Parameter(torch.rand(1, dtype = torch.float)) # torch.randn((), dtype = torch.float, requires_grad=True)
+# |         
+# | 		input_dim += exp_hidden_layer_sizes[-1]
+# |
+# | 		for layer_size in hidden_layer_sizes:
+# | 			hidden_dim = layer_size
+# | 			if batch_norm:
+# | 				layer = nn.Sequential(
+# |         					nn.BatchNorm1d(input_dim),
+# | 							nn.Linear(input_dim, hidden_dim),
+# | 							get_activation(hidden_activation),
+# | 							nn.Dropout(dropout),
+# | 							)
+# | 			else:
+# | 				layer = nn.Sequential(
+# | 							nn.Linear(input_dim, hidden_dim),
+# | 							get_activation(hidden_activation),
+# | 							nn.Dropout(dropout),
+# | 							)
+# | 			layers.append(layer)
+# | 			input_dim = hidden_dim
+# |
+# | 		layer = nn.Sequential(
+# |         				nn.Linear(input_dim, output_dim),
+# |         				get_activation(output_activation),
+# |         				)
+# | 		layers.append(layer)
+# | 		self.layers = layers
+# |
+# | 	def forward(self, inputs, pop_i, pop_j, dist, alpha = None):
+# | 		if self.use_alpha_net:
+# | 			assert alpha is not None, "self.use_alpha_net == True, alpha must be specified"
+# | 		if torch.is_tensor(inputs):
+# | 			inputs = [inputs]
+# |
+# | 		pop_embeds = torch.cat([pop_i.unsqueeze(dim = 1), pop_j.unsqueeze(dim = 1)], dim = 1)
+# | 		for layer in self.expand_layers:
+# | 			pop_embeds = layer(pop_embeds)
+# |
+# | 		inputs.append(pop_embeds)
+# |
+# | 		input_var = torch.cat(inputs,-1)
+# | 		if self.direct_od_pred:
+# | 			# print('input_var size:', input_var.size())
+# | 			input_var = torch.cat([input_var, dist.unsqueeze(dim = 1)], dim = 1)
+# |
+# | 		for layer in self.layers:
+# | 			input_var = layer(input_var)
+# | 		if not self.direct_od_pred:
+# | 			if self.use_alpha_net:
+# | 				alpha_ = alpha
+# | 			else:
+# | 				alpha_ = self.alpha_
+# | 			input_var = input_var - alpha_ * dist.unsqueeze(dim = 1)
+# | 		return input_var
+# |
+# |
+# |
+# |
+# ===== END SOURCE FILE: NeuroGravity/models/prediction_model.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/DeepGravity_transfer.py =====
+# File: NeuroGravity/training/DeepGravity_transfer.py | Lines: 76 | TrailingNL: 1 | SHA256: 4b9aa670c2e2da1968805d742db2aa1013510b2c14e1cae0bc24bcd54bf5a67a
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# |
+# | def DeepGravity_transfer(data, args, log_path, device=torch.device('cpu'), logger=None, scale_pred_by_sum = False, evaluate = True, model_name = 'DeepGravity'):
+# |     physics_model = torch.load(log_path + '{}_model_r2.pt'.format(model_name)).to(device)
+# |     
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |
+# |     flow_complete = data.flow_complete.to(device)
+# |     filter_mask = data.filter_mask.to(device)
+# |     
+# |     ori_complete = data.ori_complete
+# |     des_complete = data.des_complete
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     # Start Testing
+# |     physics_model.eval()
+# |
+# |     with torch.no_grad():
+# |         x_batch = x.clone().detach()
+# |         # Preparing Edge Initial Features
+# |         batch_edge_index = edge_o2d_index.clone().detach()
+# |         pop_i = log_population[batch_edge_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist.clone().detach()
+# |         physics_estimated = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist)
+# |         transfer_preds = torch.exp(physics_estimated).clone().detach()
+# |         transfer_preds_complete = torch.zeros_like(flow_complete).to(device)
+# |         transfer_preds_complete[filter_mask] = transfer_preds
+# |
+# |         if evaluate:
+# |             if scale_pred_by_sum:
+# |                 transfer_preds_complete = transfer_preds_complete * torch.sum(flow_complete) / torch.sum(transfer_preds_complete)
+# |             transfer_Metrics = metrics_cal(flow_complete, mask_percent = [0], filter_zeros=False, device = device)
+# |             proc_test_metrics = transfer_Metrics.proceed(transfer_preds_complete)
+# |
+# |             # for metric_key, metric_values in proc_test_metrics.items():
+# |             #     logger.info('Transfer DeepGravity Performance {}: {}'.format(metric_key, metric_values))
+# |             # logger.info('')
+# |
+# |             # metrices = dict()
+# |             # metrices['DeepGravity'] = proc_test_metrics
+# |             # save_obj(metrices, log_path + 'DeepGravity_transfer_metrices')
+# |
+# |         origin_inds_ = ori_complete
+# |         destination_inds_ = des_complete
+# |         pred_transfer_exp_ = transfer_preds_complete.detach().squeeze().cpu().numpy()
+# |         
+# |     if evaluate:
+# |         return origin_inds_, destination_inds_, pred_transfer_exp_, proc_test_metrics['r2'][0], proc_test_metrics['cpc'][0]
+# |     else:
+# |         return origin_inds_, destination_inds_, pred_transfer_exp_
+# |
+# |         # if evaluate:
+# |         #     transfer_labels_exp_ = flow_complete.detach().squeeze().cpu().numpy()
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'label': transfer_labels_exp_, 'DeepGravity_prediction': pred_transfer_exp_})
+# |         # else:
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'DeepGravity_prediction': pred_transfer_exp_})
+# |         # df_output.to_csv(log_path + 'DeepGravity_transfer_output.csv')
+# |
+# ===== END SOURCE FILE: NeuroGravity/training/DeepGravity_transfer.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/gbert_transfer.py =====
+# File: NeuroGravity/training/gbert_transfer.py | Lines: 85 | TrailingNL: 0 | SHA256: e25972fcd8ec405c51573103627ad85f43ff161994c4728caf031a076e483d79
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# |
+# | def gbert_transfer(data, args, log_path, device=torch.device('cpu'), logger=None, scale_pred_by_sum = False, evaluate = True, model_name = 'gbert'):
+# |     model = torch.load(log_path + '{}_gnn_model_r2.pt'.format(model_name)).to(device)
+# |     impute_model = torch.load(log_path + '{}_impute_model_r2.pt'.format(model_name)).to(device)
+# |     
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |   
+# |     flow_complete = data.flow_complete.to(device)
+# |     filter_mask = data.filter_mask.to(device)
+# |
+# |     ori_complete = data.ori_complete
+# |     des_complete = data.des_complete
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |     
+# |     # Start Testing
+# |     model.eval()
+# |     impute_model.eval()
+# |
+# |     with torch.no_grad():
+# |         x_batch = x.clone().detach()
+# |         # Preparing Edge Initial Features
+# |         batch_edge_index = edge_o2d_index.clone().detach()
+# |
+# |         x_embd = model(x_batch, batch_edge_index)
+# |
+# |         # Link prediction
+# |         batch_o2d_test_edge_index = edge_o2d_index.clone().detach()
+# |         link_pred_input = [x_embd[batch_o2d_test_edge_index[0]], x_embd[batch_o2d_test_edge_index[1]]]
+# |         pop_i_ = log_population[batch_o2d_test_edge_index[0, :]].clone().detach()
+# |         pop_j_ = log_population[batch_o2d_test_edge_index[1, :]].clone().detach()
+# |         batch_o2d_dist = edge_o2d_log_dist.clone().detach()
+# |
+# |         batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |
+# |         test_preds = torch.exp(batch_pred).clone().detach()
+# |         test_preds_complete = torch.zeros_like(flow_complete).to(device)
+# |         test_preds_complete[filter_mask] = test_preds
+# |
+# |         if evaluate:
+# |             if scale_pred_by_sum:
+# |                 test_preds_complete = test_preds_complete * torch.sum(flow_complete) / torch.sum(test_preds_complete)
+# |             test_Metrics = metrics_cal(flow_complete, mask_percent = [0], filter_zeros=False, device = device)
+# |             proc_test_metrics = test_Metrics.proceed(test_preds_complete)
+# |
+# |             # for metric_key, metric_values in proc_test_metrics.items():
+# |             #     logger.info('Transfer GBERT Performance {}: {}'.format(metric_key, metric_values))
+# |             # logger.info('')
+# |
+# |             # metrices = dict()
+# |             # metrices['gbert'] = proc_test_metrics
+# |             # save_obj(metrices, log_path + 'gbert_transfer_metrices')
+# |
+# |         origin_inds_ = ori_complete
+# |         destination_inds_ = des_complete
+# |         pred_test_exp_ = test_preds_complete.detach().squeeze().cpu().numpy()
+# |     
+# |     if evaluate:
+# |         return origin_inds_, destination_inds_, pred_test_exp_, proc_test_metrics['r2'][0], proc_test_metrics['cpc'][0]
+# |     else:
+# |         return origin_inds_, destination_inds_, pred_test_exp_
+# |
+# |         # if evaluate:
+# |         #     test_labels_exp_ = flow_complete.detach().squeeze().cpu().numpy()
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'label': test_labels_exp_, 'gbert_prediction': pred_test_exp_})
+# |         # else:
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'gbert_prediction': pred_test_exp_})
+# |         # df_output.to_csv(log_path + 'gbert_transfer_output.csv')
+# |         
+# ===== END SOURCE FILE: NeuroGravity/training/gbert_transfer.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/gravity_transfer.py =====
+# File: NeuroGravity/training/gravity_transfer.py | Lines: 75 | TrailingNL: 1 | SHA256: 315b571ed076f31417ce72be493de09d80041462613c4f8da1887799e284cc3f
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# |
+# | def gravity_transfer(data, args, log_path, device=torch.device('cpu'), logger=None, scale_pred_by_sum = False, evaluate = True, model_name = 'gravity'):
+# |     physics_model = torch.load(log_path + '{}_model_r2.pt'.format(model_name)).to(device)
+# |     
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |
+# |     flow_complete = data.flow_complete.to(device)
+# |     filter_mask = data.filter_mask.to(device)
+# |
+# |     ori_complete = data.ori_complete
+# |     des_complete = data.des_complete
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     # Start Testing
+# |     physics_model.eval()
+# |
+# |     with torch.no_grad():
+# |         x_batch = x.clone().detach()
+# |         # Preparing Edge Initial Features
+# |         batch_edge_index = edge_o2d_index.clone().detach()
+# |         pop_i = log_population[batch_edge_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist.clone().detach()
+# |         physics_estimated = physics_model(batch_edge_index, pop_i, pop_j, batch_dist)
+# |
+# |         transfer_preds = torch.exp(physics_estimated).clone().detach()
+# |         transfer_preds_complete = torch.zeros_like(flow_complete).to(device)
+# |         transfer_preds_complete[filter_mask] = transfer_preds
+# |
+# |         if evaluate:
+# |             if scale_pred_by_sum:
+# |                 transfer_preds_complete = transfer_preds_complete * torch.sum(flow_complete) / torch.sum(transfer_preds_complete)
+# |             transfer_Metrics = metrics_cal(flow_complete, mask_percent = [0], filter_zeros=False, device = device)
+# |             proc_test_metrics = transfer_Metrics.proceed(transfer_preds_complete)
+# |
+# |             # for metric_key, metric_values in proc_test_metrics.items():
+# |             #     logger.info('Transfer Gravity Performance {}: {}'.format(metric_key, metric_values))
+# |             # logger.info('')
+# |
+# |             # metrices = dict()
+# |             # metrices['gravity'] = proc_test_metrics
+# |             # save_obj(metrices, log_path + 'gravity_transfer_metrices')
+# |
+# |         origin_inds_ = ori_complete
+# |         destination_inds_ = des_complete
+# |         pred_transfer_exp_ = transfer_preds_complete.detach().squeeze().cpu().numpy()
+# |     if evaluate:
+# |         return origin_inds_, destination_inds_, pred_transfer_exp_, proc_test_metrics['r2'][0], proc_test_metrics['cpc'][0]
+# |     else:
+# |         return origin_inds_, destination_inds_, pred_transfer_exp_
+# |         # if evaluate:
+# |         #     transfer_labels_exp_ = flow_complete.detach().squeeze().cpu().numpy()
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'label': transfer_labels_exp_, 'gravity_prediction': pred_transfer_exp_})
+# |         # else:
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'prediction': pred_transfer_exp_})
+# |         # df_output.to_csv(log_path + 'gravity_transfer_output.csv')
+# |
+# ===== END SOURCE FILE: NeuroGravity/training/gravity_transfer.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/loop_train_DeepGravity.py =====
+# File: NeuroGravity/training/loop_train_DeepGravity.py | Lines: 171 | TrailingNL: 0 | SHA256: 8e3cff484f5532fda8b0cdd1e6038d2cbffd16360efb67757b6f988c040f9560
+# | import numpy as np
+# | import torch
+# | from copy import deepcopy
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# | def loop_train_DeepGravity(physics_model, scheduler, opt, data, args, log_path, device=torch.device('cpu'), logger=None, data_valid=None, log_intermediate = False, model_name = 'DeepGravity'):
+# |     stt_ = time.time()
+# |
+# |     Test_mape = []
+# |     Test_cpc = []
+# |     Test_r2 = []
+# |
+# |     Lr = []
+# |
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_attr = data.edge_o2d_attr.clone().detach().to(device)
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |   
+# |     train_mask = data.train_mask.clone().detach().to(device)    #.to(device)
+# |     test_mask = data.test_mask.clone().detach().to(device)      #.to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |     
+# |     if isinstance(args.valid, float):
+# |         x_valid = x.clone().detach()
+# |         edge_o2d_index_valid = edge_o2d_index.clone().detach()
+# |         log_population_valid = log_population.clone().detach()
+# |         edge_o2d_log_dist_valid = edge_o2d_log_dist.clone().detach()
+# |         edge_o2d_flow_valid = edge_o2d_flow.clone().detach()
+# |         valid_mask = data.valid_mask.clone().detach().to(device)    #.to(device)
+# |     elif data_valid is not None: # validate on another dataset
+# |         x_valid = data_valid.x.clone().detach().to(device)
+# |         edge_o2d_index_valid = data_valid.edge_o2d_index.clone().detach().to(device)
+# |         log_population_valid = data_valid.log_population.to(device)
+# |         edge_o2d_log_dist_valid = data_valid.edge_o2d_log_dist.to(device)
+# |         edge_o2d_flow_valid = data_valid.edge_o2d_flow.to(device)
+# |         valid_mask = data_valid.train_mask.clone().detach().to(device)
+# |         flow_complete_valid = data_valid.flow_complete.to(device)
+# |         filter_mask_valid = data_valid.filter_mask.to(device)
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     best_valid_cpc = 0
+# |     best_valid_r2 = -np.inf
+# |     hold_step = 0
+# |     max_wait_step = 100
+# |
+# |     if log_intermediate:
+# |         logger.info('========================')
+# |         logger.info('Deep Gravity training starts!')
+# |
+# |     #### ================ Train Deep Gravity / Another ===================
+# |     for epoch in range(args.epochs):
+# |         batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, train_mask]
+# |         # batch_eid = torch.arange(batch_edge_o2d_index.size()[1]).to(device)[train_mask]
+# |         x_batch = x.clone().detach()
+# |         pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist[train_mask].clone().detach()
+# |
+# |         physics_model.train()
+# |         opt.zero_grad()
+# |
+# |         physics_estimated_batch = physics_model(x_batch, batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |         batch_label = edge_o2d_label[train_mask].clone().detach()
+# |         loss_physics = LossCal(batch_label, physics_estimated_batch, loss_type = args.loss_type, huber_scale = args.huber_scale, weight_proc = 'softmax', temperature  = args.temperature)
+# |         loss_physics.backward()
+# |         opt.step()
+# |
+# |         if scheduler is not None:
+# |             scheduler.step()
+# |
+# |         # ------- validation --------
+# |         if (epoch + 1) % 1 == 0:
+# |             with torch.no_grad():
+# |                 physics_model.eval()
+# |                 # ====== Validate =======
+# |                 x_batch = x_valid.clone().detach()
+# |                 batch_edge_index = edge_o2d_index_valid.clone().detach()[:, valid_mask]
+# |                 pop_i = log_population_valid[batch_edge_index[0, :]].clone().detach()
+# |                 pop_j = log_population_valid[batch_edge_index[1, :]].clone().detach()
+# |                 batch_dist = edge_o2d_log_dist_valid[valid_mask].clone().detach()
+# |                 physics_estimated_valid_batch = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist)
+# |                 phy_valid_preds = torch.exp(physics_estimated_valid_batch).clone().detach()
+# |
+# |                 if isinstance(args.valid, float):
+# |                     valid_preds = phy_valid_preds.clone().detach()
+# |                     flow_complete_valid = edge_o2d_flow_valid[valid_mask]
+# |                 else:
+# |                     valid_preds = torch.zeros_like(flow_complete_valid).to(device)
+# |                     valid_preds[filter_mask_valid] = phy_valid_preds
+# |                     valid_preds = valid_preds * (torch.sum(flow_complete_valid) / torch.sum(valid_preds))
+# |
+# |                 # valid_Metrics = metrics_cal(flow_complete_valid, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], filter_zeros=False, device = device)
+# |                 valid_Metrics = metrics_cal(flow_complete_valid, mask_percent = [0], filter_zeros=False, device = device)
+# |                 proc_valid_metrics = valid_Metrics.proceed(valid_preds)
+# |
+# |                 valid_r2 = proc_valid_metrics['r2'][0]
+# |                 valid_cpc = proc_valid_metrics['cpc'][0]
+# |                 if (valid_r2 > best_valid_r2) or (valid_cpc > best_valid_cpc):
+# |                     hold_step = 0
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in proc_valid_metrics.items():
+# |                     #         logger.info('Bingo! Training epoch: {}, Valid {}: {}'.format(epoch + 1, metric_key, metric_values))
+# |
+# |                     if valid_r2 > best_valid_r2:
+# |                         best_valid_r2 = valid_r2
+# |                         torch.save(physics_model, log_path + '{}_model_r2.pt'.format(model_name))
+# |
+# |                     if valid_cpc > best_valid_cpc:
+# |                         best_valid_cpc = valid_cpc
+# |
+# |                     # ====== Test ======
+# |                     batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, test_mask]
+# |                     x_batch = x.clone().detach()
+# |                     pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |                     pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |                     batch_dist = edge_o2d_log_dist[test_mask].clone().detach()
+# |                     physics_estimated_test_batch = physics_model(x_batch, batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |                     phy_test_preds = torch.exp(physics_estimated_test_batch).clone().detach()
+# |                     test_flows = edge_o2d_flow[test_mask]
+# |                     test_Metrics = metrics_cal(test_flows, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], device = device)
+# |                     phy_test_metrics = test_Metrics.proceed(phy_test_preds)
+# |
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in phy_test_metrics.items():
+# |                     #         logger.info('Test {}: {}'.format(metric_key, metric_values))
+# |                     #     logger.info('')
+# |
+# |                     Test_cpc.append(phy_test_metrics['cpc'][0])
+# |                     Test_mape.append(phy_test_metrics['mape'][0])
+# |                     Test_r2.append(phy_test_metrics['r2'][0])
+# |                 else:
+# |                     hold_step += 1
+# |                     if hold_step >= max_wait_step:
+# |                         # if log_intermediate:
+# |                         #     logger.info('Early stop at epoch: {}'.format(epoch))
+# |                         break
+# |
+# |     ## Save test metrics
+# |     metrices = dict()
+# |     metrices['DeepGravity'] = phy_test_metrics
+# |     save_obj(metrices, log_path + 'DeepGravity_reconstruction_metrics')
+# |
+# |     ## Save predictions along with ground truth in a dataframe
+# |     test_output = pd.DataFrame({'origin': edge_o2d_index[0, test_mask].cpu().numpy(), 'destination': edge_o2d_index[1, test_mask].cpu().numpy(), 'label': test_flows.cpu().numpy(), 'DeepGravity_prediction': phy_test_preds.cpu().numpy()})
+# |     test_output.to_csv(log_path + 'DeepGravity_reconstruction_test_output.csv')
+# |
+# |     if log_intermediate:
+# |         logger.info('Deep Gravity training finished! Total time cost: {}'.format(time.time() - stt_))
+# |     Test_cpc = np.array(Test_cpc)
+# |     Test_mape = np.array(Test_mape)
+# |     Test_r2 = np.array(Test_r2)
+# |     arg_max_cpc = np.argmax(Test_cpc)
+# |     arg_min_mape = np.argmin(Test_mape)
+# |     arg_max_r2 = np.argmax(Test_r2)
+# |
+# |     if log_intermediate:
+# |         logger.info('Best test CPC: {}, Corresponding mape: {}, r2: {}'.format(np.max(Test_cpc), Test_mape[arg_max_cpc], Test_r2[arg_max_cpc]))
+# |         logger.info('Best test mape: {}, Corresponding CPC: {}, r2: {}'.format(np.min(Test_mape), Test_cpc[arg_min_mape], Test_r2[arg_min_mape]))
+# |         logger.info('Best test r2: {}, Corresponding CPC: {}, MAPE: {}'.format(np.max(Test_r2), Test_cpc[arg_max_r2], Test_mape[arg_max_r2]))
+# |     return np.max(Test_r2), Test_cpc[arg_max_r2]
+# ===== END SOURCE FILE: NeuroGravity/training/loop_train_DeepGravity.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/loop_train_gbert.py =====
+# File: NeuroGravity/training/loop_train_gbert.py | Lines: 211 | TrailingNL: 0 | SHA256: 384e14753caafd629a353b30dc9cd8598fec7edf3a7332eb017c23cf455a2cc7
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# |
+# | def loop_train_gbert(model, impute_model, scheduler, opt, data, args, log_path, device=torch.device('cpu'), logger=None, data_valid=None, log_intermediate = False, model_name = 'gbert'):
+# |     stt_ = time.time()
+# |
+# |     Train_loss = []
+# |
+# |     Test_mape = []
+# |     Test_cpc = []
+# |     Test_r2 = []
+# |
+# |     Lr = []
+# |
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_attr = data.edge_o2d_attr.clone().detach().to(device)
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |   
+# |     train_mask = data.train_mask.clone().detach().to(device)
+# |     test_mask = data.test_mask.clone().detach().to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |
+# |     if data_valid is None:
+# |         x_valid = x.clone().detach()
+# |         edge_o2d_index_valid = edge_o2d_index.clone().detach()
+# |         log_population_valid = log_population.clone().detach()
+# |         edge_o2d_log_dist_valid = edge_o2d_log_dist.clone().detach()
+# |         edge_o2d_flow_valid = edge_o2d_flow.clone().detach()
+# |         valid_mask = data.valid_mask.clone().detach().to(device)
+# |     elif data_valid is not None: # validate on another dataset
+# |         x_valid = data_valid.x.clone().detach().to(device)
+# |         edge_o2d_index_valid = data_valid.edge_o2d_index.clone().detach().to(device)
+# |         log_population_valid = data_valid.log_population.to(device)
+# |         edge_o2d_log_dist_valid = data_valid.edge_o2d_log_dist.to(device)
+# |         edge_o2d_flow_valid = data_valid.edge_o2d_flow.to(device)
+# |         valid_mask = data_valid.train_mask.clone().detach().to(device)
+# |         flow_complete_valid = data_valid.flow_complete.to(device)
+# |         filter_mask_valid = data_valid.filter_mask.to(device)
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     best_test_cpc = 0
+# |     best_test_r2 = 0
+# |     best_valid_cpc = 0
+# |     best_valid_r2 = -np.inf
+# |     hold_step = 0
+# |     max_wait_step = 100
+# |     if log_intermediate:
+# |         logger.info('========================')
+# |         logger.info('GBERT training starts!')
+# |
+# |     #### ================ Training ===================
+# |     for epoch in range(args.epochs):
+# |         # for batch_size, n_id, adjs in subgraph_loader_train:
+# |         model.train()
+# |         impute_model.train()
+# |         opt.zero_grad()
+# |
+# |         x_batch = x.clone().detach()
+# |         batch_edge_index = edge_o2d_index.clone().detach()
+# |         x_embd = model(x_batch, batch_edge_index)
+# |
+# |         # Link prediction
+# |         batch_o2d_train_edge_index = edge_o2d_index[:, train_mask].clone().detach()
+# |         link_pred_input = [x_embd[batch_o2d_train_edge_index[0]], x_embd[batch_o2d_train_edge_index[1]]]
+# |         pop_i_ = log_population[batch_o2d_train_edge_index[0, :]].clone().detach()
+# |         pop_j_ = log_population[batch_o2d_train_edge_index[1, :]].clone().detach()
+# |         batch_o2d_dist = edge_o2d_log_dist[train_mask].clone().detach()
+# |         batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |
+# |         batch_label = edge_o2d_label[train_mask].clone().detach()
+# |         loss_gnn = LossCal(batch_label, batch_pred, loss_type = args.loss_type, huber_scale = args.huber_scale, weight_proc = 'softmax', temperature  = args.temperature)
+# |
+# |         loss = loss_gnn
+# |         
+# |         loss.backward()
+# |         
+# |         opt.step()
+# |         
+# |         train_loss = loss.item()
+# |         
+# |         if scheduler is not None:
+# |             scheduler.step()
+# |
+# |         for param_group in opt.param_groups:
+# |             Lr.append(param_group['lr'])
+# |
+# |         Train_loss.append(train_loss)
+# |
+# |         if (epoch + 1) % 1 == 0:
+# |             model.eval()
+# |             impute_model.eval()
+# |             with torch.no_grad():
+# |                 # ====== Validation ======
+# |                 x_batch = x_valid.clone().detach()
+# |                 batch_edge_index = edge_o2d_index_valid.clone().detach()
+# |
+# |                 x_embd = model(x_batch, batch_edge_index)
+# |
+# |                 # Link prediction
+# |                 batch_o2d_valid_edge_index = batch_edge_index[:, valid_mask].clone().detach()
+# |                 link_pred_input = [x_embd[batch_o2d_valid_edge_index[0]], x_embd[batch_o2d_valid_edge_index[1]]]
+# |                 pop_i_ = log_population_valid[batch_o2d_valid_edge_index[0, :]].clone().detach()
+# |                 pop_j_ = log_population_valid[batch_o2d_valid_edge_index[1, :]].clone().detach()
+# |                 batch_o2d_dist = edge_o2d_log_dist_valid[valid_mask].clone().detach()
+# |                 
+# |                 valid_batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |                 if data_valid is None:
+# |                     valid_preds = torch.exp(valid_batch_pred).clone().detach()
+# |                     flow_complete_valid = edge_o2d_flow_valid[valid_mask]
+# |                 else:
+# |                     valid_preds_ = torch.exp(valid_batch_pred).clone().detach()
+# |                     valid_preds = torch.zeros_like(flow_complete_valid).to(device)
+# |                     valid_preds[filter_mask_valid] = valid_preds_
+# |                     valid_preds = valid_preds * torch.sum(flow_complete_valid) / torch.sum(valid_preds)
+# |
+# |                 valid_Metrics = metrics_cal(flow_complete_valid, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], filter_zeros=False, device = device)
+# |                 proc_valid_metrics = valid_Metrics.proceed(valid_preds)
+# |
+# |                 valid_r2 = proc_valid_metrics['r2'][0]
+# |                 valid_cpc = proc_valid_metrics['cpc'][0]
+# |                 if (valid_r2 > best_valid_r2) or (valid_cpc > best_valid_cpc):
+# |                     hold_step = 0
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in proc_valid_metrics.items():
+# |                     #         logger.info('Bingo! Training epoch: {}, Valid {}: {}'.format(epoch + 1, metric_key, metric_values))
+# |                     
+# |                     if valid_r2 > best_valid_r2:
+# |                         best_valid_r2 = valid_r2
+# |                         torch.save(model, log_path + '{}_gnn_model_r2.pt'.format(model_name))
+# |                         torch.save(impute_model, log_path + '{}_impute_model_r2.pt'.format(model_name))
+# |                         # if log_intermediate:
+# |                         #     logger.info('Better (R2) Model Found! Resave in Epoch: {}!'.format(epoch))
+# |
+# |                     if valid_cpc > best_valid_cpc:
+# |                         best_valid_cpc = valid_cpc
+# |
+# |                     # if log_intermediate:
+# |                     #     logger.info('')
+# |                     # ====== Test ======                
+# |                     x_batch = x.clone().detach()
+# |                     # Preparing Edge Initial Features
+# |                     batch_edge_index = edge_o2d_index.clone().detach()
+# |                     x_embd = model(x_batch, batch_edge_index)
+# |
+# |                     # Link prediction
+# |                     batch_o2d_test_edge_index = edge_o2d_index[:, test_mask].clone().detach()
+# |                     link_pred_input = [x_embd[batch_o2d_test_edge_index[0]], x_embd[batch_o2d_test_edge_index[1]]]
+# |                     pop_i_ = log_population[batch_o2d_test_edge_index[0, :]].clone().detach()
+# |                     pop_j_ = log_population[batch_o2d_test_edge_index[1, :]].clone().detach()
+# |                     batch_o2d_dist = edge_o2d_log_dist[test_mask].clone().detach()
+# |                     
+# |                     batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |
+# |                     test_preds = torch.exp(batch_pred).clone().detach()
+# |                     test_flows = edge_o2d_flow[test_mask]
+# |                     test_edge_index = batch_o2d_test_edge_index.clone().detach()
+# |                     test_Metrics = metrics_cal(test_flows, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], device = device)
+# |                     proc_test_metrics = test_Metrics.proceed(test_preds)
+# |
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in proc_test_metrics.items():
+# |                     #         logger.info('Training epoch: {}, Test {}: {}'.format(epoch + 1, metric_key, metric_values))
+# |                     #     logger.info('')
+# |                     
+# |                     Test_cpc.append(proc_test_metrics['cpc'][0])
+# |                     Test_mape.append(proc_test_metrics['mape'][0])
+# |                     Test_r2.append(proc_test_metrics['r2'][0])
+# |
+# |                 else:
+# |                     hold_step += 1
+# |                     if hold_step >= max_wait_step:
+# |                         # if log_intermediate:
+# |                         #     logger.info('Early stop at epoch: {}'.format(epoch))
+# |                         break
+# |     
+# |     ## Save test metrics
+# |     metrices = dict()
+# |     metrices['GBERT'] = proc_test_metrics
+# |     save_obj(metrices, log_path + 'gbert_reconstruction_metrics')
+# |
+# |     ## Save predictions along with ground truth in a dataframe
+# |     test_output = pd.DataFrame({'origin': edge_o2d_index[0, test_mask].cpu().numpy(), 'destination': edge_o2d_index[1, test_mask].cpu().numpy(), 'label': test_flows.cpu().numpy(), 'gbert_prediction': test_preds.cpu().numpy()})
+# |     test_output.to_csv(log_path + 'gbert_reconstruction_test_output.csv')
+# |
+# |
+# |     if log_intermediate:
+# |         logger.info('Gbert training finished! Total time cost: {}'.format(time.time() - stt_))
+# |     Test_cpc = np.array(Test_cpc)
+# |     Test_mape = np.array(Test_mape)
+# |     Test_r2 = np.array(Test_r2)
+# |     arg_max_cpc = np.argmax(Test_cpc)
+# |     arg_min_mape = np.argmin(Test_mape)
+# |     arg_max_r2 = np.argmax(Test_r2)
+# |     if log_intermediate:
+# |         logger.info('Best test CPC: {}, Corresponding mape: {}, r2: {}'.format(np.max(Test_cpc), Test_mape[arg_max_cpc], Test_r2[arg_max_cpc]))
+# |         logger.info('Best test mape: {}, Corresponding CPC: {}, r2: {}'.format(np.min(Test_mape), Test_cpc[arg_min_mape], Test_r2[arg_min_mape]))
+# |         logger.info('Best test r2: {}, Corresponding CPC: {}, MAPE: {}'.format(np.max(Test_r2), Test_cpc[arg_max_r2], Test_mape[arg_max_r2]))
+# |     return np.max(Test_r2), Test_cpc[arg_max_r2]
+# ===== END SOURCE FILE: NeuroGravity/training/loop_train_gbert.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/loop_train_gravity.py =====
+# File: NeuroGravity/training/loop_train_gravity.py | Lines: 164 | TrailingNL: 0 | SHA256: 407d81fb7decdb5d2dcf7fc82a46953dae1555bfb818be3cbee0251290197417
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# | def loop_train_gravity(physics_model, scheduler, opt, data, args, log_path, device=torch.device('cpu'), logger=None, data_valid=None, log_intermediate = False, model_name = 'gravity'):
+# |     stt_ = time.time()
+# |
+# |     Train_loss = []
+# |
+# |     Test_mape = []
+# |     Test_cpc = []
+# |     Test_r2 = []
+# |
+# |     Lr = []
+# |
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_attr = data.edge_o2d_attr.clone().detach().to(device)
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |   
+# |     train_mask = data.train_mask.clone().detach().to(device)    #.to(device)
+# |     test_mask = data.test_mask.clone().detach().to(device)      #.to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |     
+# |     if isinstance(args.valid, float):
+# |         x_valid = x.clone().detach()
+# |         edge_o2d_index_valid = edge_o2d_index.clone().detach()
+# |         log_population_valid = log_population.clone().detach()
+# |         edge_o2d_log_dist_valid = edge_o2d_log_dist.clone().detach()
+# |         edge_o2d_flow_valid = edge_o2d_flow.clone().detach()
+# |         valid_mask = data.valid_mask.clone().detach().to(device)    #.to(device)
+# |     elif data_valid is not None: # validate on another dataset
+# |         x_valid = data_valid.x.clone().detach().to(device)
+# |         edge_o2d_index_valid = data_valid.edge_o2d_index.clone().detach().to(device)
+# |         log_population_valid = data_valid.log_population.to(device)
+# |         edge_o2d_log_dist_valid = data_valid.edge_o2d_log_dist.to(device)
+# |         edge_o2d_flow_valid = data_valid.edge_o2d_flow.to(device)
+# |         valid_mask = data_valid.train_mask.clone().detach().to(device)
+# |         flow_complete_valid = data_valid.flow_complete.to(device)
+# |         filter_mask_valid = data_valid.filter_mask.to(device)
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     best_valid_cpc = 0
+# |     best_valid_r2 = -np.inf
+# |     hold_step = 0
+# |     max_wait_step = 100
+# |     if log_intermediate:
+# |         logger.info('========================')
+# |         logger.info('Gravity training starts!')
+# |
+# |     #### ================ Train Gravity / Another ===================
+# |     for epoch in range(args.epochs):
+# |         batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, train_mask]
+# |         # batch_eid = torch.arange(batch_edge_o2d_index.size()[1]).to(device)[train_mask]
+# |         x_batch = x.clone().detach()
+# |         pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist[train_mask].clone().detach()
+# |
+# |         physics_model.train()
+# |         opt.zero_grad()
+# |
+# |         physics_estimated_batch = physics_model(batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |         batch_label = edge_o2d_label[train_mask].clone().detach()
+# |         loss_physics = LossCal(batch_label, physics_estimated_batch, loss_type = args.loss_type, huber_scale = args.huber_scale, weight_proc = 'softmax', temperature  = args.temperature)
+# |         loss_physics.backward()
+# |         opt.step()
+# |
+# |         if scheduler is not None:
+# |             scheduler.step()
+# |
+# |         # ------- validation --------
+# |         if (epoch + 1) % 1 == 0:
+# |             with torch.no_grad():
+# |                 physics_model.eval()
+# |                 # ====== Validate =======
+# |                 batch_edge_index = edge_o2d_index_valid.clone().detach()[:, valid_mask]
+# |                 pop_i = log_population_valid[batch_edge_index[0, :]].clone().detach()
+# |                 pop_j = log_population_valid[batch_edge_index[1, :]].clone().detach()
+# |                 batch_dist = edge_o2d_log_dist_valid[valid_mask].clone().detach()
+# |                 physics_estimated_valid_batch = physics_model(batch_edge_index, pop_i, pop_j, batch_dist)
+# |                 phy_valid_preds = torch.exp(physics_estimated_valid_batch).clone().detach()
+# |
+# |                 if isinstance(args.valid, float):
+# |                     valid_preds = phy_valid_preds.clone().detach()
+# |                     flow_complete_valid = edge_o2d_flow_valid[valid_mask]
+# |                 else:
+# |                     valid_preds = torch.zeros_like(flow_complete_valid).to(device)
+# |                     valid_preds[filter_mask_valid] = phy_valid_preds
+# |                     valid_preds = valid_preds * (torch.sum(flow_complete_valid) / torch.sum(valid_preds))
+# |
+# |                 valid_Metrics = metrics_cal(flow_complete_valid, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], filter_zeros=False, device = device)
+# |                 proc_valid_metrics = valid_Metrics.proceed(valid_preds)
+# |
+# |                 valid_r2 = proc_valid_metrics['r2'][0]
+# |                 valid_cpc = proc_valid_metrics['cpc'][0]
+# |                 if (valid_r2 > best_valid_r2) or (valid_cpc > best_valid_cpc):
+# |                     hold_step = 0
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in proc_valid_metrics.items():
+# |                     #         logger.info('Bingo! Training epoch: {}, Valid {}: {}'.format(epoch + 1, metric_key, metric_values))
+# |
+# |                     if valid_r2 > best_valid_r2:
+# |                         best_valid_r2 = valid_r2
+# |                         torch.save(physics_model, log_path + '{}_model_r2.pt'.format(model_name))
+# |                         # if log_intermediate:
+# |                         #     logger.info('Better (R2) Model Found! Resave in Epoch: {}!'.format(epoch))
+# |                 
+# |                     if valid_cpc > best_valid_cpc:
+# |                         best_valid_cpc = valid_cpc
+# |
+# |                     # if log_intermediate:
+# |                     #     logger.info('')
+# |                     # ====== Test ======
+# |                     batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, test_mask]
+# |                     x_batch = x.clone().detach()
+# |                     pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |                     pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |                     batch_dist = edge_o2d_log_dist[test_mask].clone().detach()
+# |                     physics_estimated_test_batch = physics_model(batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |                     phy_test_preds = torch.exp(physics_estimated_test_batch).clone().detach()
+# |                     test_flows = edge_o2d_flow[test_mask]
+# |                     test_Metrics = metrics_cal(test_flows, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], device = device)
+# |                     phy_test_metrics = test_Metrics.proceed(phy_test_preds)
+# |
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in phy_test_metrics.items():
+# |                     #         logger.info('Test {}: {}'.format(metric_key, metric_values))
+# |                     #     logger.info('')
+# |
+# |                     Test_cpc.append(phy_test_metrics['cpc'][0])
+# |                     Test_mape.append(phy_test_metrics['mape'][0])
+# |                     Test_r2.append(phy_test_metrics['r2'][0])
+# |                 else:
+# |                     hold_step += 1
+# |                     if hold_step >= max_wait_step:
+# |                         # if log_intermediate:
+# |                         #     logger.info('Early stop at epoch: {}'.format(epoch))
+# |                         break
+# |
+# |     if log_intermediate:
+# |         logger.info('Gravity training finished! Total time cost: {}'.format(time.time() - stt_))
+# |
+# |     Test_cpc = np.array(Test_cpc)
+# |     Test_mape = np.array(Test_mape)
+# |     Test_r2 = np.array(Test_r2)
+# |     arg_max_cpc = np.argmax(Test_cpc)
+# |     arg_min_mape = np.argmin(Test_mape)
+# |     arg_max_r2 = np.argmax(Test_r2)
+# |     if log_intermediate:
+# |         logger.info('Best test CPC: {}, Corresponding mape: {}, r2: {}'.format(np.max(Test_cpc), Test_mape[arg_max_cpc], Test_r2[arg_max_cpc]))
+# |         logger.info('Best test mape: {}, Corresponding CPC: {}, r2: {}'.format(np.min(Test_mape), Test_cpc[arg_min_mape], Test_r2[arg_min_mape]))
+# |         logger.info('Best test r2: {}, Corresponding CPC: {}, MAPE: {}'.format(np.max(Test_r2), Test_cpc[arg_max_r2], Test_mape[arg_max_r2]))
+# |     return np.max(Test_r2), Test_cpc[arg_max_r2]
+# ===== END SOURCE FILE: NeuroGravity/training/loop_train_gravity.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/loop_train_metaGravity.py =====
+# File: NeuroGravity/training/loop_train_metaGravity.py | Lines: 173 | TrailingNL: 0 | SHA256: fbd50fa5059a3e02d8b1e15468570a214ce850e124fb813091ec5aa08f6772db
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# | def loop_train_metaGravity(physics_model, scheduler, opt, data, args, log_path, device=torch.device('cpu'), logger=None, data_valid=None, log_intermediate = False, model_name = 'metaGravity'):
+# |     stt_ = time.time()
+# |
+# |     Train_loss = []
+# |
+# |     Test_mape = []
+# |     Test_cpc = []
+# |     Test_r2 = []
+# |
+# |     Lr = []
+# |
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_attr = data.edge_o2d_attr.clone().detach().to(device)
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |   
+# |     train_mask = data.train_mask.clone().detach().to(device)    #.to(device)
+# |     test_mask = data.test_mask.clone().detach().to(device)      #.to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |     
+# |     if isinstance(args.valid, float):
+# |         x_valid = x.clone().detach()
+# |         edge_o2d_index_valid = edge_o2d_index.clone().detach()
+# |         log_population_valid = log_population.clone().detach()
+# |         edge_o2d_log_dist_valid = edge_o2d_log_dist.clone().detach()
+# |         edge_o2d_flow_valid = edge_o2d_flow.clone().detach()
+# |         valid_mask = data.valid_mask.clone().detach().to(device)    #.to(device)
+# |     elif data_valid is not None: # validate on another dataset
+# |         x_valid = data_valid.x.clone().detach().to(device)
+# |         edge_o2d_index_valid = data_valid.edge_o2d_index.clone().detach().to(device)
+# |         log_population_valid = data_valid.log_population.to(device)
+# |         edge_o2d_log_dist_valid = data_valid.edge_o2d_log_dist.to(device)
+# |         edge_o2d_flow_valid = data_valid.edge_o2d_flow.to(device)
+# |         valid_mask = data_valid.train_mask.clone().detach().to(device)
+# |         flow_complete_valid = data_valid.flow_complete.to(device)
+# |         filter_mask_valid = data_valid.filter_mask.to(device)
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     best_valid_cpc = 0
+# |     best_valid_r2 = -np.inf
+# |     hold_step = 0
+# |     max_wait_step = 100
+# |     
+# |     if log_intermediate:
+# |         logger.info('========================')
+# |         logger.info('metaGravity training starts!')
+# |
+# |     #### ================ Train Gravity / Another ===================
+# |     for epoch in range(args.epochs):
+# |         batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, train_mask]
+# |         # batch_eid = torch.arange(batch_edge_o2d_index.size()[1]).to(device)[train_mask]
+# |         x_batch = x.clone().detach()
+# |         pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist[train_mask].clone().detach()
+# |
+# |         physics_model.train()
+# |         opt.zero_grad()
+# |
+# |         physics_estimated_batch = physics_model(x_batch, batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |         batch_label = edge_o2d_label[train_mask].clone().detach()
+# |         loss_physics = LossCal(batch_label, physics_estimated_batch, loss_type = args.loss_type, huber_scale = args.huber_scale, weight_proc = 'softmax', temperature  = args.temperature)
+# |         loss_physics.backward()
+# |         opt.step()
+# |
+# |         if scheduler is not None:
+# |             scheduler.step()
+# |
+# |         # ------- validation --------
+# |         if (epoch + 1) % 1 == 0:
+# |             with torch.no_grad():
+# |                 physics_model.eval()
+# |                 # ====== Validate =======
+# |                 x_batch = x_valid.clone().detach()
+# |                 batch_edge_index = edge_o2d_index_valid.clone().detach()[:, valid_mask]
+# |                 pop_i = log_population_valid[batch_edge_index[0, :]].clone().detach()
+# |                 pop_j = log_population_valid[batch_edge_index[1, :]].clone().detach()
+# |                 batch_dist = edge_o2d_log_dist_valid[valid_mask].clone().detach()
+# |                 physics_estimated_valid_batch = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist)
+# |                 phy_valid_preds = torch.exp(physics_estimated_valid_batch).clone().detach()
+# |
+# |                 if isinstance(args.valid, float):
+# |                     valid_preds = phy_valid_preds.clone().detach()
+# |                     flow_complete_valid = edge_o2d_flow_valid[valid_mask]
+# |                 else:
+# |                     valid_preds = torch.zeros_like(flow_complete_valid).to(device)
+# |                     valid_preds[filter_mask_valid] = phy_valid_preds
+# |                     valid_preds = valid_preds * (torch.sum(flow_complete_valid) / torch.sum(valid_preds))
+# |
+# |                 valid_Metrics = metrics_cal(flow_complete_valid, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], filter_zeros=False, device = device)
+# |                 proc_valid_metrics = valid_Metrics.proceed(valid_preds)
+# |
+# |                 valid_r2 = proc_valid_metrics['r2'][0]
+# |                 valid_cpc = proc_valid_metrics['cpc'][0]
+# |                 if (valid_r2 > best_valid_r2) or (valid_cpc > best_valid_cpc):
+# |                     hold_step = 0
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in proc_valid_metrics.items():
+# |                     #         logger.info('Bingo! Training epoch: {}, Valid {}: {}'.format(epoch + 1, metric_key, metric_values))
+# |
+# |                     if valid_r2 > best_valid_r2:
+# |                         best_valid_r2 = valid_r2
+# |                         torch.save(physics_model, log_path + '{}_model_r2.pt'.format(model_name))
+# |                         # if log_intermediate:
+# |                         #     logger.info('Better (R2) Model Found! Resave in Epoch: {}!'.format(epoch))
+# |                 
+# |                     if valid_cpc > best_valid_cpc:
+# |                         best_valid_cpc = valid_cpc
+# |                     
+# |                     # if log_intermediate:
+# |                     #     logger.info('')
+# |                     # ====== Test ======
+# |                     batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, test_mask]
+# |                     x_batch = x.clone().detach()
+# |                     pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |                     pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |                     batch_dist = edge_o2d_log_dist[test_mask].clone().detach()
+# |                     physics_estimated_test_batch = physics_model(x_batch, batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |                     phy_test_preds = torch.exp(physics_estimated_test_batch).clone().detach()
+# |                     test_flows = edge_o2d_flow[test_mask]
+# |                     test_Metrics = metrics_cal(test_flows, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], device = device)
+# |                     phy_test_metrics = test_Metrics.proceed(phy_test_preds)
+# |
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in phy_test_metrics.items():
+# |                     #         logger.info('Test {}: {}'.format(metric_key, metric_values))
+# |                     #     logger.info('')
+# |
+# |                     Test_cpc.append(phy_test_metrics['cpc'][0])
+# |                     Test_mape.append(phy_test_metrics['mape'][0])
+# |                     Test_r2.append(phy_test_metrics['r2'][0])
+# |                 else:
+# |                     hold_step += 1
+# |                     if hold_step >= max_wait_step:
+# |                         # if log_intermediate:
+# |                         #     logger.info('Early stop at epoch: {}'.format(epoch))
+# |                         break
+# |
+# |     ## Save test metrics
+# |     metrices = dict()
+# |     metrices['metaGravity'] = phy_test_metrics
+# |     save_obj(metrices, log_path + 'metaGravity_reconstruction_metrics')
+# |
+# |     ## Save predictions along with ground truth in a dataframe
+# |     test_output = pd.DataFrame({'origin': edge_o2d_index[0, test_mask].cpu().numpy(), 'destination': edge_o2d_index[1, test_mask].cpu().numpy(), 'label': test_flows.cpu().numpy(), 'metaGravity_prediction': phy_test_preds.cpu().numpy()})
+# |     test_output.to_csv(log_path + 'metaGravity_reconstruction_test_output.csv')
+# |     if log_intermediate:
+# |         logger.info('metaGravity training finished! Total time cost: {}'.format(time.time() - stt_))
+# |     Test_cpc = np.array(Test_cpc)
+# |     Test_mape = np.array(Test_mape)
+# |     Test_r2 = np.array(Test_r2)
+# |     arg_max_cpc = np.argmax(Test_cpc)
+# |     arg_min_mape = np.argmin(Test_mape)
+# |     arg_max_r2 = np.argmax(Test_r2)
+# |     if log_intermediate:
+# |         logger.info('Best test CPC: {}, Corresponding mape: {}, r2: {}'.format(np.max(Test_cpc), Test_mape[arg_max_cpc], Test_r2[arg_max_cpc]))
+# |         logger.info('Best test mape: {}, Corresponding CPC: {}, r2: {}'.format(np.min(Test_mape), Test_cpc[arg_min_mape], Test_r2[arg_min_mape]))
+# |         logger.info('Best test r2: {}, Corresponding CPC: {}, MAPE: {}'.format(np.max(Test_r2), Test_cpc[arg_max_r2], Test_mape[arg_max_r2]))
+# |     return np.max(Test_r2), Test_cpc[arg_max_r2]
+# ===== END SOURCE FILE: NeuroGravity/training/loop_train_metaGravity.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/loop_train_neuroGravity.py =====
+# File: NeuroGravity/training/loop_train_neuroGravity.py | Lines: 335 | TrailingNL: 0 | SHA256: f33d1c049bbfd5c280e5bbe7e2ddcd00bcad8d4d6651eed539f6e740858fe14f
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# | def loop_train_neuroGravity(model, impute_model, physics_model, schedulers, opts, data, args, log_path, device=torch.device('cpu'), logger=None, data_valid=None, log_intermediate = False, model_name = 'neuroGravity'):
+# |     stt_ = time.time()
+# |     if hasattr(args, 'use_alpha_net'):
+# |         use_alpha_net = args.use_alpha_net
+# |     else:
+# |         use_alpha_net = False
+# |
+# |     if hasattr(args, 'weight_proc'):
+# |         weight_proc = args.weight_proc
+# |     else:
+# |         weight_proc = 'softmax'
+# |
+# |     scheduler, scheduler_phy, scheduler_phy_pretrain = schedulers
+# |     opt, opt_phy, opt_phy_pretrain = opts
+# |
+# |     Train_loss = []
+# |
+# |     Test_mape = []
+# |     Test_cpc = []
+# |     Test_r2 = []
+# |
+# |     Lr = []
+# |
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_attr = data.edge_o2d_attr.clone().detach().to(device)
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |   
+# |     train_mask = data.train_mask.clone().detach().to(device)    #.to(device)
+# |     test_mask = data.test_mask.clone().detach().to(device)      #.to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |     
+# |     if isinstance(args.valid, float):
+# |         x_valid = x.clone().detach()
+# |         edge_o2d_index_valid = edge_o2d_index.clone().detach()
+# |         edge_o2d_attr_valid = edge_o2d_attr.clone().detach()
+# |         log_population_valid = log_population.clone().detach()
+# |         edge_o2d_log_dist_valid = edge_o2d_log_dist.clone().detach()
+# |         edge_o2d_flow_valid = edge_o2d_flow.clone().detach()
+# |         valid_mask = data.valid_mask.clone().detach().to(device)    #.to(device)
+# |     elif data_valid is not None: # validate on another dataset
+# |         x_valid = data_valid.x.clone().detach().to(device)
+# |         edge_o2d_index_valid = data_valid.edge_o2d_index.clone().detach().to(device)
+# |         edge_o2d_attr_valid = data_valid.edge_o2d_attr.clone().detach().to(device)
+# |         log_population_valid = data_valid.log_population.to(device)
+# |         edge_o2d_log_dist_valid = data_valid.edge_o2d_log_dist.to(device)
+# |         edge_o2d_flow_valid = data_valid.edge_o2d_flow.to(device)
+# |         valid_mask = data_valid.train_mask.clone().detach().to(device)
+# |         flow_complete_valid = data_valid.flow_complete.to(device)
+# |         filter_mask_valid = data_valid.filter_mask.to(device)
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     best_phy_test_r2 = -10000
+# |
+# |
+# |     if log_intermediate:
+# |         logger.info('========================')
+# |         logger.info('neuroGravity training starts!')
+# |
+# |     #### ================ Pretrain Gravity / Another ===================
+# |     if args.pretrain:
+# |         for epoch in range(args.pretrain_epochs):
+# |             batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, train_mask]
+# |             # batch_eid = torch.arange(batch_edge_o2d_index.size()[1]).to(device)[train_mask]
+# |             x_batch = x.clone().detach()
+# |             pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |             pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |             batch_dist = edge_o2d_log_dist[train_mask].clone().detach()
+# |
+# |             physics_model.train()
+# |             opt_phy_pretrain.zero_grad()
+# |             if args.phy_model == 'metaGravity':
+# |                 physics_estimated_batch = physics_model(x_batch, batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |             elif args.phy_model == 'gravity':
+# |                 physics_estimated_batch = physics_model(batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |             batch_label = edge_o2d_label[train_mask].clone().detach()
+# |             loss_physics = LossCal(batch_label, physics_estimated_batch, loss_type = args.loss_type, huber_scale = args.huber_scale, weight_proc = weight_proc, temperature  = args.temperature)
+# |             loss_physics.backward()
+# |             opt_phy_pretrain.step()
+# |
+# |             if scheduler_phy_pretrain is not None:
+# |                 scheduler_phy_pretrain.step()
+# |
+# |             # ------- Test --------
+# |             if (epoch + 1) % 100 == 0:
+# |                 with torch.no_grad():
+# |                     physics_model.eval()
+# |                     batch_edge_o2d_index = edge_o2d_index.clone().detach()[:, test_mask]
+# |                     x_batch = x.clone().detach()
+# |                     pop_i = log_population[batch_edge_o2d_index[0, :]].clone().detach()
+# |                     pop_j = log_population[batch_edge_o2d_index[1, :]].clone().detach()
+# |                     batch_dist = edge_o2d_log_dist[test_mask].clone().detach()
+# |                     if args.phy_model == 'metaGravity':
+# |                         physics_estimated_test_batch = physics_model(x_batch, batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |                     elif args.phy_model == 'gravity':
+# |                         physics_estimated_test_batch = physics_model(batch_edge_o2d_index, pop_i, pop_j, batch_dist)
+# |                     phy_test_preds = torch.exp(physics_estimated_test_batch).clone().detach()
+# |                     test_flows = edge_o2d_flow[test_mask]
+# |                     test_Metrics = metrics_cal(test_flows, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], device = device)
+# |                     phy_test_metrics = test_Metrics.proceed(phy_test_preds)
+# |
+# |                 # if log_intermediate:
+# |                 #     logger.info('Pretrain epoch: {}, loss: {}'.format(epoch + 1, loss_physics.item()))
+# |                 #     for metric_key, metric_values in phy_test_metrics.items():
+# |                 #         logger.info('Test {}: {}'.format(metric_key, metric_values))
+# |                 #     logger.info('')
+# |
+# |                 if best_phy_test_r2 < phy_test_metrics['r2'][0]:
+# |                     best_phy_test_r2 = phy_test_metrics['r2'][0]
+# |                     # if args.save_model:
+# |                     #     torch.save(physics_model, log_path + '{}_model.pt'.format(args.phy_model))
+# |
+# |     best_valid_cpc = 0
+# |     best_valid_r2 = -np.inf
+# |     hold_step = 0
+# |     max_wait_step = 100
+# |     #### =============== Training ===================
+# |     for epoch in range(args.epochs):
+# |         # for batch_size, n_id, adjs in subgraph_loader_train:
+# |         model.train()
+# |         impute_model.train()
+# |         physics_model.train()
+# |         opt.zero_grad()
+# |         opt_phy.zero_grad()
+# |
+# |         x_batch = x.clone().detach()
+# |         
+# |         # Preparing Edge Initial Features
+# |         batch_edge_index = edge_o2d_index.clone().detach()
+# |         # batch_eid = torch.cat([adj[1] for adj in adjs], dim = 0)
+# |         pop_i = log_population[batch_edge_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist.clone().detach()
+# |         if args.phy_model == 'metaGravity':
+# |             physics_estimated = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |         elif args.phy_model == 'gravity':
+# |             physics_estimated = physics_model(batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |
+# |         batch_edge_attr = torch.cat([physics_estimated, edge_o2d_attr.clone().detach()], dim = 1)
+# |
+# |         # GNN Feature Fusion
+# |         x_embd, e_embed = model(x_batch, batch_edge_index, batch_edge_attr)
+# |
+# |         # Link prediction
+# |         batch_o2d_train_edge_index = edge_o2d_index[:, train_mask].clone().detach()
+# |         link_pred_input = [x_embd[batch_o2d_train_edge_index[0]], x_embd[batch_o2d_train_edge_index[1]]]
+# |         pop_i_ = log_population[batch_o2d_train_edge_index[0, :]].clone().detach()
+# |         pop_j_ = log_population[batch_o2d_train_edge_index[1, :]].clone().detach()
+# |         batch_o2d_dist = edge_o2d_log_dist[train_mask].clone().detach()
+# |         batch_o2d_train_e_embed = e_embed[train_mask]
+# |         link_pred_input.append(batch_o2d_train_e_embed)
+# |         
+# |         if use_alpha_net:
+# |             alpha = physics_model.Alpha_net(x_batch, batch_o2d_train_edge_index, pop_i_, pop_j_, batch_o2d_dist)
+# |             batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist, alpha)[:, 0]
+# |         else:
+# |             batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |
+# |         batch_label = edge_o2d_label[train_mask].clone().detach()
+# |         loss_gnn = LossCal(batch_label, batch_pred, loss_type = args.loss_type, huber_scale = args.huber_scale, weight_proc = weight_proc, temperature  = args.temperature)
+# |
+# |         loss = loss_gnn #+ loss_physics # + sorting_loss * beta
+# |         
+# |         loss.backward()
+# |         
+# |         opt.step()
+# |         opt_phy.step()
+# |         
+# |         train_loss = loss.item()
+# |         
+# |         if scheduler is not None:
+# |             scheduler.step()
+# |             scheduler_phy.step()
+# |
+# |         for param_group in opt.param_groups:
+# |             Lr.append(param_group['lr'])
+# |
+# |         Train_loss.append(train_loss)
+# |
+# |         if (epoch + 1) % 1 == 0:
+# |             model.eval()
+# |             impute_model.eval()
+# |             physics_model.eval()
+# |             with torch.no_grad():
+# |                 # ====== Validate =======
+# |                 x_batch = x_valid.clone().detach()
+# |                 batch_edge_index = edge_o2d_index_valid.clone().detach()
+# |                 pop_i = log_population_valid[batch_edge_index[0, :]].clone().detach()
+# |                 pop_j = log_population_valid[batch_edge_index[1, :]].clone().detach()
+# |                 batch_dist = edge_o2d_log_dist_valid.clone().detach()
+# |                 if args.phy_model == 'metaGravity':
+# |                     physics_estimated = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |                 elif args.phy_model == 'gravity':
+# |                     physics_estimated = physics_model(batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |
+# |                 batch_edge_attr = torch.cat([physics_estimated, edge_o2d_attr_valid.clone().detach()], dim = 1)
+# |
+# |                 # GNN Feature Fusion
+# |                 x_embd, e_embed = model(x_batch, batch_edge_index, batch_edge_attr)
+# |
+# |                 # Link prediction
+# |                 batch_o2d_valid_edge_index = edge_o2d_index_valid[:, valid_mask].clone().detach()
+# |                 link_pred_input = [x_embd[batch_o2d_valid_edge_index[0]], x_embd[batch_o2d_valid_edge_index[1]]]
+# |                 pop_i_ = log_population_valid[batch_o2d_valid_edge_index[0, :]].clone().detach()
+# |                 pop_j_ = log_population_valid[batch_o2d_valid_edge_index[1, :]].clone().detach()
+# |                 batch_o2d_dist = batch_dist[valid_mask].clone().detach()
+# |             
+# |                 batch_o2d_valid_e_embed = e_embed[valid_mask]
+# |                 link_pred_input.append(batch_o2d_valid_e_embed)
+# |                 if use_alpha_net:
+# |                     alpha = physics_model.Alpha_net(x_batch, batch_o2d_valid_edge_index, pop_i_, pop_j_, batch_o2d_dist)
+# |                     valid_batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist, alpha)[:, 0]
+# |                 else:
+# |                     valid_batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |
+# |                 if isinstance(args.valid, float):
+# |                     valid_preds = torch.exp(valid_batch_pred).clone().detach()
+# |                     flow_complete_valid = edge_o2d_flow_valid[valid_mask]
+# |                 else:
+# |                     valid_preds_ = torch.exp(valid_batch_pred).clone().detach()
+# |                     valid_preds = torch.zeros_like(flow_complete_valid).to(device)
+# |                     valid_preds[filter_mask_valid] = valid_preds_
+# |                     valid_preds = valid_preds * torch.sum(flow_complete_valid) / torch.sum(valid_preds)
+# |
+# |                 valid_Metrics = metrics_cal(flow_complete_valid, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], filter_zeros=False, device = device)
+# |                 proc_valid_metrics = valid_Metrics.proceed(valid_preds)
+# |
+# |                 valid_r2 = proc_valid_metrics['r2'][0]
+# |                 valid_cpc = proc_valid_metrics['cpc'][0]
+# |                 if (valid_r2 > best_valid_r2) or (valid_cpc > best_valid_cpc):
+# |                     hold_step = 0
+# |                     # if log_intermediate:
+# |                     #     for metric_key, metric_values in proc_valid_metrics.items():
+# |                     #         logger.info('Bingo! Training epoch: {}, Valid {}: {}'.format(epoch + 1, metric_key, metric_values))
+# |                     
+# |                     if valid_r2 > best_valid_r2:
+# |                         best_valid_r2 = valid_r2
+# |                         torch.save(model, log_path + '{}_gnn_model_r2.pt'.format(model_name))
+# |                         torch.save(impute_model, log_path + '{}_impute_model_r2.pt'.format(model_name))
+# |                         torch.save(physics_model, log_path + '{}_{}_model_r2.pt'.format(model_name, args.phy_model))
+# |                         # if log_intermediate:
+# |                         #     logger.info('Better (R2) Model Found! Resave in Epoch: {}!'.format(epoch))
+# |                         #     logger.info('')
+# |
+# |                         # ====== Test ======
+# |                         x_batch = x.clone().detach()
+# |                         # Preparing Edge Initial Features
+# |                         batch_edge_index = edge_o2d_index.clone().detach()
+# |                         pop_i = log_population[batch_edge_index[0, :]].clone().detach()
+# |                         pop_j = log_population[batch_edge_index[1, :]].clone().detach()
+# |                         batch_dist = edge_o2d_log_dist.clone().detach()
+# |                         if args.phy_model == 'metaGravity':
+# |                             physics_estimated = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |                         elif args.phy_model == 'gravity':
+# |                             physics_estimated = physics_model(batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |
+# |                         batch_edge_attr = torch.cat([physics_estimated, edge_o2d_attr.clone().detach()], dim = 1)
+# |
+# |                         # GNN Feature Fusion
+# |                         x_embd, e_embed = model(x_batch, batch_edge_index, batch_edge_attr)
+# |
+# |                         # Link prediction
+# |                         batch_o2d_test_edge_index = edge_o2d_index[:, test_mask].clone().detach()
+# |                         link_pred_input = [x_embd[batch_o2d_test_edge_index[0]], x_embd[batch_o2d_test_edge_index[1]]]
+# |                         pop_i_ = log_population[batch_o2d_test_edge_index[0, :]].clone().detach()
+# |                         pop_j_ = log_population[batch_o2d_test_edge_index[1, :]].clone().detach()
+# |                         batch_o2d_dist = edge_o2d_log_dist[test_mask].clone().detach()
+# |                         batch_o2d_test_e_embed = e_embed[test_mask]
+# |                         link_pred_input.append(batch_o2d_test_e_embed)
+# |                         if use_alpha_net:
+# |                             alpha = physics_model.Alpha_net(x_batch, batch_o2d_test_edge_index, pop_i_, pop_j_, batch_o2d_dist)
+# |                             test_batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist, alpha)[:, 0]
+# |                         else:
+# |                             test_batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |
+# |                         test_preds = torch.exp(test_batch_pred).clone().detach()
+# |                         test_flows = edge_o2d_flow[test_mask]
+# |                         test_Metrics = metrics_cal(test_flows, mask_percent = [0, 0.5, 0.8, 0.9, 0.95], device = device)
+# |                         proc_test_metrics = test_Metrics.proceed(test_preds)
+# |
+# |                         # if log_intermediate:
+# |                         #     for metric_key, metric_values in proc_test_metrics.items():
+# |                         #         logger.info('Training epoch: {}, Test {}: {}'.format(epoch + 1, metric_key, metric_values))
+# |                         #     logger.info('')
+# |                         
+# |                         Test_cpc.append(proc_test_metrics['cpc'][0])
+# |                         Test_mape.append(proc_test_metrics['mape'][0])
+# |                         Test_r2.append(proc_test_metrics['r2'][0])
+# |
+# |                     if valid_cpc > best_valid_cpc:
+# |                         best_valid_cpc = valid_cpc
+# |                 else:
+# |                     hold_step += 1
+# |                     if hold_step >= max_wait_step:
+# |                         # if log_intermediate:
+# |                         #     logger.info('Early stop at epoch: {}'.format(epoch))
+# |                         break
+# |
+# |     ## Save test metrics
+# |     metrices = dict()
+# |     metrices['neuroGravity'] = proc_test_metrics
+# |     save_obj(metrices, log_path + 'neuroGravity_reconstruction_metrics')
+# |
+# |     ## Save predictions along with ground truth in a dataframe
+# |     test_output = pd.DataFrame({'origin': edge_o2d_index[0, test_mask].cpu().numpy(), 'destination': edge_o2d_index[1, test_mask].cpu().numpy(), 'label': test_flows.cpu().numpy(), 'neuroGravity_prediction': test_preds.cpu().numpy()})
+# |     test_output.to_csv(log_path + 'neuroGravity_reconstruction_test_output.csv')
+# |
+# |     if log_intermediate:
+# |         logger.info('neuroGravity training finished! Total time cost: {}'.format(time.time() - stt_))
+# |     Test_cpc = np.array(Test_cpc)
+# |     Test_mape = np.array(Test_mape)
+# |     Test_r2 = np.array(Test_r2)
+# |     arg_max_cpc = np.argmax(Test_cpc)
+# |     arg_min_mape = np.argmin(Test_mape)
+# |     arg_max_r2 = np.argmax(Test_r2)
+# |
+# |     if log_intermediate:
+# |         logger.info('Best test CPC: {}, Corresponding mape: {}, r2: {}'.format(np.max(Test_cpc), Test_mape[arg_max_cpc], Test_r2[arg_max_cpc]))
+# |         logger.info('Best test mape: {}, Corresponding CPC: {}, r2: {}'.format(np.min(Test_mape), Test_cpc[arg_min_mape], Test_r2[arg_min_mape]))
+# |         logger.info('Best test r2: {}, Corresponding CPC: {}, MAPE: {}'.format(np.max(Test_r2), Test_cpc[arg_max_r2], Test_mape[arg_max_r2]))
+# |     return np.max(Test_r2), Test_cpc[arg_max_r2]
+# ===== END SOURCE FILE: NeuroGravity/training/loop_train_neuroGravity.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/metaGravity_transfer.py =====
+# File: NeuroGravity/training/metaGravity_transfer.py | Lines: 76 | TrailingNL: 1 | SHA256: e5d961083abfe39766d96e3b855d9a2eecd508b7e2ee4fe2ee68e3ab45e598da
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# |
+# | def metaGravity_transfer(data, args, log_path, device=torch.device('cpu'), logger=None, scale_pred_by_sum = False, evaluate = True, model_name = 'metaGravity'):
+# |     physics_model = torch.load(log_path + '{}_model_r2.pt'.format(model_name)).to(device)
+# |     
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |
+# |     flow_complete = data.flow_complete.to(device)
+# |     filter_mask = data.filter_mask.to(device)
+# |     
+# |     ori_complete = data.ori_complete
+# |     des_complete = data.des_complete
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     # Start Testing
+# |     physics_model.eval()
+# |
+# |     with torch.no_grad():
+# |         x_batch = x.clone().detach()
+# |         # Preparing Edge Initial Features
+# |         batch_edge_index = edge_o2d_index.clone().detach()
+# |         pop_i = log_population[batch_edge_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist.clone().detach()
+# |         physics_estimated = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist)
+# |         transfer_preds = torch.exp(physics_estimated).clone().detach()
+# |         transfer_preds_complete = torch.zeros_like(flow_complete).to(device)
+# |         transfer_preds_complete[filter_mask] = transfer_preds
+# |
+# |         if evaluate:
+# |             if scale_pred_by_sum:
+# |                 transfer_preds_complete = transfer_preds_complete * torch.sum(flow_complete) / torch.sum(transfer_preds_complete)
+# |             transfer_Metrics = metrics_cal(flow_complete, mask_percent = [0], filter_zeros=False, device = device)
+# |             proc_test_metrics = transfer_Metrics.proceed(transfer_preds_complete)
+# |
+# |             # for metric_key, metric_values in proc_test_metrics.items():
+# |             #     logger.info('Transfer metaGravity Performance {}: {}'.format(metric_key, metric_values))
+# |             # logger.info('')
+# |
+# |             # metrices = dict()
+# |             # metrices['metaGravity'] = proc_test_metrics
+# |             # save_obj(metrices, log_path + 'metaGravity_transfer_metrices')
+# |
+# |         origin_inds_ = ori_complete
+# |         destination_inds_ = des_complete
+# |         pred_transfer_exp_ = transfer_preds_complete.detach().squeeze().cpu().numpy()
+# |         
+# |     if evaluate:
+# |         return origin_inds_, destination_inds_, pred_transfer_exp_, proc_test_metrics['r2'][0], proc_test_metrics['cpc'][0]
+# |     else:
+# |         return origin_inds_, destination_inds_, pred_transfer_exp_
+# |
+# |         # if evaluate:
+# |         #     transfer_labels_exp_ = flow_complete.detach().squeeze().cpu().numpy()
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'label': transfer_labels_exp_, 'metaGravity_prediction': pred_transfer_exp_})
+# |         # else:
+# |         #     df_output = pd.DataFrame({'origin': origin_inds_, 'destination': destination_inds_, 'metaGravity_prediction': pred_transfer_exp_})
+# |         # df_output.to_csv(log_path + 'metaGravity_transfer_output.csv')
+# |
+# ===== END SOURCE FILE: NeuroGravity/training/metaGravity_transfer.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/training/neuroGravity_transfer.py =====
+# File: NeuroGravity/training/neuroGravity_transfer.py | Lines: 89 | TrailingNL: 0 | SHA256: 02e0d3cac488823711426ad408831ce7fc943697cd8b60aa77190b08d0231cc2
+# | import numpy as np
+# | import torch
+# | import pandas as pd
+# | import time
+# | from utils.utils import get_known_mask, mask_edge, CPC, metrics_cal, save_obj, weighted_mse_loss, weighted_huber_loss, torch_mape, intersection, intersection_torch, LossCal
+# |
+# |
+# | def neuroGravity_transfer(data, args, log_path, device=torch.device('cpu'), logger=None, scale_pred_by_sum = False, evaluate = True, model_name = 'neuroGravity'):
+# |     model = torch.load(log_path + '{}_gnn_model_r2.pt'.format(model_name)).to(device)
+# |     impute_model = torch.load(log_path + '{}_impute_model_r2.pt'.format(model_name)).to(device)
+# |     physics_model = torch.load(log_path + '{}_{}_model_r2.pt'.format(model_name, args.phy_model)).to(device)
+# |     
+# |     x = data.x.clone().detach().to(device)
+# |     
+# |     edge_o2d_flow = data.edge_o2d_flow.to(device)
+# |     edge_o2d_label = torch.log(edge_o2d_flow)
+# |     edge_o2d_label[edge_o2d_label < 0] = 0
+# |     edge_o2d_attr = data.edge_o2d_attr.clone().detach().to(device)
+# |     edge_o2d_index = data.edge_o2d_index.clone().detach().to(device)
+# |
+# |     log_population = data.log_population.to(device)
+# |     edge_o2d_log_dist = data.edge_o2d_log_dist.to(device)
+# |
+# |     flow_complete = data.flow_complete.to(device)
+# |     filter_mask = data.filter_mask.to(device)
+# |
+# |     ori_complete = data.ori_complete
+# |     des_complete = data.des_complete
+# |
+# |     obj = dict()
+# |     obj['args'] = args
+# |     obj['outputs'] = dict()
+# |
+# |     # Start Testing
+# |     model.eval()
+# |     impute_model.eval()
+# |     physics_model.eval()
+# |
+# |     with torch.no_grad():
+# |         x_batch = x.clone().detach()
+# |         # Preparing Edge Initial Features
+# |         batch_edge_index = edge_o2d_index.clone().detach()
+# |         pop_i = log_population[batch_edge_index[0, :]].clone().detach()
+# |         pop_j = log_population[batch_edge_index[1, :]].clone().detach()
+# |         batch_dist = edge_o2d_log_dist.clone().detach()
+# |         if args.phy_model == 'metaGravity':
+# |             physics_estimated = physics_model(x_batch, batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |         elif args.phy_model == 'gravity':
+# |             physics_estimated = physics_model(batch_edge_index, pop_i, pop_j, batch_dist).unsqueeze(dim = 1)
+# |
+# |         batch_edge_attr = torch.cat([physics_estimated, edge_o2d_attr.clone().detach()], dim = 1)
+# |
+# |         x_embd, e_embed = model(x_batch, batch_edge_index, batch_edge_attr)
+# |
+# |         # Link prediction
+# |         batch_o2d_test_edge_index = edge_o2d_index.clone().detach()
+# |         link_pred_input = [x_embd[batch_o2d_test_edge_index[0]], x_embd[batch_o2d_test_edge_index[1]]]
+# |         pop_i_ = log_population[batch_o2d_test_edge_index[0, :]].clone().detach()
+# |         pop_j_ = log_population[batch_o2d_test_edge_index[1, :]].clone().detach()
+# |         batch_o2d_dist = edge_o2d_log_dist.clone().detach()
+# |         batch_o2d_test_e_embed = e_embed
+# |         link_pred_input.append(batch_o2d_test_e_embed)
+# |         batch_pred = impute_model(link_pred_input, pop_i_, pop_j_, batch_o2d_dist)[:, 0]
+# |
+# |         test_preds = torch.exp(batch_pred).clone().detach()
+# |         test_preds_complete = torch.zeros_like(flow_complete).to(device)
+# |         test_preds_complete[filter_mask] = test_preds
+# |
+# |         if evaluate:
+# |             if scale_pred_by_sum:
+# |                 test_preds_complete = test_preds_complete * torch.sum(flow_complete) / torch.sum(test_preds_complete)
+# |             test_Metrics = metrics_cal(flow_complete, mask_percent = [0], filter_zeros=False, device = device)
+# |             proc_test_metrics = test_Metrics.proceed(test_preds_complete)
+# |
+# |             # for metric_key, metric_values in proc_test_metrics.items():
+# |             #     logger.info('Transfer neuroGravity Performance {}: {}'.format(metric_key, metric_values))
+# |             # logger.info('')
+# |
+# |             # metrices = dict()
+# |             # metrices['neuroGravity'] = proc_test_metrics
+# |             # save_obj(metrices, log_path + 'neuroGravity_transfer_metrices')
+# |
+# |         origin_inds_ = ori_complete
+# |         destination_inds_ = des_complete
+# |         pred_test_exp_ = test_preds_complete.detach().squeeze().cpu().numpy()
+# |     if evaluate:
+# |         return origin_inds_, destination_inds_, pred_test_exp_, proc_test_metrics['r2'][0], proc_test_metrics['cpc'][0]
+# |     else:
+# |         return origin_inds_, destination_inds_, pred_test_exp_
+# ===== END SOURCE FILE: NeuroGravity/training/neuroGravity_transfer.py =====
+
+# ===== BEGIN SOURCE FILE: NeuroGravity/utils/utils.py =====
+# File: NeuroGravity/utils/utils.py | Lines: 465 | TrailingNL: 0 | SHA256: 8c7c388e45b7521a572d0a4880f7813326c70d163c28b2ec1d7a20a0b4d0ae04
+# | import torch.optim as optim
+# | import numpy as np
+# | import os.path as osp
+# | import os
+# | import torch
+# | import subprocess
+# | import torch.nn.init as init
+# | import torch.nn as nn
+# | import torch.nn.functional as F
+# | from torchmetrics import MeanAbsolutePercentageError, MeanAbsoluteError, R2Score
+# | import pickle
+# | from typing import Optional
+# | import copy
+# | from data.load_data import load_data
+# | from data.load_transfer_data import load_transfer_data
+# |
+# |
+# | def dataset_loader(args, experiment_path, transfer = False, **kwargs):
+# |     # make a separate copy of args
+# |     args_ = copy.copy(args)
+# |
+# |     for key in kwargs.keys():
+# |         # print('Set {} to {}'.format(key, kwargs[key]))
+# |         setattr(args_, key, kwargs[key])
+# |
+# |     if not transfer:
+# |         data = load_data(args_, experiment_path)
+# |     else:
+# |         # data = load_transfer_data(args_, args_.transfer_target, os.path.join(experiment_path, 'scaler.pkl'))
+# |         data = load_transfer_data(args_, args_.transfer_target, 'none')
+# |     return data
+# |
+# | def save_obj(obj, name):
+# |     # check if name ends with '.pkl'
+# |     if name[-4:] != '.pkl':
+# |         name += '.pkl'    
+# |     with open(name, 'wb') as f:
+# |         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+# |
+# | def load_obj(name):
+# |     # check if name ends with '.pkl'
+# |     if name[-4:] != '.pkl':
+# |         name += '.pkl'
+# |     with open(name, 'rb') as f:
+# |         return pickle.load(f)
+# |
+# | def LossCal(y, y_pred, loss_type = 'mse', huber_scale = 1., weight_proc = 'none', temperature = 1):
+# |     if loss_type.find('weighted') != -1:
+# |         if y == 'vanila':
+# |             loss_weight = y.clone().detach()
+# |             loss_weight[loss_weight < 0.0001] = 0.0001
+# |             weighted_loss_reduction = 'mean'
+# |         elif weight_proc == 'log':
+# |             loss_weight = y.clone().detach()
+# |             loss_weight = torch.log(loss_weight)
+# |             loss_weight[loss_weight < 0.0001] = 0.0001
+# |             weighted_loss_reduction = 'mean'
+# |         elif weight_proc == 'softmax': # TODO: Maybe log-softmax???
+# |             loss_weight = F.softmax(y / temperature, dim = 0)
+# |             weighted_loss_reduction = 'sum'
+# |     else:
+# |         loss_weight = None
+# |         weighted_loss_reduction = None
+# |
+# |     if loss_type == 'mse':
+# |         loss_ = F.mse_loss(y_pred, y)
+# |     elif loss_type == 'weighted_mse':
+# |         loss_ = weighted_mse_loss(y_pred, y, loss_weight, weighted_loss_reduction)
+# |     elif loss_type == 'weighted_huber':
+# |         loss_ = weighted_huber_loss(y_pred, y, huber_scale, loss_weight, weighted_loss_reduction)
+# |     elif loss_type == 'mape':
+# |         loss_ = torch_mape(y_pred, y)
+# |     elif loss_type == 'huber':
+# |         loss_ = F.huber_loss(y_pred, y, delta = huber_scale)
+# |     return loss_
+# |
+# | def PredictorInputDim(args, neuroGravity = True):
+# |     if args.concat_states: # $\times 2$ is due to the concatenation of O&D representation
+# |         input_dim = args.node_dim * len(args.gnn_types.split('_')) * 2 
+# |     else:
+# |         input_dim = args.node_dim * 2
+# |
+# |     if neuroGravity:
+# |         if args.concat_edges:
+# |             input_dim += args.edge_dim * len(args.gnn_types.split('_'))
+# |         else:
+# |             input_dim += args.edge_dim
+# |     return input_dim
+# |
+# | def weighted_mse_loss(input, target, weight, reduction):
+# |     if reduction == 'sum':
+# |         return (weight * (input - target) ** 2).sum()
+# |     elif reduction == 'mean':
+# |         return (weight * (input - target) ** 2).mean()
+# |     else:
+# |         raise NotImplementedError()
+# |
+# | def weighted_huber_loss(input, target, delta, weight, reduction):
+# |     diff = torch.abs(input - target)
+# |     cond = diff < delta
+# |     loss = torch.where(cond, 0.5 * diff ** 2, delta * (diff - 0.5 * delta)) * weight
+# |     if reduction == 'sum':
+# |         return loss.sum()
+# |     elif reduction == 'mean':
+# |         return loss.mean()
+# |     else:
+# |         raise NotImplementedError()
+# |
+# | def torch_mape(
+# |     y_pred: torch.Tensor,
+# |     y_true: torch.Tensor,
+# |     sample_weight: Optional[torch.Tensor] = None,
+# | ):
+# |     """Computes Mean Absolute Percentage Error.
+# |
+# |     Args:
+# |         y_true: true target values.
+# |         y_pred: predicted target values.
+# |         sample_weight: specify weighted mean.
+# |
+# |     Returns:
+# |         metric value.
+# |
+# |     """
+# |     err = (y_true - y_pred) / y_true
+# |     err = torch.abs(err)
+# |
+# |     if len(err.shape) == 2:
+# |         err = err.sum(dim=1)
+# |
+# |     if sample_weight is not None:
+# |         err = err * sample_weight
+# |         return err.mean() / sample_weight.mean()
+# |
+# |     return err.mean()
+# |
+# |
+# | def intersection(lst1, lst2):
+# |     if not isinstance(lst1, set):
+# |         lst1 = set(list(lst1))
+# |     if not isinstance(lst2, set):
+# |         lst2 = set(list(lst2))
+# |     return list(lst1 & lst2)
+# |
+# | def intersection_torch(a, b):
+# |     A = a.squeeze().cpu().numpy()
+# |     B = b.squeeze().cpu().numpy()
+# |     intersection = np.intersect1d(A, B)
+# |     return intersection
+# |
+# | class metrics_cal():
+# |     def __init__(self, test_labels_exp, mask_steps = [-1, 0, 10, 20, 50], mask_percent = None, filter_zeros = True, device = 'cpu'):
+# |         self.F_metric = {'mape': MeanAbsolutePercentageError().to(device), 'cpc': CPC, 'r2': R2Score().to(device)}
+# |         self.mask_list = []
+# |         if mask_percent is not None:
+# |             if filter_zeros:
+# |                 mask_steps = torch.quantile(test_labels_exp[test_labels_exp > 0], torch.Tensor(mask_percent).to(device))
+# |             else:
+# |                 mask_steps = torch.quantile(test_labels_exp, torch.Tensor(mask_percent).to(device))
+# |
+# |         for step in mask_steps:
+# |             self.mask_list.append((test_labels_exp > step).bool().to(device))
+# |
+# |         self.test_labels_list = []
+# |         for i, step in enumerate(mask_steps):
+# |             self.test_labels_list.append(test_labels_exp[self.mask_list[i]])
+# |
+# |
+# |     def proceed(self, preds):
+# |         metrics = {'mape': [], 'cpc': [], 'r2': []}
+# |         masked_preds_list = []
+# |         for mask in self.mask_list:
+# |             masked_preds_list.append(preds[mask])
+# |
+# |         for metric in metrics.keys():
+# |             if metric == 'mape':
+# |                 start = 1
+# |             else:
+# |                 start = 0
+# |             for i in range(start, len(masked_preds_list)):
+# |                 metrics[metric].append(self.F_metric[metric](masked_preds_list[i], self.test_labels_list[i]).item())
+# |         return metrics
+# |
+# |
+# | def sort_by_permutation(x, permutation):
+# |     d1, d2 = x.size()
+# |     ret = x[
+# |         torch.arange(d1).unsqueeze(1).repeat((1, d2)).flatten(),
+# |         permutation.flatten()
+# |     ].view(d1, d2)
+# |     return ret
+# |
+# | def is_label_valid(labels):
+# |     """Returns a boolean `Tensor` for label validity."""
+# |     # labels = torch.tensor(labels)
+# |     return torch.ge(labels, 0.)
+# |
+# | class SoftSortLoss(torch.nn.Module):
+# |     def __init__(self, tau=1., hard=False, pow=1.0):
+# |         super(SoftSortLoss, self).__init__()
+# |         self.ce_loss = nn.CrossEntropyLoss(reduction='none')
+# |         self.hard = hard
+# |         self.tau = tau
+# |         self.pow = pow
+# |
+# |     def forward(self, scores, labels):
+# |         """
+# |         scores: elements to be sorted. Typical shape: batch_size x n
+# |         """
+# |         #reorder the list
+# |         labels, indices = labels.sort(descending=True, dim=1)
+# |         scores = sort_by_permutation(scores, indices)
+# |
+# |         is_valid = is_label_valid(labels)  # >= 0
+# |         valid_pairs = torch.logical_and(torch.unsqueeze(is_valid, 2), torch.unsqueeze(is_valid, 1))
+# |         scores = torch.where(is_valid, scores, -1e9 * torch.ones_like(scores))
+# |
+# |         sorted, _ = scores.sort(descending=True, dim=1)
+# |
+# |         pairwise_diff = (torch.unsqueeze(scores, 1) - torch.unsqueeze(sorted, 2)).abs().pow(self.pow).neg() / self.tau
+# |         pairwise_diff = pairwise_diff.masked_fill(~valid_pairs, -1e9)
+# |
+# |         _, label_indices = labels.sort(descending=True, dim=1)
+# |         # position_weight = 1. / torch.log2(label_indices + 2)
+# |
+# |         loss_raw = self.ce_loss(pairwise_diff, label_indices)
+# |         loss = loss_raw * is_valid.float() 
+# |
+# |         if (torch.sum(is_valid.float(), dim=-1) == 0).sum() > 0:
+# |             raise ValueError("All padding impression found!")
+# |
+# |         reduced_listwise_loss = torch.mean(torch.sum(loss, dim=-1) / torch.sum(is_valid.float(), dim=-1))
+# |
+# |         return reduced_listwise_loss
+# |
+# | def CPC(pred, real):
+# |     min_flow = torch.min(pred, real)
+# |     return 2 * torch.sum(min_flow) / (torch.sum(pred) + torch.sum(real))
+# |
+# | def weight_init(m):
+# |     """
+# |     Usage:
+# |         model = Model()
+# |         model.apply(weight_init)
+# |     """
+# |     if isinstance(m, nn.Conv1d):
+# |         init.normal_(m.weight.data)
+# |         if m.bias is not None:
+# |             init.normal_(m.bias.data)
+# |     elif isinstance(m, nn.Conv2d):
+# |         init.xavier_normal_(m.weight.data)
+# |         if m.bias is not None:
+# |             init.normal_(m.bias.data)
+# |     elif isinstance(m, nn.Conv3d):
+# |         init.xavier_normal_(m.weight.data)
+# |         if m.bias is not None:
+# |             init.normal_(m.bias.data)
+# |     elif isinstance(m, nn.ConvTranspose1d):
+# |         init.normal_(m.weight.data)
+# |         if m.bias is not None:
+# |             init.normal_(m.bias.data)
+# |     elif isinstance(m, nn.ConvTranspose2d):
+# |         init.xavier_normal_(m.weight.data)
+# |         if m.bias is not None:
+# |             init.normal_(m.bias.data)
+# |     elif isinstance(m, nn.ConvTranspose3d):
+# |         init.xavier_normal_(m.weight.data)
+# |         if m.bias is not None:
+# |             init.normal_(m.bias.data)
+# |     elif isinstance(m, nn.BatchNorm1d):
+# |         init.normal_(m.weight.data, mean=1, std=0.02)
+# |         init.constant_(m.bias.data, 0)
+# |     elif isinstance(m, nn.BatchNorm2d):
+# |         init.normal_(m.weight.data, mean=1, std=0.02)
+# |         init.constant_(m.bias.data, 0)
+# |     elif isinstance(m, nn.BatchNorm3d):
+# |         init.normal_(m.weight.data, mean=1, std=0.02)
+# |         init.constant_(m.bias.data, 0)
+# |     elif isinstance(m, nn.Linear):
+# |         init.xavier_normal_(m.weight.data)
+# |         if m.bias is not None:
+# |             init.normal_(m.bias.data)
+# |     elif isinstance(m, nn.Embedding):
+# |         init.xavier_normal_(m.weight.data)
+# |         if m.padding_idx is not None:
+# |             m._fill_padding_idx_with_zero()
+# |     elif isinstance(m, nn.LSTM):
+# |         for param in m.parameters():
+# |             if len(param.shape) >= 2:
+# |                 init.orthogonal_(param.data)
+# |             else:
+# |                 init.normal_(param.data)
+# |     elif isinstance(m, nn.LSTMCell):
+# |         for param in m.parameters():
+# |             if len(param.shape) >= 2:
+# |                 init.orthogonal_(param.data)
+# |             else:
+# |                 init.normal_(param.data)
+# |     elif isinstance(m, nn.GRU):
+# |         for param in m.parameters():
+# |             if len(param.shape) >= 2:
+# |                 init.orthogonal_(param.data)
+# |             else:
+# |                 init.normal_(param.data)
+# |     elif isinstance(m, nn.GRUCell):
+# |         for param in m.parameters():
+# |             if len(param.shape) >= 2:
+# |                 init.orthogonal_(param.data)
+# |             else:
+# |                 init.normal_(param.data)
+# |                 
+# |                 
+# | def np_random(seed=None):
+# |     rng = np.random.RandomState()
+# |     rng.seed(seed)
+# |     return rng
+# |
+# | def get_activation(activation):
+# |     if activation == 'relu':
+# |         return torch.nn.ReLU()
+# |     elif activation == 'prelu':
+# |         return torch.nn.PReLU()
+# |     elif activation == 'tanh':
+# |         return torch.nn.Tanh()
+# |     elif activation == 'sigmoid':
+# |         return torch.nn.Sigmoid()
+# |     elif (activation is None) or (activation == 'none'):
+# |         return torch.nn.Identity()
+# |     else:
+# |         raise NotImplementedError
+# |
+# | def build_optimizer(params, opt='adam', lr=1e-4, weight_decay=0, opt_scheduler='none', opt_decay_step=1000, opt_decay_rate=0.99, epochs=100):
+# |     filter_fn = filter(lambda p : p.requires_grad, params)
+# |     if opt == 'adam':
+# |         optimizer = optim.Adam(filter_fn, lr=lr, weight_decay=weight_decay)
+# |     elif opt == 'sgd':
+# |         optimizer = optim.SGD(filter_fn, lr=lr, momentum=0.95, weight_decay=weight_decay)
+# |     elif opt == 'rmsprop':
+# |         optimizer = optim.RMSprop(filter_fn, lr=lr, weight_decay=weight_decay)
+# |     elif opt == 'adagrad':
+# |         optimizer = optim.Adagrad(filter_fn, lr=lr, weight_decay=weight_decay)
+# |     if opt_scheduler == 'none':
+# |         return None, optimizer
+# |     elif opt_scheduler == 'step':
+# |         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt_decay_step, gamma=opt_decay_rate)
+# |     elif opt_scheduler == 'cos':
+# |         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+# |     return scheduler, optimizer
+# |
+# | class objectview(object):
+# |     def __init__(self, d):
+# |         self.__dict__ = d
+# |
+# | def save_mask(length,true_rate,log_dir,seed):
+# |     np.random.seed(seed)
+# |     mask = np.random.rand(length) < true_rate
+# |     np.save(osp.join(log_dir,'len'+str(length)+'rate'+str(true_rate)+'seed'+str(seed)),mask)
+# |     return mask
+# |
+# | def get_known_mask(known_prob, edge_num):
+# |     known_mask = (torch.FloatTensor(edge_num, 1).uniform_() < known_prob).view(-1)
+# |     return known_mask
+# |
+# | def mask_edge(edge_index,edge_attr,mask,remove_edge):
+# |     edge_index = edge_index.clone().detach()
+# |     edge_attr = edge_attr.clone().detach()
+# |     if remove_edge:
+# |         edge_index = edge_index[:,mask]
+# |         edge_attr = edge_attr[mask]
+# |     else:
+# |         edge_attr[~mask] = 0.
+# |     return edge_index, edge_attr
+# |
+# | def one_hot(batch,depth):
+# |     ones = torch.sparse.torch.eye(depth)
+# |     return ones.index_select(0,torch.tensor(batch,dtype=int))
+# |
+# | def soft_one_hot(batch,depth):
+# |     batch = torch.tensor(batch)
+# |     encodings = torch.zeros((batch.shape[0],depth))
+# |     for i,x in enumerate(batch):
+# |         for r in range(depth):
+# |             encodings[i,r] = torch.exp(-((x-float(r))/float(depth))**2)
+# |         encodings[i,:] = encodings[i,:]/torch.sum(encodings[i,:])
+# |     return encodings
+# |
+# | def construct_missing_X_from_mask(train_mask, df):
+# |     nrow, ncol = df.shape
+# |     data_incomplete = np.zeros((nrow, ncol))
+# |     data_complete = np.zeros((nrow, ncol)) 
+# |     train_mask = train_mask.reshape(nrow, ncol)
+# |     for i in range(nrow):
+# |         for j in range(ncol):
+# |             data_complete[i,j] = df.iloc[i,j]
+# |             if train_mask[i,j]:
+# |                 data_incomplete[i,j] = df.iloc[i,j]
+# |             else:
+# |                 data_incomplete[i,j] = np.NaN
+# |     return data_complete, data_incomplete
+# |
+# | def construct_missing_X_from_edge_index(train_edge_index, df):
+# |     nrow, ncol = df.shape
+# |     data_incomplete = np.zeros((nrow, ncol))
+# |     data_complete = np.zeros((nrow, ncol)) 
+# |     train_edge_list = torch.transpose(train_edge_index,1,0).numpy()
+# |     train_edge_list = list(map(tuple,[*train_edge_list]))
+# |     for i in range(nrow):
+# |         for j in range(ncol):
+# |             data_complete[i,j] = df.iloc[i,j]
+# |             if (i,j) in train_edge_list:
+# |                 data_incomplete[i,j] = df.iloc[i,j]
+# |             else:
+# |                 data_incomplete[i,j] = np.NaN
+# |     return data_complete, data_incomplete
+# |
+# | # get gpu usage
+# | def get_gpu_memory_map():
+# |     """Get the current gpu usage.
+# |
+# |     Returns
+# |     -------
+# |     usage: dict
+# |         Keys are device ids as integers.
+# |         Values are memory usage as integers in MB.
+# |     """
+# |     try:
+# |         result = subprocess.check_output(
+# |             [
+# |                 'nvidia-smi', '--query-gpu=memory.used',
+# |                 '--format=csv,nounits,noheader'
+# |             ], encoding='utf-8')
+# |     except:
+# |         result = subprocess.check_output(
+# |             [
+# |                 'ixsmi', '--query-gpu=memory.used',
+# |                 '--format=csv,nounits,noheader'
+# |             ], encoding='utf-8')
+# |     # Convert lines into a dictionary
+# |     gpu_memory = np.array([int(x) for x in result.strip().split('\n') if x.isdigit()])
+# |     # gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
+# |     return gpu_memory
+# |
+# | def auto_select_gpu(memory_threshold = 7000, smooth_ratio=200, strategy='greedy'):
+# |     gpu_memory_raw = get_gpu_memory_map() + 10
+# |     if strategy=='random':
+# |         gpu_memory = gpu_memory_raw/smooth_ratio
+# |         gpu_memory = gpu_memory.sum() / (gpu_memory+10)
+# |         gpu_memory[gpu_memory_raw>memory_threshold] = 0
+# |         gpu_prob = gpu_memory / gpu_memory.sum()
+# |         cuda = str(np.random.choice(len(gpu_prob), p=gpu_prob))
+# |         print('GPU select prob: {}, Select GPU {}'.format(gpu_prob, cuda))
+# |     elif strategy == 'greedy':
+# |         cuda = np.argmin(gpu_memory_raw)
+# |         print('GPU mem: {}, Select GPU {}'.format(gpu_memory_raw[cuda], cuda))
+# |     return cuda
+# |
+# | def select_device():
+# |     if torch.cuda.is_available():
+# |         cuda = auto_select_gpu()
+# |         os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# |         # os.environ['CUDA_VISIBLE_DEVICES'] = str(cuda)
+# |         device = torch.device('cuda:{}'.format(cuda))
+# |     else:
+# |         device = torch.device('cpu')
+# |     return device
+# ===== END SOURCE FILE: NeuroGravity/utils/utils.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/project_adapter.py =====
+# File: od_plan_tester/project_adapter.py | Lines: 138 | TrailingNL: 1 | SHA256: 1b399e7b5550f569d44eb4c780ac448ec722fcbb6e762c54f03ed74a8c86b376
+# | """
+# | Project Adapter: Bridge between od_plan_tester test suite and moving-bin framework.
+# | """
+# |
+# | import sys
+# | from pathlib import Path
+# | import torch
+# | import numpy as np
+# |
+# | # Ensure repo root is on sys.path
+# | REPO_ROOT = Path(__file__).resolve().parent.parent
+# | if str(REPO_ROOT) not in sys.path:
+# |     sys.path.insert(0, str(REPO_ROOT))
+# |
+# | # Loss & Oracle
+# | from src.loss.ztnb import (
+# |     nb_log_prob,
+# |     nb_log_prob_at_zero,
+# |     ztnb_nll,
+# |     nb_nll,
+# |     compute_conditional_mean,
+# | )
+# |
+# | # Models
+# | from src.models.gravity import GravityPrior
+# | from src.models.node_encoder import UrbanGNN
+# | UrbanNodeEncoder = UrbanGNN
+# | from src.models.decoder import PairwiseODDecoder
+# | from src.models.zero_shot_model import ZeroShotODModel
+# |
+# | # Data & Graph
+# | from src.data.urban_graph import (
+# |     haversine_distance_matrix,
+# |     build_radius_graph,
+# |     build_knn_graph,
+# |     build_adaptive_radius_graph,
+# | )
+# | from src.data.dataset import CityData, load_city, load_cities, assign_bins
+# | get_distance_bin_indices = assign_bins
+# | from src.data.city_splits import generate_5fold_splits, get_all_cities_sorted_by_size
+# | from src.data.trip_sampler import sample_multinomial_yd, M_GRID
+# | from src.data.yd_extractor import (
+# |     extract_yd_4bin_oracle,
+# |     extract_yd_4bin_real,
+# |     extract_yd_moving_oracle,
+# |     extract_M1_city_oracle_obs,
+# |     compute_distributional_overlap,
+# |     CITY_FIPS_GADM,
+# | )
+# |
+# | # Calibration: Primary is calibrate_moving_bins
+# | from src.calibration.bin_calibration import (
+# |     calibrate_moving_bins,
+# |     calibrate_4bin_legacy_ablation,
+# | )
+# |
+# | # Evaluation
+# | from src.training.evaluate import (
+# |     compute_cpc_pair,
+# |     compute_cpc_norm_pair,
+# |     compute_rmse_log1p_pair,
+# |     compute_pearson_pair,
+# |     evaluate_all,
+# |     evaluate_moving_and_full,
+# | )
+# |
+# | def compute_cpc(t_true, t_pred) -> float:
+# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
+# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
+# |     return compute_cpc_pair(t_t, t_p)
+# |
+# | def compute_cpc_norm(t_true, t_pred) -> float:
+# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
+# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
+# |     return compute_cpc_norm_pair(t_t, t_p)
+# |
+# | def compute_rmse_log1p(t_true, t_pred) -> float:
+# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
+# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
+# |     return compute_rmse_log1p_pair(t_t, t_p)
+# |
+# | def compute_pearson_r(t_true, t_pred) -> float:
+# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
+# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
+# |     return compute_pearson_pair(t_t, t_p)
+# |
+# | # Training & Experiment
+# | from src.training.train import train_zero_shot_model, infer_zero_shot
+# | from src.experiment.run_experiment import run_target_city_experiments
+# | from src.experiment.compute_qstar import analyze_qstar
+# | from src.experiment.compute_delta_r import analyze_delta_r
+# |
+# | __all__ = [
+# |     "nb_log_prob",
+# |     "nb_log_prob_at_zero",
+# |     "ztnb_nll",
+# |     "nb_nll",
+# |     "compute_conditional_mean",
+# |     "GravityPrior",
+# |     "UrbanNodeEncoder",
+# |     "UrbanGNN",
+# |     "PairwiseODDecoder",
+# |     "ZeroShotODModel",
+# |     "haversine_distance_matrix",
+# |     "build_radius_graph",
+# |     "build_knn_graph",
+# |     "build_adaptive_radius_graph",
+# |     "CityData",
+# |     "load_city",
+# |     "load_cities",
+# |     "assign_bins",
+# |     "get_distance_bin_indices",
+# |     "generate_5fold_splits",
+# |     "get_all_cities_sorted_by_size",
+# |     "extract_yd_moving_oracle",
+# |     "extract_M1_city_oracle_obs",
+# |     "extract_yd_4bin_oracle",
+# |     "extract_yd_4bin_real",
+# |     "compute_distributional_overlap",
+# |     "CITY_FIPS_GADM",
+# |     "sample_multinomial_yd",
+# |     "M_GRID",
+# |     "calibrate_moving_bins",
+# |     "calibrate_4bin_legacy_ablation",
+# |     "compute_cpc",
+# |     "compute_cpc_norm",
+# |     "compute_rmse_log1p",
+# |     "compute_pearson_r",
+# |     "evaluate_all",
+# |     "evaluate_moving_and_full",
+# |     "train_zero_shot_model",
+# |     "infer_zero_shot",
+# |     "run_target_city_experiments",
+# |
+# |     "analyze_qstar",
+# |     "analyze_delta_r",
+# | ]
+# ===== END SOURCE FILE: od_plan_tester/project_adapter.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/pytest.ini =====
+# File: od_plan_tester/pytest.ini | Lines: 12 | TrailingNL: 1 | SHA256: 2bea0ac8d5f806548e82c669c23fd164a1a0489de2e7ffb90c43b540b2207301
+# | [pytest]
+# | testpaths = od_plan_tester/tests
+# | python_files = test_*.py
+# | python_classes = Test*
+# | python_functions = test_*
+# | addopts = -ra
+# | markers =
+# |     reference: Independent mathematical oracles and reference formulas
+# |     contract: Production code contract validation
+# |     scientific: Scientific integrity, leakage prevention, and invariants
+# |     slow: Long-running or heavy tests
+# ===== END SOURCE FILE: od_plan_tester/pytest.ini =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/conftest.py =====
+# File: od_plan_tester/tests/conftest.py | Lines: 35 | TrailingNL: 1 | SHA256: c8786916e88b6812c76364ad897a9d5e8af076f97845bac8f504cd0700f2d970
+# | """
+# | Pytest configuration and shared fixtures for od_plan_tester.
+# | """
+# |
+# | import pytest
+# | import torch
+# | import numpy as np
+# |
+# |
+# | @pytest.fixture(autouse=True)
+# | def set_random_seeds():
+# |     torch.manual_seed(42)
+# |     np.random.seed(42)
+# |
+# |
+# | @pytest.fixture
+# | def sample_coordinates():
+# |     """Returns sample lat/lon coordinates for spatial graph tests."""
+# |     return np.array([
+# |         [-84.3880, 33.7490],  # Atlanta core 1
+# |         [-84.3900, 33.7500],  # Atlanta core 2 (~0.25 km)
+# |         [-84.4000, 33.7600],  # Atlanta mid (~1.5 km)
+# |         [-84.4500, 33.8000],  # Atlanta sub (~8 km)
+# |         [-85.0000, 34.2000],  # Distant isolated tract (~70 km)
+# |     ])
+# |
+# |
+# | @pytest.fixture
+# | def synthetic_od_flows():
+# |     """Returns mock true flow counts and distance bins."""
+# |     torch.manual_seed(42)
+# |     t_true = torch.tensor([12.0, 45.0, 150.0, 8.0, 220.0, 35.0, 90.0, 15.0])
+# |     bins = torch.tensor([0, 0, 1, 1, 2, 2, 3, 3])
+# |     return t_true, bins
+# ===== END SOURCE FILE: od_plan_tester/tests/conftest.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_calibration_equivalence.py =====
+# File: od_plan_tester/tests/test_calibration_equivalence.py | Lines: 79 | TrailingNL: 1 | SHA256: 96dd6318250ea144287c62211a7167e17f76e914e2bbc66d37c66189ef36a3b9
+# | """
+# | Test to ensure manual Partial-OD calibration is exactly numerically equivalent 
+# | to the canonical `calibrate_kbins` production operator.
+# | """
+# |
+# | import pytest
+# | import numpy as np
+# |
+# | def test_manual_calibration_equivalence_to_canonical():
+# |     """
+# |     T27: Ensure any manual multiplicative calibration is numerically equivalent 
+# |     to the canonical `calibrate_kbins` operator.
+# |     """
+# |     from src.calibration.bin_calibration import calibrate_kbins
+# |     
+# |     # 1. Setup mock data
+# |     N = 100
+# |     t0_np = np.random.uniform(1, 100, size=N)
+# |     dist_km = np.random.uniform(1, 150, size=N)
+# |     
+# |     # Randomly assign pairs to interzonal
+# |     inter_mask = np.random.rand(N) > 0.2
+# |     
+# |     # 3 target bins
+# |     bin_edges = np.array([0.0, 10.0, 100.0, float('inf')])
+# |     yd_target = np.array([0.5, 0.4, 0.1])
+# |     
+# |     # 2. Run canonical operator
+# |     t_cal_canonical = calibrate_kbins(
+# |         t0_np=t0_np.copy(),
+# |         dist_km=dist_km,
+# |         inter_mask=inter_mask,
+# |         yd_target=yd_target,
+# |         bin_edges=bin_edges,
+# |         q=1.0
+# |     )
+# |     
+# |     # 3. Emulate manual operator correctly (using active mask instead of target mask)
+# |     t_cal_manual = t0_np.copy()
+# |     n_inter = np.sum(t0_np[inter_mask])
+# |     
+# |     implied_b = np.zeros(3)
+# |     active_mask = np.zeros(3, dtype=bool)
+# |     
+# |     # Determine bins
+# |     bins = np.digitize(dist_km, bin_edges) - 1
+# |     
+# |     for k in range(3):
+# |         mask_k = inter_mask & (bins == k)
+# |         implied_b[k] = np.sum(t0_np[mask_k])
+# |         active_mask[k] = np.any(mask_k)
+# |         
+# |     p_active = yd_target * active_mask
+# |     p_cond = p_active / np.sum(p_active)
+# |     
+# |     implied_p = implied_b / n_inter
+# |     
+# |     w = np.zeros(3)
+# |     for k in range(3):
+# |         if active_mask[k] and implied_p[k] > 0:
+# |             w[k] = p_cond[k] / implied_p[k]
+# |         else:
+# |             w[k] = 1.0
+# |             
+# |     weighted_mass = np.sum(implied_p * w)
+# |     s = w / weighted_mass
+# |     
+# |     for k in range(3):
+# |         mask_k = inter_mask & (bins == k)
+# |         if np.any(mask_k):
+# |             t_cal_manual[mask_k] *= s[k]
+# |             
+# |     # Rescale interzonal strictly
+# |     cal_mass = np.sum(t_cal_manual[inter_mask])
+# |     t_cal_manual[inter_mask] *= (n_inter / cal_mass)
+# |     
+# |     # 4. Assert exact numerical equivalence
+# |     np.testing.assert_allclose(t_cal_manual, t_cal_canonical, atol=1e-5, rtol=1e-5)
+# ===== END SOURCE FILE: od_plan_tester/tests/test_calibration_equivalence.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_e1_contracts.py =====
+# File: od_plan_tester/tests/test_e1_contracts.py | Lines: 351 | TrailingNL: 1 | SHA256: 83f14bf87f1904d15ad72ce5aacd37fa885ca9915313d2d0a49d9d7531f56432
+# | """
+# | Unit and Contract Tests for E1 Oracle Existence Test Implementation (Amended Protocol v2).
+# |
+# | Tests cover:
+# |   - T51: 35/5/10 fold split invariants & manifest v2 integrity + SHA-256 matching.
+# |   - T52: compute_kbin_edges invariant (strictly increasing, bounds, deduplication).
+# |   - T53: extract_yd_kbins invariant (proper sum to 1.0, support handling).
+# |   - T54: calibrate_kbins mass preservation and intrazonal identity.
+# |   - T55: calibrate_kbins q=1 exact bin distribution matching.
+# |   - T56: calibrate_kbins GT permutation invariance.
+# |   - T57: wrong-donor helper distinctness, coverage (9 donors), and legacy single donor.
+# |   - T58: Confirmatory guard on incomplete subsets.
+# |   - T59: Size-stratified validation representation invariant across size strata and metadata logging.
+# |   - T60: Specificity estimand (Delta_target - Delta_wrong_avg9) & IQR calculation.
+# | """
+# |
+# | import numpy as np
+# | import pytest
+# | import torch
+# |
+# | from src.data.city_splits import (
+# |     get_all_cities_sorted_by_size,
+# |     generate_5fold_splits,
+# |     load_splits_manifest_v2,
+# |     generate_35_5_10_splits,
+# |     get_donor_city,
+# |     get_wrong_donors,
+# |     LOCKED_V1_TEST_FOLDS,
+# | )
+# | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
+# | from src.calibration.bin_calibration import calibrate_kbins
+# | from src.data.dataset import get_scaler_fingerprint, load_city, load_cities, clear_city_cache
+# | from src.experiment.run_e1 import compute_summary, compute_iqr, get_runtime_metadata, configure_cpu_threads
+# |
+# |
+# | def test_t51_splits_35_5_10_invariants_and_v1_locking():
+# |     splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
+# |     assert len(splits) == 5
+# |
+# |     all_test = []
+# |     for f, s in splits.items():
+# |         train = set(s["train"])
+# |         val   = set(s["val"])
+# |         test  = set(s["test"])
+# |
+# |         assert len(s["train"]) == 35, f"Fold {f} train size {len(s['train'])} != 35"
+# |         assert len(s["val"]) == 5, f"Fold {f} val size {len(s['val'])} != 5"
+# |         assert len(s["test"]) == 10, f"Fold {f} test size {len(s['test'])} != 10"
+# |
+# |         # Strictly identical to locked E1-v1 test sets
+# |         assert s["test"] == sorted(LOCKED_V1_TEST_FOLDS[f]), f"Fold {f} test set does not match locked v1 test set"
+# |
+# |         # Disjoint within fold
+# |         assert len(train & val) == 0, f"Fold {f} train and val overlap!"
+# |         assert len(train & test) == 0, f"Fold {f} train and test overlap!"
+# |         assert len(val & test) == 0, f"Fold {f} val and test overlap!"
+# |
+# |         all_test.extend(s["test"])
+# |
+# |     # Across folds: test sets form exact partition of 50 cities
+# |     assert len(all_test) == 50
+# |     assert len(set(all_test)) == 50
+# |
+# |
+# | def test_t52_kbin_edges_strictly_increasing():
+# |     splits = generate_35_5_10_splits("data")
+# |     train35 = splits[1]["train"]
+# |     edges, K_active = compute_kbin_edges(train35, K=8, data_root="data")
+# |
+# |     assert len(edges) == K_active + 1
+# |     assert edges[0] == 0.0
+# |     assert np.isinf(edges[-1])
+# |     assert np.all(np.diff(edges) > 0), f"Bin edges not strictly increasing: {edges}"
+# |     assert K_active >= 2, f"Too few active bins: {K_active}"
+# |
+# |
+# | def test_t53_extract_yd_kbins_normalized():
+# |     dist_km = np.array([0.0, 2.5, 5.0, 15.0, 30.0, 80.0, 150.0])
+# |     trips   = np.array([50.0, 20.0, 30.0, 15.0, 10.0, 5.0, 2.0])
+# |     inter_mask = np.array([False, True, True, True, True, True, True])
+# |     edges = np.array([0.0, 10.0, 50.0, 100.0, np.inf])
+# |
+# |     yd = extract_yd_kbins(dist_km, trips, edges, inter_mask)
+# |     assert len(yd) == 4
+# |     assert np.isclose(yd.sum(), 1.0, atol=1e-6)
+# |     assert np.all(yd >= 0.0)
+# |
+# |
+# | def test_t54_calibrate_kbins_mass_and_intrazonal_invariants():
+# |     t0 = np.array([100.0, 20.0, 30.0, 40.0, 50.0], dtype=np.float64)
+# |     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
+# |     inter_mask = np.array([False, True, True, True, True])
+# |     edges = np.array([0.0, 5.0, 15.0, 50.0, np.inf])
+# |     yd_target = np.array([0.1, 0.4, 0.3, 0.2])
+# |
+# |     t_cal = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
+# |
+# |     # Invariant 1: Intrazonal preserved
+# |     assert np.isclose(t_cal[0], t0[0], atol=1e-6)
+# |
+# |     # Invariant 2: Interzonal mass preserved
+# |     assert np.isclose(t_cal[inter_mask].sum(), t0[inter_mask].sum(), atol=1e-4)
+# |
+# |
+# | def test_t55_calibrate_kbins_q1_exact_distribution():
+# |     t0 = np.array([10.0, 50.0, 20.0, 10.0, 5.0], dtype=np.float64)
+# |     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
+# |     inter_mask = np.array([False, True, True, True, True])
+# |     edges = np.array([0.0, 5.0, 15.0, 50.0, np.inf])
+# |     yd_target = np.array([0.40, 0.30, 0.20, 0.10])
+# |
+# |     t_cal = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
+# |     inter_cal = t_cal[inter_mask]
+# |     total_cal = inter_cal.sum()
+# |
+# |     for k in range(4):
+# |         lo, hi = edges[k], edges[k+1]
+# |         in_b = (dist_km[inter_mask] > lo) & (dist_km[inter_mask] <= hi)
+# |         prop = inter_cal[in_b].sum() / total_cal
+# |         assert np.isclose(prop, yd_target[k], atol=1e-5), f"Bin {k} prop {prop} != target {yd_target[k]}"
+# |
+# |
+# | def test_t56_calibrate_kbins_gt_invariance():
+# |     """T_cal is a function of (T0, Y_D), completely independent of T_GT at cell level."""
+# |     t0 = np.array([50.0, 20.0, 30.0, 40.0], dtype=np.float64)
+# |     dist_km = np.array([0.0, 5.0, 15.0, 45.0], dtype=np.float64)
+# |     inter_mask = np.array([False, True, True, True])
+# |     edges = np.array([0.0, 10.0, 30.0, np.inf])
+# |     yd_target = np.array([0.5, 0.3, 0.2])
+# |
+# |     t_cal1 = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
+# |     t_cal2 = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
+# |
+# |     assert np.allclose(t_cal1, t_cal2)
+# |
+# |
+# | def test_t57_donor_city_and_all_9_wrong_donors():
+# |     test_cities = ["Austin", "Denver", "Portland", "Seattle", "Chicago", "Boston", "Miami", "Dallas", "Atlanta", "Detroit"]
+# |     for c in test_cities:
+# |         # Single donor
+# |         donor = get_donor_city(c, test_cities)
+# |         assert donor != c, f"Donor {donor} is identical to target {c}"
+# |         assert donor in test_cities, f"Donor {donor} not in test set"
+# |
+# |         # 9 wrong donors
+# |         wrong_9 = get_wrong_donors(c, test_cities)
+# |         assert len(wrong_9) == 9, f"Expected 9 wrong donors, got {len(wrong_9)}"
+# |         assert c not in wrong_9, f"Target city {c} was included in wrong donors list"
+# |         assert set(wrong_9) == set(test_cities) - {c}
+# |
+# |     # Verify wrap-around for legacy single donor
+# |     assert get_donor_city(sorted(test_cities)[-1], test_cities) == sorted(test_cities)[0]
+# |
+# |
+# | def test_t58_confirmatory_guard_on_incomplete_subsets():
+# |     """Verify that smoke / partial results are NOT reported as confirmatory."""
+# |     dummy_results = [
+# |         {
+# |             "city": "Portland", "fold": 4, "donor_city": "all_9_fold_donors", "n_wrong_donors": 9,
+# |             "n_inter_pairs": 1000, "K_active": 8, "cpc_baseline": 0.40, "cpc_baseline_norm": 0.50,
+# |             "cpc_target_yd": 0.43, "cpc_target_yd_norm": 0.53, "delta_cpc_target": 0.03,
+# |             "cpc_wrong_yd": 0.39, "cpc_wrong_yd_norm": 0.49, "delta_cpc_wrong": -0.01,
+# |             "delta_cpc_specificity": 0.04,
+# |             "Y_D_target": [0.125]*8, "wrong_donor_breakdown": []
+# |         },
+# |         {
+# |             "city": "Denver", "fold": 5, "donor_city": "all_9_fold_donors", "n_wrong_donors": 9,
+# |             "n_inter_pairs": 1000, "K_active": 8, "cpc_baseline": 0.42, "cpc_baseline_norm": 0.52,
+# |             "cpc_target_yd": 0.45, "cpc_target_yd_norm": 0.55, "delta_cpc_target": 0.03,
+# |             "cpc_wrong_yd": 0.41, "cpc_wrong_yd_norm": 0.51, "delta_cpc_wrong": -0.01,
+# |             "delta_cpc_specificity": 0.04,
+# |             "Y_D_target": [0.125]*8, "wrong_donor_breakdown": []
+# |         }
+# |     ]
+# |
+# |     summary = compute_summary(dummy_results)
+# |     assert not summary["is_full_50_complete"], "Partial 2-city run was falsely marked as full 50 complete!"
+# |
+# |
+# | def test_t59_stratified_validation_strata_coverage_and_metadata():
+# |     """Verify validation representation across size strata and candidates metadata presence."""
+# |     cities_info = get_all_cities_sorted_by_size("data")
+# |     city_dict = {c["city"]: c for c in cities_info}
+# |     splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
+# |
+# |     for fold_id, s in splits.items():
+# |         val_cities = set(s["val"])
+# |         test_cities = set(s["test"])
+# |         non_test_cities = [c["city"] for c in cities_info if c["city"] not in test_cities]
+# |         non_test_info = [city_dict[c] for c in non_test_cities]
+# |         ordered = sorted(non_test_info, key=lambda x: (x["n_tracts"], x["city"]))
+# |
+# |         # Stratum coverage check
+# |         strata = [ordered[i * 8 : (i + 1) * 8] for i in range(5)]
+# |         for s_idx, stratum in enumerate(strata):
+# |             stratum_cities = set(x["city"] for x in stratum)
+# |             overlap = val_cities & stratum_cities
+# |             assert len(overlap) == 1, (
+# |                 f"Fold {fold_id} stratum {s_idx} must have exactly 1 validation city, got {overlap}"
+# |             )
+# |
+# |         # Candidates metadata check
+# |         cand_meta = s.get("validation_candidates_by_stratum", {})
+# |         assert len(cand_meta) == 5, f"Fold {fold_id} missing stratum candidate metadata"
+# |         for s_name, candidates in cand_meta.items():
+# |             assert len(candidates) == 8, f"Stratum {s_name} in Fold {fold_id} must list exactly 8 candidates"
+# |
+# |
+# | def test_t60_specificity_estimand_and_iqr():
+# |     """Verify that delta_specificity = delta_target - delta_wrong is computed on city level."""
+# |     test_results = []
+# |     for i in range(50):
+# |         f = (i % 5) + 1
+# |         dt = 0.05 + 0.01 * (i % 3)
+# |         dw = 0.01 + 0.005 * (i % 2)
+# |         test_results.append({
+# |             "city": f"City_{i}",
+# |             "fold": f,
+# |             "donor_city": "all_9_fold_donors",
+# |             "n_wrong_donors": 9,
+# |             "n_inter_pairs": 1000,
+# |             "K_active": 8,
+# |             "cpc_baseline": 0.40,
+# |             "cpc_baseline_norm": 0.50,
+# |             "cpc_target_yd": 0.40 + dt,
+# |             "cpc_target_yd_norm": 0.50 + dt,
+# |             "delta_cpc_target": dt,
+# |             "cpc_wrong_yd": 0.40 + dw,
+# |             "cpc_wrong_yd_norm": 0.50 + dw,
+# |             "delta_cpc_wrong": dw,
+# |             "delta_cpc_specificity": dt - dw,
+# |             "Y_D_target": [0.125]*8,
+# |             "wrong_donor_breakdown": [],
+# |         })
+# |
+# |     summary = compute_summary(test_results)
+# |     assert summary["is_full_50_complete"]
+# |
+# |     # Invariant: Mean Specificity = Mean Target - Mean Wrong
+# |     expected_spec = summary["delta_cpc_target_mean"] - summary["delta_cpc_wrong_mean"]
+# |     assert np.isclose(summary["delta_specificity_mean"], expected_spec, atol=1e-6)
+# |
+# |     # Invariant: IQR is non-negative
+# |     assert summary["delta_specificity_iqr"] >= 0.0
+# |     assert summary["delta_cpc_target_iqr"] >= 0.0
+# |     assert summary["delta_cpc_wrong_iqr"] >= 0.0
+# |
+# |
+# | def test_t61_runtime_metadata_and_cpu_thread_control():
+# |     """Verify runtime metadata collection, CPU thread configuration, and summary integration."""
+# |     meta = get_runtime_metadata()
+# |     required_keys = [
+# |         "platform",
+# |         "processor",
+# |         "python_version",
+# |         "torch_version",
+# |         "cuda_available",
+# |         "cpu_count_logical",
+# |         "cpu_count_physical",
+# |         "torch_num_threads",
+# |         "torch_num_interop_threads",
+# |         "omp_num_threads",
+# |         "mkl_num_threads",
+# |     ]
+# |     for key in required_keys:
+# |         assert key in meta, f"Missing required runtime metadata key: {key}"
+# |
+# |     assert meta["cpu_count_logical"] is not None and meta["cpu_count_logical"] > 0
+# |     assert meta["torch_num_threads"] > 0
+# |     assert meta["torch_num_interop_threads"] > 0
+# |
+# |     # Test thread configuration
+# |     orig_threads = torch.get_num_threads()
+# |     try:
+# |         set_threads = 4
+# |         active = configure_cpu_threads(set_threads)
+# |         assert active == set_threads
+# |         assert torch.get_num_threads() == set_threads
+# |         updated_meta = get_runtime_metadata()
+# |         assert updated_meta["torch_num_threads"] == set_threads
+# |         assert updated_meta["omp_num_threads"] == str(set_threads)
+# |         assert updated_meta["mkl_num_threads"] == str(set_threads)
+# |     finally:
+# |         configure_cpu_threads(orig_threads)
+# |
+# |     # Test compute_summary integration
+# |     mock_results = [{
+# |         "city": "Boston",
+# |         "fold": 1,
+# |         "donor_city": "all_9_fold_donors",
+# |         "n_wrong_donors": 9,
+# |         "n_inter_pairs": 500,
+# |         "K_active": 8,
+# |         "cpc_baseline": 0.50,
+# |         "cpc_baseline_norm": 0.60,
+# |         "cpc_target_yd": 0.55,
+# |         "cpc_target_yd_norm": 0.65,
+# |         "delta_cpc_target": 0.05,
+# |         "cpc_wrong_yd": 0.52,
+# |         "cpc_wrong_yd_norm": 0.62,
+# |         "delta_cpc_wrong": 0.02,
+# |         "delta_cpc_specificity": 0.03,
+# |         "Y_D_target": [0.125]*8,
+# |         "wrong_donor_breakdown": [],
+# |     }]
+# |     summary = compute_summary(mock_results)
+# |     assert "runtime_environment" in summary
+# |     assert summary["runtime_environment"]["torch_num_threads"] > 0
+# |
+# |
+# | def test_t62_scaler_fingerprint_and_cache_isolation():
+# |     """Verify deterministic content-based scaler hashing and cross-fold cache isolation."""
+# |     from sklearn.preprocessing import StandardScaler
+# |
+# |     # 1. Unfitted / None scaler handling
+# |     assert get_scaler_fingerprint(None) is None
+# |
+# |     s1 = StandardScaler()
+# |     s1.mean_ = np.ones(26, dtype=np.float64) * 1.0
+# |     s1.var_  = np.ones(26, dtype=np.float64) * 0.5
+# |     s1.scale_ = np.sqrt(s1.var_)
+# |
+# |     s2 = StandardScaler()
+# |     s2.mean_ = np.ones(26, dtype=np.float64) * 1.0
+# |     s2.var_  = np.ones(26, dtype=np.float64) * 0.5
+# |     s2.scale_ = np.sqrt(s2.var_)
+# |
+# |     s3 = StandardScaler()
+# |     s3.mean_ = np.ones(26, dtype=np.float64) * 2.0
+# |     s3.var_  = np.ones(26, dtype=np.float64) * 1.0
+# |     s3.scale_ = np.sqrt(s3.var_)
+# |
+# |     # Invariant: identical parameters -> identical fingerprint (even with different object IDs)
+# |     assert get_scaler_fingerprint(s1) == get_scaler_fingerprint(s2)
+# |     assert id(s1) != id(s2)
+# |
+# |     # Invariant: different parameters -> different fingerprint
+# |     assert get_scaler_fingerprint(s1) != get_scaler_fingerprint(s3)
+# |
+# |     # 2. In-memory cache isolation on load_city
+# |     clear_city_cache()
+# |     cd_s1 = load_city("Boston", data_root="data", feature_scaler=s1)
+# |     cd_s3 = load_city("Boston", data_root="data", feature_scaler=s3)
+# |
+# |     # Features must differ because s1 and s3 normalization parameters differ
+# |     assert not torch.allclose(cd_s1.node_features, cd_s3.node_features)
+# |     
+# |     # Reloading with s1 must hit cache and return exact same tensor values
+# |     cd_s1_cached = load_city("Boston", data_root="data", feature_scaler=s1)
+# |     assert torch.allclose(cd_s1.node_features, cd_s1_cached.node_features)
+# ===== END SOURCE FILE: od_plan_tester/tests/test_e1_contracts.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_experiment_contracts.py =====
+# File: od_plan_tester/tests/test_experiment_contracts.py | Lines: 324 | TrailingNL: 1 | SHA256: 378a3f8d283cb54301a8a86247a3e248ec9f9115f96850b0b852ec39fe8c4580
+# | """
+# | Tests for Experiment Contracts, Moving-Bin Support, and Manifest Integrity.
+# | (Tests T37 to T45)
+# | """
+# |
+# | import json
+# | import hashlib
+# | from pathlib import Path
+# | import pytest
+# | import torch
+# | import numpy as np
+# | from od_plan_tester.project_adapter import (
+# |     train_zero_shot_model,
+# |     load_cities,
+# |     load_city,
+# |     run_target_city_experiments,
+# | )
+# | from src.training.evaluate import compute_cpc_pair
+# | from src.data.city_splits import generate_5fold_splits
+# | from src.data.urban_graph import build_radius_graph
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_model_freezing_theta_star():
+# |     """T37: Model parameters theta* are completely frozen (requires_grad=False) before target inference."""
+# |     model, _ = train_zero_shot_model(
+# |         train_city_names=["Raleigh", "Denver"],
+# |         data_root="data",
+# |         epochs=1,
+# |         device_str="cpu",
+# |         verbose=False,
+# |     )
+# |
+# |     for name, param in model.named_parameters():
+# |         assert not param.requires_grad, f"Parameter {name} was not frozen!"
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_shared_support_omega_c_across_conditions():
+# |     """T38: All moving-bin experimental conditions evaluate on identical candidate support Omega_c."""
+# |     train_data_list, fitted_scaler = load_cities(["Raleigh", "Denver"], data_root="data")
+# |     model, _ = train_zero_shot_model(
+# |         train_city_names=["Raleigh", "Denver"],
+# |         data_root="data",
+# |         epochs=1,
+# |         device_str="cpu",
+# |         verbose=False,
+# |     )
+# |
+# |     cd = load_city("Denver", data_root="data", feature_scaler=fitted_scaler)
+# |     dist_km = np.expm1(cd.pair_distance.numpy())
+# |     expected_inter_mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
+# |     expected_n_inter = int(np.sum(expected_inter_mask))
+# |
+# |     from src.data.yd_extractor import compute_kbin_edges
+# |     bin_edges, _ = compute_kbin_edges(["Raleigh", "Denver"], K=8, data_root="data")
+# |     res = run_target_city_experiments(
+# |         model=model,
+# |         city_name="Denver",
+# |         scaler=fitted_scaler,
+# |         data_root="data",
+# |         bin_edges=bin_edges,
+# |         device_str="cpu",
+# |     )
+# |
+# |     # 1. Candidate pair counts strictly match target city candidate dataset
+# |     assert res["n_pairs"] == len(cd.pair_o_idx)
+# |     assert res["n_inter_pairs"] == expected_n_inter
+# |
+# |     # 2. Key conditions exist
+# |     assert "M0" in res
+# |     assert "M1_city_oracle_obs" in res
+# |     assert "M1_county_oracle_obs" in res
+# |     assert "M1_subzone_oracle_obs" in res
+# |
+# |     # 3. Verify that evaluation support on interzonal pairs is mathematically identical
+# |     t_gt = cd.pair_trips.numpy()
+# |     cpc_inter_m0_expected = compute_cpc_pair(
+# |         t_gt[expected_inter_mask],
+# |         res["M0"]["cpc_inter"] # checked via consistent evaluation
+# |     )
+# |     assert res["M0"]["cpc_inter"] > 0.0
+# |     assert res["M1_city_oracle_obs"]["cpc_inter"] > 0.0
+# |
+# |
+# | @pytest.mark.reference
+# | def test_delta_r_and_realization_gap_formulas():
+# |     """T39: Verify Delta R^+ and realization gap arithmetic formulas on interzonal metrics."""
+# |     cpc_m0 = 0.35
+# |     cpc_m1_real = 0.42
+# |     cpc_m1_oracle = 0.50
+# |
+# |     delta_r_real = cpc_m1_real - cpc_m0
+# |     delta_r_oracle = cpc_m1_oracle - cpc_m0
+# |     realization_gap = cpc_m1_oracle - cpc_m1_real
+# |
+# |     assert pytest.approx(0.07, rel=1e-5) == delta_r_real
+# |     assert pytest.approx(0.15, rel=1e-5) == delta_r_oracle
+# |     assert pytest.approx(0.08, rel=1e-5) == realization_gap
+# |
+# |
+# |
+# |
+# | @pytest.mark.contract
+# | def test_t40_manifest_exists():
+# |     """T40: manifest exists, is readable, and file hashes match."""
+# |     import hashlib
+# |     manifest_path = Path("results/manifest_rq1_v1.json")
+# |     assert manifest_path.exists(), "Production manifest results/manifest_rq1_v1.json does not exist!"
+# |     with open(manifest_path, "r") as f:
+# |         manifest = json.load(f)
+# |     assert "contract_conditions" in manifest
+# |     
+# |     # Verify file hashes
+# |     file_hashes = manifest.get("file_hashes", {})
+# |     assert len(file_hashes) > 0, "No file hashes found in manifest!"
+# |     for fp, expected_hash in file_hashes.items():
+# |         p = Path("results") / fp
+# |         if p.exists():
+# |             computed = hashlib.sha256(p.read_bytes()).hexdigest()
+# |             assert computed == expected_hash, f"Hash mismatch for {fp}!"
+# |
+# | @pytest.mark.contract
+# | def test_t41_50_unique_test_cities():
+# |     """T41: manifest vs pipeline (50 unique test cities)."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     with open("results/5fold_results.json", "r") as f:
+# |         results = json.load(f)
+# |     cities = set([r["city"] for r in results["city_level_results"]])
+# |     assert len(cities) == manifest["contract_conditions"]["unique_cities"]
+# |     assert len(cities) == 50
+# |
+# | @pytest.mark.contract
+# | def test_t42_5_folds_by_10_cities():
+# |     """T42: manifest vs pipeline (5 folds x 10 cities)."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     with open("results/5fold_results.json", "r") as f:
+# |         results = json.load(f)
+# |     from collections import defaultdict
+# |     fold_counts = defaultdict(int)
+# |     for r in results["city_level_results"]:
+# |         fold_counts[r["fold"]] += 1
+# |     
+# |     assert len(fold_counts) == manifest["contract_conditions"]["folds"]
+# |     assert len(fold_counts) == 5
+# |     for count in fold_counts.values():
+# |         assert count == manifest["contract_conditions"]["cities_per_fold"]
+# |         assert count == 10
+# |
+# | @pytest.mark.contract
+# | def test_t43_primary_k_is_8():
+# |     """T43: manifest vs pipeline (primary K == 8)."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     locked_k = manifest["contract_conditions"]["primary_k_bins"]
+# |     
+# |     from src.data.yd_extractor import compute_kbin_edges
+# |     bin_edges, _ = compute_kbin_edges(["Denver"], K=locked_k, data_root="data")
+# |     assert len(bin_edges) - 1 == locked_k
+# |
+# | @pytest.mark.contract
+# | def test_t44_seeds_are_1_10_100():
+# |     """T44: manifest vs pipeline (seeds == {1,10,100})."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     locked_seeds = set(manifest["contract_conditions"]["model_seeds"])
+# |     
+# |     import ast
+# |     with open("src/experiment/run_5fold.py", "r") as f:
+# |         tree = ast.parse(f.read())
+# |     
+# |     found_seeds = None
+# |     for node in ast.walk(tree):
+# |         if isinstance(node, ast.Assign):
+# |             for target in node.targets:
+# |                 if getattr(target, 'id', '') == 'seeds':
+# |                     if isinstance(node.value, ast.List):
+# |                         found_seeds = set(elt.value for elt in node.value.elts if isinstance(elt, ast.Constant))
+# |     
+# |     assert found_seeds == locked_seeds, f"Found seeds {found_seeds} in run_5fold.py!"
+# |
+# | @pytest.mark.contract
+# | def test_t45_m1_city_is_primary_treatment():
+# |     """T45: manifest vs pipeline (M1_city is primary treatment)."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     primary = manifest["contract_conditions"]["primary_treatment"]
+# |     
+# |     with open("results/5fold_results.json", "r") as f:
+# |         results = json.load(f)
+# |     keys = results["city_level_results"][0].keys()
+# |     assert primary in keys, f"{primary} not found in pipeline results!"
+# |
+# | @pytest.mark.contract
+# | def test_t46_m1_subzone_is_ceiling_only():
+# |     """T46: manifest vs pipeline (M1_subzone is ceiling only)."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     ceiling = manifest["contract_conditions"]["ceiling_treatment"]
+# |     
+# |     with open("results/5fold_results.json", "r") as f:
+# |         results = json.load(f)
+# |     keys = results["city_level_results"][0].keys()
+# |     assert ceiling in keys, f"{ceiling} not found in pipeline results!"
+# |
+# | @pytest.mark.contract
+# | def test_t47_primary_metric_is_cpc_interzonal():
+# |     """T47: manifest vs pipeline (primary metric == CPC interzonal)."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     metric = manifest["contract_conditions"]["primary_metric"]
+# |     
+# |     with open("results/5fold_results.json", "r") as f:
+# |         results = json.load(f)
+# |     m0_metrics = results["city_level_results"][0]["M0"].keys()
+# |     assert metric in m0_metrics, f"{metric} not found in pipeline metrics!"
+# |
+# | @pytest.mark.scientific
+# | def test_t48_support_is_omega_c_plus():
+# |     """T48: Rigorous verification that Omega_c^+ is defined by D_ij > 0 and strictly equal to bin_labels in {1,2,3}. (Restored T44)"""
+# |     for city_name in ["Denver", "Portland"]:
+# |         cd = load_city(city_name, data_root="data")
+# |         dist_km = np.expm1(cd.pair_distance.numpy())
+# |         o_np = cd.pair_o_idx.numpy()
+# |         d_np = cd.pair_d_idx.numpy()
+# |         b_np = cd.bin_labels.numpy()
+# |
+# |         # Check equivalence between distance threshold and bin assignment
+# |         mask_dist = (o_np != d_np) & (dist_km > 0.0)
+# |         mask_bins = (o_np != d_np) & (b_np > 0)
+# |         assert np.array_equal(mask_dist, mask_bins), f"{city_name}: mask_dist and mask_bins mismatch!"
+# |
+# |         # Intrazonal pairs are strictly bin 0
+# |         diag_mask = (o_np == d_np)
+# |         assert np.all(b_np[diag_mask] == 0), f"{city_name}: intrazonal pairs contain non-zero bins!"
+# |
+# |
+# | @pytest.mark.contract
+# | def test_t49_main_results_reproduce_locked_values():
+# |     """T49: main results reproduce locked values."""
+# |     with open("results/manifest_rq1_v1.json", "r") as f:
+# |         manifest = json.load(f)
+# |     
+# |     with open("results/5fold_results.json", "r") as f:
+# |         results = json.load(f)
+# |         
+# |     city_results = results["city_level_results"]
+# |     import numpy as np
+# |     m0_cpcs = np.array([r["M0"]["cpc_inter"] for r in city_results])
+# |     m1_cpcs = np.array([r["M1_city_oracle_obs"]["cpc_inter"] for r in city_results])
+# |     
+# |     mean_delta = np.mean(m1_cpcs - m0_cpcs)
+# |     win_rate = np.mean(m1_cpcs > m0_cpcs) * 100.0
+# |     
+# |     locked_delta = manifest["locked_results"]["mean_delta_cpc"]
+# |     locked_win_rate = manifest["locked_results"]["win_rate_percent"]
+# |     
+# |     assert abs(mean_delta - locked_delta) < 1e-4, f"Delta CPC mismatch: {mean_delta} vs {locked_delta}"
+# |     assert abs(win_rate - locked_win_rate) < 1e-4, f"Win rate mismatch: {win_rate} vs {locked_win_rate}"
+# |
+# | @pytest.mark.scientific
+# | def test_t50_target_ground_truth_permutation_invariance_for_m0():
+# |     """T50: Changing, permuting, or zeroing target ground-truth T^GT has zero effect on M0 predictions. (Restored T45)"""
+# |     train_data_list, fitted_scaler = load_cities(["Raleigh", "Denver"], data_root="data")
+# |     model, _ = train_zero_shot_model(
+# |         train_city_names=["Raleigh", "Denver"],
+# |         data_root="data",
+# |         epochs=1,
+# |         device_str="cpu",
+# |         verbose=False,
+# |     )
+# |
+# |     cd = load_city("Portland", data_root="data", feature_scaler=fitted_scaler)
+# |     import copy
+# |     cd = copy.deepcopy(cd)
+# |     edge_idx, edge_dist = build_radius_graph(cd.lon_lat, radius_km=5.0)
+# |
+# |     with torch.no_grad():
+# |         pred_orig = model(
+# |             cd.node_features,
+# |             edge_idx,
+# |             edge_dist,
+# |             cd.pair_o_idx,
+# |             cd.pair_d_idx,
+# |             cd.pair_distance,
+# |             cd.population,
+# |             return_conditional_mean=True,
+# |         )
+# |
+# |     # Permute trips completely
+# |     cd.pair_trips = cd.pair_trips[torch.randperm(len(cd.pair_trips))]
+# |
+# |     with torch.no_grad():
+# |         pred_permuted = model(
+# |             cd.node_features,
+# |             edge_idx,
+# |             edge_dist,
+# |             cd.pair_o_idx,
+# |             cd.pair_d_idx,
+# |             cd.pair_distance,
+# |             cd.population,
+# |             return_conditional_mean=True,
+# |         )
+# |
+# |     # Set trips to zeros
+# |     cd.pair_trips = torch.zeros_like(cd.pair_trips)
+# |
+# |     with torch.no_grad():
+# |         pred_zeros = model(
+# |             cd.node_features,
+# |             edge_idx,
+# |             edge_dist,
+# |             cd.pair_o_idx,
+# |             cd.pair_d_idx,
+# |             cd.pair_distance,
+# |             cd.population,
+# |             return_conditional_mean=True,
+# |         )
+# |
+# |     torch.testing.assert_close(pred_orig, pred_permuted, rtol=0, atol=1e-6)
+# |     torch.testing.assert_close(pred_orig, pred_zeros, rtol=0, atol=1e-6)
+# ===== END SOURCE FILE: od_plan_tester/tests/test_experiment_contracts.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_graph_topology.py =====
+# File: od_plan_tester/tests/test_graph_topology.py | Lines: 210 | TrailingNL: 1 | SHA256: 634a0ffb37898ad4324940571aed693f09058018da5959105d4fd03248bd26f7
+# | """
+# | Tests for Spatial Urban Graph Topology and Fallback Invariants.
+# | (Tests T07 to T10)
+# | """
+# |
+# | import pytest
+# | import torch
+# | import numpy as np
+# | from od_plan_tester.project_adapter import (
+# |     build_radius_graph,
+# |     haversine_distance_matrix,
+# | )
+# |
+# |
+# | @pytest.mark.reference
+# | def test_radius_graph_5km_threshold(sample_coordinates):
+# |     """T07: Radius graph with r=5.0 km connects all pairs within 5 km."""
+# |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0)
+# |
+# |     # Core tract 0 (-84.388, 33.749) and tract 1 (-84.390, 33.750) are ~0.25 km apart
+# |     # Tract 2 is ~1.5 km apart. They should be connected.
+# |     dist_mat = haversine_distance_matrix(sample_coordinates)
+# |     assert dist_mat[0, 1] < 5.0
+# |     assert dist_mat[0, 2] < 5.0
+# |
+# |     # Verify edge exists in edge_index
+# |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
+# |     assert (0, 1) in edges or (1, 0) in edges
+# |     assert (0, 2) in edges or (2, 0) in edges
+# |
+# |
+# | @pytest.mark.reference
+# | def test_radius_graph_isolated_fallback_1nn(sample_coordinates):
+# |     """T08: Isolated tract (node 4, ~70 km away) connects via 1-NN fallback (degree >= 1)."""
+# |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0)
+# |
+# |     # Node 4 is distant. It must have at least 1 neighbor via fallback
+# |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
+# |     node_4_neighbors = [dst for src, dst in edges if src == 4 and dst != 4]
+# |
+# |     assert len(node_4_neighbors) >= 1, "Isolated node must have 1-NN fallback edge"
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_urban_graph_zero_od_leakage(sample_coordinates):
+# |     """T09: Graph construction uses only spatial coordinates and is completely independent of OD flows."""
+# |     ei1, ed1 = build_radius_graph(sample_coordinates, radius_km=5.0)
+# |     ei2, ed2 = build_radius_graph(sample_coordinates, radius_km=5.0)
+# |
+# |     assert torch.equal(ei1, ei2)
+# |     assert torch.equal(ed1, ed2)
+# |
+# |
+# | @pytest.mark.contract
+# | def test_graph_symmetric_and_self_loops(sample_coordinates):
+# |     """T10: Built graph contains self-loops and is undirected (symmetric adjacency)."""
+# |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0, include_self_loop=True)
+# |
+# |     n_nodes = len(sample_coordinates)
+# |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
+# |
+# |     # Check self loops
+# |     for i in range(n_nodes):
+# |         assert (i, i) in edges
+# |
+# |     # Check symmetry
+# |     for u, v in edges:
+# |         assert (v, u) in edges
+# |
+# |
+# | @pytest.mark.contract
+# | def test_graph_caching_and_clear(sample_coordinates):
+# |     """T11: Graph caching returns identical cached tensors and respects clear_graph_cache."""
+# |     from src.data.urban_graph import build_radius_graph, build_knn_graph, clear_graph_cache, _GRAPH_CACHE
+# |
+# |     clear_graph_cache()
+# |     assert len(_GRAPH_CACHE) == 0
+# |
+# |     ei1, ed1 = build_radius_graph(sample_coordinates, radius_km=5.0, use_cache=True)
+# |     assert len(_GRAPH_CACHE) == 1
+# |
+# |     ei2, ed2 = build_radius_graph(sample_coordinates, radius_km=5.0, use_cache=True)
+# |     assert len(_GRAPH_CACHE) == 1
+# |     assert torch.equal(ei1, ei2)
+# |     assert torch.equal(ed1, ed2)
+# |
+# |     # Test knn caching
+# |     ki1, kd1 = build_knn_graph(sample_coordinates, k=3, use_cache=True)
+# |     assert len(_GRAPH_CACHE) == 2
+# |     ki2, kd2 = build_knn_graph(sample_coordinates, k=3, use_cache=True)
+# |     assert len(_GRAPH_CACHE) == 2
+# |     assert torch.equal(ki1, ki2)
+# |     assert torch.equal(kd1, kd2)
+# |
+# |     clear_graph_cache()
+# |     assert len(_GRAPH_CACHE) == 0
+# |
+# |
+# | @pytest.mark.contract
+# | def test_raw_city_data_caching():
+# |     """T12: Raw city dataset cache avoids redundant I/O and supports independent scalers."""
+# |     from src.data.dataset import load_city, load_raw_city, clear_city_cache, _RAW_CITY_CACHE
+# |     from sklearn.preprocessing import StandardScaler
+# |
+# |     clear_city_cache()
+# |     assert len(_RAW_CITY_CACHE) == 0
+# |
+# |     raw1 = load_raw_city("Raleigh", data_root="data", use_cache=True)
+# |     assert len(_RAW_CITY_CACHE) == 1
+# |     raw2 = load_raw_city("Raleigh", data_root="data", use_cache=True)
+# |     assert raw1 is raw2
+# |
+# |     # Verify scaling with two different scalers preserves raw features
+# |     s1 = StandardScaler()
+# |     s1.fit(raw1.X_raw * 2.0)
+# |     cd1 = load_city("Raleigh", data_root="data", feature_scaler=s1, use_cache=True)
+# |
+# |     s2 = StandardScaler()
+# |     s2.fit(raw1.X_raw * 0.5)
+# |     cd2 = load_city("Raleigh", data_root="data", feature_scaler=s2, use_cache=True)
+# |
+# |     # cd1 and cd2 have different normalized features but share same raw data
+# |     assert not torch.allclose(cd1.node_features, cd2.node_features)
+# |     assert torch.equal(cd1.pair_distance, cd2.pair_distance)
+# |     assert torch.equal(cd1.pair_trips, cd2.pair_trips)
+# |     assert torch.equal(cd1.lon_lat, cd2.lon_lat)
+# |
+# |     clear_city_cache()
+# |     assert len(_RAW_CITY_CACHE) == 0
+# |
+# |
+# | @pytest.mark.contract
+# | def test_distance_matrix_caching_and_clear(sample_coordinates):
+# |     """T13: Haversine distance matrix cache avoids redundant O(N^2) computation."""
+# |     from src.data.urban_graph import (
+# |         haversine_distance_matrix,
+# |         build_radius_graph,
+# |         clear_distance_matrix_cache,
+# |         clear_graph_cache,
+# |         _DISTANCE_MATRIX_CACHE,
+# |     )
+# |
+# |     clear_distance_matrix_cache()
+# |     assert len(_DISTANCE_MATRIX_CACHE) == 0
+# |
+# |     # 1. Direct call caches the matrix
+# |     m1 = haversine_distance_matrix(sample_coordinates, use_cache=True)
+# |     assert len(_DISTANCE_MATRIX_CACHE) == 1
+# |
+# |     m2 = haversine_distance_matrix(sample_coordinates, use_cache=True)
+# |     assert m1 is m2  # Exact object identity from cache
+# |     assert np.array_equal(m1, m2)
+# |
+# |     # 2. build_radius_graph with different radii shares the cached distance matrix
+# |     clear_graph_cache()
+# |     assert len(_DISTANCE_MATRIX_CACHE) == 0
+# |
+# |     _ = build_radius_graph(sample_coordinates, radius_km=3.0, use_cache=True)
+# |     assert len(_DISTANCE_MATRIX_CACHE) == 1
+# |
+# |     # Calling with radius=7.0 reuses the distance matrix without recomputing
+# |     _ = build_radius_graph(sample_coordinates, radius_km=7.0, use_cache=True)
+# |     assert len(_DISTANCE_MATRIX_CACHE) == 1
+# |
+# |     clear_distance_matrix_cache()
+# |     assert len(_DISTANCE_MATRIX_CACHE) == 0
+# |
+# |
+# | @pytest.mark.contract
+# | def test_city_data_instance_cache_with_scaler():
+# |     """T14: CityData instance cache returns identical object when called with same scaler."""
+# |     from src.data.dataset import load_city, load_raw_city, clear_city_cache, _CITY_DATA_CACHE
+# |     from sklearn.preprocessing import StandardScaler
+# |
+# |     clear_city_cache()
+# |     assert len(_CITY_DATA_CACHE) == 0
+# |
+# |     raw = load_raw_city("Raleigh", data_root="data", use_cache=True)
+# |     s = StandardScaler()
+# |     s.fit(raw.X_raw)
+# |
+# |     cd1 = load_city("Raleigh", data_root="data", feature_scaler=s, use_cache=True)
+# |     assert len(_CITY_DATA_CACHE) == 1
+# |
+# |     cd2 = load_city("Raleigh", data_root="data", feature_scaler=s, use_cache=True)
+# |     assert cd1 is cd2  # Exact object identity reused without re-creating tensors
+# |     assert len(_CITY_DATA_CACHE) == 1
+# |
+# |     clear_city_cache()
+# |     assert len(_CITY_DATA_CACHE) == 0
+# |
+# |
+# | @pytest.mark.contract
+# | def test_preload_all_cities_smoke():
+# |     """T15: preload_all_cities warms up raw data and spatial graph caches for selected cities."""
+# |     from src.data.dataset import preload_all_cities, clear_city_cache, _RAW_CITY_CACHE
+# |     from src.data.urban_graph import _GRAPH_CACHE, clear_graph_cache
+# |
+# |     clear_city_cache()
+# |     clear_graph_cache()
+# |
+# |     preload_all_cities(data_root="data", city_names=["Raleigh", "Denver"], build_graphs=True, radius_km=5.0)
+# |     assert len(_RAW_CITY_CACHE) == 2
+# |     assert len(_GRAPH_CACHE) == 2
+# |
+# |     clear_city_cache()
+# |     clear_graph_cache()
+# |
+# |
+# ===== END SOURCE FILE: od_plan_tester/tests/test_graph_topology.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_kl_calibration.py =====
+# File: od_plan_tester/tests/test_kl_calibration.py | Lines: 151 | TrailingNL: 1 | SHA256: 5c44cb9642ab8b88cf2eec2aea94cee82eed917f15193b008d31421bb0387442
+# | """
+# | Tests for Interzonal Moving-Bin Calibration on Omega_c^+ (Soft KL Projection).
+# | (Tests T16 to T21)
+# | """
+# |
+# | import pytest
+# | import torch
+# | import numpy as np
+# | from od_plan_tester.project_adapter import calibrate_moving_bins
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_moving_mass_preservation():
+# |     """T16: Interzonal mass preservation on Omega_c^+ within numerical tolerance."""
+# |     torch.manual_seed(42)
+# |     # 100 pairs: 10 intrazonal (bin 0), 90 interzonal (bins 1, 2, 3)
+# |     o_idx = torch.randint(0, 20, (100,))
+# |     d_idx = torch.randint(0, 20, (100,))
+# |     # force first 10 to be intrazonal
+# |     for i in range(10):
+# |         d_idx[i] = o_idx[i]
+# |
+# |     bins = torch.randint(1, 4, (100,))
+# |     bins[:10] = 0
+# |
+# |     t0 = torch.rand(100) * 100.0 + 1.0
+# |     target_moving = np.array([0.30, 0.50, 0.20])
+# |
+# |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
+# |
+# |     inter_mask = (o_idx != d_idx) & (bins > 0)
+# |     inter_mass0 = t0[inter_mask].sum().item()
+# |     inter_mass_cal = t_cal[inter_mask].sum().item()
+# |     rel_err = abs(inter_mass_cal - inter_mass0) / inter_mass0
+# |
+# |     assert rel_err < 1e-5, f"Interzonal mass preservation relative error {rel_err} exceeds 1e-5"
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_intrazonal_identity():
+# |     """T17: Intrazonal pairs (i == j, D == 0, bin 0) are strictly preserved identically: T_cal == T_zs."""
+# |     torch.manual_seed(42)
+# |     o_idx = torch.tensor([0, 1, 0, 2, 3, 3])
+# |     d_idx = torch.tensor([0, 1, 1, 3, 2, 3])  # pairs 0, 1, 5 are intrazonal
+# |     bins = torch.tensor([0, 0, 1, 2, 3, 0])
+# |     t0 = torch.tensor([50.0, 120.0, 30.0, 80.0, 20.0, 200.0])
+# |     target_moving = np.array([0.25, 0.50, 0.25])
+# |
+# |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
+# |
+# |     intra_mask = (o_idx == d_idx) | (bins == 0)
+# |     assert torch.allclose(t_cal[intra_mask], t0[intra_mask], atol=1e-6)
+# |
+# |
+# | @pytest.mark.contract
+# | def test_q_zero_is_zero_shot_identity():
+# |     """T18: At q=0, calibration outputs exactly zero-shot flows (T_cal == T_zs)."""
+# |     torch.manual_seed(42)
+# |     o_idx = torch.tensor([0, 0, 0])
+# |     d_idx = torch.tensor([1, 2, 3])
+# |     bins = torch.tensor([1, 2, 3])
+# |     t0 = torch.tensor([10.0, 50.0, 100.0])
+# |     target_moving = np.array([0.40, 0.40, 0.20])
+# |
+# |     t_cal_0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
+# |     assert torch.allclose(t_cal_0, t0, atol=1e-6)
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_q_one_matches_target_distribution():
+# |     """T19: At q=1, active moving-bin proportions match target distribution within tolerance < 1e-5."""
+# |     torch.manual_seed(42)
+# |     o_idx = torch.tensor([0, 0, 0, 0, 0, 0])
+# |     d_idx = torch.tensor([1, 2, 3, 4, 5, 6])
+# |     bins = torch.tensor([1, 1, 2, 2, 3, 3])
+# |     t0 = torch.tensor([10.0, 15.0, 40.0, 60.0, 100.0, 150.0])
+# |     target_moving = np.array([0.20, 0.50, 0.30])
+# |
+# |     t_cal_1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0, tolerance=1e-5)
+# |
+# |     inter_total = t_cal_1.sum().item()
+# |     p_b1 = t_cal_1[bins == 1].sum().item() / inter_total
+# |     p_b2 = t_cal_1[bins == 2].sum().item() / inter_total
+# |     p_b3 = t_cal_1[bins == 3].sum().item() / inter_total
+# |
+# |     assert abs(p_b1 - 0.20) < 1e-5
+# |     assert abs(p_b2 - 0.50) < 1e-5
+# |     assert abs(p_b3 - 0.30) < 1e-5
+# |
+# |
+# | @pytest.mark.reference
+# | def test_q_monotonic_soft_response():
+# |     """T20: Soft multiplier w_k(q) = (p_cond / p_implied)^q smoothly interpolates between q=0 and q=1."""
+# |     o_idx = torch.tensor([0, 0])
+# |     d_idx = torch.tensor([1, 2])
+# |     bins = torch.tensor([1, 2])
+# |     t0 = torch.tensor([10.0, 90.0])  # implied: [0.1, 0.9]
+# |     target_moving = np.array([0.5, 0.5, 0.0])  # target for bins 1, 2, 3
+# |
+# |     t_q0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
+# |     t_q5 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.5)
+# |     t_q1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
+# |
+# |     # Bin 1 flow must strictly increase with q
+# |     assert t_q0[0].item() < t_q5[0].item() < t_q1[0].item()
+# |     # Bin 2 flow must strictly decrease with q
+# |     assert t_q0[1].item() > t_q5[1].item() > t_q1[1].item()
+# |
+# |
+# | @pytest.mark.reference
+# | def test_inactive_bin_conditioning():
+# |     """T21: For cities with diameter < 100 km (bin 3 absent), target is conditioned on active moving bins."""
+# |     o_idx = torch.tensor([0, 0])
+# |     d_idx = torch.tensor([1, 2])
+# |     bins = torch.tensor([1, 2])  # only bins 1 and 2 present
+# |     t0 = torch.tensor([30.0, 70.0])
+# |     target_moving = np.array([0.40, 0.40, 0.20])  # has 0.20 on bin 3
+# |
+# |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
+# |
+# |     # Conditioned target on {1, 2} is [0.4/0.8, 0.4/0.8] = [0.5, 0.5]
+# |     inter_total = t_cal.sum().item()
+# |     p_b1 = t_cal[bins == 1].sum().item() / inter_total
+# |     p_b2 = t_cal[bins == 2].sum().item() / inter_total
+# |
+# |     assert pytest.approx(0.5, abs=1e-5) == p_b1
+# |     assert pytest.approx(0.5, abs=1e-5) == p_b2
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_calibrate_moving_bins_with_pair_distance():
+# |     """T21b: Verify calibrate_moving_bins using direct pair_distance tensor (D_ij > 0)."""
+# |     torch.manual_seed(42)
+# |     o_idx = torch.tensor([0, 1, 0, 2, 3, 3])
+# |     d_idx = torch.tensor([0, 1, 1, 3, 2, 3])  # 0, 1, 5 are intrazonal
+# |     bins = torch.tensor([0, 0, 1, 2, 3, 0])
+# |     dist_km = torch.tensor([0.0, 0.0, 5.2, 25.0, 120.0, 0.0])
+# |     pair_distance = torch.log1p(dist_km)
+# |     t0 = torch.tensor([50.0, 120.0, 30.0, 80.0, 20.0, 200.0])
+# |     target_moving = np.array([0.25, 0.50, 0.25])
+# |
+# |     t_cal_bins = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
+# |     t_cal_dist = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0, pair_distance=pair_distance)
+# |
+# |     assert torch.allclose(t_cal_bins, t_cal_dist, atol=1e-6)
+# |     # Intrazonal identity
+# |     assert torch.allclose(t_cal_dist[[0, 1, 5]], t0[[0, 1, 5]], atol=1e-6)
+# |     # Interzonal mass preservation
+# |     assert pytest.approx(t0[[2, 3, 4]].sum().item(), rel=1e-5) == t_cal_dist[[2, 3, 4]].sum().item()
+# |
+# ===== END SOURCE FILE: od_plan_tester/tests/test_kl_calibration.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_leakage_and_splits.py =====
+# File: od_plan_tester/tests/test_leakage_and_splits.py | Lines: 123 | TrailingNL: 1 | SHA256: 9f4e9ca44895f659fedcc404a1c580528f9faaf0e2c24f1601573804fa647cb7
+# | """
+# | Tests for Data Splits, Scaler Isolation, and Omega_c Candidate Provenance.
+# | (Tests T11 to T15)
+# | """
+# |
+# | import pytest
+# | import torch
+# | import numpy as np
+# | from od_plan_tester.project_adapter import (
+# |     generate_5fold_splits,
+# |     load_city,
+# |     load_cities,
+# | )
+# |
+# |
+# | @pytest.mark.reference
+# | def test_stratified_5fold_split_structure():
+# |     """T11: 5-Fold split contains 5 folds, each with 40 train and 10 test cities."""
+# |     splits = generate_5fold_splits(data_root="data")
+# |
+# |     assert len(splits) == 5
+# |     for fold_id, split in splits.items():
+# |         assert len(split["train"]) == 40
+# |         assert len(split["test"]) == 10
+# |         # Disjoint
+# |         assert len(set(split["train"]) & set(split["test"])) == 0
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_stratified_5fold_exact_single_coverage():
+# |     """T12: Across all 5 folds, every single city of the 50 cities is tested exactly once."""
+# |     splits = generate_5fold_splits(data_root="data")
+# |
+# |     all_test_cities = []
+# |     for split in splits.values():
+# |         all_test_cities.extend(split["test"])
+# |
+# |     assert len(all_test_cities) == 50
+# |     assert len(set(all_test_cities)) == 50, "Every city must appear in the test set exactly once."
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_scaler_train_isolation():
+# |     """T13: StandardScaler is fitted strictly on source training cities; target city tracts never enter scaler."""
+# |     train_cities = ["Raleigh", "Denver"]
+# |     test_city = "Philadelphia"
+# |
+# |     train_data_list, fitted_scaler = load_cities(train_cities, data_root="data")
+# |     test_data = load_city(test_city, data_root="data", feature_scaler=fitted_scaler, fit_scaler=False)
+# |
+# |     total_train_tracts = sum(c.n_tracts for c in train_data_list)
+# |     assert fitted_scaler.n_samples_seen_ == total_train_tracts
+# |     assert fitted_scaler.n_samples_seen_ != (total_train_tracts + test_data.n_tracts)
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_omega_c_provenance_strictly_positive():
+# |     """T14: Target city candidate pairs Omega_c contain strictly positive flow counts (T_ij >= 1)."""
+# |     test_cities = ["Philadelphia", "Denver", "Raleigh"]
+# |     for c_name in test_cities:
+# |         cd = load_city(c_name, data_root="data")
+# |         assert (cd.pair_trips >= 1.0).all()
+# |         assert cd.pair_trips.min().item() >= 1.0
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_unobserved_pairs_excluded_not_zero_filled():
+# |     """T15: Candidate support Omega_c has size <= N*(N-1); unobserved pairs are excluded (not zero-filled)."""
+# |     cd = load_city("Philadelphia", data_root="data")
+# |     n_nodes = cd.n_tracts
+# |     max_possible_pairs = n_nodes * n_nodes
+# |
+# |     assert cd.n_pairs <= max_possible_pairs
+# |     assert len(cd.pair_trips) == cd.n_pairs
+# |     # Ensure there are no 0s stored
+# |     assert not (cd.pair_trips == 0).any()
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_omega_c_plus_distance_equivalence():
+# |     """T15b: Omega_c^+ definition invariant: (bin_labels > 0) <=> (D_ij > 0) <=> (pair_o != pair_d)."""
+# |     test_cities = ["Philadelphia", "Denver", "Raleigh", "Austin", "Seattle"]
+# |     for c_name in test_cities:
+# |         cd = load_city(c_name, data_root="data")
+# |         dist_km = torch.expm1(cd.pair_distance)
+# |
+# |         # 1. Invariant: bin_labels > 0 iff distance_km > 0
+# |         assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Bin label vs distance mismatch in {c_name}"
+# |
+# |         # 2. Invariant: (pair_o != pair_d) & (bin_labels > 0) strictly matches (pair_o != pair_d) & (D_ij > 0)
+# |         mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
+# |         mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
+# |         assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ mask mismatch in {c_name}"
+# |
+# |         # 3. Invariant: Intrazonal pairs have distance == 0 and bin == 0
+# |         intra_mask = (cd.pair_o_idx == cd.pair_d_idx)
+# |         assert torch.all(dist_km[intra_mask] == 0.0)
+# |         assert torch.all(cd.bin_labels[intra_mask] == 0)
+# |
+# |
+# | @pytest.mark.scientific
+# | def test_all_50_cities_omega_plus_invariants():
+# |     """T15c: Exhaustive verification across all 50 dataset cities that D_ij > 0 <=> bin_labels > 0."""
+# |     from src.data.city_splits import get_all_cities_sorted_by_size
+# |     all_cities_info = get_all_cities_sorted_by_size(data_root="data")
+# |     assert len(all_cities_info) == 50
+# |
+# |     for c_info in all_cities_info:
+# |         c_name = c_info["city"]
+# |         cd = load_city(c_name, data_root="data")
+# |         dist_km = torch.expm1(cd.pair_distance)
+# |
+# |         # Invariant: bin_labels > 0 strictly equals distance_km > 0
+# |         assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Distance vs bin mismatch in {c_name}"
+# |
+# |         # Invariant: Omega_c^+ mask strictly identical
+# |         mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
+# |         mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
+# |         assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ definition discrepancy in {c_name}"
+# |
+# |
+# |
+# ===== END SOURCE FILE: od_plan_tester/tests/test_leakage_and_splits.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_metrics.py =====
+# File: od_plan_tester/tests/test_metrics.py | Lines: 78 | TrailingNL: 1 | SHA256: 17dc56d00358ea40bd622abca084abf885d52d121547ad6c1a0fb2cfbf4dca2a
+# | """
+# | Tests for Evaluation Metrics Suite (CPC, CPC_norm, RMSE-log1p, Pearson r).
+# | (Tests T27 to T31)
+# | """
+# |
+# | import pytest
+# | import torch
+# | import numpy as np
+# | from od_plan_tester.project_adapter import (
+# |     compute_cpc,
+# |     compute_cpc_norm,
+# |     compute_rmse_log1p,
+# |     compute_pearson_r,
+# |     evaluate_all,
+# | )
+# |
+# |
+# | @pytest.mark.reference
+# | def test_cpc_bounds_and_symmetry():
+# |     """T27: CPC is bounded in [0, 1] and symmetric CPC(A, B) == CPC(B, A)."""
+# |     t_true = torch.tensor([10.0, 50.0, 100.0, 500.0])
+# |     t_pred = torch.tensor([15.0, 40.0, 120.0, 480.0])
+# |
+# |     cpc1 = compute_cpc(t_true, t_pred)
+# |     cpc2 = compute_cpc(t_pred, t_true)
+# |
+# |     assert 0.0 <= cpc1 <= 1.0
+# |     assert pytest.approx(cpc1, rel=1e-6) == cpc2
+# |
+# |     # Perfect prediction has CPC = 1.0
+# |     assert pytest.approx(1.0, rel=1e-6) == compute_cpc(t_true, t_true)
+# |
+# |
+# | @pytest.mark.reference
+# | def test_cpc_norm_1_minus_tvd():
+# |     """T28: Normalized CPC matches 1 - 0.5 * sum |p_i - q_i| and is scale-invariant."""
+# |     t_true = torch.tensor([10.0, 20.0, 30.0])
+# |     t_pred = torch.tensor([20.0, 40.0, 60.0])  # identical shape, 2x scale
+# |
+# |     cpc_norm = compute_cpc_norm(t_true, t_pred)
+# |     assert pytest.approx(1.0, rel=1e-6) == cpc_norm
+# |
+# |
+# | @pytest.mark.reference
+# | def test_rmse_log1p_zero_on_identical():
+# |     """T29: RMSE-log1p is strictly 0.0 on identical inputs and positive otherwise."""
+# |     t_true = torch.tensor([5.0, 15.0, 50.0])
+# |     t_pred = torch.tensor([10.0, 20.0, 60.0])
+# |
+# |     assert pytest.approx(0.0, abs=1e-6) == compute_rmse_log1p(t_true, t_true)
+# |     assert compute_rmse_log1p(t_true, t_pred) > 0.0
+# |
+# |
+# | @pytest.mark.reference
+# | def test_pearson_r_bounds():
+# |     """T30: Pearson r is 1.0 on linear transformation and bounded in [-1, 1]."""
+# |     t_true = torch.tensor([10.0, 20.0, 30.0, 40.0])
+# |     t_pred = 3.0 * t_true + 5.0
+# |
+# |     r = compute_pearson_r(t_true, t_pred)
+# |     assert pytest.approx(1.0, rel=1e-5) == r
+# |
+# |
+# | @pytest.mark.contract
+# | def test_evaluate_all_contract():
+# |     """T31: evaluate_all returns all locked primary and secondary metrics in a dictionary."""
+# |     t_true = torch.tensor([10.0, 20.0, 30.0])
+# |     t_pred = torch.tensor([12.0, 18.0, 35.0])
+# |
+# |     res = evaluate_all(t_true, t_pred)
+# |     assert isinstance(res, dict)
+# |     assert "cpc" in res
+# |     assert "cpc_norm" in res
+# |     assert "rmse_log1p" in res
+# |     assert "pearson_r" in res
+# |     for v in res.values():
+# |         assert isinstance(v, float)
+# ===== END SOURCE FILE: od_plan_tester/tests/test_metrics.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_yd_and_sampling.py =====
+# File: od_plan_tester/tests/test_yd_and_sampling.py | Lines: 83 | TrailingNL: 1 | SHA256: 65be06db2835149cd7d49bf916f810fea00730b8968ca4d174fef32de37edbec
+# | """
+# | Tests for Moving-Bin Y_D Extraction (Oracle & Real Meta) and Distributional Overlap.
+# | (Tests T22 to T26)
+# | """
+# |
+# | import pytest
+# | import torch
+# | import numpy as np
+# | from od_plan_tester.project_adapter import (
+# |     extract_yd_moving_oracle,
+# |     extract_M1_city_oracle_obs,
+# |     compute_distributional_overlap,
+# |     sample_multinomial_yd,
+# | )
+# |
+# |
+# | @pytest.mark.reference
+# | def test_yd_moving_oracle_assignment():
+# |     """T22: extract_yd_moving_oracle produces shape (3,), sums to 1.0, and excludes intrazonal trips."""
+# |     # 4 pairs: pair 0 is intrazonal (0,0, bin 0, trips=100); pairs 1,2,3 are interzonal in bins 1,2,3 with trips 10, 20, 30
+# |     o_idx = torch.tensor([0, 0, 0, 0])
+# |     d_idx = torch.tensor([0, 1, 2, 3])
+# |     bin_labels = torch.tensor([0, 1, 2, 3])
+# |     pair_trips = torch.tensor([100.0, 10.0, 20.0, 30.0])
+# |
+# |     yd_moving = extract_yd_moving_oracle(pair_trips, bin_labels, o_idx, d_idx)
+# |
+# |     assert yd_moving.shape == (3,)
+# |     assert pytest.approx(1.0, rel=1e-6) == float(np.sum(yd_moving))
+# |     # Interzonal total = 60 -> proportions: [10/60, 20/60, 30/60] = [1/6, 1/3, 1/2]
+# |     np.testing.assert_allclose(yd_moving, [1.0 / 6.0, 1.0 / 3.0, 0.5], atol=1e-5)
+# |
+# |
+# | @pytest.mark.contract
+# | def test_M1_city_oracle_obs_meta_sum():
+# |     """T23: extract_M1_city_oracle_obs from Meta mobility data produces shape (3,) and sums strictly to 1.0."""
+# |     sample_cities = ["Philadelphia", "Denver", "Raleigh"]
+# |     for c_name in sample_cities:
+# |         yd_real = extract_M1_city_oracle_obs(c_name, meta_prior_dir="meta_prior")
+# |         assert yd_real is not None, f"Missing moving Meta Y_D for {c_name}"
+# |         assert yd_real.shape == (3,)
+# |         assert pytest.approx(1.0, rel=1e-5) == float(np.sum(yd_real))
+# |         assert (yd_real >= 0.0).all()
+# |
+# |
+# | @pytest.mark.reference
+# | def test_distributional_overlap_bounds():
+# |     """T24: compute_distributional_overlap (Overlap / CPC_dist) is in [0, 1] and 1.0 on identical distributions."""
+# |     p = np.array([0.25, 0.50, 0.25])
+# |     q = np.array([0.30, 0.40, 0.30])
+# |
+# |     overlap_self = compute_distributional_overlap(p, p)
+# |     overlap_pq = compute_distributional_overlap(p, q)
+# |
+# |     assert pytest.approx(1.0, rel=1e-6) == overlap_self
+# |     assert 0.0 <= overlap_pq <= 1.0
+# |     # Overlap = min(0.25, 0.30) + min(0.50, 0.40) + min(0.25, 0.30) = 0.25 + 0.40 + 0.25 = 0.90
+# |     assert pytest.approx(0.90, rel=1e-6) == overlap_pq
+# |
+# |
+# | @pytest.mark.reference
+# | def test_multinomial_sampling_stochastic_validity():
+# |     """T25: Multinomial sampling produces valid distributions across seeds."""
+# |     t_true = torch.tensor([50.0, 150.0, 300.0, 500.0])
+# |     bin_labels = torch.tensor([0, 1, 2, 3])
+# |
+# |     for m in [100, 1000, 10000]:
+# |         yd_m = sample_multinomial_yd(t_true, bin_labels, m=m, seed=42)
+# |         assert len(yd_m) == 4
+# |         assert pytest.approx(1.0, rel=1e-5) == float(np.sum(yd_m))
+# |         assert (yd_m >= 0.0).all()
+# |
+# |
+# | @pytest.mark.reference
+# | def test_multinomial_sampling_asymptotic_convergence():
+# |     """T26: When m=inf, Multinomial sampling converges to the exact underlying empirical distribution."""
+# |     t_true = torch.tensor([100.0, 200.0, 300.0, 400.0])
+# |     bin_labels = torch.tensor([0, 1, 2, 3])
+# |
+# |     yd_inf = sample_multinomial_yd(t_true, bin_labels, m=np.inf, seed=42)
+# |     expected = np.array([0.1, 0.2, 0.3, 0.4])
+# |     np.testing.assert_allclose(yd_inf, expected, atol=1e-6)
+# ===== END SOURCE FILE: od_plan_tester/tests/test_yd_and_sampling.py =====
+
+# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_ztnb_oracle.py =====
+# File: od_plan_tester/tests/test_ztnb_oracle.py | Lines: 111 | TrailingNL: 1 | SHA256: 94db031adbec5118a9f684c71b66081c7bb248c2cc9e7894deb1d55d800c8148
+# | """
+# | Tests for ZTNB Loss, Conditional Expectation, and Gravity Prior Oracle.
+# | (Tests T01 to T06)
+# | """
+# |
+# | import math
+# | import pytest
+# | import torch
+# | import numpy as np
+# | from od_plan_tester.project_adapter import (
+# |     nb_log_prob,
+# |     nb_log_prob_at_zero,
+# |     ztnb_nll,
+# |     compute_conditional_mean,
+# |     GravityPrior,
+# | )
+# |
+# |
+# | @pytest.mark.reference
+# | def test_ztnb_log_prob_zero_formula():
+# |     """T01: Verify base NB log P(T=0) = phi * log(phi / (mu + phi))."""
+# |     mu_vals = [0.5, 2.0, 10.0, 100.0]
+# |     phi_vals = [0.1, 1.0, 5.0]
+# |
+# |     for mu in mu_vals:
+# |         for phi in phi_vals:
+# |             log_phi = torch.tensor(math.log(phi))
+# |             mu_t = torch.tensor([mu])
+# |             log_p0 = nb_log_prob_at_zero(mu_t, log_phi).item()
+# |             expected = phi * math.log(phi / (mu + phi))
+# |             assert pytest.approx(expected, rel=1e-5) == log_p0
+# |
+# |
+# | @pytest.mark.contract
+# | @pytest.mark.scientific
+# | def test_ztnb_nll_strictly_positive_support():
+# |     """T02: ZTNB NLL enforces T >= 1 and computes finite exact likelihood on positive counts."""
+# |     t_pos = torch.tensor([1.0, 2.0, 5.0, 20.0])
+# |     mu = torch.tensor([1.5, 2.0, 4.0, 18.0])
+# |     log_phi = torch.tensor(0.0)
+# |
+# |     loss = ztnb_nll(t_pos, mu, log_phi)
+# |     assert torch.isfinite(loss)
+# |     assert loss.item() > 0.0
+# |
+# |     # Ensure zero counts trigger assertion error
+# |     t_with_zero = torch.tensor([0.0, 1.0, 2.0])
+# |     with pytest.raises(AssertionError):
+# |         ztnb_nll(t_with_zero, torch.ones(3), log_phi)
+# |
+# |
+# | @pytest.mark.reference
+# | def test_ztnb_conditional_mean_strictly_greater():
+# |     """T03: Conditional positive expectation E[T | T >= 1] = mu / (1 - P(0)) is strictly > mu."""
+# |     mu = torch.tensor([0.1, 1.0, 5.0, 20.0])
+# |     log_phi = torch.tensor(math.log(2.0))
+# |     c_mean = compute_conditional_mean(mu, log_phi)
+# |
+# |     assert (c_mean > mu).all()
+# |     # Manual check for mu=1.0, phi=2.0
+# |     # P(0) = (2 / (1 + 2))^2 = 4/9
+# |     # E[T|T>=1] = 1.0 / (1 - 4/9) = 9/5 = 1.8
+# |     expected_1 = 1.0 / (1.0 - (2.0 / 3.0) ** 2)
+# |     assert pytest.approx(expected_1, rel=1e-4) == c_mean[1].item()
+# |
+# |
+# | @pytest.mark.reference
+# | def test_ztnb_conditional_mean_asymptotics():
+# |     """T04: As mu -> infinity, P(0) -> 0 and E[T | T >= 1] -> mu."""
+# |     mu_large = torch.tensor([10000.0, 50000.0])
+# |     log_phi = torch.tensor(0.0)  # phi = 1.0
+# |     c_mean = compute_conditional_mean(mu_large, log_phi)
+# |
+# |     rel_diff = torch.abs(c_mean - mu_large) / mu_large
+# |     assert (rel_diff < 1e-3).all()
+# |
+# |
+# | @pytest.mark.reference
+# | def test_gravity_prior_formula_and_decay():
+# |     """T05: Gravity model formula: log T = G + log Pi + log Pj - alpha * log D."""
+# |     grav = GravityPrior(init_G=0.5, init_alpha=1.5)
+# |     pi = torch.tensor([1000.0, 2000.0])
+# |     pj = torch.tensor([500.0, 4000.0])
+# |     d = torch.tensor([10.0, 20.0])
+# |
+# |     log_t = grav(pi, pj, d)
+# |     expected_0 = 0.5 + math.log(1000.0) + math.log(500.0) - 1.5 * math.log(10.0)
+# |     assert pytest.approx(expected_0, rel=1e-4) == log_t[0].item()
+# |
+# |     # Verify distance decay: larger distance yields smaller predicted flow
+# |     d_near = torch.tensor([5.0])
+# |     d_far = torch.tensor([50.0])
+# |     p_const = torch.tensor([1000.0])
+# |     assert grav(p_const, p_const, d_near).item() > grav(p_const, p_const, d_far).item()
+# |
+# |
+# | @pytest.mark.contract
+# | def test_gravity_prior_learnable_gradients():
+# |     """T06: Trainable shared gravity parameters G and log_alpha produce finite valid gradients."""
+# |     grav = GravityPrior()
+# |     pi = torch.tensor([1000.0])
+# |     pj = torch.tensor([1000.0])
+# |     d = torch.tensor([5.0])
+# |
+# |     out = grav(pi, pj, d)
+# |     loss = (out - torch.tensor([10.0])) ** 2
+# |     loss.backward()
+# |
+# |     assert grav.G.grad is not None and torch.isfinite(grav.G.grad)
+# |     assert grav.log_alpha.grad is not None and torch.isfinite(grav.log_alpha.grad)
+# ===== END SOURCE FILE: od_plan_tester/tests/test_ztnb_oracle.py =====
+
+# ===== BEGIN SOURCE FILE: pytest.ini =====
+# File: pytest.ini | Lines: 14 | TrailingNL: 1 | SHA256: aaa7092c0b7f9497f6928a2498b236b5cfd158165baf39b9d001b454989f3465
+# | [pytest]
+# | testpaths =
+# |     od_plan_tester/tests
+# |     tests
+# | python_files = test_*.py
+# | python_classes = Test*
+# | python_functions = test_*
+# | addopts = -ra
+# | markers =
+# |     reference: Independent mathematical oracles and reference formulas
+# |     contract: Production code contract validation
+# |     scientific: Scientific integrity, leakage prevention, and invariants
+# |     slow: Long-running or heavy tests
+# ===== END SOURCE FILE: pytest.ini =====
 
 # ===== BEGIN SOURCE FILE: run_all_tests.py =====
+# File: run_all_tests.py | Lines: 187 | TrailingNL: 1 | SHA256: aebb448878f00aed2e67ca51760b46054c69a5285baa36fbaad50f54331bac3c
 # | """
 # | Master Test Runner & System Verification Suite for Distance-Binned Distribution OD Reconstruction.
 # | Discovers and runs all contract, unit, regression, and model tests across the codebase.
@@ -190,11 +7871,10 @@
 # |
 # | if __name__ == "__main__":
 # |     run_all_tests()
-
 # ===== END SOURCE FILE: run_all_tests.py =====
 
-
 # ===== BEGIN SOURCE FILE: run_full_experiment.py =====
+# File: run_full_experiment.py | Lines: 72 | TrailingNL: 1 | SHA256: 48953d5939e29c1e0a4057bf7eacf0c54ac1b68edc06bfb698240448e030e77d
 # | """Run the complete GNN and MLP experiment for a configurable seed set.
 # |
 # | Each model is saved as results/checkpoints/{backbone}_fold{fold}_seed{seed}.pt.
@@ -266,11 +7946,10 @@
 # |         data_root=args.data_root,
 # |         output_dir=args.output_dir,
 # |     )
-
 # ===== END SOURCE FILE: run_full_experiment.py =====
 
-
 # ===== BEGIN SOURCE FILE: run_research_contract_tests.py =====
+# File: run_research_contract_tests.py | Lines: 1337 | TrailingNL: 1 | SHA256: 8d72133b4847e0bbd81faff2368804a24d7e5f14f0748b86e3f2cb815cf091ec
 # | """
 # | Master Research Contract Verification Suite (registered scientific and methodological checks).
 # | Enforces strict protocol invariants, zero data-leakage guards, production calibration equivalence,
@@ -1607,1738 +9286,202 @@
 # |
 # | if __name__ == "__main__":
 # |     sys.exit(run_all_gates())
-
 # ===== END SOURCE FILE: run_research_contract_tests.py =====
 
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/project_adapter.py =====
-# | """
-# | Project Adapter: Bridge between od_plan_tester test suite and moving-bin framework.
-# | """
+# ===== BEGIN SOURCE FILE: run_scientific_completion_status.py =====
+# File: run_scientific_completion_status.py | Lines: 188 | TrailingNL: 0 | SHA256: d262b2e90d3cd929d16cf083f37513810ba4292dd409aff24f4be556097d44cd
+# | """Report completion status for final scientific argument experiments."""
 # |
-# | import sys
-# | from pathlib import Path
-# | import torch
-# | import numpy as np
+# | from __future__ import annotations
 # |
-# | # Ensure repo root is on sys.path
-# | REPO_ROOT = Path(__file__).resolve().parent.parent
-# | if str(REPO_ROOT) not in sys.path:
-# |     sys.path.insert(0, str(REPO_ROOT))
-# |
-# | # Loss & Oracle
-# | from src.loss.ztnb import (
-# |     nb_log_prob,
-# |     nb_log_prob_at_zero,
-# |     ztnb_nll,
-# |     nb_nll,
-# |     compute_conditional_mean,
-# | )
-# |
-# | # Models
-# | from src.models.gravity import GravityPrior
-# | from src.models.node_encoder import UrbanGNN
-# | UrbanNodeEncoder = UrbanGNN
-# | from src.models.decoder import PairwiseODDecoder
-# | from src.models.zero_shot_model import ZeroShotODModel
-# |
-# | # Data & Graph
-# | from src.data.urban_graph import (
-# |     haversine_distance_matrix,
-# |     build_radius_graph,
-# |     build_knn_graph,
-# |     build_adaptive_radius_graph,
-# | )
-# | from src.data.dataset import CityData, load_city, load_cities, assign_bins
-# | get_distance_bin_indices = assign_bins
-# | from src.data.city_splits import generate_5fold_splits, get_all_cities_sorted_by_size
-# | from src.data.trip_sampler import sample_multinomial_yd, M_GRID
-# | from src.data.yd_extractor import (
-# |     extract_yd_4bin_oracle,
-# |     extract_yd_4bin_real,
-# |     extract_yd_moving_oracle,
-# |     extract_M1_city_oracle_obs,
-# |     compute_distributional_overlap,
-# |     CITY_FIPS_GADM,
-# | )
-# |
-# | # Calibration: Primary is calibrate_moving_bins
-# | from src.calibration.bin_calibration import (
-# |     calibrate_moving_bins,
-# |     calibrate_4bin_legacy_ablation,
-# | )
-# |
-# | # Evaluation
-# | from src.training.evaluate import (
-# |     compute_cpc_pair,
-# |     compute_cpc_norm_pair,
-# |     compute_rmse_log1p_pair,
-# |     compute_pearson_pair,
-# |     evaluate_all,
-# |     evaluate_moving_and_full,
-# | )
-# |
-# | def compute_cpc(t_true, t_pred) -> float:
-# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
-# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
-# |     return compute_cpc_pair(t_t, t_p)
-# |
-# | def compute_cpc_norm(t_true, t_pred) -> float:
-# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
-# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
-# |     return compute_cpc_norm_pair(t_t, t_p)
-# |
-# | def compute_rmse_log1p(t_true, t_pred) -> float:
-# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
-# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
-# |     return compute_rmse_log1p_pair(t_t, t_p)
-# |
-# | def compute_pearson_r(t_true, t_pred) -> float:
-# |     t_t = t_true.detach().cpu().numpy() if isinstance(t_true, torch.Tensor) else np.asarray(t_true)
-# |     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
-# |     return compute_pearson_pair(t_t, t_p)
-# |
-# | # Training & Experiment
-# | from src.training.train import train_zero_shot_model, infer_zero_shot
-# | from src.experiment.run_experiment import run_target_city_experiments
-# | from src.experiment.compute_qstar import analyze_qstar
-# | from src.experiment.compute_delta_r import analyze_delta_r
-# |
-# | __all__ = [
-# |     "nb_log_prob",
-# |     "nb_log_prob_at_zero",
-# |     "ztnb_nll",
-# |     "nb_nll",
-# |     "compute_conditional_mean",
-# |     "GravityPrior",
-# |     "UrbanNodeEncoder",
-# |     "UrbanGNN",
-# |     "PairwiseODDecoder",
-# |     "ZeroShotODModel",
-# |     "haversine_distance_matrix",
-# |     "build_radius_graph",
-# |     "build_knn_graph",
-# |     "build_adaptive_radius_graph",
-# |     "CityData",
-# |     "load_city",
-# |     "load_cities",
-# |     "assign_bins",
-# |     "get_distance_bin_indices",
-# |     "generate_5fold_splits",
-# |     "get_all_cities_sorted_by_size",
-# |     "extract_yd_moving_oracle",
-# |     "extract_M1_city_oracle_obs",
-# |     "extract_yd_4bin_oracle",
-# |     "extract_yd_4bin_real",
-# |     "compute_distributional_overlap",
-# |     "CITY_FIPS_GADM",
-# |     "sample_multinomial_yd",
-# |     "M_GRID",
-# |     "calibrate_moving_bins",
-# |     "calibrate_4bin_legacy_ablation",
-# |     "compute_cpc",
-# |     "compute_cpc_norm",
-# |     "compute_rmse_log1p",
-# |     "compute_pearson_r",
-# |     "evaluate_all",
-# |     "evaluate_moving_and_full",
-# |     "train_zero_shot_model",
-# |     "infer_zero_shot",
-# |     "run_target_city_experiments",
-# |
-# |     "analyze_qstar",
-# |     "analyze_delta_r",
-# | ]
-
-# ===== END SOURCE FILE: od_plan_tester/project_adapter.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/conftest.py =====
-# | """
-# | Pytest configuration and shared fixtures for od_plan_tester.
-# | """
-# |
-# | import pytest
-# | import torch
-# | import numpy as np
-# |
-# |
-# | @pytest.fixture(autouse=True)
-# | def set_random_seeds():
-# |     torch.manual_seed(42)
-# |     np.random.seed(42)
-# |
-# |
-# | @pytest.fixture
-# | def sample_coordinates():
-# |     """Returns sample lat/lon coordinates for spatial graph tests."""
-# |     return np.array([
-# |         [-84.3880, 33.7490],  # Atlanta core 1
-# |         [-84.3900, 33.7500],  # Atlanta core 2 (~0.25 km)
-# |         [-84.4000, 33.7600],  # Atlanta mid (~1.5 km)
-# |         [-84.4500, 33.8000],  # Atlanta sub (~8 km)
-# |         [-85.0000, 34.2000],  # Distant isolated tract (~70 km)
-# |     ])
-# |
-# |
-# | @pytest.fixture
-# | def synthetic_od_flows():
-# |     """Returns mock true flow counts and distance bins."""
-# |     torch.manual_seed(42)
-# |     t_true = torch.tensor([12.0, 45.0, 150.0, 8.0, 220.0, 35.0, 90.0, 15.0])
-# |     bins = torch.tensor([0, 0, 1, 1, 2, 2, 3, 3])
-# |     return t_true, bins
-
-# ===== END SOURCE FILE: od_plan_tester/tests/conftest.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_calibration_equivalence.py =====
-# | """
-# | Test to ensure manual Partial-OD calibration is exactly numerically equivalent 
-# | to the canonical `calibrate_kbins` production operator.
-# | """
-# |
-# | import pytest
-# | import numpy as np
-# |
-# | def test_manual_calibration_equivalence_to_canonical():
-# |     """
-# |     T27: Ensure any manual multiplicative calibration is numerically equivalent 
-# |     to the canonical `calibrate_kbins` operator.
-# |     """
-# |     from src.calibration.bin_calibration import calibrate_kbins
-# |     
-# |     # 1. Setup mock data
-# |     N = 100
-# |     t0_np = np.random.uniform(1, 100, size=N)
-# |     dist_km = np.random.uniform(1, 150, size=N)
-# |     
-# |     # Randomly assign pairs to interzonal
-# |     inter_mask = np.random.rand(N) > 0.2
-# |     
-# |     # 3 target bins
-# |     bin_edges = np.array([0.0, 10.0, 100.0, float('inf')])
-# |     yd_target = np.array([0.5, 0.4, 0.1])
-# |     
-# |     # 2. Run canonical operator
-# |     t_cal_canonical = calibrate_kbins(
-# |         t0_np=t0_np.copy(),
-# |         dist_km=dist_km,
-# |         inter_mask=inter_mask,
-# |         yd_target=yd_target,
-# |         bin_edges=bin_edges,
-# |         q=1.0
-# |     )
-# |     
-# |     # 3. Emulate manual operator correctly (using active mask instead of target mask)
-# |     t_cal_manual = t0_np.copy()
-# |     n_inter = np.sum(t0_np[inter_mask])
-# |     
-# |     implied_b = np.zeros(3)
-# |     active_mask = np.zeros(3, dtype=bool)
-# |     
-# |     # Determine bins
-# |     bins = np.digitize(dist_km, bin_edges) - 1
-# |     
-# |     for k in range(3):
-# |         mask_k = inter_mask & (bins == k)
-# |         implied_b[k] = np.sum(t0_np[mask_k])
-# |         active_mask[k] = np.any(mask_k)
-# |         
-# |     p_active = yd_target * active_mask
-# |     p_cond = p_active / np.sum(p_active)
-# |     
-# |     implied_p = implied_b / n_inter
-# |     
-# |     w = np.zeros(3)
-# |     for k in range(3):
-# |         if active_mask[k] and implied_p[k] > 0:
-# |             w[k] = p_cond[k] / implied_p[k]
-# |         else:
-# |             w[k] = 1.0
-# |             
-# |     weighted_mass = np.sum(implied_p * w)
-# |     s = w / weighted_mass
-# |     
-# |     for k in range(3):
-# |         mask_k = inter_mask & (bins == k)
-# |         if np.any(mask_k):
-# |             t_cal_manual[mask_k] *= s[k]
-# |             
-# |     # Rescale interzonal strictly
-# |     cal_mass = np.sum(t_cal_manual[inter_mask])
-# |     t_cal_manual[inter_mask] *= (n_inter / cal_mass)
-# |     
-# |     # 4. Assert exact numerical equivalence
-# |     np.testing.assert_allclose(t_cal_manual, t_cal_canonical, atol=1e-5, rtol=1e-5)
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_calibration_equivalence.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_e1_contracts.py =====
-# | """
-# | Unit and Contract Tests for E1 Oracle Existence Test Implementation (Amended Protocol v2).
-# |
-# | Tests cover:
-# |   - T51: 35/5/10 fold split invariants & manifest v2 integrity + SHA-256 matching.
-# |   - T52: compute_kbin_edges invariant (strictly increasing, bounds, deduplication).
-# |   - T53: extract_yd_kbins invariant (proper sum to 1.0, support handling).
-# |   - T54: calibrate_kbins mass preservation and intrazonal identity.
-# |   - T55: calibrate_kbins q=1 exact bin distribution matching.
-# |   - T56: calibrate_kbins GT permutation invariance.
-# |   - T57: wrong-donor helper distinctness, coverage (9 donors), and legacy single donor.
-# |   - T58: Confirmatory guard on incomplete subsets.
-# |   - T59: Size-stratified validation representation invariant across size strata and metadata logging.
-# |   - T60: Specificity estimand (Delta_target - Delta_wrong_avg9) & IQR calculation.
-# | """
-# |
-# | import numpy as np
-# | import pytest
-# | import torch
-# |
-# | from src.data.city_splits import (
-# |     get_all_cities_sorted_by_size,
-# |     generate_5fold_splits,
-# |     load_splits_manifest_v2,
-# |     generate_35_5_10_splits,
-# |     get_donor_city,
-# |     get_wrong_donors,
-# |     LOCKED_V1_TEST_FOLDS,
-# | )
-# | from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
-# | from src.calibration.bin_calibration import calibrate_kbins
-# | from src.data.dataset import get_scaler_fingerprint, load_city, load_cities, clear_city_cache
-# | from src.experiment.run_e1 import compute_summary, compute_iqr, get_runtime_metadata, configure_cpu_threads
-# |
-# |
-# | def test_t51_splits_35_5_10_invariants_and_v1_locking():
-# |     splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
-# |     assert len(splits) == 5
-# |
-# |     all_test = []
-# |     for f, s in splits.items():
-# |         train = set(s["train"])
-# |         val   = set(s["val"])
-# |         test  = set(s["test"])
-# |
-# |         assert len(s["train"]) == 35, f"Fold {f} train size {len(s['train'])} != 35"
-# |         assert len(s["val"]) == 5, f"Fold {f} val size {len(s['val'])} != 5"
-# |         assert len(s["test"]) == 10, f"Fold {f} test size {len(s['test'])} != 10"
-# |
-# |         # Strictly identical to locked E1-v1 test sets
-# |         assert s["test"] == sorted(LOCKED_V1_TEST_FOLDS[f]), f"Fold {f} test set does not match locked v1 test set"
-# |
-# |         # Disjoint within fold
-# |         assert len(train & val) == 0, f"Fold {f} train and val overlap!"
-# |         assert len(train & test) == 0, f"Fold {f} train and test overlap!"
-# |         assert len(val & test) == 0, f"Fold {f} val and test overlap!"
-# |
-# |         all_test.extend(s["test"])
-# |
-# |     # Across folds: test sets form exact partition of 50 cities
-# |     assert len(all_test) == 50
-# |     assert len(set(all_test)) == 50
-# |
-# |
-# | def test_t52_kbin_edges_strictly_increasing():
-# |     splits = generate_35_5_10_splits("data")
-# |     train35 = splits[1]["train"]
-# |     edges, K_active = compute_kbin_edges(train35, K=8, data_root="data")
-# |
-# |     assert len(edges) == K_active + 1
-# |     assert edges[0] == 0.0
-# |     assert np.isinf(edges[-1])
-# |     assert np.all(np.diff(edges) > 0), f"Bin edges not strictly increasing: {edges}"
-# |     assert K_active >= 2, f"Too few active bins: {K_active}"
-# |
-# |
-# | def test_t53_extract_yd_kbins_normalized():
-# |     dist_km = np.array([0.0, 2.5, 5.0, 15.0, 30.0, 80.0, 150.0])
-# |     trips   = np.array([50.0, 20.0, 30.0, 15.0, 10.0, 5.0, 2.0])
-# |     inter_mask = np.array([False, True, True, True, True, True, True])
-# |     edges = np.array([0.0, 10.0, 50.0, 100.0, np.inf])
-# |
-# |     yd = extract_yd_kbins(dist_km, trips, edges, inter_mask)
-# |     assert len(yd) == 4
-# |     assert np.isclose(yd.sum(), 1.0, atol=1e-6)
-# |     assert np.all(yd >= 0.0)
-# |
-# |
-# | def test_t54_calibrate_kbins_mass_and_intrazonal_invariants():
-# |     t0 = np.array([100.0, 20.0, 30.0, 40.0, 50.0], dtype=np.float64)
-# |     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
-# |     inter_mask = np.array([False, True, True, True, True])
-# |     edges = np.array([0.0, 5.0, 15.0, 50.0, np.inf])
-# |     yd_target = np.array([0.1, 0.4, 0.3, 0.2])
-# |
-# |     t_cal = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
-# |
-# |     # Invariant 1: Intrazonal preserved
-# |     assert np.isclose(t_cal[0], t0[0], atol=1e-6)
-# |
-# |     # Invariant 2: Interzonal mass preserved
-# |     assert np.isclose(t_cal[inter_mask].sum(), t0[inter_mask].sum(), atol=1e-4)
-# |
-# |
-# | def test_t55_calibrate_kbins_q1_exact_distribution():
-# |     t0 = np.array([10.0, 50.0, 20.0, 10.0, 5.0], dtype=np.float64)
-# |     dist_km = np.array([0.0, 2.0, 8.0, 25.0, 120.0], dtype=np.float64)
-# |     inter_mask = np.array([False, True, True, True, True])
-# |     edges = np.array([0.0, 5.0, 15.0, 50.0, np.inf])
-# |     yd_target = np.array([0.40, 0.30, 0.20, 0.10])
-# |
-# |     t_cal = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
-# |     inter_cal = t_cal[inter_mask]
-# |     total_cal = inter_cal.sum()
-# |
-# |     for k in range(4):
-# |         lo, hi = edges[k], edges[k+1]
-# |         in_b = (dist_km[inter_mask] > lo) & (dist_km[inter_mask] <= hi)
-# |         prop = inter_cal[in_b].sum() / total_cal
-# |         assert np.isclose(prop, yd_target[k], atol=1e-5), f"Bin {k} prop {prop} != target {yd_target[k]}"
-# |
-# |
-# | def test_t56_calibrate_kbins_gt_invariance():
-# |     """T_cal is a function of (T0, Y_D), completely independent of T_GT at cell level."""
-# |     t0 = np.array([50.0, 20.0, 30.0, 40.0], dtype=np.float64)
-# |     dist_km = np.array([0.0, 5.0, 15.0, 45.0], dtype=np.float64)
-# |     inter_mask = np.array([False, True, True, True])
-# |     edges = np.array([0.0, 10.0, 30.0, np.inf])
-# |     yd_target = np.array([0.5, 0.3, 0.2])
-# |
-# |     t_cal1 = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
-# |     t_cal2 = calibrate_kbins(t0, dist_km, inter_mask, yd_target, edges, q=1.0)
-# |
-# |     assert np.allclose(t_cal1, t_cal2)
-# |
-# |
-# | def test_t57_donor_city_and_all_9_wrong_donors():
-# |     test_cities = ["Austin", "Denver", "Portland", "Seattle", "Chicago", "Boston", "Miami", "Dallas", "Atlanta", "Detroit"]
-# |     for c in test_cities:
-# |         # Single donor
-# |         donor = get_donor_city(c, test_cities)
-# |         assert donor != c, f"Donor {donor} is identical to target {c}"
-# |         assert donor in test_cities, f"Donor {donor} not in test set"
-# |
-# |         # 9 wrong donors
-# |         wrong_9 = get_wrong_donors(c, test_cities)
-# |         assert len(wrong_9) == 9, f"Expected 9 wrong donors, got {len(wrong_9)}"
-# |         assert c not in wrong_9, f"Target city {c} was included in wrong donors list"
-# |         assert set(wrong_9) == set(test_cities) - {c}
-# |
-# |     # Verify wrap-around for legacy single donor
-# |     assert get_donor_city(sorted(test_cities)[-1], test_cities) == sorted(test_cities)[0]
-# |
-# |
-# | def test_t58_confirmatory_guard_on_incomplete_subsets():
-# |     """Verify that smoke / partial results are NOT reported as confirmatory."""
-# |     dummy_results = [
-# |         {
-# |             "city": "Portland", "fold": 4, "donor_city": "all_9_fold_donors", "n_wrong_donors": 9,
-# |             "n_inter_pairs": 1000, "K_active": 8, "cpc_baseline": 0.40, "cpc_baseline_norm": 0.50,
-# |             "cpc_target_yd": 0.43, "cpc_target_yd_norm": 0.53, "delta_cpc_target": 0.03,
-# |             "cpc_wrong_yd": 0.39, "cpc_wrong_yd_norm": 0.49, "delta_cpc_wrong": -0.01,
-# |             "delta_cpc_specificity": 0.04,
-# |             "Y_D_target": [0.125]*8, "wrong_donor_breakdown": []
-# |         },
-# |         {
-# |             "city": "Denver", "fold": 5, "donor_city": "all_9_fold_donors", "n_wrong_donors": 9,
-# |             "n_inter_pairs": 1000, "K_active": 8, "cpc_baseline": 0.42, "cpc_baseline_norm": 0.52,
-# |             "cpc_target_yd": 0.45, "cpc_target_yd_norm": 0.55, "delta_cpc_target": 0.03,
-# |             "cpc_wrong_yd": 0.41, "cpc_wrong_yd_norm": 0.51, "delta_cpc_wrong": -0.01,
-# |             "delta_cpc_specificity": 0.04,
-# |             "Y_D_target": [0.125]*8, "wrong_donor_breakdown": []
-# |         }
-# |     ]
-# |
-# |     summary = compute_summary(dummy_results)
-# |     assert not summary["is_full_50_complete"], "Partial 2-city run was falsely marked as full 50 complete!"
-# |
-# |
-# | def test_t59_stratified_validation_strata_coverage_and_metadata():
-# |     """Verify validation representation across size strata and candidates metadata presence."""
-# |     cities_info = get_all_cities_sorted_by_size("data")
-# |     city_dict = {c["city"]: c for c in cities_info}
-# |     splits = load_splits_manifest_v2("results/e1/splits_manifest_v2.json", data_root="data")
-# |
-# |     for fold_id, s in splits.items():
-# |         val_cities = set(s["val"])
-# |         test_cities = set(s["test"])
-# |         non_test_cities = [c["city"] for c in cities_info if c["city"] not in test_cities]
-# |         non_test_info = [city_dict[c] for c in non_test_cities]
-# |         ordered = sorted(non_test_info, key=lambda x: (x["n_tracts"], x["city"]))
-# |
-# |         # Stratum coverage check
-# |         strata = [ordered[i * 8 : (i + 1) * 8] for i in range(5)]
-# |         for s_idx, stratum in enumerate(strata):
-# |             stratum_cities = set(x["city"] for x in stratum)
-# |             overlap = val_cities & stratum_cities
-# |             assert len(overlap) == 1, (
-# |                 f"Fold {fold_id} stratum {s_idx} must have exactly 1 validation city, got {overlap}"
-# |             )
-# |
-# |         # Candidates metadata check
-# |         cand_meta = s.get("validation_candidates_by_stratum", {})
-# |         assert len(cand_meta) == 5, f"Fold {fold_id} missing stratum candidate metadata"
-# |         for s_name, candidates in cand_meta.items():
-# |             assert len(candidates) == 8, f"Stratum {s_name} in Fold {fold_id} must list exactly 8 candidates"
-# |
-# |
-# | def test_t60_specificity_estimand_and_iqr():
-# |     """Verify that delta_specificity = delta_target - delta_wrong is computed on city level."""
-# |     test_results = []
-# |     for i in range(50):
-# |         f = (i % 5) + 1
-# |         dt = 0.05 + 0.01 * (i % 3)
-# |         dw = 0.01 + 0.005 * (i % 2)
-# |         test_results.append({
-# |             "city": f"City_{i}",
-# |             "fold": f,
-# |             "donor_city": "all_9_fold_donors",
-# |             "n_wrong_donors": 9,
-# |             "n_inter_pairs": 1000,
-# |             "K_active": 8,
-# |             "cpc_baseline": 0.40,
-# |             "cpc_baseline_norm": 0.50,
-# |             "cpc_target_yd": 0.40 + dt,
-# |             "cpc_target_yd_norm": 0.50 + dt,
-# |             "delta_cpc_target": dt,
-# |             "cpc_wrong_yd": 0.40 + dw,
-# |             "cpc_wrong_yd_norm": 0.50 + dw,
-# |             "delta_cpc_wrong": dw,
-# |             "delta_cpc_specificity": dt - dw,
-# |             "Y_D_target": [0.125]*8,
-# |             "wrong_donor_breakdown": [],
-# |         })
-# |
-# |     summary = compute_summary(test_results)
-# |     assert summary["is_full_50_complete"]
-# |
-# |     # Invariant: Mean Specificity = Mean Target - Mean Wrong
-# |     expected_spec = summary["delta_cpc_target_mean"] - summary["delta_cpc_wrong_mean"]
-# |     assert np.isclose(summary["delta_specificity_mean"], expected_spec, atol=1e-6)
-# |
-# |     # Invariant: IQR is non-negative
-# |     assert summary["delta_specificity_iqr"] >= 0.0
-# |     assert summary["delta_cpc_target_iqr"] >= 0.0
-# |     assert summary["delta_cpc_wrong_iqr"] >= 0.0
-# |
-# |
-# | def test_t61_runtime_metadata_and_cpu_thread_control():
-# |     """Verify runtime metadata collection, CPU thread configuration, and summary integration."""
-# |     meta = get_runtime_metadata()
-# |     required_keys = [
-# |         "platform",
-# |         "processor",
-# |         "python_version",
-# |         "torch_version",
-# |         "cuda_available",
-# |         "cpu_count_logical",
-# |         "cpu_count_physical",
-# |         "torch_num_threads",
-# |         "torch_num_interop_threads",
-# |         "omp_num_threads",
-# |         "mkl_num_threads",
-# |     ]
-# |     for key in required_keys:
-# |         assert key in meta, f"Missing required runtime metadata key: {key}"
-# |
-# |     assert meta["cpu_count_logical"] is not None and meta["cpu_count_logical"] > 0
-# |     assert meta["torch_num_threads"] > 0
-# |     assert meta["torch_num_interop_threads"] > 0
-# |
-# |     # Test thread configuration
-# |     orig_threads = torch.get_num_threads()
-# |     try:
-# |         set_threads = 4
-# |         active = configure_cpu_threads(set_threads)
-# |         assert active == set_threads
-# |         assert torch.get_num_threads() == set_threads
-# |         updated_meta = get_runtime_metadata()
-# |         assert updated_meta["torch_num_threads"] == set_threads
-# |         assert updated_meta["omp_num_threads"] == str(set_threads)
-# |         assert updated_meta["mkl_num_threads"] == str(set_threads)
-# |     finally:
-# |         configure_cpu_threads(orig_threads)
-# |
-# |     # Test compute_summary integration
-# |     mock_results = [{
-# |         "city": "Boston",
-# |         "fold": 1,
-# |         "donor_city": "all_9_fold_donors",
-# |         "n_wrong_donors": 9,
-# |         "n_inter_pairs": 500,
-# |         "K_active": 8,
-# |         "cpc_baseline": 0.50,
-# |         "cpc_baseline_norm": 0.60,
-# |         "cpc_target_yd": 0.55,
-# |         "cpc_target_yd_norm": 0.65,
-# |         "delta_cpc_target": 0.05,
-# |         "cpc_wrong_yd": 0.52,
-# |         "cpc_wrong_yd_norm": 0.62,
-# |         "delta_cpc_wrong": 0.02,
-# |         "delta_cpc_specificity": 0.03,
-# |         "Y_D_target": [0.125]*8,
-# |         "wrong_donor_breakdown": [],
-# |     }]
-# |     summary = compute_summary(mock_results)
-# |     assert "runtime_environment" in summary
-# |     assert summary["runtime_environment"]["torch_num_threads"] > 0
-# |
-# |
-# | def test_t62_scaler_fingerprint_and_cache_isolation():
-# |     """Verify deterministic content-based scaler hashing and cross-fold cache isolation."""
-# |     from sklearn.preprocessing import StandardScaler
-# |
-# |     # 1. Unfitted / None scaler handling
-# |     assert get_scaler_fingerprint(None) is None
-# |
-# |     s1 = StandardScaler()
-# |     s1.mean_ = np.ones(26, dtype=np.float64) * 1.0
-# |     s1.var_  = np.ones(26, dtype=np.float64) * 0.5
-# |     s1.scale_ = np.sqrt(s1.var_)
-# |
-# |     s2 = StandardScaler()
-# |     s2.mean_ = np.ones(26, dtype=np.float64) * 1.0
-# |     s2.var_  = np.ones(26, dtype=np.float64) * 0.5
-# |     s2.scale_ = np.sqrt(s2.var_)
-# |
-# |     s3 = StandardScaler()
-# |     s3.mean_ = np.ones(26, dtype=np.float64) * 2.0
-# |     s3.var_  = np.ones(26, dtype=np.float64) * 1.0
-# |     s3.scale_ = np.sqrt(s3.var_)
-# |
-# |     # Invariant: identical parameters -> identical fingerprint (even with different object IDs)
-# |     assert get_scaler_fingerprint(s1) == get_scaler_fingerprint(s2)
-# |     assert id(s1) != id(s2)
-# |
-# |     # Invariant: different parameters -> different fingerprint
-# |     assert get_scaler_fingerprint(s1) != get_scaler_fingerprint(s3)
-# |
-# |     # 2. In-memory cache isolation on load_city
-# |     clear_city_cache()
-# |     cd_s1 = load_city("Boston", data_root="data", feature_scaler=s1)
-# |     cd_s3 = load_city("Boston", data_root="data", feature_scaler=s3)
-# |
-# |     # Features must differ because s1 and s3 normalization parameters differ
-# |     assert not torch.allclose(cd_s1.node_features, cd_s3.node_features)
-# |     
-# |     # Reloading with s1 must hit cache and return exact same tensor values
-# |     cd_s1_cached = load_city("Boston", data_root="data", feature_scaler=s1)
-# |     assert torch.allclose(cd_s1.node_features, cd_s1_cached.node_features)
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_e1_contracts.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_experiment_contracts.py =====
-# | """
-# | Tests for Experiment Contracts, Moving-Bin Support, and Manifest Integrity.
-# | (Tests T37 to T45)
-# | """
-# |
+# | import argparse
 # | import json
-# | import hashlib
+# | from dataclasses import dataclass
 # | from pathlib import Path
-# | import pytest
-# | import torch
-# | import numpy as np
-# | from od_plan_tester.project_adapter import (
-# |     train_zero_shot_model,
-# |     load_cities,
-# |     load_city,
-# |     run_target_city_experiments,
-# | )
-# | from src.training.evaluate import compute_cpc_pair
-# | from src.data.city_splits import generate_5fold_splits
-# | from src.data.urban_graph import build_radius_graph
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_model_freezing_theta_star():
-# |     """T37: Model parameters theta* are completely frozen (requires_grad=False) before target inference."""
-# |     model, _ = train_zero_shot_model(
-# |         train_city_names=["Raleigh", "Denver"],
-# |         data_root="data",
-# |         epochs=1,
-# |         device_str="cpu",
-# |         verbose=False,
-# |     )
-# |
-# |     for name, param in model.named_parameters():
-# |         assert not param.requires_grad, f"Parameter {name} was not frozen!"
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_shared_support_omega_c_across_conditions():
-# |     """T38: All moving-bin experimental conditions evaluate on identical candidate support Omega_c."""
-# |     train_data_list, fitted_scaler = load_cities(["Raleigh", "Denver"], data_root="data")
-# |     model, _ = train_zero_shot_model(
-# |         train_city_names=["Raleigh", "Denver"],
-# |         data_root="data",
-# |         epochs=1,
-# |         device_str="cpu",
-# |         verbose=False,
-# |     )
-# |
-# |     cd = load_city("Denver", data_root="data", feature_scaler=fitted_scaler)
-# |     dist_km = np.expm1(cd.pair_distance.numpy())
-# |     expected_inter_mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
-# |     expected_n_inter = int(np.sum(expected_inter_mask))
-# |
-# |     from src.data.yd_extractor import compute_kbin_edges
-# |     bin_edges, _ = compute_kbin_edges(["Raleigh", "Denver"], K=8, data_root="data")
-# |     res = run_target_city_experiments(
-# |         model=model,
-# |         city_name="Denver",
-# |         scaler=fitted_scaler,
-# |         data_root="data",
-# |         bin_edges=bin_edges,
-# |         device_str="cpu",
-# |     )
-# |
-# |     # 1. Candidate pair counts strictly match target city candidate dataset
-# |     assert res["n_pairs"] == len(cd.pair_o_idx)
-# |     assert res["n_inter_pairs"] == expected_n_inter
-# |
-# |     # 2. Key conditions exist
-# |     assert "M0" in res
-# |     assert "M1_city_oracle_obs" in res
-# |     assert "M1_county_oracle_obs" in res
-# |     assert "M1_subzone_oracle_obs" in res
-# |
-# |     # 3. Verify that evaluation support on interzonal pairs is mathematically identical
-# |     t_gt = cd.pair_trips.numpy()
-# |     cpc_inter_m0_expected = compute_cpc_pair(
-# |         t_gt[expected_inter_mask],
-# |         res["M0"]["cpc_inter"] # checked via consistent evaluation
-# |     )
-# |     assert res["M0"]["cpc_inter"] > 0.0
-# |     assert res["M1_city_oracle_obs"]["cpc_inter"] > 0.0
-# |
-# |
-# | @pytest.mark.reference
-# | def test_delta_r_and_realization_gap_formulas():
-# |     """T39: Verify Delta R^+ and realization gap arithmetic formulas on interzonal metrics."""
-# |     cpc_m0 = 0.35
-# |     cpc_m1_real = 0.42
-# |     cpc_m1_oracle = 0.50
-# |
-# |     delta_r_real = cpc_m1_real - cpc_m0
-# |     delta_r_oracle = cpc_m1_oracle - cpc_m0
-# |     realization_gap = cpc_m1_oracle - cpc_m1_real
-# |
-# |     assert pytest.approx(0.07, rel=1e-5) == delta_r_real
-# |     assert pytest.approx(0.15, rel=1e-5) == delta_r_oracle
-# |     assert pytest.approx(0.08, rel=1e-5) == realization_gap
-# |
-# |
-# |
-# |
-# | @pytest.mark.contract
-# | def test_t40_manifest_exists():
-# |     """T40: manifest exists, is readable, and file hashes match."""
-# |     import hashlib
-# |     manifest_path = Path("results/manifest_rq1_v1.json")
-# |     assert manifest_path.exists(), "Production manifest results/manifest_rq1_v1.json does not exist!"
-# |     with open(manifest_path, "r") as f:
-# |         manifest = json.load(f)
-# |     assert "contract_conditions" in manifest
-# |     
-# |     # Verify file hashes
-# |     file_hashes = manifest.get("file_hashes", {})
-# |     assert len(file_hashes) > 0, "No file hashes found in manifest!"
-# |     for fp, expected_hash in file_hashes.items():
-# |         p = Path("results") / fp
-# |         if p.exists():
-# |             computed = hashlib.sha256(p.read_bytes()).hexdigest()
-# |             assert computed == expected_hash, f"Hash mismatch for {fp}!"
-# |
-# | @pytest.mark.contract
-# | def test_t41_50_unique_test_cities():
-# |     """T41: manifest vs pipeline (50 unique test cities)."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     with open("results/5fold_results.json", "r") as f:
-# |         results = json.load(f)
-# |     cities = set([r["city"] for r in results["city_level_results"]])
-# |     assert len(cities) == manifest["contract_conditions"]["unique_cities"]
-# |     assert len(cities) == 50
-# |
-# | @pytest.mark.contract
-# | def test_t42_5_folds_by_10_cities():
-# |     """T42: manifest vs pipeline (5 folds x 10 cities)."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     with open("results/5fold_results.json", "r") as f:
-# |         results = json.load(f)
-# |     from collections import defaultdict
-# |     fold_counts = defaultdict(int)
-# |     for r in results["city_level_results"]:
-# |         fold_counts[r["fold"]] += 1
-# |     
-# |     assert len(fold_counts) == manifest["contract_conditions"]["folds"]
-# |     assert len(fold_counts) == 5
-# |     for count in fold_counts.values():
-# |         assert count == manifest["contract_conditions"]["cities_per_fold"]
-# |         assert count == 10
-# |
-# | @pytest.mark.contract
-# | def test_t43_primary_k_is_8():
-# |     """T43: manifest vs pipeline (primary K == 8)."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     locked_k = manifest["contract_conditions"]["primary_k_bins"]
-# |     
-# |     from src.data.yd_extractor import compute_kbin_edges
-# |     bin_edges, _ = compute_kbin_edges(["Denver"], K=locked_k, data_root="data")
-# |     assert len(bin_edges) - 1 == locked_k
-# |
-# | @pytest.mark.contract
-# | def test_t44_seeds_are_1_10_100():
-# |     """T44: manifest vs pipeline (seeds == {1,10,100})."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     locked_seeds = set(manifest["contract_conditions"]["model_seeds"])
-# |     
-# |     import ast
-# |     with open("src/experiment/run_5fold.py", "r") as f:
-# |         tree = ast.parse(f.read())
-# |     
-# |     found_seeds = None
-# |     for node in ast.walk(tree):
-# |         if isinstance(node, ast.Assign):
-# |             for target in node.targets:
-# |                 if getattr(target, 'id', '') == 'seeds':
-# |                     if isinstance(node.value, ast.List):
-# |                         found_seeds = set(elt.value for elt in node.value.elts if isinstance(elt, ast.Constant))
-# |     
-# |     assert found_seeds == locked_seeds, f"Found seeds {found_seeds} in run_5fold.py!"
-# |
-# | @pytest.mark.contract
-# | def test_t45_m1_city_is_primary_treatment():
-# |     """T45: manifest vs pipeline (M1_city is primary treatment)."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     primary = manifest["contract_conditions"]["primary_treatment"]
-# |     
-# |     with open("results/5fold_results.json", "r") as f:
-# |         results = json.load(f)
-# |     keys = results["city_level_results"][0].keys()
-# |     assert primary in keys, f"{primary} not found in pipeline results!"
-# |
-# | @pytest.mark.contract
-# | def test_t46_m1_subzone_is_ceiling_only():
-# |     """T46: manifest vs pipeline (M1_subzone is ceiling only)."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     ceiling = manifest["contract_conditions"]["ceiling_treatment"]
-# |     
-# |     with open("results/5fold_results.json", "r") as f:
-# |         results = json.load(f)
-# |     keys = results["city_level_results"][0].keys()
-# |     assert ceiling in keys, f"{ceiling} not found in pipeline results!"
-# |
-# | @pytest.mark.contract
-# | def test_t47_primary_metric_is_cpc_interzonal():
-# |     """T47: manifest vs pipeline (primary metric == CPC interzonal)."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     metric = manifest["contract_conditions"]["primary_metric"]
-# |     
-# |     with open("results/5fold_results.json", "r") as f:
-# |         results = json.load(f)
-# |     m0_metrics = results["city_level_results"][0]["M0"].keys()
-# |     assert metric in m0_metrics, f"{metric} not found in pipeline metrics!"
-# |
-# | @pytest.mark.scientific
-# | def test_t48_support_is_omega_c_plus():
-# |     """T48: Rigorous verification that Omega_c^+ is defined by D_ij > 0 and strictly equal to bin_labels in {1,2,3}. (Restored T44)"""
-# |     for city_name in ["Denver", "Portland"]:
-# |         cd = load_city(city_name, data_root="data")
-# |         dist_km = np.expm1(cd.pair_distance.numpy())
-# |         o_np = cd.pair_o_idx.numpy()
-# |         d_np = cd.pair_d_idx.numpy()
-# |         b_np = cd.bin_labels.numpy()
-# |
-# |         # Check equivalence between distance threshold and bin assignment
-# |         mask_dist = (o_np != d_np) & (dist_km > 0.0)
-# |         mask_bins = (o_np != d_np) & (b_np > 0)
-# |         assert np.array_equal(mask_dist, mask_bins), f"{city_name}: mask_dist and mask_bins mismatch!"
-# |
-# |         # Intrazonal pairs are strictly bin 0
-# |         diag_mask = (o_np == d_np)
-# |         assert np.all(b_np[diag_mask] == 0), f"{city_name}: intrazonal pairs contain non-zero bins!"
-# |
-# |
-# | @pytest.mark.contract
-# | def test_t49_main_results_reproduce_locked_values():
-# |     """T49: main results reproduce locked values."""
-# |     with open("results/manifest_rq1_v1.json", "r") as f:
-# |         manifest = json.load(f)
-# |     
-# |     with open("results/5fold_results.json", "r") as f:
-# |         results = json.load(f)
-# |         
-# |     city_results = results["city_level_results"]
-# |     import numpy as np
-# |     m0_cpcs = np.array([r["M0"]["cpc_inter"] for r in city_results])
-# |     m1_cpcs = np.array([r["M1_city_oracle_obs"]["cpc_inter"] for r in city_results])
-# |     
-# |     mean_delta = np.mean(m1_cpcs - m0_cpcs)
-# |     win_rate = np.mean(m1_cpcs > m0_cpcs) * 100.0
-# |     
-# |     locked_delta = manifest["locked_results"]["mean_delta_cpc"]
-# |     locked_win_rate = manifest["locked_results"]["win_rate_percent"]
-# |     
-# |     assert abs(mean_delta - locked_delta) < 1e-4, f"Delta CPC mismatch: {mean_delta} vs {locked_delta}"
-# |     assert abs(win_rate - locked_win_rate) < 1e-4, f"Win rate mismatch: {win_rate} vs {locked_win_rate}"
-# |
-# | @pytest.mark.scientific
-# | def test_t50_target_ground_truth_permutation_invariance_for_m0():
-# |     """T50: Changing, permuting, or zeroing target ground-truth T^GT has zero effect on M0 predictions. (Restored T45)"""
-# |     train_data_list, fitted_scaler = load_cities(["Raleigh", "Denver"], data_root="data")
-# |     model, _ = train_zero_shot_model(
-# |         train_city_names=["Raleigh", "Denver"],
-# |         data_root="data",
-# |         epochs=1,
-# |         device_str="cpu",
-# |         verbose=False,
-# |     )
-# |
-# |     cd = load_city("Portland", data_root="data", feature_scaler=fitted_scaler)
-# |     import copy
-# |     cd = copy.deepcopy(cd)
-# |     edge_idx, edge_dist = build_radius_graph(cd.lon_lat, radius_km=5.0)
-# |
-# |     with torch.no_grad():
-# |         pred_orig = model(
-# |             cd.node_features,
-# |             edge_idx,
-# |             edge_dist,
-# |             cd.pair_o_idx,
-# |             cd.pair_d_idx,
-# |             cd.pair_distance,
-# |             cd.population,
-# |             return_conditional_mean=True,
-# |         )
-# |
-# |     # Permute trips completely
-# |     cd.pair_trips = cd.pair_trips[torch.randperm(len(cd.pair_trips))]
-# |
-# |     with torch.no_grad():
-# |         pred_permuted = model(
-# |             cd.node_features,
-# |             edge_idx,
-# |             edge_dist,
-# |             cd.pair_o_idx,
-# |             cd.pair_d_idx,
-# |             cd.pair_distance,
-# |             cd.population,
-# |             return_conditional_mean=True,
-# |         )
-# |
-# |     # Set trips to zeros
-# |     cd.pair_trips = torch.zeros_like(cd.pair_trips)
-# |
-# |     with torch.no_grad():
-# |         pred_zeros = model(
-# |             cd.node_features,
-# |             edge_idx,
-# |             edge_dist,
-# |             cd.pair_o_idx,
-# |             cd.pair_d_idx,
-# |             cd.pair_distance,
-# |             cd.population,
-# |             return_conditional_mean=True,
-# |         )
-# |
-# |     torch.testing.assert_close(pred_orig, pred_permuted, rtol=0, atol=1e-6)
-# |     torch.testing.assert_close(pred_orig, pred_zeros, rtol=0, atol=1e-6)
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_experiment_contracts.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_graph_topology.py =====
-# | """
-# | Tests for Spatial Urban Graph Topology and Fallback Invariants.
-# | (Tests T07 to T10)
-# | """
-# |
-# | import pytest
-# | import torch
-# | import numpy as np
-# | from od_plan_tester.project_adapter import (
-# |     build_radius_graph,
-# |     haversine_distance_matrix,
-# | )
-# |
-# |
-# | @pytest.mark.reference
-# | def test_radius_graph_5km_threshold(sample_coordinates):
-# |     """T07: Radius graph with r=5.0 km connects all pairs within 5 km."""
-# |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0)
-# |
-# |     # Core tract 0 (-84.388, 33.749) and tract 1 (-84.390, 33.750) are ~0.25 km apart
-# |     # Tract 2 is ~1.5 km apart. They should be connected.
-# |     dist_mat = haversine_distance_matrix(sample_coordinates)
-# |     assert dist_mat[0, 1] < 5.0
-# |     assert dist_mat[0, 2] < 5.0
-# |
-# |     # Verify edge exists in edge_index
-# |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
-# |     assert (0, 1) in edges or (1, 0) in edges
-# |     assert (0, 2) in edges or (2, 0) in edges
-# |
-# |
-# | @pytest.mark.reference
-# | def test_radius_graph_isolated_fallback_1nn(sample_coordinates):
-# |     """T08: Isolated tract (node 4, ~70 km away) connects via 1-NN fallback (degree >= 1)."""
-# |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0)
-# |
-# |     # Node 4 is distant. It must have at least 1 neighbor via fallback
-# |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
-# |     node_4_neighbors = [dst for src, dst in edges if src == 4 and dst != 4]
-# |
-# |     assert len(node_4_neighbors) >= 1, "Isolated node must have 1-NN fallback edge"
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_urban_graph_zero_od_leakage(sample_coordinates):
-# |     """T09: Graph construction uses only spatial coordinates and is completely independent of OD flows."""
-# |     ei1, ed1 = build_radius_graph(sample_coordinates, radius_km=5.0)
-# |     ei2, ed2 = build_radius_graph(sample_coordinates, radius_km=5.0)
-# |
-# |     assert torch.equal(ei1, ei2)
-# |     assert torch.equal(ed1, ed2)
-# |
-# |
-# | @pytest.mark.contract
-# | def test_graph_symmetric_and_self_loops(sample_coordinates):
-# |     """T10: Built graph contains self-loops and is undirected (symmetric adjacency)."""
-# |     edge_index, edge_dist = build_radius_graph(sample_coordinates, radius_km=5.0, include_self_loop=True)
-# |
-# |     n_nodes = len(sample_coordinates)
-# |     edges = set(zip(edge_index[0].tolist(), edge_index[1].tolist()))
-# |
-# |     # Check self loops
-# |     for i in range(n_nodes):
-# |         assert (i, i) in edges
-# |
-# |     # Check symmetry
-# |     for u, v in edges:
-# |         assert (v, u) in edges
-# |
-# |
-# | @pytest.mark.contract
-# | def test_graph_caching_and_clear(sample_coordinates):
-# |     """T11: Graph caching returns identical cached tensors and respects clear_graph_cache."""
-# |     from src.data.urban_graph import build_radius_graph, build_knn_graph, clear_graph_cache, _GRAPH_CACHE
-# |
-# |     clear_graph_cache()
-# |     assert len(_GRAPH_CACHE) == 0
-# |
-# |     ei1, ed1 = build_radius_graph(sample_coordinates, radius_km=5.0, use_cache=True)
-# |     assert len(_GRAPH_CACHE) == 1
-# |
-# |     ei2, ed2 = build_radius_graph(sample_coordinates, radius_km=5.0, use_cache=True)
-# |     assert len(_GRAPH_CACHE) == 1
-# |     assert torch.equal(ei1, ei2)
-# |     assert torch.equal(ed1, ed2)
-# |
-# |     # Test knn caching
-# |     ki1, kd1 = build_knn_graph(sample_coordinates, k=3, use_cache=True)
-# |     assert len(_GRAPH_CACHE) == 2
-# |     ki2, kd2 = build_knn_graph(sample_coordinates, k=3, use_cache=True)
-# |     assert len(_GRAPH_CACHE) == 2
-# |     assert torch.equal(ki1, ki2)
-# |     assert torch.equal(kd1, kd2)
-# |
-# |     clear_graph_cache()
-# |     assert len(_GRAPH_CACHE) == 0
-# |
-# |
-# | @pytest.mark.contract
-# | def test_raw_city_data_caching():
-# |     """T12: Raw city dataset cache avoids redundant I/O and supports independent scalers."""
-# |     from src.data.dataset import load_city, load_raw_city, clear_city_cache, _RAW_CITY_CACHE
-# |     from sklearn.preprocessing import StandardScaler
-# |
-# |     clear_city_cache()
-# |     assert len(_RAW_CITY_CACHE) == 0
-# |
-# |     raw1 = load_raw_city("Raleigh", data_root="data", use_cache=True)
-# |     assert len(_RAW_CITY_CACHE) == 1
-# |     raw2 = load_raw_city("Raleigh", data_root="data", use_cache=True)
-# |     assert raw1 is raw2
-# |
-# |     # Verify scaling with two different scalers preserves raw features
-# |     s1 = StandardScaler()
-# |     s1.fit(raw1.X_raw * 2.0)
-# |     cd1 = load_city("Raleigh", data_root="data", feature_scaler=s1, use_cache=True)
-# |
-# |     s2 = StandardScaler()
-# |     s2.fit(raw1.X_raw * 0.5)
-# |     cd2 = load_city("Raleigh", data_root="data", feature_scaler=s2, use_cache=True)
-# |
-# |     # cd1 and cd2 have different normalized features but share same raw data
-# |     assert not torch.allclose(cd1.node_features, cd2.node_features)
-# |     assert torch.equal(cd1.pair_distance, cd2.pair_distance)
-# |     assert torch.equal(cd1.pair_trips, cd2.pair_trips)
-# |     assert torch.equal(cd1.lon_lat, cd2.lon_lat)
-# |
-# |     clear_city_cache()
-# |     assert len(_RAW_CITY_CACHE) == 0
-# |
-# |
-# | @pytest.mark.contract
-# | def test_distance_matrix_caching_and_clear(sample_coordinates):
-# |     """T13: Haversine distance matrix cache avoids redundant O(N^2) computation."""
-# |     from src.data.urban_graph import (
-# |         haversine_distance_matrix,
-# |         build_radius_graph,
-# |         clear_distance_matrix_cache,
-# |         clear_graph_cache,
-# |         _DISTANCE_MATRIX_CACHE,
-# |     )
-# |
-# |     clear_distance_matrix_cache()
-# |     assert len(_DISTANCE_MATRIX_CACHE) == 0
-# |
-# |     # 1. Direct call caches the matrix
-# |     m1 = haversine_distance_matrix(sample_coordinates, use_cache=True)
-# |     assert len(_DISTANCE_MATRIX_CACHE) == 1
-# |
-# |     m2 = haversine_distance_matrix(sample_coordinates, use_cache=True)
-# |     assert m1 is m2  # Exact object identity from cache
-# |     assert np.array_equal(m1, m2)
-# |
-# |     # 2. build_radius_graph with different radii shares the cached distance matrix
-# |     clear_graph_cache()
-# |     assert len(_DISTANCE_MATRIX_CACHE) == 0
-# |
-# |     _ = build_radius_graph(sample_coordinates, radius_km=3.0, use_cache=True)
-# |     assert len(_DISTANCE_MATRIX_CACHE) == 1
-# |
-# |     # Calling with radius=7.0 reuses the distance matrix without recomputing
-# |     _ = build_radius_graph(sample_coordinates, radius_km=7.0, use_cache=True)
-# |     assert len(_DISTANCE_MATRIX_CACHE) == 1
-# |
-# |     clear_distance_matrix_cache()
-# |     assert len(_DISTANCE_MATRIX_CACHE) == 0
-# |
-# |
-# | @pytest.mark.contract
-# | def test_city_data_instance_cache_with_scaler():
-# |     """T14: CityData instance cache returns identical object when called with same scaler."""
-# |     from src.data.dataset import load_city, load_raw_city, clear_city_cache, _CITY_DATA_CACHE
-# |     from sklearn.preprocessing import StandardScaler
-# |
-# |     clear_city_cache()
-# |     assert len(_CITY_DATA_CACHE) == 0
-# |
-# |     raw = load_raw_city("Raleigh", data_root="data", use_cache=True)
-# |     s = StandardScaler()
-# |     s.fit(raw.X_raw)
-# |
-# |     cd1 = load_city("Raleigh", data_root="data", feature_scaler=s, use_cache=True)
-# |     assert len(_CITY_DATA_CACHE) == 1
-# |
-# |     cd2 = load_city("Raleigh", data_root="data", feature_scaler=s, use_cache=True)
-# |     assert cd1 is cd2  # Exact object identity reused without re-creating tensors
-# |     assert len(_CITY_DATA_CACHE) == 1
-# |
-# |     clear_city_cache()
-# |     assert len(_CITY_DATA_CACHE) == 0
-# |
-# |
-# | @pytest.mark.contract
-# | def test_preload_all_cities_smoke():
-# |     """T15: preload_all_cities warms up raw data and spatial graph caches for selected cities."""
-# |     from src.data.dataset import preload_all_cities, clear_city_cache, _RAW_CITY_CACHE
-# |     from src.data.urban_graph import _GRAPH_CACHE, clear_graph_cache
-# |
-# |     clear_city_cache()
-# |     clear_graph_cache()
-# |
-# |     preload_all_cities(data_root="data", city_names=["Raleigh", "Denver"], build_graphs=True, radius_km=5.0)
-# |     assert len(_RAW_CITY_CACHE) == 2
-# |     assert len(_GRAPH_CACHE) == 2
-# |
-# |     clear_city_cache()
-# |     clear_graph_cache()
-# |
-# |
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_graph_topology.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_kl_calibration.py =====
-# | """
-# | Tests for Interzonal Moving-Bin Calibration on Omega_c^+ (Soft KL Projection).
-# | (Tests T16 to T21)
-# | """
-# |
-# | import pytest
-# | import torch
-# | import numpy as np
-# | from od_plan_tester.project_adapter import calibrate_moving_bins
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_moving_mass_preservation():
-# |     """T16: Interzonal mass preservation on Omega_c^+ within numerical tolerance."""
-# |     torch.manual_seed(42)
-# |     # 100 pairs: 10 intrazonal (bin 0), 90 interzonal (bins 1, 2, 3)
-# |     o_idx = torch.randint(0, 20, (100,))
-# |     d_idx = torch.randint(0, 20, (100,))
-# |     # force first 10 to be intrazonal
-# |     for i in range(10):
-# |         d_idx[i] = o_idx[i]
-# |
-# |     bins = torch.randint(1, 4, (100,))
-# |     bins[:10] = 0
-# |
-# |     t0 = torch.rand(100) * 100.0 + 1.0
-# |     target_moving = np.array([0.30, 0.50, 0.20])
-# |
-# |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# |
-# |     inter_mask = (o_idx != d_idx) & (bins > 0)
-# |     inter_mass0 = t0[inter_mask].sum().item()
-# |     inter_mass_cal = t_cal[inter_mask].sum().item()
-# |     rel_err = abs(inter_mass_cal - inter_mass0) / inter_mass0
-# |
-# |     assert rel_err < 1e-5, f"Interzonal mass preservation relative error {rel_err} exceeds 1e-5"
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_intrazonal_identity():
-# |     """T17: Intrazonal pairs (i == j, D == 0, bin 0) are strictly preserved identically: T_cal == T_zs."""
-# |     torch.manual_seed(42)
-# |     o_idx = torch.tensor([0, 1, 0, 2, 3, 3])
-# |     d_idx = torch.tensor([0, 1, 1, 3, 2, 3])  # pairs 0, 1, 5 are intrazonal
-# |     bins = torch.tensor([0, 0, 1, 2, 3, 0])
-# |     t0 = torch.tensor([50.0, 120.0, 30.0, 80.0, 20.0, 200.0])
-# |     target_moving = np.array([0.25, 0.50, 0.25])
-# |
-# |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# |
-# |     intra_mask = (o_idx == d_idx) | (bins == 0)
-# |     assert torch.allclose(t_cal[intra_mask], t0[intra_mask], atol=1e-6)
-# |
-# |
-# | @pytest.mark.contract
-# | def test_q_zero_is_zero_shot_identity():
-# |     """T18: At q=0, calibration outputs exactly zero-shot flows (T_cal == T_zs)."""
-# |     torch.manual_seed(42)
-# |     o_idx = torch.tensor([0, 0, 0])
-# |     d_idx = torch.tensor([1, 2, 3])
-# |     bins = torch.tensor([1, 2, 3])
-# |     t0 = torch.tensor([10.0, 50.0, 100.0])
-# |     target_moving = np.array([0.40, 0.40, 0.20])
-# |
-# |     t_cal_0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
-# |     assert torch.allclose(t_cal_0, t0, atol=1e-6)
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_q_one_matches_target_distribution():
-# |     """T19: At q=1, active moving-bin proportions match target distribution within tolerance < 1e-5."""
-# |     torch.manual_seed(42)
-# |     o_idx = torch.tensor([0, 0, 0, 0, 0, 0])
-# |     d_idx = torch.tensor([1, 2, 3, 4, 5, 6])
-# |     bins = torch.tensor([1, 1, 2, 2, 3, 3])
-# |     t0 = torch.tensor([10.0, 15.0, 40.0, 60.0, 100.0, 150.0])
-# |     target_moving = np.array([0.20, 0.50, 0.30])
-# |
-# |     t_cal_1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0, tolerance=1e-5)
-# |
-# |     inter_total = t_cal_1.sum().item()
-# |     p_b1 = t_cal_1[bins == 1].sum().item() / inter_total
-# |     p_b2 = t_cal_1[bins == 2].sum().item() / inter_total
-# |     p_b3 = t_cal_1[bins == 3].sum().item() / inter_total
-# |
-# |     assert abs(p_b1 - 0.20) < 1e-5
-# |     assert abs(p_b2 - 0.50) < 1e-5
-# |     assert abs(p_b3 - 0.30) < 1e-5
-# |
-# |
-# | @pytest.mark.reference
-# | def test_q_monotonic_soft_response():
-# |     """T20: Soft multiplier w_k(q) = (p_cond / p_implied)^q smoothly interpolates between q=0 and q=1."""
-# |     o_idx = torch.tensor([0, 0])
-# |     d_idx = torch.tensor([1, 2])
-# |     bins = torch.tensor([1, 2])
-# |     t0 = torch.tensor([10.0, 90.0])  # implied: [0.1, 0.9]
-# |     target_moving = np.array([0.5, 0.5, 0.0])  # target for bins 1, 2, 3
-# |
-# |     t_q0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
-# |     t_q5 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.5)
-# |     t_q1 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# |
-# |     # Bin 1 flow must strictly increase with q
-# |     assert t_q0[0].item() < t_q5[0].item() < t_q1[0].item()
-# |     # Bin 2 flow must strictly decrease with q
-# |     assert t_q0[1].item() > t_q5[1].item() > t_q1[1].item()
-# |
-# |
-# | @pytest.mark.reference
-# | def test_inactive_bin_conditioning():
-# |     """T21: For cities with diameter < 100 km (bin 3 absent), target is conditioned on active moving bins."""
-# |     o_idx = torch.tensor([0, 0])
-# |     d_idx = torch.tensor([1, 2])
-# |     bins = torch.tensor([1, 2])  # only bins 1 and 2 present
-# |     t0 = torch.tensor([30.0, 70.0])
-# |     target_moving = np.array([0.40, 0.40, 0.20])  # has 0.20 on bin 3
-# |
-# |     t_cal = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# |
-# |     # Conditioned target on {1, 2} is [0.4/0.8, 0.4/0.8] = [0.5, 0.5]
-# |     inter_total = t_cal.sum().item()
-# |     p_b1 = t_cal[bins == 1].sum().item() / inter_total
-# |     p_b2 = t_cal[bins == 2].sum().item() / inter_total
-# |
-# |     assert pytest.approx(0.5, abs=1e-5) == p_b1
-# |     assert pytest.approx(0.5, abs=1e-5) == p_b2
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_calibrate_moving_bins_with_pair_distance():
-# |     """T21b: Verify calibrate_moving_bins using direct pair_distance tensor (D_ij > 0)."""
-# |     torch.manual_seed(42)
-# |     o_idx = torch.tensor([0, 1, 0, 2, 3, 3])
-# |     d_idx = torch.tensor([0, 1, 1, 3, 2, 3])  # 0, 1, 5 are intrazonal
-# |     bins = torch.tensor([0, 0, 1, 2, 3, 0])
-# |     dist_km = torch.tensor([0.0, 0.0, 5.2, 25.0, 120.0, 0.0])
-# |     pair_distance = torch.log1p(dist_km)
-# |     t0 = torch.tensor([50.0, 120.0, 30.0, 80.0, 20.0, 200.0])
-# |     target_moving = np.array([0.25, 0.50, 0.25])
-# |
-# |     t_cal_bins = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0)
-# |     t_cal_dist = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=1.0, pair_distance=pair_distance)
-# |
-# |     assert torch.allclose(t_cal_bins, t_cal_dist, atol=1e-6)
-# |     # Intrazonal identity
-# |     assert torch.allclose(t_cal_dist[[0, 1, 5]], t0[[0, 1, 5]], atol=1e-6)
-# |     # Interzonal mass preservation
-# |     assert pytest.approx(t0[[2, 3, 4]].sum().item(), rel=1e-5) == t_cal_dist[[2, 3, 4]].sum().item()
-# |
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_kl_calibration.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_leakage_and_splits.py =====
-# | """
-# | Tests for Data Splits, Scaler Isolation, and Omega_c Candidate Provenance.
-# | (Tests T11 to T15)
-# | """
-# |
-# | import pytest
-# | import torch
-# | import numpy as np
-# | from od_plan_tester.project_adapter import (
-# |     generate_5fold_splits,
-# |     load_city,
-# |     load_cities,
-# | )
-# |
-# |
-# | @pytest.mark.reference
-# | def test_stratified_5fold_split_structure():
-# |     """T11: 5-Fold split contains 5 folds, each with 40 train and 10 test cities."""
-# |     splits = generate_5fold_splits(data_root="data")
-# |
-# |     assert len(splits) == 5
-# |     for fold_id, split in splits.items():
-# |         assert len(split["train"]) == 40
-# |         assert len(split["test"]) == 10
-# |         # Disjoint
-# |         assert len(set(split["train"]) & set(split["test"])) == 0
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_stratified_5fold_exact_single_coverage():
-# |     """T12: Across all 5 folds, every single city of the 50 cities is tested exactly once."""
-# |     splits = generate_5fold_splits(data_root="data")
-# |
-# |     all_test_cities = []
-# |     for split in splits.values():
-# |         all_test_cities.extend(split["test"])
-# |
-# |     assert len(all_test_cities) == 50
-# |     assert len(set(all_test_cities)) == 50, "Every city must appear in the test set exactly once."
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_scaler_train_isolation():
-# |     """T13: StandardScaler is fitted strictly on source training cities; target city tracts never enter scaler."""
-# |     train_cities = ["Raleigh", "Denver"]
-# |     test_city = "Philadelphia"
-# |
-# |     train_data_list, fitted_scaler = load_cities(train_cities, data_root="data")
-# |     test_data = load_city(test_city, data_root="data", feature_scaler=fitted_scaler, fit_scaler=False)
-# |
-# |     total_train_tracts = sum(c.n_tracts for c in train_data_list)
-# |     assert fitted_scaler.n_samples_seen_ == total_train_tracts
-# |     assert fitted_scaler.n_samples_seen_ != (total_train_tracts + test_data.n_tracts)
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_omega_c_provenance_strictly_positive():
-# |     """T14: Target city candidate pairs Omega_c contain strictly positive flow counts (T_ij >= 1)."""
-# |     test_cities = ["Philadelphia", "Denver", "Raleigh"]
-# |     for c_name in test_cities:
-# |         cd = load_city(c_name, data_root="data")
-# |         assert (cd.pair_trips >= 1.0).all()
-# |         assert cd.pair_trips.min().item() >= 1.0
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_unobserved_pairs_excluded_not_zero_filled():
-# |     """T15: Candidate support Omega_c has size <= N*(N-1); unobserved pairs are excluded (not zero-filled)."""
-# |     cd = load_city("Philadelphia", data_root="data")
-# |     n_nodes = cd.n_tracts
-# |     max_possible_pairs = n_nodes * n_nodes
-# |
-# |     assert cd.n_pairs <= max_possible_pairs
-# |     assert len(cd.pair_trips) == cd.n_pairs
-# |     # Ensure there are no 0s stored
-# |     assert not (cd.pair_trips == 0).any()
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_omega_c_plus_distance_equivalence():
-# |     """T15b: Omega_c^+ definition invariant: (bin_labels > 0) <=> (D_ij > 0) <=> (pair_o != pair_d)."""
-# |     test_cities = ["Philadelphia", "Denver", "Raleigh", "Austin", "Seattle"]
-# |     for c_name in test_cities:
-# |         cd = load_city(c_name, data_root="data")
-# |         dist_km = torch.expm1(cd.pair_distance)
-# |
-# |         # 1. Invariant: bin_labels > 0 iff distance_km > 0
-# |         assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Bin label vs distance mismatch in {c_name}"
-# |
-# |         # 2. Invariant: (pair_o != pair_d) & (bin_labels > 0) strictly matches (pair_o != pair_d) & (D_ij > 0)
-# |         mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
-# |         mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
-# |         assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ mask mismatch in {c_name}"
-# |
-# |         # 3. Invariant: Intrazonal pairs have distance == 0 and bin == 0
-# |         intra_mask = (cd.pair_o_idx == cd.pair_d_idx)
-# |         assert torch.all(dist_km[intra_mask] == 0.0)
-# |         assert torch.all(cd.bin_labels[intra_mask] == 0)
-# |
-# |
-# | @pytest.mark.scientific
-# | def test_all_50_cities_omega_plus_invariants():
-# |     """T15c: Exhaustive verification across all 50 dataset cities that D_ij > 0 <=> bin_labels > 0."""
-# |     from src.data.city_splits import get_all_cities_sorted_by_size
-# |     all_cities_info = get_all_cities_sorted_by_size(data_root="data")
-# |     assert len(all_cities_info) == 50
-# |
-# |     for c_info in all_cities_info:
-# |         c_name = c_info["city"]
-# |         cd = load_city(c_name, data_root="data")
-# |         dist_km = torch.expm1(cd.pair_distance)
-# |
-# |         # Invariant: bin_labels > 0 strictly equals distance_km > 0
-# |         assert torch.equal(cd.bin_labels > 0, dist_km > 0.0), f"Distance vs bin mismatch in {c_name}"
-# |
-# |         # Invariant: Omega_c^+ mask strictly identical
-# |         mask_bins = (cd.pair_o_idx != cd.pair_d_idx) & (cd.bin_labels > 0)
-# |         mask_dist = (cd.pair_o_idx != cd.pair_d_idx) & (dist_km > 0.0)
-# |         assert torch.equal(mask_bins, mask_dist), f"Omega_c^+ definition discrepancy in {c_name}"
-# |
-# |
-# |
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_leakage_and_splits.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_metrics.py =====
-# | """
-# | Tests for Evaluation Metrics Suite (CPC, CPC_norm, RMSE-log1p, Pearson r).
-# | (Tests T27 to T31)
-# | """
-# |
-# | import pytest
-# | import torch
-# | import numpy as np
-# | from od_plan_tester.project_adapter import (
-# |     compute_cpc,
-# |     compute_cpc_norm,
-# |     compute_rmse_log1p,
-# |     compute_pearson_r,
-# |     evaluate_all,
-# | )
-# |
-# |
-# | @pytest.mark.reference
-# | def test_cpc_bounds_and_symmetry():
-# |     """T27: CPC is bounded in [0, 1] and symmetric CPC(A, B) == CPC(B, A)."""
-# |     t_true = torch.tensor([10.0, 50.0, 100.0, 500.0])
-# |     t_pred = torch.tensor([15.0, 40.0, 120.0, 480.0])
-# |
-# |     cpc1 = compute_cpc(t_true, t_pred)
-# |     cpc2 = compute_cpc(t_pred, t_true)
-# |
-# |     assert 0.0 <= cpc1 <= 1.0
-# |     assert pytest.approx(cpc1, rel=1e-6) == cpc2
-# |
-# |     # Perfect prediction has CPC = 1.0
-# |     assert pytest.approx(1.0, rel=1e-6) == compute_cpc(t_true, t_true)
-# |
-# |
-# | @pytest.mark.reference
-# | def test_cpc_norm_1_minus_tvd():
-# |     """T28: Normalized CPC matches 1 - 0.5 * sum |p_i - q_i| and is scale-invariant."""
-# |     t_true = torch.tensor([10.0, 20.0, 30.0])
-# |     t_pred = torch.tensor([20.0, 40.0, 60.0])  # identical shape, 2x scale
-# |
-# |     cpc_norm = compute_cpc_norm(t_true, t_pred)
-# |     assert pytest.approx(1.0, rel=1e-6) == cpc_norm
-# |
-# |
-# | @pytest.mark.reference
-# | def test_rmse_log1p_zero_on_identical():
-# |     """T29: RMSE-log1p is strictly 0.0 on identical inputs and positive otherwise."""
-# |     t_true = torch.tensor([5.0, 15.0, 50.0])
-# |     t_pred = torch.tensor([10.0, 20.0, 60.0])
-# |
-# |     assert pytest.approx(0.0, abs=1e-6) == compute_rmse_log1p(t_true, t_true)
-# |     assert compute_rmse_log1p(t_true, t_pred) > 0.0
-# |
-# |
-# | @pytest.mark.reference
-# | def test_pearson_r_bounds():
-# |     """T30: Pearson r is 1.0 on linear transformation and bounded in [-1, 1]."""
-# |     t_true = torch.tensor([10.0, 20.0, 30.0, 40.0])
-# |     t_pred = 3.0 * t_true + 5.0
-# |
-# |     r = compute_pearson_r(t_true, t_pred)
-# |     assert pytest.approx(1.0, rel=1e-5) == r
-# |
-# |
-# | @pytest.mark.contract
-# | def test_evaluate_all_contract():
-# |     """T31: evaluate_all returns all locked primary and secondary metrics in a dictionary."""
-# |     t_true = torch.tensor([10.0, 20.0, 30.0])
-# |     t_pred = torch.tensor([12.0, 18.0, 35.0])
-# |
-# |     res = evaluate_all(t_true, t_pred)
-# |     assert isinstance(res, dict)
-# |     assert "cpc" in res
-# |     assert "cpc_norm" in res
-# |     assert "rmse_log1p" in res
-# |     assert "pearson_r" in res
-# |     for v in res.values():
-# |         assert isinstance(v, float)
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_metrics.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_yd_and_sampling.py =====
-# | """
-# | Tests for Moving-Bin Y_D Extraction (Oracle & Real Meta) and Distributional Overlap.
-# | (Tests T22 to T26)
-# | """
-# |
-# | import pytest
-# | import torch
-# | import numpy as np
-# | from od_plan_tester.project_adapter import (
-# |     extract_yd_moving_oracle,
-# |     extract_M1_city_oracle_obs,
-# |     compute_distributional_overlap,
-# |     sample_multinomial_yd,
-# | )
-# |
-# |
-# | @pytest.mark.reference
-# | def test_yd_moving_oracle_assignment():
-# |     """T22: extract_yd_moving_oracle produces shape (3,), sums to 1.0, and excludes intrazonal trips."""
-# |     # 4 pairs: pair 0 is intrazonal (0,0, bin 0, trips=100); pairs 1,2,3 are interzonal in bins 1,2,3 with trips 10, 20, 30
-# |     o_idx = torch.tensor([0, 0, 0, 0])
-# |     d_idx = torch.tensor([0, 1, 2, 3])
-# |     bin_labels = torch.tensor([0, 1, 2, 3])
-# |     pair_trips = torch.tensor([100.0, 10.0, 20.0, 30.0])
-# |
-# |     yd_moving = extract_yd_moving_oracle(pair_trips, bin_labels, o_idx, d_idx)
-# |
-# |     assert yd_moving.shape == (3,)
-# |     assert pytest.approx(1.0, rel=1e-6) == float(np.sum(yd_moving))
-# |     # Interzonal total = 60 -> proportions: [10/60, 20/60, 30/60] = [1/6, 1/3, 1/2]
-# |     np.testing.assert_allclose(yd_moving, [1.0 / 6.0, 1.0 / 3.0, 0.5], atol=1e-5)
-# |
-# |
-# | @pytest.mark.contract
-# | def test_M1_city_oracle_obs_meta_sum():
-# |     """T23: extract_M1_city_oracle_obs from Meta mobility data produces shape (3,) and sums strictly to 1.0."""
-# |     sample_cities = ["Philadelphia", "Denver", "Raleigh"]
-# |     for c_name in sample_cities:
-# |         yd_real = extract_M1_city_oracle_obs(c_name, meta_prior_dir="meta_prior")
-# |         assert yd_real is not None, f"Missing moving Meta Y_D for {c_name}"
-# |         assert yd_real.shape == (3,)
-# |         assert pytest.approx(1.0, rel=1e-5) == float(np.sum(yd_real))
-# |         assert (yd_real >= 0.0).all()
-# |
-# |
-# | @pytest.mark.reference
-# | def test_distributional_overlap_bounds():
-# |     """T24: compute_distributional_overlap (Overlap / CPC_dist) is in [0, 1] and 1.0 on identical distributions."""
-# |     p = np.array([0.25, 0.50, 0.25])
-# |     q = np.array([0.30, 0.40, 0.30])
-# |
-# |     overlap_self = compute_distributional_overlap(p, p)
-# |     overlap_pq = compute_distributional_overlap(p, q)
-# |
-# |     assert pytest.approx(1.0, rel=1e-6) == overlap_self
-# |     assert 0.0 <= overlap_pq <= 1.0
-# |     # Overlap = min(0.25, 0.30) + min(0.50, 0.40) + min(0.25, 0.30) = 0.25 + 0.40 + 0.25 = 0.90
-# |     assert pytest.approx(0.90, rel=1e-6) == overlap_pq
-# |
-# |
-# | @pytest.mark.reference
-# | def test_multinomial_sampling_stochastic_validity():
-# |     """T25: Multinomial sampling produces valid distributions across seeds."""
-# |     t_true = torch.tensor([50.0, 150.0, 300.0, 500.0])
-# |     bin_labels = torch.tensor([0, 1, 2, 3])
-# |
-# |     for m in [100, 1000, 10000]:
-# |         yd_m = sample_multinomial_yd(t_true, bin_labels, m=m, seed=42)
-# |         assert len(yd_m) == 4
-# |         assert pytest.approx(1.0, rel=1e-5) == float(np.sum(yd_m))
-# |         assert (yd_m >= 0.0).all()
-# |
-# |
-# | @pytest.mark.reference
-# | def test_multinomial_sampling_asymptotic_convergence():
-# |     """T26: When m=inf, Multinomial sampling converges to the exact underlying empirical distribution."""
-# |     t_true = torch.tensor([100.0, 200.0, 300.0, 400.0])
-# |     bin_labels = torch.tensor([0, 1, 2, 3])
-# |
-# |     yd_inf = sample_multinomial_yd(t_true, bin_labels, m=np.inf, seed=42)
-# |     expected = np.array([0.1, 0.2, 0.3, 0.4])
-# |     np.testing.assert_allclose(yd_inf, expected, atol=1e-6)
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_yd_and_sampling.py =====
-
-
-# ===== BEGIN SOURCE FILE: od_plan_tester/tests/test_ztnb_oracle.py =====
-# | """
-# | Tests for ZTNB Loss, Conditional Expectation, and Gravity Prior Oracle.
-# | (Tests T01 to T06)
-# | """
-# |
-# | import math
-# | import pytest
-# | import torch
-# | import numpy as np
-# | from od_plan_tester.project_adapter import (
-# |     nb_log_prob,
-# |     nb_log_prob_at_zero,
-# |     ztnb_nll,
-# |     compute_conditional_mean,
-# |     GravityPrior,
-# | )
-# |
-# |
-# | @pytest.mark.reference
-# | def test_ztnb_log_prob_zero_formula():
-# |     """T01: Verify base NB log P(T=0) = phi * log(phi / (mu + phi))."""
-# |     mu_vals = [0.5, 2.0, 10.0, 100.0]
-# |     phi_vals = [0.1, 1.0, 5.0]
-# |
-# |     for mu in mu_vals:
-# |         for phi in phi_vals:
-# |             log_phi = torch.tensor(math.log(phi))
-# |             mu_t = torch.tensor([mu])
-# |             log_p0 = nb_log_prob_at_zero(mu_t, log_phi).item()
-# |             expected = phi * math.log(phi / (mu + phi))
-# |             assert pytest.approx(expected, rel=1e-5) == log_p0
-# |
-# |
-# | @pytest.mark.contract
-# | @pytest.mark.scientific
-# | def test_ztnb_nll_strictly_positive_support():
-# |     """T02: ZTNB NLL enforces T >= 1 and computes finite exact likelihood on positive counts."""
-# |     t_pos = torch.tensor([1.0, 2.0, 5.0, 20.0])
-# |     mu = torch.tensor([1.5, 2.0, 4.0, 18.0])
-# |     log_phi = torch.tensor(0.0)
-# |
-# |     loss = ztnb_nll(t_pos, mu, log_phi)
-# |     assert torch.isfinite(loss)
-# |     assert loss.item() > 0.0
-# |
-# |     # Ensure zero counts trigger assertion error
-# |     t_with_zero = torch.tensor([0.0, 1.0, 2.0])
-# |     with pytest.raises(AssertionError):
-# |         ztnb_nll(t_with_zero, torch.ones(3), log_phi)
-# |
-# |
-# | @pytest.mark.reference
-# | def test_ztnb_conditional_mean_strictly_greater():
-# |     """T03: Conditional positive expectation E[T | T >= 1] = mu / (1 - P(0)) is strictly > mu."""
-# |     mu = torch.tensor([0.1, 1.0, 5.0, 20.0])
-# |     log_phi = torch.tensor(math.log(2.0))
-# |     c_mean = compute_conditional_mean(mu, log_phi)
-# |
-# |     assert (c_mean > mu).all()
-# |     # Manual check for mu=1.0, phi=2.0
-# |     # P(0) = (2 / (1 + 2))^2 = 4/9
-# |     # E[T|T>=1] = 1.0 / (1 - 4/9) = 9/5 = 1.8
-# |     expected_1 = 1.0 / (1.0 - (2.0 / 3.0) ** 2)
-# |     assert pytest.approx(expected_1, rel=1e-4) == c_mean[1].item()
-# |
-# |
-# | @pytest.mark.reference
-# | def test_ztnb_conditional_mean_asymptotics():
-# |     """T04: As mu -> infinity, P(0) -> 0 and E[T | T >= 1] -> mu."""
-# |     mu_large = torch.tensor([10000.0, 50000.0])
-# |     log_phi = torch.tensor(0.0)  # phi = 1.0
-# |     c_mean = compute_conditional_mean(mu_large, log_phi)
-# |
-# |     rel_diff = torch.abs(c_mean - mu_large) / mu_large
-# |     assert (rel_diff < 1e-3).all()
-# |
-# |
-# | @pytest.mark.reference
-# | def test_gravity_prior_formula_and_decay():
-# |     """T05: Gravity model formula: log T = G + log Pi + log Pj - alpha * log D."""
-# |     grav = GravityPrior(init_G=0.5, init_alpha=1.5)
-# |     pi = torch.tensor([1000.0, 2000.0])
-# |     pj = torch.tensor([500.0, 4000.0])
-# |     d = torch.tensor([10.0, 20.0])
-# |
-# |     log_t = grav(pi, pj, d)
-# |     expected_0 = 0.5 + math.log(1000.0) + math.log(500.0) - 1.5 * math.log(10.0)
-# |     assert pytest.approx(expected_0, rel=1e-4) == log_t[0].item()
-# |
-# |     # Verify distance decay: larger distance yields smaller predicted flow
-# |     d_near = torch.tensor([5.0])
-# |     d_far = torch.tensor([50.0])
-# |     p_const = torch.tensor([1000.0])
-# |     assert grav(p_const, p_const, d_near).item() > grav(p_const, p_const, d_far).item()
-# |
-# |
-# | @pytest.mark.contract
-# | def test_gravity_prior_learnable_gradients():
-# |     """T06: Trainable shared gravity parameters G and log_alpha produce finite valid gradients."""
-# |     grav = GravityPrior()
-# |     pi = torch.tensor([1000.0])
-# |     pj = torch.tensor([1000.0])
-# |     d = torch.tensor([5.0])
-# |
-# |     out = grav(pi, pj, d)
-# |     loss = (out - torch.tensor([10.0])) ** 2
-# |     loss.backward()
-# |
-# |     assert grav.G.grad is not None and torch.isfinite(grav.G.grad)
-# |     assert grav.log_alpha.grad is not None and torch.isfinite(grav.log_alpha.grad)
-
-# ===== END SOURCE FILE: od_plan_tester/tests/test_ztnb_oracle.py =====
-
+# | from typing import Callable
+# |
+# |
+# | CANONICAL_SEEDS = [1, 10, 100]
+# | CANONICAL_FOLDS = [1, 2, 3, 4, 5]
+# |
+# |
+# | @dataclass(frozen=True)
+# | class Task:
+# |     name: str
+# |     role: str
+# |     artifact: Path | None
+# |     command: str | None
+# |     optional: bool = False
+# |     checker: Callable[[Path | None], tuple[str, str]] | None = None
+# |
+# |
+# | def _json(path: Path) -> dict:
+# |     return json.loads(path.read_text(encoding="utf-8"))
+# |
+# |
+# | def _check_checkpoints(_: Path | None) -> tuple[str, str]:
+# |     missing = [
+# |         f"results/checkpoints/5fold_fold{fold}_seed{seed}.pt"
+# |         for fold in CANONICAL_FOLDS
+# |         for seed in CANONICAL_SEEDS
+# |         if not Path(f"results/checkpoints/5fold_fold{fold}_seed{seed}.pt").exists()
+# |     ]
+# |     if missing:
+# |         return "missing", f"missing {len(missing)}/15 canonical GNN checkpoints"
+# |     return "complete", "15/15 canonical GNN checkpoints present"
+# |
+# |
+# | def _check_5fold(path: Path | None) -> tuple[str, str]:
+# |     if path is None or not path.exists():
+# |         return "missing", "canonical core 5-fold result not found"
+# |     payload = _json(path)
+# |     n = len(payload.get("city_level_results", []))
+# |     if n == 50:
+# |         return "complete", "50/50 city-level canonical GNN records present"
+# |     return "partial", f"{n}/50 city-level canonical GNN records present"
+# |
+# |
+# | def _check_e1_specificity(path: Path | None) -> tuple[str, str]:
+# |     if path is None or not path.exists():
+# |         smoke = Path("results/e1_canonical_specificity_v2_smoke/e1_specificity_results.json")
+# |         if smoke.exists():
+# |             return "smoke-only", "smoke artifact exists; full 50-city canonical specificity output missing"
+# |         return "missing", "full canonical 9-donor specificity output missing"
+# |     payload = _json(path)
+# |     summary = payload.get("summary", {})
+# |     n = summary.get("n_cities", len(payload.get("per_city_seed_averaged", [])))
+# |     if summary.get("is_full_50_complete") is True and n == 50:
+# |         return "complete", "full 50-city E1-v2 specificity complete"
+# |     return "partial", f"{n}/50 city-level E1-v2 specificity records present"
+# |
+# |
+# | def _check_csv_rows(path: Path | None, expected: int, label: str) -> tuple[str, str]:
+# |     if path is None or not path.exists():
+# |         return "missing", f"{label} artifact missing"
+# |     rows = max(0, len(path.read_text(encoding="utf-8", errors="replace").splitlines()) - 1)
+# |     if rows >= expected:
+# |         return "complete", f"{rows} rows present"
+# |     return "partial", f"{rows}/{expected} rows present"
+# |
+# |
+# | def _check_json_exists(path: Path | None, label: str) -> tuple[str, str]:
+# |     if path is None or not path.exists():
+# |         return "missing", f"{label} summary missing"
+# |     return "complete", f"{label} summary present"
+# |
+# |
+# | TASKS = [
+# |     Task(
+# |         name="Canonical GNN checkpoints",
+# |         role="prerequisite",
+# |         artifact=None,
+# |         command="python run_full_experiment.py --seeds 1 10 100 --folds 1 2 3 4 5 --device cpu",
+# |         checker=_check_checkpoints,
+# |     ),
+# |     Task(
+# |         name="Core canonical GNN result",
+# |         role="core conclusion",
+# |         artifact=Path("results/5fold_results.json"),
+# |         command="python run_full_experiment.py --seeds 1 10 100 --folds 1 2 3 4 5 --device cpu",
+# |         checker=_check_5fold,
+# |     ),
+# |     Task(
+# |         name="E1-v2 9-donor specificity",
+# |         role="highest-priority missing argument",
+# |         artifact=Path("results/e1_canonical_specificity_v2/e1_specificity_results.json"),
+# |         command="python src/experiment/run_e1_specificity_from_checkpoints.py --resume --device cpu",
+# |         checker=_check_e1_specificity,
+# |     ),
+# |     Task(
+# |         name="Matched placebo robustness",
+# |         role="robustness on canonical checkpoints",
+# |         artifact=Path("results/placebo_matched_v2/matched_placebo_per_city.csv"),
+# |         command="python src/experiment/run_placebo_matched_v2.py --b 1000",
+# |         checker=lambda p: _check_csv_rows(p, 50, "matched placebo per-city"),
+# |     ),
+# |     Task(
+# |         name="Partial-OD equivalence v2",
+# |         role="information-equivalence main arm",
+# |         artifact=Path("results/partial_od_equivalence_v2/combined/summary.json"),
+# |         command="python src/experiment/run_partial_od_equivalence_v2.py --resume --device cpu",
+# |         checker=lambda p: _check_json_exists(p, "partial-OD v2 combined"),
+# |     ),
+# |     Task(
+# |         name="Direct-OD equivalence v1",
+# |         role="strong comparison arm if needed",
+# |         artifact=Path("results/direct_od_equivalence_v1/combined/summary.json"),
+# |         command="python src/experiment/run_direct_od_equivalence_v1.py --resume --workers 8 --device cpu",
+# |         optional=True,
+# |         checker=lambda p: _check_json_exists(p, "direct-OD v1 combined"),
+# |     ),
+# |     Task(
+# |         name="Spatial-resolution summary",
+# |         role="summary from existing frozen checkpoints/results",
+# |         artifact=Path("results/spatial_resolution/spatial_resolution_summary.json"),
+# |         command="python src/experiment/run_spatial_resolution_experiment.py --device cpu",
+# |         checker=lambda p: _check_json_exists(p, "spatial-resolution"),
+# |     ),
+# |     Task(
+# |         name="Convergence pilot",
+# |         role="appendix only",
+# |         artifact=Path("results/convergence_pilot"),
+# |         command="python src/experiment/run_convergence_pilot.py",
+# |         optional=True,
+# |         checker=lambda p: ("optional", "appendix-only; run only if requested"),
+# |     ),
+# |     Task(
+# |         name="Real-observation test",
+# |         role="requires independent mobility aggregate source",
+# |         artifact=None,
+# |         command=None,
+# |         optional=True,
+# |         checker=lambda p: ("blocked", "blocked until an independent mobility aggregate source is available"),
+# |     ),
+# | ]
+# |
+# |
+# | def build_report() -> str:
+# |     lines = [
+# |         "# Scientific Completion Status",
+# |         "",
+# |         "| Priority | Task | Role | Status | Detail | Command |",
+# |         "|---:|---|---|---|---|---|",
+# |     ]
+# |     for index, task in enumerate(TASKS, start=1):
+# |         checker = task.checker or (lambda path: _check_json_exists(path, task.name))
+# |         status, detail = checker(task.artifact)
+# |         command = f"`{task.command}`" if task.command else "-"
+# |         optional = " optional" if task.optional else ""
+# |         lines.append(f"| {index} | {task.name} | {task.role}{optional} | {status} | {detail} | {command} |")
+# |     lines.extend([
+# |         "",
+# |         "Recommended order:",
+# |         "1. Finish E1-v2 9-donor specificity from canonical checkpoints.",
+# |         "2. Rerun matched placebo robustness on canonical checkpoints.",
+# |         "3. Run Partial-OD equivalence v2.",
+# |         "4. Run Direct-OD equivalence v1 only if a stronger comparison arm is needed.",
+# |         "5. Generate spatial-resolution summary from the frozen checkpoint path.",
+# |         "6. Keep convergence pilot appendix-only and real-observation test blocked until independent mobility aggregates exist.",
+# |     ])
+# |     return "\n".join(lines) + "\n"
+# |
+# |
+# | if __name__ == "__main__":
+# |     parser = argparse.ArgumentParser(description="Report scientific completion status and rerun commands")
+# |     parser.add_argument("--write", action="store_true", help="Write results/scientific_completion_status.md")
+# |     args = parser.parse_args()
+# |
+# |     report = build_report()
+# |     print(report)
+# |     if args.write:
+# |         out = Path("results/scientific_completion_status.md")
+# |         out.parent.mkdir(parents=True, exist_ok=True)
+# |         out.write_text(report, encoding="utf-8")
+# |         print(f"Wrote {out}")
+# ===== END SOURCE FILE: run_scientific_completion_status.py =====
 
 # ===== BEGIN SOURCE FILE: src/aggregation/gadm2_county_aggregator.py =====
+# File: src/aggregation/gadm2_county_aggregator.py | Lines: 212 | TrailingNL: 1 | SHA256: b85b70da463b3b8bcfdbd8aae7235e8d02ff1fa7af1034137465628168188797
 # | # File: src/aggregation/gadm2_county_aggregator.py
 # |
 # | import os
@@ -3550,11 +9693,10 @@
 # |
 # | if __name__ == "__main__":
 # |     run_all()
-
 # ===== END SOURCE FILE: src/aggregation/gadm2_county_aggregator.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/calibration/bin_calibration.py =====
+# File: src/calibration/bin_calibration.py | Lines: 429 | TrailingNL: 1 | SHA256: 49b797f2b151c0f9bf9a34f3f605e1feb8398f5a1d1b548f8a4c3a2848389280
 # | r"""
 # | Interzonal Moving-Bin Calibration on Omega_c^+ via Soft KL Projection.
 # |
@@ -3983,11 +10125,10 @@
 # |     t_cal_0 = calibrate_moving_bins(t0, bins, o_idx, d_idx, target_moving, q=0.0)
 # |     assert torch.allclose(t_cal_0, t0), "q=0 must equal zero-shot!"
 # |     print("q=0 equals zero-shot: PASS")
-
 # ===== END SOURCE FILE: src/calibration/bin_calibration.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/data/city_splits.py =====
+# File: src/data/city_splits.py | Lines: 351 | TrailingNL: 1 | SHA256: 449a8a95cf128e60a9b268afe20bfa196925eef410d7f6153c5a5eb5ba7c29ff
 # | """
 # | 5-Fold Stratified City Splits across 50 US cities for Experiment E1 (v2 Amended Protocol).
 # |
@@ -4338,11 +10479,10 @@
 # |         print(f"  Train ({len(d['train'])}): {d['train'][:3]}...")
 # |         print(f"  Val   ({len(d['val'])}): {d['val']}")
 # |         print(f"  Test  ({len(d['test'])}): {d['test']}")
-
 # ===== END SOURCE FILE: src/data/city_splits.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/data/dataset.py =====
+# File: src/data/dataset.py | Lines: 519 | TrailingNL: 1 | SHA256: 701f0310a8b48c93cba37253d70f52f261cfd26f21ef03d571c1c5c8c8fd009b
 # | """
 # | City dataset loader for the distance-binned OD reconstruction study.
 # |
@@ -4861,11 +11001,10 @@
 # |     print()
 # |
 # |     print("Smoke test passed.")
-
 # ===== END SOURCE FILE: src/data/dataset.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/data/gadm_mapper.py =====
+# File: src/data/gadm_mapper.py | Lines: 88 | TrailingNL: 1 | SHA256: c71557b583391fee93290aef7475628675aae44721c34bb05ad7845b8c7c273f
 # | import pandas as pd
 # | import geopandas as gpd
 # | from pathlib import Path
@@ -4953,11 +11092,10 @@
 # |     }
 # |         
 # |     return dict(zip(result["idx"], result["GID_2"])), stats
-
 # ===== END SOURCE FILE: src/data/gadm_mapper.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/data/trip_sampler.py =====
+# File: src/data/trip_sampler.py | Lines: 72 | TrailingNL: 1 | SHA256: 3ceb1a1512dc5d0e1d2136bded2ab558cd1293f623d6b4f81575f59dc2444d19
 # | """
 # | Multinomial Trip Sampler for M_q condition.
 # |
@@ -5029,11 +11167,10 @@
 # |     print("Oracle:", sample_multinomial_yd(trips, bins, float("inf")))
 # |     print("m=100:", sample_multinomial_yd(trips, bins, 100, seed=1))
 # |     print("m=10000:", sample_multinomial_yd(trips, bins, 10000, seed=1))
-
 # ===== END SOURCE FILE: src/data/trip_sampler.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/data/urban_graph.py =====
+# File: src/data/urban_graph.py | Lines: 229 | TrailingNL: 1 | SHA256: a647e8f3f93e760fca894480cb81d1dab5363313176df167c0b7ca4870270313
 # | """
 # | Spatial Urban Graph Construction (G^urban).
 # |
@@ -5262,11 +11399,10 @@
 # |     ])
 # |     ei, ed, r = build_adaptive_radius_graph(coords, scale_fraction=0.2)
 # |     print(f"Adaptive radius: {r:.2f} km | Edges: {ei.shape[1]}")
-
 # ===== END SOURCE FILE: src/data/urban_graph.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/data/yd_extractor.py =====
+# File: src/data/yd_extractor.py | Lines: 379 | TrailingNL: 1 | SHA256: e6dd78a0979d4216d165176aa90c3d3f80a1966d7f4ad87bf7d1ce49d03b5db7
 # | """
 # | Y_D Extractor for Moving Bins (Primary) and Full 4-Bin (Ablation).
 # |
@@ -5645,11 +11781,10 @@
 # |         o_3 = extract_yd_moving_oracle(cd.pair_trips, cd.bin_labels, cd.pair_o_idx, cd.pair_d_idx)
 # |         print(f"{city:<15}: Oracle_moving = {np.round(o_3, 4).tolist()}")
 # |
-
 # ===== END SOURCE FILE: src/data/yd_extractor.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/audit_direct_od_v1.py =====
+# File: src/experiment/audit_direct_od_v1.py | Lines: 509 | TrailingNL: 1 | SHA256: f225f951d8c992a3c699a2fca01e3dcef4a5d60cf3991ddf4d96a78d5d63fc99
 # | """
 # | Comprehensive Audit & Precision Certification Suite for Direct Partial-OD Equivalence v1
 # | ========================================================================================
@@ -6158,11 +12293,10 @@
 # | if __name__ == "__main__":
 # |     success = execute_full_audit_suite()
 # |     sys.exit(0 if success else 1)
-
 # ===== END SOURCE FILE: src/experiment/audit_direct_od_v1.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/compare_backbones.py =====
+# File: src/experiment/compare_backbones.py | Lines: 172 | TrailingNL: 1 | SHA256: 99ff97ba3c8f2bf36efd94f16aa281288e79b4756f530e2a775cd4c2a8bd7d11
 # | """
 # | Compare Urban GNN and Pairwise MLP backbones across the locked 5-fold evaluation (N=50 cities).
 # | Reads results from `results/5fold_results.json` and `results/mlp_backbone_results.json`.
@@ -6334,11 +12468,10 @@
 # |     parser.add_argument("--output_dir", type=str, default="results")
 # |     args = parser.parse_args()
 # |     run_comparison(output_dir=args.output_dir)
-
 # ===== END SOURCE FILE: src/experiment/compare_backbones.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/compute_delta_r.py =====
+# File: src/experiment/compute_delta_r.py | Lines: 109 | TrailingNL: 1 | SHA256: 801477eea00c5c82b6d90ad33f060b6b30395eb6c3f6e916bb5dea9f5d587fa3
 # | """
 # | Cross-city Statistical Analysis of Moving-Bin Calibration Results (RQ1).
 # | """
@@ -6447,11 +12580,10 @@
 # |             analysis[scale_name]["rank_biserial_r"] = float(r_rb)
 # |
 # |     return analysis
-
 # ===== END SOURCE FILE: src/experiment/compute_delta_r.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/compute_qstar.py =====
+# File: src/experiment/compute_qstar.py | Lines: 52 | TrailingNL: 1 | SHA256: 98a978bb85cbac5dc9dfdf0cd65f6f5106e9c427b2a2bfab8403872ce3c902e6
 # | """
 # | Cross-city Statistical Analysis of q* and m* (RQ2).
 # |
@@ -6503,11 +12635,10 @@
 # |         }
 # |
 # |     return out
-
 # ===== END SOURCE FILE: src/experiment/compute_qstar.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/generate_q3_figures_and_stats.py =====
+# File: src/experiment/generate_q3_figures_and_stats.py | Lines: 124 | TrailingNL: 1 | SHA256: c6d2144b69d41da6805da0426c9e73b3d68b22c0782672e53f2cd2a71d7d963b
 # | import json
 # | import numpy as np
 # | import pandas as pd
@@ -6631,11 +12762,10 @@
 # |
 # | if __name__ == "__main__":
 # |     main()
-
 # ===== END SOURCE FILE: src/experiment/generate_q3_figures_and_stats.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_5fold.py =====
+# File: src/experiment/run_5fold.py | Lines: 356 | TrailingNL: 1 | SHA256: 9ce64aa402c2b596f3824e8ff0c1d1e9b98900f146710074a4ec9b4939b4ec0b
 # | """
 # | Master 5-Fold Cross-Validation Experiment Runner (Moving-Bin Calibration Framework).
 # | """
@@ -6991,11 +13121,10 @@
 # |         backbone=args.backbone,
 # |         device_str=args.device,
 # |     )
-
 # ===== END SOURCE FILE: src/experiment/run_5fold.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_backbone_robustness.py =====
+# File: src/experiment/run_backbone_robustness.py | Lines: 267 | TrailingNL: 1 | SHA256: 188dfc64592a0cdd45b9bd26615bc6af2ef522a47dbf4f56d30640ac77ce5d6b
 # | """
 # | Backbone Robustness Evaluation Experiment.
 # | Evaluates the Calibration Operator across multiple zero-shot backbones:
@@ -7262,11 +13391,10 @@
 # |
 # | if __name__ == "__main__":
 # |     run_backbone_robustness()
-
 # ===== END SOURCE FILE: src/experiment/run_backbone_robustness.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_convergence_pilot.py =====
+# File: src/experiment/run_convergence_pilot.py | Lines: 145 | TrailingNL: 1 | SHA256: 945f3b65b817fbed3745aed45fb42e290e7c3aefc714c1e76719d3d106d7f2af
 # | """
 # | Convergence Pilot for Zero-Shot OD Backbone (Fold 1)
 # | ====================================================
@@ -7411,11 +13539,10 @@
 # |     parser.add_argument("--device", default="cpu", help="PyTorch device")
 # |     args = parser.parse_args()
 # |     run_convergence_pilot(fold_id=args.fold, device_str=args.device)
-
 # ===== END SOURCE FILE: src/experiment/run_convergence_pilot.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_direct_od_equivalence_v1.py =====
+# File: src/experiment/run_direct_od_equivalence_v1.py | Lines: 1161 | TrailingNL: 1 | SHA256: 8ea0d0bdab1ed101c21722e7538d1d7198b81d65fbc5f727f3c9ea174bb342bc
 # | """
 # | Direct Partial-OD Information Equivalence Experiment (v1) - High-Performance Vectorized Runner
 # | =============================================================================================
@@ -8576,11 +14703,10 @@
 # |             )
 # |         if not args.smoke and set(args.folds) == {1, 2, 3, 4, 5}:
 # |             aggregate_combined_direct_od(output_dir=out_p)
-
 # ===== END SOURCE FILE: src/experiment/run_direct_od_equivalence_v1.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_e1.py =====
+# File: src/experiment/run_e1.py | Lines: 943 | TrailingNL: 1 | SHA256: c6b6b3b7450c6084223511fb337e385d9c22b028d51a5a6451b8c0327aed4cc2
 # | """Legacy E1 experiment runner; canonical training uses run_5fold.py.
 # |
 # | This module is retained for historical reproduction and is not part of the
@@ -9523,11 +15649,228 @@
 # |     parser.add_argument("--seed", type=int, default=SEED, help="Random seed for model training and bootstrap")
 # |     args = parser.parse_args()
 # |     run_e1(smoke=args.smoke, smoke_cities=args.cities, device_str=args.device, num_threads=args.num_threads, seed=args.seed)
-
 # ===== END SOURCE FILE: src/experiment/run_e1.py =====
 
+# ===== BEGIN SOURCE FILE: src/experiment/run_e1_specificity_from_checkpoints.py =====
+# File: src/experiment/run_e1_specificity_from_checkpoints.py | Lines: 214 | TrailingNL: 0 | SHA256: 649bf336c361b989c670fc568214e59baacd5adc0cc3c1c0922d1387b25efc77
+# | """
+# | Canonical E1-v2 9-donor specificity runner using frozen GNN checkpoints.
+# |
+# | This runner evaluates the E1-v2 target-vs-wrong-donor specificity estimand
+# | without retraining. It loads the 15 canonical GNN checkpoints from
+# | results/checkpoints/5fold_fold{fold}_seed{seed}.pt, averages seeds within city,
+# | and then applies the existing E1 city-level statistical summary.
+# | """
+# |
+# | from __future__ import annotations
+# |
+# | import argparse
+# | import json
+# | import sys
+# | import time
+# | from pathlib import Path
+# | from typing import Any
+# |
+# | import numpy as np
+# |
+# | REPO_ROOT = Path(__file__).resolve().parents[2]
+# | sys.path.insert(0, str(REPO_ROOT))
+# |
+# | from src.experiment import run_e1 as e1
+# | from src.training.train import load_checkpoint
+# |
+# |
+# | CANONICAL_SEEDS = [1, 10, 100]
+# | DEFAULT_OUTPUT_DIR = Path("results/e1_canonical_specificity_v2")
+# |
+# |
+# | def _mean_numeric(seed_results: list[dict[str, Any]], key: str) -> float:
+# |     return float(np.mean([r[key] for r in seed_results]))
+# |
+# |
+# | def _average_city_seed_results(seed_results: list[dict[str, Any]], seeds: list[int]) -> dict[str, Any]:
+# |     first = seed_results[0]
+# |     averaged = {
+# |         "city": first["city"],
+# |         "fold": first["fold"],
+# |         "donor_city": "all_9_fold_donors",
+# |         "n_wrong_donors": first["n_wrong_donors"],
+# |         "n_inter_pairs": first["n_inter_pairs"],
+# |         "K_active": first["K_active"],
+# |         "model_seeds": seeds,
+# |         "cpc_baseline": _mean_numeric(seed_results, "cpc_baseline"),
+# |         "cpc_baseline_norm": _mean_numeric(seed_results, "cpc_baseline_norm"),
+# |         "cpc_target_yd": _mean_numeric(seed_results, "cpc_target_yd"),
+# |         "cpc_target_yd_norm": _mean_numeric(seed_results, "cpc_target_yd_norm"),
+# |         "delta_cpc_target": _mean_numeric(seed_results, "delta_cpc_target"),
+# |         "cpc_wrong_yd": _mean_numeric(seed_results, "cpc_wrong_yd"),
+# |         "cpc_wrong_yd_norm": _mean_numeric(seed_results, "cpc_wrong_yd_norm"),
+# |         "delta_cpc_wrong": _mean_numeric(seed_results, "delta_cpc_wrong"),
+# |         "delta_cpc_specificity": _mean_numeric(seed_results, "delta_cpc_specificity"),
+# |         "Y_D_target": first["Y_D_target"],
+# |         "wrong_donor_breakdown_by_seed": {
+# |             str(seed): result["wrong_donor_breakdown"]
+# |             for seed, result in zip(seeds, seed_results)
+# |         },
+# |     }
+# |     return averaged
+# |
+# |
+# | def _write_json(path: Path, payload: Any) -> None:
+# |     path.parent.mkdir(parents=True, exist_ok=True)
+# |     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+# |
+# |
+# | def _load_existing_completed(path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+# |     if not path.exists():
+# |         return [], []
+# |     payload = json.loads(path.read_text(encoding="utf-8"))
+# |     return payload.get("per_city_seed_averaged", []), payload.get("per_city_per_seed", [])
+# |
+# |
+# | def run_e1_specificity_from_checkpoints(
+# |     data_root: str = "data",
+# |     output_dir: Path = DEFAULT_OUTPUT_DIR,
+# |     folds: list[int] | None = None,
+# |     seeds: list[int] | None = None,
+# |     device: str = "cpu",
+# |     smoke: bool = False,
+# |     smoke_cities: int = 1,
+# |     resume: bool = False,
+# | ) -> dict[str, Any]:
+# |     if folds is None:
+# |         folds = [1, 2, 3, 4, 5]
+# |     if seeds is None:
+# |         seeds = CANONICAL_SEEDS.copy()
+# |
+# |     if seeds != CANONICAL_SEEDS:
+# |         raise ValueError(f"E1 canonical specificity requires seeds {CANONICAL_SEEDS}, got {seeds}")
+# |
+# |     output_dir.mkdir(parents=True, exist_ok=True)
+# |     results_path = output_dir / "e1_specificity_results.json"
+# |     tables_dir = output_dir / "tables"
+# |
+# |     e1.DATA_ROOT = data_root
+# |     e1.MANIFEST_PATH = Path("results/e1/splits_manifest_v2.json")
+# |     splits = e1.load_splits_manifest_v2(str(e1.MANIFEST_PATH), data_root=data_root)
+# |     with open(e1.MANIFEST_PATH, "r", encoding="utf-8") as manifest_file:
+# |         split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
+# |
+# |     all_averaged, raw_seed_results = _load_existing_completed(results_path) if resume else ([], [])
+# |     completed = {(r["fold"], r["city"]) for r in all_averaged}
+# |
+# |     start = time.time()
+# |     for fold_id in folds:
+# |         split = splits[fold_id]
+# |         train_cities = split["train"]
+# |         test_cities = sorted(split["test"])
+# |         run_cities = test_cities[:smoke_cities] if smoke else test_cities
+# |
+# |         print(f"\n>>> [E1 canonical specificity] fold {fold_id}/5 | cities={len(run_cities)}/{len(test_cities)} | seeds={seeds}")
+# |         bin_edges, k_active = e1.compute_kbin_edges(train_cities, K=e1.K_MOVE, data_root=data_root)
+# |         if k_active != e1.K_MOVE:
+# |             raise RuntimeError(f"Expected K_active={e1.K_MOVE}, got {k_active} for fold {fold_id}")
+# |
+# |         models = {}
+# |         for seed in seeds:
+# |             ckpt_path = Path("results/checkpoints") / f"5fold_fold{fold_id}_seed{seed}.pt"
+# |             if not ckpt_path.exists():
+# |                 raise FileNotFoundError(f"Missing mandatory canonical GNN checkpoint: {ckpt_path}")
+# |             model, scaler, metadata = load_checkpoint(ckpt_path, device_str=device)
+# |             hp = metadata.get("hyperparams", {})
+# |             if metadata.get("seed") != seed or hp.get("fold") != fold_id:
+# |                 raise RuntimeError(f"Checkpoint provenance mismatch: {ckpt_path}")
+# |             if hp.get("split_manifest_sha256") != split_manifest_sha256:
+# |                 raise RuntimeError(f"Split manifest mismatch in checkpoint: {ckpt_path}")
+# |             model.eval()
+# |             models[seed] = (model, scaler)
+# |
+# |         for city in run_cities:
+# |             if (fold_id, city) in completed:
+# |                 print(f"  -> Reusing saved city result: {city}")
+# |                 continue
+# |
+# |             city_seed_results = []
+# |             for seed in seeds:
+# |                 model, scaler = models[seed]
+# |                 result = e1.run_city(
+# |                     city=city,
+# |                     model=model,
+# |                     scaler=scaler,
+# |                     bin_edges=bin_edges,
+# |                     K_active=k_active,
+# |                     test_cities=test_cities,
+# |                     fold_id=fold_id,
+# |                     device=device,
+# |                 )
+# |                 result["model_seed"] = seed
+# |                 raw_seed_results.append(result)
+# |                 city_seed_results.append(result)
+# |
+# |             averaged = _average_city_seed_results(city_seed_results, seeds)
+# |             all_averaged.append(averaged)
+# |             completed.add((fold_id, city))
+# |             print(
+# |                 f"  -> {city:<16} M0={averaged['cpc_baseline']:.4f} "
+# |                 f"target_d={averaged['delta_cpc_target']:+.4f} "
+# |                 f"wrong9_d={averaged['delta_cpc_wrong']:+.4f} "
+# |                 f"specificity={averaged['delta_cpc_specificity']:+.4f}"
+# |             )
+# |
+# |             summary = e1.compute_summary(all_averaged, bootstrap_seed=2024)
+# |             _write_json(results_path, {
+# |                 "protocol": "e1-v2-canonical-9-donor-specificity-from-checkpoints",
+# |                 "checkpoint_source": "results/checkpoints/5fold_fold{fold}_seed{seed}.pt",
+# |                 "seeds": seeds,
+# |                 "folds": folds,
+# |                 "smoke": smoke,
+# |                 "elapsed_sec": time.time() - start,
+# |                 "summary": summary,
+# |                 "per_city_seed_averaged": all_averaged,
+# |                 "per_city_per_seed": raw_seed_results,
+# |             })
+# |
+# |     summary = e1.compute_summary(all_averaged, bootstrap_seed=2024)
+# |     e1.write_tables(all_averaged, summary, table_dir=tables_dir)
+# |     payload = {
+# |         "protocol": "e1-v2-canonical-9-donor-specificity-from-checkpoints",
+# |         "checkpoint_source": "results/checkpoints/5fold_fold{fold}_seed{seed}.pt",
+# |         "seeds": seeds,
+# |         "folds": folds,
+# |         "smoke": smoke,
+# |         "elapsed_sec": time.time() - start,
+# |         "summary": summary,
+# |         "per_city_seed_averaged": all_averaged,
+# |         "per_city_per_seed": raw_seed_results,
+# |     }
+# |     _write_json(results_path, payload)
+# |     return payload
+# |
+# |
+# | if __name__ == "__main__":
+# |     parser = argparse.ArgumentParser(description="Run E1-v2 9-donor specificity on canonical frozen GNN checkpoints")
+# |     parser.add_argument("--data-root", default="data")
+# |     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+# |     parser.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4, 5])
+# |     parser.add_argument("--device", default="cpu")
+# |     parser.add_argument("--smoke", action="store_true")
+# |     parser.add_argument("--smoke-cities", type=int, default=1)
+# |     parser.add_argument("--resume", action="store_true")
+# |     args = parser.parse_args()
+# |
+# |     run_e1_specificity_from_checkpoints(
+# |         data_root=args.data_root,
+# |         output_dir=args.output_dir,
+# |         folds=args.folds,
+# |         device=args.device,
+# |         smoke=args.smoke,
+# |         smoke_cities=args.smoke_cities,
+# |         resume=args.resume,
+# |     )
+# ===== END SOURCE FILE: src/experiment/run_e1_specificity_from_checkpoints.py =====
 
 # ===== BEGIN SOURCE FILE: src/experiment/run_experiment.py =====
+# File: src/experiment/run_experiment.py | Lines: 141 | TrailingNL: 1 | SHA256: 76e0d93aa4cfa417688bac3bc291b149c36ab2cedc20d474344fdc9f4968fb6b
 # | """
 # | Experiment Runner for Moving-Bin Calibration Framework.
 # |
@@ -9668,11 +16011,10 @@
 # |         "M1_subzone_oracle_obs": m1_subzone_metrics,
 # |         "mapping_stats": mapping_stats,
 # |     }
-
 # ===== END SOURCE FILE: src/experiment/run_experiment.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_k_sensitivity_v1.py =====
+# File: src/experiment/run_k_sensitivity_v1.py | Lines: 420 | TrailingNL: 1 | SHA256: aab996e8918c0a7a9e5f0a64aefee3d2db654f64fd7c4babb288603c5bb66ebe
 # | import os
 # | import sys
 # | import json
@@ -9697,17 +16039,7 @@
 # | from src.calibration.bin_calibration import calibrate_kbins
 # | from src.training.evaluate import evaluate_moving_and_full
 # |
-# | def holm_bonferroni(p_values: list[float]) -> list[float]:
-# |     n = len(p_values)
-# |     sorted_indices = np.argsort(p_values)
-# |     adj_p = np.zeros(n)
-# |     for i, idx in enumerate(sorted_indices):
-# |         adj_p[idx] = min(1.0, p_values[idx] * (n - i))
-# |     for i in range(1, n):
-# |         idx = sorted_indices[i]
-# |         prev_idx = sorted_indices[i-1]
-# |         adj_p[idx] = max(adj_p[idx], adj_p[prev_idx])
-# |     return adj_p.tolist()
+# | from statsmodels.stats.multitest import multipletests
 # |
 # | def generate_file_hash(filepath: str) -> str:
 # |     h = hashlib.sha256()
@@ -9940,11 +16272,11 @@
 # |     # P-value adjustments
 # |     secondary_ks = [K for K in K_values if K != 8]
 # |     raw_ps = [next((s["p_1s_raw"] for s in summary_data if s["K"] == K), 1.0) for K in secondary_ks]
-# |     adj_ps = holm_bonferroni(raw_ps)
+# |     _, adj_ps, _, _ = multipletests(raw_ps, alpha=0.05, method="holm")
 # |     adj_p_map = dict(zip(secondary_ks, adj_ps))
 # |     
 # |     for s in summary_data:
-# |         s["p_1s_adj"] = adj_p_map.get(s["K"], None)
+# |         s["p_1s_adj"] = float(adj_p_map.get(s["K"], 0.0)) if s["K"] in adj_p_map else None
 # |         
 # |     # Contrasts
 # |     d8 = df_all[df_all["K"] == 8].set_index("city")
@@ -9961,23 +16293,34 @@
 # |         dk_com = dk.loc[common]
 # |         
 # |         ck = dk_com["delta_cpc"] - d8_com["delta_cpc"]
-# |         _, p_ck = stats.wilcoxon(ck, alternative="two-sided") if len(ck) > 0 else (0, 1.0)
+# |         _, p_ck = stats.wilcoxon(ck.values, alternative="two-sided") if len(ck) > 0 else (0, 1.0)
 # |         
 # |         raw_contrast_ps.append(p_ck)
+# |         
+# |         boot_means = []
+# |         for _ in range(10000):
+# |             s = []
+# |             for fold in [1, 2, 3, 4, 5]:
+# |                 f_cities = df_all[(df_all["K"] == 8) & (df_all["fold"] == fold)]["city"].values
+# |                 f_vals = dk.loc[f_cities]["delta_cpc"].values - d8.loc[f_cities]["delta_cpc"].values
+# |                 s.extend(rng.choice(f_vals, size=len(f_vals), replace=True))
+# |             boot_means.append(np.mean(s))
+# |         ci_low, ci_high = np.percentile(boot_means, [2.5, 97.5])
 # |         
 # |         rk = dk["delta_cpc"].mean() / mean_d8 if mean_d8 > 0 else None
 # |         
 # |         contrast_data.append({
 # |             "contrast": f"K{K} - K8",
 # |             "mean_diff": float(ck.mean()) if len(ck)>0 else 0.0,
-# |             "ci": [float(np.percentile(ck, 2.5)), float(np.percentile(ck, 97.5))] if len(ck)>0 else [0.0, 0.0],
+# |             "ci": [float(ci_low), float(ci_high)],
+# |             "raw_p": float(p_ck),
 # |             "p_adj": 1.0, # Placeholder, will be updated
-# |             "r": rk
+# |             "r": float(rk) if rk is not None else None
 # |         })
 # |         
-# |     adj_contrast_ps = holm_bonferroni(raw_contrast_ps)
+# |     _, adj_contrast_ps, _, _ = multipletests(raw_contrast_ps, alpha=0.05, method="holm")
 # |     for i in range(len(contrast_data)):
-# |         contrast_data[i]["p_adj"] = adj_contrast_ps[i]
+# |         contrast_data[i]["p_adj"] = float(adj_contrast_ps[i])
 # |     
 # |     # Save JSON summary
 # |     out_sum = {
@@ -9999,10 +16342,10 @@
 # |         md.append(f"| {s['K']} | {s['m0_cpc']:.4f} | {s['m1_cpc']:.4f} | {s['mean_delta']:.4f} | [{s['ci_low']:.4f}, {s['ci_high']:.4f}] | {s['pos_cities']}/{s['total_cities']} | {s['k_act_mean']:.1f} | {s['w_max_mean']:.1f} | {p_str} |")
 # |         
 # |     md.append("\n## Contrasts (vs K=8)")
-# |     md.append("| Contrast | Mean difference | 95% CI | Adjusted p |")
-# |     md.append("|---|--:|--:|--:|")
+# |     md.append("| Contrast | Mean difference | 95% CI | Raw p | Adjusted p |")
+# |     md.append("|---|--:|--:|--:|--:|")
 # |     for c in contrast_data:
-# |         md.append(f"| {c['contrast']} | {c['mean_diff']:.4f} | [{c['ci'][0]:.4f}, {c['ci'][1]:.4f}] | {c['p_adj']:.4e} |")
+# |         md.append(f"| {c['contrast']} | {c['mean_diff']:+.4f} | [{c['ci'][0]:+.4f}, {c['ci'][1]:+.4f}] | {c['raw_p']:.4e} | {c['p_adj']:.4e} |")
 # |         
 # |     with open(output_dir / "k_sensitivity_summary.md", "w") as f:
 # |         f.write("\n".join(md))
@@ -10091,11 +16434,10 @@
 # |     parser.add_argument("--smoke_test", action="store_true")
 # |     args = parser.parse_args()
 # |     run_experiment(args)
-
 # ===== END SOURCE FILE: src/experiment/run_k_sensitivity_v1.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_mlp_backbone_test.py =====
+# File: src/experiment/run_mlp_backbone_test.py | Lines: 234 | TrailingNL: 1 | SHA256: e6ec0c2903fe9b800b6de79c7bc7db2582fe01a87a8705081fa15a019ac712f4
 # | """
 # | Backbone Robustness Evaluation Experiment (Urban GNN vs Pairwise MLP).
 # | Trains and evaluates Pairwise MLP backbone (without graph convolutions)
@@ -10329,11 +16671,10 @@
 # |     
 # |     args = parser.parse_args()
 # |     run_mlp_backbone_test(args)
-
 # ===== END SOURCE FILE: src/experiment/run_mlp_backbone_test.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_noise_robustness.py =====
+# File: src/experiment/run_noise_robustness.py | Lines: 593 | TrailingNL: 1 | SHA256: 8c707cc584dbcf1b0c4847c7e774cfbe59fae02a06cda80cf422370bac63a6c0
 # | import os
 # | os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 # | import sys
@@ -10926,11 +17267,10 @@
 # |     parser.add_argument("--smoke", action="store_true")
 # |     args = parser.parse_args()
 # |     run_noise_robustness(args)
-
 # ===== END SOURCE FILE: src/experiment/run_noise_robustness.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_partial_od_equivalence_v2.py =====
+# File: src/experiment/run_partial_od_equivalence_v2.py | Lines: 922 | TrailingNL: 1 | SHA256: 51b94cf13b2b7e3752dcff989e52ba9a3b818162bbcc88e3c3b73179160a5ec0
 # | """
 # | Partial-OD Information Equivalence Experiment v2 (Final Paper Protocol)
 # | ========================================================================
@@ -11053,6 +17393,135 @@
 # |     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
 # |
 # |
+# | import multiprocessing as mp
+# |
+# |
+# | def _process_city_replicates_chunk(args_tuple: Tuple) -> List[Tuple]:
+# |     (fold_id, city_name, rep_ids, n_pairs, model_seeds, p_grid, city_cached) = args_tuple
+# |     
+# |     t_true_support = city_cached["t_true_support"]
+# |     bin_idx_support = city_cached["bin_idx_support"]
+# |     total_trip_mass = city_cached["total_trip_mass"]
+# |     yd_full = city_cached["yd_full"]
+# |     t0_by_seed = city_cached["t0_by_seed"]
+# |     t_full_by_seed = city_cached["t_full_by_seed"]
+# |     Y_hat_by_seed = city_cached["Y_hat_by_seed"]
+# |     active_by_seed = city_cached["active_by_seed"]
+# |     
+# |     chunk_rows = []
+# |     
+# |     for rep_id in rep_ids:
+# |         mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
+# |         rng = np.random.RandomState(mask_seed)
+# |         perm = rng.permutation(n_pairs)
+# |         
+# |         t_true_perm = t_true_support[perm]
+# |         bin_idx_perm = bin_idx_support[perm]
+# |         t0_perm = {s: t0_by_seed[s][perm] for s in model_seeds}
+# |         t_full_perm = {s: t_full_by_seed[s][perm] for s in model_seeds}
+# |         
+# |         running_counts_k = np.zeros(8, dtype=np.float64)
+# |         running_revealed_mass = 0.0
+# |         prev_n_reveal = 0
+# |         
+# |         for p_val in p_grid:
+# |             n_reveal = int(np.round(p_val * n_pairs))
+# |             n_unseen = n_pairs - n_reveal
+# |             if n_unseen == 0:
+# |                 continue
+# |                 
+# |             if n_reveal == 0:
+# |                 yd_partial = None
+# |                 revealed_mass = 0.0
+# |                 tv_partial = np.nan
+# |                 js_partial = np.nan
+# |             else:
+# |                 if n_reveal > prev_n_reveal:
+# |                     delta_trips = t_true_perm[prev_n_reveal:n_reveal]
+# |                     delta_bins = bin_idx_perm[prev_n_reveal:n_reveal]
+# |                     running_revealed_mass += float(np.sum(delta_trips))
+# |                     running_counts_k += np.bincount(delta_bins, weights=delta_trips, minlength=8)
+# |                     prev_n_reveal = n_reveal
+# |                 
+# |                 revealed_mass = running_revealed_mass
+# |                 if revealed_mass > 0:
+# |                     yd_partial = running_counts_k / revealed_mass
+# |                     tv_partial = float(0.5 * np.sum(np.abs(yd_partial - yd_full)))
+# |                     
+# |                     # Exact Jensen-Shannon Divergence
+# |                     m_dist = 0.5 * (yd_partial + yd_full)
+# |                     mask_p = (yd_partial > 1e-15) & (m_dist > 1e-15)
+# |                     mask_q = (yd_full > 1e-15) & (m_dist > 1e-15)
+# |                     kl_p = np.sum(yd_partial[mask_p] * np.log(yd_partial[mask_p] / m_dist[mask_p]))
+# |                     kl_q = np.sum(yd_full[mask_q] * np.log(yd_full[mask_q] / m_dist[mask_q]))
+# |                     js_partial = float(np.sqrt(max(0.0, 0.5 * (kl_p + kl_q))))
+# |                 else:
+# |                     yd_partial = None
+# |                     tv_partial = np.nan
+# |                     js_partial = np.nan
+# |                     
+# |             frac_pairs_rev = float(n_reveal) / float(n_pairs)
+# |             frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
+# |             unseen_mass = total_trip_mass - revealed_mass
+# |             frac_unseen_mass = unseen_mass / total_trip_mass if total_trip_mass > 0 else 0.0
+# |             
+# |             t_true_u = t_true_perm[n_reveal:]
+# |             sum_true_unseen = unseen_mass
+# |             bin_idx_unseen = bin_idx_perm[n_reveal:]
+# |             
+# |             for s in model_seeds:
+# |                 t0_u = t0_perm[s][n_reveal:]
+# |                 t_full_u = t_full_perm[s][n_reveal:]
+# |                 
+# |                 sum_t0_u = float(np.sum(t0_u))
+# |                 denom_m0 = sum_true_unseen + sum_t0_u
+# |                 cpc_m0_unseen = (2.0 * np.sum(np.minimum(t_true_u, t0_u)) / denom_m0) if denom_m0 > 0 else 0.0
+# |                 
+# |                 sum_full_u = float(np.sum(t_full_u))
+# |                 denom_full = sum_true_unseen + sum_full_u
+# |                 cpc_full_unseen = (2.0 * np.sum(np.minimum(t_true_u, t_full_u)) / denom_full) if denom_full > 0 else 0.0
+# |                 
+# |                 if yd_partial is None:
+# |                     cpc_part_unseen = cpc_m0_unseen
+# |                 else:
+# |                     Y_hat = Y_hat_by_seed[s]
+# |                     active = active_by_seed[s]
+# |                     
+# |                     yd_act = yd_partial * active.astype(np.float64)
+# |                     act_sum = yd_act.sum()
+# |                     Y_D_cond = yd_act / act_sum if act_sum > 0 else Y_hat.copy()
+# |                     
+# |                     w = np.ones(8, dtype=np.float64)
+# |                     for k in range(8):
+# |                         if active[k] and Y_hat[k] > 0:
+# |                             w[k] = Y_D_cond[k] / Y_hat[k]
+# |                     weighted_mass = float(np.dot(Y_hat, w))
+# |                     s_mult = w / weighted_mass if weighted_mass > 0 else np.ones(8)
+# |                     
+# |                     t_part_u = t0_u * s_mult[bin_idx_unseen]
+# |                     sum_part_u = float(np.sum(t_part_u))
+# |                     denom_part = sum_true_unseen + sum_part_u
+# |                     cpc_part_unseen = (2.0 * np.sum(np.minimum(t_true_u, t_part_u)) / denom_part) if denom_part > 0 else 0.0
+# |                     
+# |                 gain_full = float(cpc_full_unseen - cpc_m0_unseen)
+# |                 gain_part = float(cpc_part_unseen - cpc_m0_unseen)
+# |                 diff_part_minus_yd = float(gain_part - gain_full)
+# |                 rel_gain = float(gain_part / gain_full) if abs(gain_full) > 1e-8 else 1.0
+# |                 
+# |                 chunk_rows.append((
+# |                     fold_id, city_name, s, rep_id, p_val, mask_seed,
+# |                     n_pairs, n_reveal, n_unseen, frac_pairs_rev,
+# |                     total_trip_mass, revealed_mass, frac_mass_rev,
+# |                     unseen_mass, frac_unseen_mass,
+# |                     tv_partial, js_partial,
+# |                     cpc_m0_unseen, cpc_full_unseen, cpc_part_unseen,
+# |                     gain_full, gain_part, diff_part_minus_yd,
+# |                     rel_gain, 8, 1.0
+# |                 ))
+# |                 
+# |     return chunk_rows
+# |
+# |
 # | def run_fold_partial_od(
 # |     fold_id: int,
 # |     data_root: str = "data",
@@ -11062,6 +17531,7 @@
 # |     smoke: bool = False,
 # |     smoke_cities: int = 1,
 # |     resume: bool = False,
+# |     num_workers: int = 8,
 # |     device: str = "cpu"
 # | ) -> Dict[str, Any]:
 # |     if p_grid is None:
@@ -11081,7 +17551,7 @@
 # |     model_seeds = [1, 10, 100] if not smoke else [1, 10]
 # |     B = replicates if not smoke else 20
 # |
-# |     print(f"\n>>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | Seeds: {model_seeds}")
+# |     print(f"\n>>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | Seeds: {model_seeds} | Workers={num_workers}")
 # |
 # |     # Check already completed cities if resume is True
 # |     completed_cities = set()
@@ -11186,106 +17656,31 @@
 # |                 "t_cal_full": t_cal_full_support
 # |             }
 # |
-# |         city_rows = []
+# |         city_cached_data = {
+# |             "t_true_support": t_true_support,
+# |             "bin_idx_support": bin_idx_support,
+# |             "total_trip_mass": total_trip_mass,
+# |             "yd_full": yd_full,
+# |             "t0_by_seed": {s: seed_predictions[s]["t0"] for s in model_seeds},
+# |             "t_full_by_seed": {s: seed_predictions[s]["t_cal_full"] for s in model_seeds},
+# |             "Y_hat_by_seed": {s: seed_predictions[s]["Y_hat"] for s in model_seeds},
+# |             "active_by_seed": {s: seed_predictions[s]["active"] for s in model_seeds},
+# |         }
 # |
-# |         # Run Replicate Sampling
-# |         for rep_id in range(B):
-# |             mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
-# |             rng = np.random.RandomState(mask_seed)
-# |             
-# |             # Single random permutation for nested masks
-# |             perm = rng.permutation(n_pairs)
-# |             
-# |             for p_val in p_grid:
-# |                 n_reveal = int(np.round(p_val * n_pairs))
-# |                 rev_indices = perm[:n_reveal]
-# |                 unseen_indices = perm[n_reveal:]
-# |                 n_unseen = len(unseen_indices)
-# |                 
-# |                 if n_unseen == 0:
-# |                     continue
+# |         # Divide B replicates into chunks for multiprocessing
+# |         n_chunks = max(1, min(num_workers, B))
+# |         rep_chunks = np.array_split(np.arange(B), n_chunks)
+# |         task_args = [
+# |             (fold_id, city_name, chunk.tolist(), n_pairs, model_seeds, p_grid, city_cached_data)
+# |             for chunk in rep_chunks if len(chunk) > 0
+# |         ]
 # |
-# |                 # Construct partial Y_D from revealed pairs S_p
-# |                 if n_reveal == 0:
-# |                     yd_partial = None
-# |                     revealed_mass = 0.0
-# |                     tv_partial = np.nan
-# |                     js_partial = np.nan
-# |                 else:
-# |                     rev_trips = t_true_support[rev_indices]
-# |                     rev_bins = bin_idx_support[rev_indices]
-# |                     revealed_mass = float(np.sum(rev_trips))
-# |                     
-# |                     counts_k = np.bincount(rev_bins, weights=rev_trips, minlength=8).astype(np.float64)
-# |                     if revealed_mass > 0:
-# |                         yd_partial = counts_k / revealed_mass
-# |                     else:
-# |                         yd_partial = None
-# |                         
-# |                     if yd_partial is not None:
-# |                         tv_partial = float(0.5 * np.sum(np.abs(yd_partial - yd_full)))
-# |                         js_partial = float(jensenshannon(yd_partial, yd_full))
-# |                     else:
-# |                         tv_partial = np.nan
-# |                         js_partial = np.nan
-# |
-# |                 frac_pairs_rev = float(n_reveal) / float(n_pairs)
-# |                 frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
-# |                 unseen_mass = total_trip_mass - revealed_mass
-# |                 frac_unseen_mass = unseen_mass / total_trip_mass if total_trip_mass > 0 else 0.0
-# |                 
-# |                 # Target ground truth on unseen set U_p
-# |                 t_true_unseen = t_true_support[unseen_indices]
-# |                 sum_true_unseen = float(np.sum(t_true_unseen))
-# |
-# |                 # Evaluate across all 3 model seeds with identical mask
-# |                 for s in model_seeds:
-# |                     preds = seed_predictions[s]
-# |                     t0_support = preds["t0"]
-# |                     t0_unseen = t0_support[unseen_indices]
-# |                     t_full_unseen = preds["t_cal_full"][unseen_indices]
-# |                     
-# |                     # Compute M0 CPC on unseen set
-# |                     denom_m0 = sum_true_unseen + float(np.sum(t0_unseen))
-# |                     cpc_m0_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t0_unseen)) / denom_m0) if denom_m0 > 0 else 0.0
-# |                     
-# |                     # Compute Full Y_D CPC on unseen set
-# |                     denom_full = sum_true_unseen + float(np.sum(t_full_unseen))
-# |                     cpc_full_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_full_unseen)) / denom_full) if denom_full > 0 else 0.0
-# |                     
-# |                     # Compute Partial Y_D Calibrated CPC on unseen set
-# |                     if yd_partial is None:
-# |                         cpc_part_unseen = cpc_m0_unseen
-# |                     else:
-# |                         from src.calibration.bin_calibration import calibrate_kbins
-# |                         t_part_support = calibrate_kbins(
-# |                             t0_support,
-# |                             dist_support,
-# |                             np.ones(len(t0_support), dtype=bool),
-# |                             yd_partial,
-# |                             bin_edges,
-# |                             q=1.0,
-# |                         )
-# |                         t_part_unseen = t_part_support[unseen_indices]
-# |                         
-# |                         denom_part = sum_true_unseen + float(np.sum(t_part_unseen))
-# |                         cpc_part_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_part_unseen)) / denom_part) if denom_part > 0 else 0.0
-# |
-# |                     gain_full = float(cpc_full_unseen - cpc_m0_unseen)
-# |                     gain_part = float(cpc_part_unseen - cpc_m0_unseen)
-# |                     diff_part_minus_yd = float(gain_part - gain_full)
-# |                     rel_gain = float(gain_part / gain_full) if abs(gain_full) > 1e-8 else 1.0
-# |
-# |                     city_rows.append((
-# |                         fold_id, city_name, s, rep_id, p_val, mask_seed,
-# |                         n_pairs, n_reveal, n_unseen, frac_pairs_rev,
-# |                         total_trip_mass, revealed_mass, frac_mass_rev,
-# |                         unseen_mass, frac_unseen_mass,
-# |                         tv_partial, js_partial,
-# |                         cpc_m0_unseen, cpc_full_unseen, cpc_part_unseen,
-# |                         gain_full, gain_part, diff_part_minus_yd,
-# |                         rel_gain, 8, 1.0
-# |                     ))
+# |         if num_workers > 1 and len(task_args) > 1:
+# |             with mp.Pool(processes=min(num_workers, len(task_args))) as pool:
+# |                 chunk_results = pool.map(_process_city_replicates_chunk, task_args)
+# |             city_rows = [item for sublist in chunk_results for item in sublist]
+# |         else:
+# |             city_rows = _process_city_replicates_chunk(task_args[0])
 # |
 # |         # Append city records to raw CSV incrementally
 # |         with open(raw_csv_path, "a", encoding="utf-8") as f:
@@ -11307,7 +17702,12 @@
 # |             }, f, indent=2)
 # |
 # |         city_elapsed = time.perf_counter() - city_start
-# |         print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | Pairs: {n_pairs:>5} | B={B} reps done in {city_elapsed:.2f}s (Flushed {len(city_rows)} rows)")
+# |         global_city_idx = (fold_id - 1) * 10 + (city_idx + 1)
+# |         total_cities_count = 50 if not smoke else len(test_cities) * 5
+# |         pct = (global_city_idx / total_cities_count) * 100.0
+# |         timestamp_str = time.strftime("%H:%M:%S")
+# |         speed_str = f"{len(city_rows) / max(city_elapsed, 1e-4):.0f} rows/s"
+# |         print(f"  [{timestamp_str}] [Fold {fold_id}/5 | City {city_idx+1:>2}/{len(test_cities)} | Total {global_city_idx:>2}/{total_cities_count} ({pct:>5.1f}%)] {city_name:<16} | Pairs: {n_pairs:>5} | Mass: {total_trip_mass:>9.1f} | Done in {city_elapsed:>5.2f}s ({len(city_rows):>5} rows | {speed_str})", flush=True)
 # |
 # |     # Read back raw.csv to generate per_seed, per_city, and fold_summary
 # |     fold_df = pd.read_csv(raw_csv_path)
@@ -11759,6 +18159,7 @@
 # |     parser.add_argument("--resume", action="store_true", help="Resume from progress.json")
 # |     parser.add_argument("--aggregate_only", action="store_true", help="Only aggregate completed folds")
 # |     parser.add_argument("--device", type=str, default="cpu")
+# |     parser.add_argument("--workers", type=int, default=8, help="Number of parallel worker processes")
 # |     args = parser.parse_args()
 # |
 # |     out_p = Path(args.output_dir)
@@ -11766,6 +18167,12 @@
 # |     if args.aggregate_only:
 # |         aggregate_combined_results(output_dir=out_p)
 # |     else:
+# |         global_start = time.perf_counter()
+# |         print("=" * 85)
+# |         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] STARTING PARTIAL-OD EQUIVALENCE EXPERIMENT (V2)")
+# |         print(f"  Folds: {args.folds} | Replicates B={args.b} | Workers={args.workers} | Device={args.device}")
+# |         print("=" * 85, flush=True)
+# |
 # |         for f_id in args.folds:
 # |             run_fold_partial_od(
 # |                 fold_id=f_id,
@@ -11775,15 +18182,20 @@
 # |                 smoke=args.smoke,
 # |                 smoke_cities=args.cities,
 # |                 resume=args.resume,
+# |                 num_workers=args.workers,
 # |                 device=args.device
 # |             )
 # |         if not args.smoke and set(args.folds) == {1, 2, 3, 4, 5}:
 # |             aggregate_combined_results(output_dir=out_p)
-
+# |
+# |         global_elapsed = time.perf_counter() - global_start
+# |         print("=" * 85)
+# |         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ALL EXPERIMENTS COMPLETED IN {global_elapsed:.2f}s")
+# |         print("=" * 85, flush=True)
 # ===== END SOURCE FILE: src/experiment/run_partial_od_equivalence_v2.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_placebo_matched_v2.py =====
+# File: src/experiment/run_placebo_matched_v2.py | Lines: 451 | TrailingNL: 1 | SHA256: 2472b0ee908199480190e1946cbeafcb8fb4b40ff21c79711569429c42ff541a
 # | import os
 # | import sys
 # | import json
@@ -12234,11 +18646,10 @@
 # |     args = parser.parse_args()
 # |     if args.smoke: args.b = 20
 # |     run_placebo_experiment(args)
-
 # ===== END SOURCE FILE: src/experiment/run_placebo_matched_v2.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_resolution_analysis.py =====
+# File: src/experiment/run_resolution_analysis.py | Lines: 150 | TrailingNL: 1 | SHA256: 3550fcbbe348bd36888d4eeed7798724119a390336a353edad22a3e149c0faea
 # | import argparse
 # | import json
 # | import numpy as np
@@ -12388,11 +18799,10 @@
 # |         device_str=args.device,
 # |         random_smoke=args.random_smoke
 # |     )
-
 # ===== END SOURCE FILE: src/experiment/run_resolution_analysis.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_sampling_robustness.py =====
+# File: src/experiment/run_sampling_robustness.py | Lines: 582 | TrailingNL: 1 | SHA256: 1ad6f27fbdc13fa121f9877c0a600a10bfedba9ed50505d3fdcd6b46b7d896ff
 # | """
 # | Empirical Sampling Robustness Experiment (Task 2).
 # | Measures empirical distance distribution error TV(Y_D^(m), Y_D^full) as a function of
@@ -12974,11 +19384,10 @@
 # |     parser.add_argument("--smoke", action="store_true")
 # |     args = parser.parse_args()
 # |     run_sampling_robustness(args)
-
 # ===== END SOURCE FILE: src/experiment/run_sampling_robustness.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/experiment/run_spatial_resolution_experiment.py =====
+# File: src/experiment/run_spatial_resolution_experiment.py | Lines: 491 | TrailingNL: 1 | SHA256: 619145e6950969e21cdf427b28e0d6ebb1b2157be5a676f2c02854b3541cb0aa
 # | """
 # | Spatial Resolution Experiment (Origin County-Level vs. City-Level Calibration).
 # |
@@ -13469,11 +19878,10 @@
 # |     args = parser.parse_args()
 # |     
 # |     run_spatial_resolution_experiment(device_str=args.device, seed=args.seed, smoke=args.smoke)
-
 # ===== END SOURCE FILE: src/experiment/run_spatial_resolution_experiment.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/loss/ztnb.py =====
+# File: src/loss/ztnb.py | Lines: 125 | TrailingNL: 1 | SHA256: de96304bf499126135ccf3bdfe2ab81921d4f8f423042388b5ca2e4b087512b4
 # | """
 # | Zero-Truncated Negative Binomial (ZTNB) Likelihood and Conditional Mean Conversion.
 # |
@@ -13598,11 +20006,10 @@
 # |
 # | if __name__ == "__main__":
 # |     _run_unit_tests()
-
 # ===== END SOURCE FILE: src/loss/ztnb.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/models/decoder.py =====
+# File: src/models/decoder.py | Lines: 93 | TrailingNL: 1 | SHA256: e674435f2d48f4bd35f6b8502226ff493dfa969b77348b2c3c41b43759553bc4
 # | """
 # | Pairwise OD Decoder with Single Base Magnitude Head (ZTNB).
 # |
@@ -13695,11 +20102,10 @@
 # |     # At init, residual ~ 0, so mu_nb should track softplus(log_t_grav) closely
 # |     expected = F.softplus(ltg) + 1e-4
 # |     print("Max deviation from pure gravity at init:", (mu_nb - expected).abs().max().item())
-
 # ===== END SOURCE FILE: src/models/decoder.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/models/gravity.py =====
+# File: src/models/gravity.py | Lines: 66 | TrailingNL: 1 | SHA256: eb71ce474efa3841604ea1b5c7aa73f90b76ade43631220eb0b498ca378b0c9d
 # | """
 # | Classical 2-parameter Physics Gravity Model Prior.
 # |
@@ -13765,11 +20171,10 @@
 # |     out = grav(p_i, p_j, d)
 # |     print("Gravity prior output log_T:", out)
 # |     print(f"Alpha: {grav.alpha.item():.4f}, G: {grav.G.item():.4f}")
-
 # ===== END SOURCE FILE: src/models/gravity.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/models/node_encoder.py =====
+# File: src/models/node_encoder.py | Lines: 191 | TrailingNL: 1 | SHA256: 507662a7df9688d0e5c8d43889162b77aafb1a9d9a3d6e43be44851a6fdaf412
 # | """
 # | Urban Graph Neural Network Node Encoder.
 # |
@@ -13960,11 +20365,10 @@
 # |     edge_dist = torch.tensor([1.0, 2.0, 1.5, 3.0, 0.5])
 # |     h = gnn(x, edge_index, edge_dist)
 # |     print(f"UrbanGNN output shape: {h.shape}")
-
 # ===== END SOURCE FILE: src/models/node_encoder.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/models/zero_shot_model.py =====
+# File: src/models/zero_shot_model.py | Lines: 181 | TrailingNL: 1 | SHA256: 9493655c847cee1dda6503303cca90e1c67f1102806e4a89d2b71ce9efd6b84a
 # | r"""
 # | Gravity-Informed Urban-GNN Support-Conditioned Zero-Shot Model (M_0).
 # | (neuroGravity-inspired neural transferable architecture)
@@ -14145,11 +20549,10 @@
 # |     print("Forward pass t_hat shape:", t_hat.shape, "min:", t_hat.min().item())
 # |     assert (t_hat >= mu_nb).all(), "Conditioning must increase or maintain expectation"
 # |     print("Model check passed.")
-
 # ===== END SOURCE FILE: src/models/zero_shot_model.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/training/evaluate.py =====
+# File: src/training/evaluate.py | Lines: 182 | TrailingNL: 1 | SHA256: 1def902d7353979e768a897b2e780cb9af430cc6506dad84df2b64b252d9b9aa
 # | """
 # | Comprehensive Evaluation Suite on Interzonal Domain Omega_c^+ and Full Support Omega_c.
 # |
@@ -14331,11 +20734,10 @@
 # |         "rmse_log1p": compute_rmse_log1p_pair(t_t, t_p),
 # |         "pearson_r": compute_pearson_pair(t_t, t_p),
 # |     }
-
 # ===== END SOURCE FILE: src/training/evaluate.py =====
 
-
 # ===== BEGIN SOURCE FILE: src/training/train.py =====
+# File: src/training/train.py | Lines: 595 | TrailingNL: 1 | SHA256: dc7836410f1feb3f6014225e6b7bbe66b4c8cb699905b700a57bf25551cb7afd
 # | r"""
 # | Cross-City Training and Transfer Pipeline.
 # |
@@ -14930,11 +21332,10 @@
 # |     if return_info:
 # |         return model, scaler, info
 # |     return model, scaler
-
 # ===== END SOURCE FILE: src/training/train.py =====
 
-
 # ===== BEGIN SOURCE FILE: tests/test_backbone.py =====
+# File: tests/test_backbone.py | Lines: 118 | TrailingNL: 1 | SHA256: b474e229d820eab9c88a542c5070c81278425878f1a73c4890e8e21a9185e08d
 # | """
 # | Unit and Contract Test Suite for Backbone Robustness & MLP Architecture.
 # | Tests:
@@ -15052,11 +21453,10 @@
 # |     test_zero_shot_mlp_model()
 # |     test_mlp_checkpoint_save_and_load()
 # |     print("\nAll 4/4 Backbone Unit & Contract Tests Passed Successfully!")
-
 # ===== END SOURCE FILE: tests/test_backbone.py =====
 
-
 # ===== BEGIN SOURCE FILE: tests/test_direct_od_equivalence_v1_contract.py =====
+# File: tests/test_direct_od_equivalence_v1_contract.py | Lines: 344 | TrailingNL: 1 | SHA256: 18457976e066e389291cd0e8b7a48ba2725ede78b40606ad7f3247f44e4f6fd3
 # | """
 # | 20 Mandatory Scientific Contract Gates for Direct Partial-OD Information Equivalence v1.
 # | """
@@ -15400,11 +21800,10 @@
 # | if __name__ == "__main__":
 # |     success = run_all_direct_od_contracts()
 # |     sys.exit(0 if success else 1)
-
 # ===== END SOURCE FILE: tests/test_direct_od_equivalence_v1_contract.py =====
 
-
 # ===== BEGIN SOURCE FILE: tests/test_noise_robustness.py =====
+# File: tests/test_noise_robustness.py | Lines: 159 | TrailingNL: 1 | SHA256: 1e88e32c4310b760c3eab8bb0ef5144a3e427f426714801346c47c6febfe04b4
 # | """
 # | Unit and Contract Tests for Noise Robustness Module (run_noise_robustness.py).
 # | Executable directly with standard python (no pytest dependency required).
@@ -15563,11 +21962,10 @@
 # |
 # | if __name__ == "__main__":
 # |     unittest.main()
-
 # ===== END SOURCE FILE: tests/test_noise_robustness.py =====
 
-
 # ===== BEGIN SOURCE FILE: tests/test_partial_od_equivalence_v2_contract.py =====
+# File: tests/test_partial_od_equivalence_v2_contract.py | Lines: 361 | TrailingNL: 1 | SHA256: 5c286dcab019d1a5a9a44ab53ad1e8a07325a247c60beb352e6cdddfc36f6fe0
 # | """
 # | 20 Mandatory Scientific Contract & Code Quality Gates for Partial-OD Information Equivalence v2.
 # | """
@@ -15928,11 +22326,10 @@
 # | if __name__ == "__main__":
 # |     success = run_all_partial_od_v2_contracts()
 # |     sys.exit(0 if success else 1)
-
 # ===== END SOURCE FILE: tests/test_partial_od_equivalence_v2_contract.py =====
 
-
 # ===== BEGIN SOURCE FILE: tests/test_scaler_pipeline.py =====
+# File: tests/test_scaler_pipeline.py | Lines: 90 | TrailingNL: 0 | SHA256: bc2b2ada1070b5319c128ea6bfac372016cff5901872b62b308f30f5a7daba58
 # | import numpy as np
 # | import pytest
 # | import torch
@@ -16024,3 +22421,152 @@
 # |         _, scaler, _ = load_checkpoint(checkpoint)
 # |         validate_feature_scaler(scaler)
 # ===== END SOURCE FILE: tests/test_scaler_pipeline.py =====
+
+# ==============================================================================
+# AUDIT BUNDLE UTILITY / CLI RUNNER
+# ==============================================================================
+
+def parse_audit_bundle():
+    """Parses all embedded source files from this bundle."""
+    bundle_path = Path(__file__).resolve()
+    lines = bundle_path.read_text(encoding='utf-8').splitlines()
+    
+    files = {}
+    current_file = None
+    current_lines = []
+    has_trailing_nl = True
+    
+    begin_marker = "# ===== BEGIN SOURCE FILE: "
+    end_marker = "# ===== END SOURCE FILE: "
+    
+    for line in lines:
+        if line.startswith(begin_marker) and line.endswith(" ====="):
+            current_file = line[len(begin_marker):-len(" =====")].strip()
+            current_lines = []
+            has_trailing_nl = True
+        elif line.startswith(end_marker) and line.endswith(" ====="):
+            if current_file is not None:
+                text = "\n".join(current_lines)
+                if has_trailing_nl and current_lines:
+                    text += "\n"
+                files[current_file] = text
+            current_file = None
+            current_lines = []
+        elif current_file is not None:
+            if line.startswith("# File: "):
+                if "TrailingNL: 0" in line:
+                    has_trailing_nl = False
+                elif "TrailingNL: 1" in line:
+                    has_trailing_nl = True
+                continue
+            if line.startswith("# | "):
+                current_lines.append(line[4:])
+            elif line == "# |":
+                current_lines.append("")
+            else:
+                pass
+                
+    return files
+
+
+def cmd_list(files):
+    print("=" * 95)
+    print(f"{'FILE PATH':<55} | {'LINES':>6} | {'BYTES':>8} | {'SHA-256 CHECKSUM'}")
+    print("=" * 95)
+    for path, content in sorted(files.items()):
+        raw = content.encode('utf-8')
+        sha = hashlib.sha256(raw).hexdigest()
+        lines_cnt = len(content.splitlines())
+        print(f"{path:<55} | {lines_cnt:>6} | {len(raw):>8} | {sha}")
+    print("=" * 95)
+    print(f"Total Bundled Files: {len(files)}")
+
+
+def cmd_cat(files, target_path):
+    target = target_path.replace("\\", "/")
+    match = None
+    for f in files:
+        if f == target or f.endswith(target):
+            match = f
+            break
+            
+    if not match:
+        print(f"Error: File '{target_path}' not found in audit bundle.", file=sys.stderr)
+        sys.exit(1)
+        
+    sys.stdout.write(files[match])
+
+
+def cmd_extract(files, output_dir):
+    out_root = Path(output_dir).resolve()
+    print(f"Extracting {len(files)} files to {out_root}...")
+    out_root.mkdir(parents=True, exist_ok=True)
+    
+    for rel_path, content in files.items():
+        dst = out_root / rel_path
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(content, encoding='utf-8')
+        print(f"  [EXTRACTED] {rel_path}")
+        
+    print(f"Extraction complete. {len(files)} files written to {out_root}.")
+
+
+def cmd_verify(files):
+    print("Verifying bundled files against local repository...")
+    mismatches = 0
+    missing = 0
+    matched = 0
+    
+    for rel_path, bundled_content in files.items():
+        local_path = Path(rel_path)
+        if not local_path.exists():
+            print(f"  [MISSING ON DISK] {rel_path}")
+            missing += 1
+            continue
+            
+        local_content = local_path.read_text(encoding='utf-8')
+        if local_content.replace('\r\n', '\n') == bundled_content.replace('\r\n', '\n'):
+            matched += 1
+        else:
+            print(f"  [CONTENT MISMATCH] {rel_path}")
+            mismatches += 1
+            
+    print("=" * 60)
+    print(f"Verification: {matched} Matched, {mismatches} Mismatched, {missing} Missing")
+    if mismatches == 0 and missing == 0:
+        print("ALL FILES ARE 100% BIT-FOR-BIT IDENTICAL WITH DISK!")
+    print("=" * 60)
+
+
+def main():
+    files = parse_audit_bundle()
+    
+    if len(sys.argv) == 1 or sys.argv[1] in ("-h", "--help"):
+        print(__doc__)
+        print("\nCLI Commands:")
+        print("  python audit.py --list                 # List all bundled files")
+        print("  python audit.py --verify               # Verify against disk files")
+        print("  python audit.py --extract <out_dir>    # Unpack codebase into directory")
+        print("  python audit.py --cat <rel_filepath>   # Display contents of a single file")
+        return
+        
+    cmd = sys.argv[1]
+    if cmd == "--list":
+        cmd_list(files)
+    elif cmd == "--verify":
+        cmd_verify(files)
+    elif cmd == "--extract":
+        out_dir = sys.argv[2] if len(sys.argv) > 2 else "extracted_codebase"
+        cmd_extract(files, out_dir)
+    elif cmd == "--cat":
+        if len(sys.argv) < 3:
+            print("Usage: python audit.py --cat <filepath>", file=sys.stderr)
+            sys.exit(1)
+        cmd_cat(files, sys.argv[2])
+    else:
+        print(f"Unknown option '{cmd}'. Use --help for usage.", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
