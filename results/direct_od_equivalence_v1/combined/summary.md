@@ -2,10 +2,10 @@
 
 > **Evaluation Scope**: Evaluates the operational reconstruction value of directly observed positive interzonal OD pairs via low-capacity Origin-Destination Fixed-Effect residual adaptation (OD-FE), relative to the full target-city distance distribution $Y_D$ ($K=8, q=1.0$, seeds $s \in \{1, 10, 100\}$), evaluated strictly on unseen pairs ($N=50$ held-out test cities across 5 folds).
 
-• **Validation-Selected Lambdas:** Fold 1: `10.0`, Fold 2: `10.0`, Fold 3: `10.0`, Fold 4: `10.0`, Fold 5: `10.0`  
-• **Positive Mean Crossing Point ($p_\text{mean+}$):** `0.10%` of positive interzonal OD pairs  
-• **Statistically Supported Benefit Threshold ($p^*_\text{DirectBenefit}$):** `0.10%` of positive interzonal OD pairs ($p_\text{Holm} < 0.05$)  
-• **Operational Equivalence Crossing ($p_\text{eq,interp}$):** `0.20%` of positive interzonal OD pairs  
+• **Validation-Selected Lambdas:** Fold 1: `10.0`, Fold 2: `10.0`, Fold 3: `10.0`, Fold 4: `10.0`, Fold 5: `10.0`
+• **Positive Mean Crossing Point ($p_\text{mean+}$):** `0.10%` of positive interzonal OD pairs
+• **Statistically Supported Benefit Threshold ($p^*_\text{DirectBenefit}$):** `0.10%` of positive interzonal OD pairs ($p_\text{Holm} < 0.05$)
+• **Operational Equivalence Crossing ($p_\text{eq,interp}$):** `0.20%` of positive interzonal OD pairs
 
 | Revealed OD Pairs ($p$) | Both Coverage | $M_0$ CPC (Unseen) | Full-$Y_D$ Gain | Direct-OD Gain | Difference vs Full $Y_D$ ($D(p)$) | 95% CI Difference | Direct Benefit Holm $p$ | Cities Direct $> M_0$ | Cities Direct $\ge$ Full $Y_D$ |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|

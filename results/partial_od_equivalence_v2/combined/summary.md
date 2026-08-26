@@ -2,9 +2,9 @@
 
 > **Evaluation Scope**: Assesses the operational reconstruction value of target-city distance distribution $Y_D$ relative to observing $p\%$ of positive interzonal OD pairs ($K=8, q=1.0$, seeds $s \in \{1, 10, 100\}$) evaluated strictly on unseen pairs ($N=50$ held-out test cities across 5 folds).
 
-• **Positive Mean Crossing Point:** `5.00%` of positive interzonal OD pairs  
-• **Statistically Supported Benefit Threshold ($p^*_\text{benefit}$):** `20.00%` of positive interzonal OD pairs ($p_\text{Holm} < 0.05$)  
-• **Operational Equivalence Crossing:** Full target-city $Y_D$ was not matched within the prespecified partial-OD range up to 90% of the positive interzonal OD support.  
+• **Positive Mean Crossing Point:** `5.00%` of positive interzonal OD pairs
+• **Statistically Supported Benefit Threshold ($p^*_\text{benefit}$):** `20.00%` of positive interzonal OD pairs ($p_\text{Holm} < 0.05$)
+• **Operational Equivalence Crossing:** Full target-city $Y_D$ was not matched within the prespecified partial-OD range up to 90% of the positive interzonal OD support.
 
 | Revealed OD Pairs ($p$) | Mean Revealed Trip Mass | Mean TV to Full $Y_D$ | $M_0$ CPC (Unseen) | Full-$Y_D$ Gain | Partial-OD Gain | Difference vs Full $Y_D$ ($D(p)$) | 95% CI Difference | Partial Benefit Holm $p$ | Cities Partial $> M_0$ | Cities Partial $\ge$ Full $Y_D$ |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|

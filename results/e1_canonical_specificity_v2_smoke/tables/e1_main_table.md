@@ -26,7 +26,7 @@
 
 ## E1-B: Full 5-fold Sensitivity Analysis (Excluding Fold 1: Folds 1-5, n=50)
 
-> *Status: NOT AVAILABLE (Observed 0/50 test cities; Full 5-fold evaluation strictly requires complete 50 test cities across Folds 1-5, with 10 test cities per fold).* 
+> *Status: NOT AVAILABLE (Observed 0/50 test cities; Full 5-fold evaluation strictly requires complete 50 test cities across Folds 1-5, with 10 test cities per fold).*
 
 ## E1-C: Per-Fold Independent Training & Evaluation Breakdown
 
@@ -36,4 +36,4 @@
 
 ## Acceptance Criteria Verification
 
-> *Status: PENDING FULL 50-CITY EXECUTION (Evaluated 1/50 cities. Full 5-fold criteria will be locked upon full completion).* 
+> *Status: PENDING FULL 50-CITY EXECUTION (Evaluated 1/50 cities. Full 5-fold criteria will be locked upon full completion).*
