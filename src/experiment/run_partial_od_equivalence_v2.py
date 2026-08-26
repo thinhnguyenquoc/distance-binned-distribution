@@ -628,6 +628,17 @@ def aggregate_combined_results(
         assert manifest.get("protocol_version") == "v2", f"Fold {f} protocol version mismatch"
         assert manifest.get("model_seeds") == [1, 10, 100], f"Fold {f} model seeds mismatch (not [1, 10, 100])"
         assert manifest.get("replicates") == 500, f"Fold {f} replicates != 500"
+        expected_signature = {
+            "fold_id": f,
+            "model_seeds": [1, 10, 100],
+            "B": 500,
+            "p_grid": [float(p) for p in p_grid],
+            "n_p_levels": len(p_grid),
+            "split_manifest_sha256": _sha256_file(Path("results/e1/splits_manifest_v2.json")),
+            "checkpoint_sha256": _checkpoint_hashes(f, [1, 10, 100]),
+        }
+        if manifest.get("protocol_signature") != expected_signature:
+            raise RuntimeError(f"Fold {f} protocol signature mismatch in {manifest_path}")
         
         from src.data.city_splits import generate_35_5_10_splits
         splits = generate_35_5_10_splits()

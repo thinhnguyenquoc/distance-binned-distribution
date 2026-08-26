@@ -515,13 +515,23 @@ def run_fold_direct_od(
     b_val = 50 if not smoke else 5
     manifest_path = Path("results/e1/splits_manifest_v2.json")
     split_manifest_sha256 = _sha256_file(manifest_path)
+    checkpoint_sha256 = _checkpoint_hashes(fold_id, model_seeds)
+    lambda_signature = {
+        "fold_id": fold_id,
+        "val_cities": val_cities,
+        "model_seeds": model_seeds,
+        "b_val": b_val,
+        "lambda_candidates": [float(value) for value in LAMBDA_CANDIDATES],
+        "split_manifest_sha256": split_manifest_sha256,
+        "checkpoint_sha256": checkpoint_sha256,
+    }
 
     # 1. Select / Load Fold Lambda
     valid_lambda_cache = False
     if lambda_json_path.exists():
-        with open(lambda_json_path, "r") as f:
+        with open(lambda_json_path, "r", encoding="utf-8") as f:
             lam_info = json.load(f)
-            if lam_info.get("val_cities") == val_cities and lam_info.get("model_seeds") == model_seeds and lam_info.get("b_val") == b_val:
+            if lam_info.get("lambda_signature") == lambda_signature:
                 selected_lambda = float(lam_info["selected_lambda"])
                 print(f">>> [FOLD {fold_id}] Using cached lambda_f* = {selected_lambda}")
                 valid_lambda_cache = True
@@ -548,12 +558,12 @@ def run_fold_direct_od(
                 "val_cities": val_cities,
                 "model_seeds": model_seeds,
                 "b_val": b_val,
+                "lambda_signature": lambda_signature,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             }, f, indent=2)
 
     print(f">>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | lambda={selected_lambda} | Workers={num_workers}")
 
-    checkpoint_sha256 = _checkpoint_hashes(fold_id, model_seeds)
     expected_signature = {
         "fold_id": fold_id,
         "model_seeds": model_seeds,
@@ -812,6 +822,7 @@ def run_fold_direct_od(
             "model_seeds": model_seeds,
             "replicates": B,
             "p_grid": p_grid,
+            "protocol_signature": expected_signature,
             "raw_rows": len(fold_df),
             "per_seed_rows": len(per_seed_df),
             "per_city_rows": len(per_city_df),
@@ -870,6 +881,21 @@ def aggregate_combined_direct_od(
         
         with open(fold_dir / "lambda_selected.json", "r") as lf:
             fold_lambdas[f] = json.load(lf)["selected_lambda"]
+
+        expected_signature = {
+            "fold_id": f,
+            "model_seeds": [1, 10, 100],
+            "B": 200,
+            "selected_lambda": float(fold_lambdas[f]),
+            "p_grid": [float(p) for p in p_grid],
+            "n_p_levels": len(p_grid),
+            "split_manifest_sha256": _sha256_file(Path("results/e1/splits_manifest_v2.json")),
+            "checkpoint_sha256": _checkpoint_hashes(f, [1, 10, 100]),
+        }
+        with open(fold_dir / "run_manifest.json", "r", encoding="utf-8") as mf:
+            fold_manifest = json.load(mf)
+        if fold_manifest.get("protocol_signature") != expected_signature:
+            raise RuntimeError(f"Cannot aggregate: protocol signature mismatch in {fold_dir / 'run_manifest.json'}")
             
         all_raw_dfs.append(pd.read_csv(fold_dir / "raw.csv"))
         all_per_seed_dfs.append(pd.read_csv(fold_dir / "per_seed.csv"))
