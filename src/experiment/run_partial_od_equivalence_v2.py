@@ -120,6 +120,135 @@ def fold_stratified_bootstrap(
     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
 
 
+import multiprocessing as mp
+
+
+def _process_city_replicates_chunk(args_tuple: Tuple) -> List[Tuple]:
+    (fold_id, city_name, rep_ids, n_pairs, model_seeds, p_grid, city_cached) = args_tuple
+    
+    t_true_support = city_cached["t_true_support"]
+    bin_idx_support = city_cached["bin_idx_support"]
+    total_trip_mass = city_cached["total_trip_mass"]
+    yd_full = city_cached["yd_full"]
+    t0_by_seed = city_cached["t0_by_seed"]
+    t_full_by_seed = city_cached["t_full_by_seed"]
+    Y_hat_by_seed = city_cached["Y_hat_by_seed"]
+    active_by_seed = city_cached["active_by_seed"]
+    
+    chunk_rows = []
+    
+    for rep_id in rep_ids:
+        mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
+        rng = np.random.RandomState(mask_seed)
+        perm = rng.permutation(n_pairs)
+        
+        t_true_perm = t_true_support[perm]
+        bin_idx_perm = bin_idx_support[perm]
+        t0_perm = {s: t0_by_seed[s][perm] for s in model_seeds}
+        t_full_perm = {s: t_full_by_seed[s][perm] for s in model_seeds}
+        
+        running_counts_k = np.zeros(8, dtype=np.float64)
+        running_revealed_mass = 0.0
+        prev_n_reveal = 0
+        
+        for p_val in p_grid:
+            n_reveal = int(np.round(p_val * n_pairs))
+            n_unseen = n_pairs - n_reveal
+            if n_unseen == 0:
+                continue
+                
+            if n_reveal == 0:
+                yd_partial = None
+                revealed_mass = 0.0
+                tv_partial = np.nan
+                js_partial = np.nan
+            else:
+                if n_reveal > prev_n_reveal:
+                    delta_trips = t_true_perm[prev_n_reveal:n_reveal]
+                    delta_bins = bin_idx_perm[prev_n_reveal:n_reveal]
+                    running_revealed_mass += float(np.sum(delta_trips))
+                    running_counts_k += np.bincount(delta_bins, weights=delta_trips, minlength=8)
+                    prev_n_reveal = n_reveal
+                
+                revealed_mass = running_revealed_mass
+                if revealed_mass > 0:
+                    yd_partial = running_counts_k / revealed_mass
+                    tv_partial = float(0.5 * np.sum(np.abs(yd_partial - yd_full)))
+                    
+                    # Exact Jensen-Shannon Divergence
+                    m_dist = 0.5 * (yd_partial + yd_full)
+                    mask_p = (yd_partial > 1e-15) & (m_dist > 1e-15)
+                    mask_q = (yd_full > 1e-15) & (m_dist > 1e-15)
+                    kl_p = np.sum(yd_partial[mask_p] * np.log(yd_partial[mask_p] / m_dist[mask_p]))
+                    kl_q = np.sum(yd_full[mask_q] * np.log(yd_full[mask_q] / m_dist[mask_q]))
+                    js_partial = float(np.sqrt(max(0.0, 0.5 * (kl_p + kl_q))))
+                else:
+                    yd_partial = None
+                    tv_partial = np.nan
+                    js_partial = np.nan
+                    
+            frac_pairs_rev = float(n_reveal) / float(n_pairs)
+            frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
+            unseen_mass = total_trip_mass - revealed_mass
+            frac_unseen_mass = unseen_mass / total_trip_mass if total_trip_mass > 0 else 0.0
+            
+            t_true_u = t_true_perm[n_reveal:]
+            sum_true_unseen = unseen_mass
+            bin_idx_unseen = bin_idx_perm[n_reveal:]
+            
+            for s in model_seeds:
+                t0_u = t0_perm[s][n_reveal:]
+                t_full_u = t_full_perm[s][n_reveal:]
+                
+                sum_t0_u = float(np.sum(t0_u))
+                denom_m0 = sum_true_unseen + sum_t0_u
+                cpc_m0_unseen = (2.0 * np.sum(np.minimum(t_true_u, t0_u)) / denom_m0) if denom_m0 > 0 else 0.0
+                
+                sum_full_u = float(np.sum(t_full_u))
+                denom_full = sum_true_unseen + sum_full_u
+                cpc_full_unseen = (2.0 * np.sum(np.minimum(t_true_u, t_full_u)) / denom_full) if denom_full > 0 else 0.0
+                
+                if yd_partial is None:
+                    cpc_part_unseen = cpc_m0_unseen
+                else:
+                    Y_hat = Y_hat_by_seed[s]
+                    active = active_by_seed[s]
+                    
+                    yd_act = yd_partial * active.astype(np.float64)
+                    act_sum = yd_act.sum()
+                    Y_D_cond = yd_act / act_sum if act_sum > 0 else Y_hat.copy()
+                    
+                    w = np.ones(8, dtype=np.float64)
+                    for k in range(8):
+                        if active[k] and Y_hat[k] > 0:
+                            w[k] = Y_D_cond[k] / Y_hat[k]
+                    weighted_mass = float(np.dot(Y_hat, w))
+                    s_mult = w / weighted_mass if weighted_mass > 0 else np.ones(8)
+                    
+                    t_part_u = t0_u * s_mult[bin_idx_unseen]
+                    sum_part_u = float(np.sum(t_part_u))
+                    denom_part = sum_true_unseen + sum_part_u
+                    cpc_part_unseen = (2.0 * np.sum(np.minimum(t_true_u, t_part_u)) / denom_part) if denom_part > 0 else 0.0
+                    
+                gain_full = float(cpc_full_unseen - cpc_m0_unseen)
+                gain_part = float(cpc_part_unseen - cpc_m0_unseen)
+                diff_part_minus_yd = float(gain_part - gain_full)
+                rel_gain = float(gain_part / gain_full) if abs(gain_full) > 1e-8 else 1.0
+                
+                chunk_rows.append((
+                    fold_id, city_name, s, rep_id, p_val, mask_seed,
+                    n_pairs, n_reveal, n_unseen, frac_pairs_rev,
+                    total_trip_mass, revealed_mass, frac_mass_rev,
+                    unseen_mass, frac_unseen_mass,
+                    tv_partial, js_partial,
+                    cpc_m0_unseen, cpc_full_unseen, cpc_part_unseen,
+                    gain_full, gain_part, diff_part_minus_yd,
+                    rel_gain, 8, 1.0
+                ))
+                
+    return chunk_rows
+
+
 def run_fold_partial_od(
     fold_id: int,
     data_root: str = "data",
@@ -129,6 +258,7 @@ def run_fold_partial_od(
     smoke: bool = False,
     smoke_cities: int = 1,
     resume: bool = False,
+    num_workers: int = 8,
     device: str = "cpu"
 ) -> Dict[str, Any]:
     if p_grid is None:
@@ -148,7 +278,7 @@ def run_fold_partial_od(
     model_seeds = [1, 10, 100] if not smoke else [1, 10]
     B = replicates if not smoke else 20
 
-    print(f"\n>>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | Seeds: {model_seeds}")
+    print(f"\n>>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | Seeds: {model_seeds} | Workers={num_workers}")
 
     # Check already completed cities if resume is True
     completed_cities = set()
@@ -253,106 +383,31 @@ def run_fold_partial_od(
                 "t_cal_full": t_cal_full_support
             }
 
-        city_rows = []
+        city_cached_data = {
+            "t_true_support": t_true_support,
+            "bin_idx_support": bin_idx_support,
+            "total_trip_mass": total_trip_mass,
+            "yd_full": yd_full,
+            "t0_by_seed": {s: seed_predictions[s]["t0"] for s in model_seeds},
+            "t_full_by_seed": {s: seed_predictions[s]["t_cal_full"] for s in model_seeds},
+            "Y_hat_by_seed": {s: seed_predictions[s]["Y_hat"] for s in model_seeds},
+            "active_by_seed": {s: seed_predictions[s]["active"] for s in model_seeds},
+        }
 
-        # Run Replicate Sampling
-        for rep_id in range(B):
-            mask_seed = get_stable_mask_seed(PARTIAL_OD_BASE_SEED, fold_id, city_name, rep_id)
-            rng = np.random.RandomState(mask_seed)
-            
-            # Single random permutation for nested masks
-            perm = rng.permutation(n_pairs)
-            
-            for p_val in p_grid:
-                n_reveal = int(np.round(p_val * n_pairs))
-                rev_indices = perm[:n_reveal]
-                unseen_indices = perm[n_reveal:]
-                n_unseen = len(unseen_indices)
-                
-                if n_unseen == 0:
-                    continue
+        # Divide B replicates into chunks for multiprocessing
+        n_chunks = max(1, min(num_workers, B))
+        rep_chunks = np.array_split(np.arange(B), n_chunks)
+        task_args = [
+            (fold_id, city_name, chunk.tolist(), n_pairs, model_seeds, p_grid, city_cached_data)
+            for chunk in rep_chunks if len(chunk) > 0
+        ]
 
-                # Construct partial Y_D from revealed pairs S_p
-                if n_reveal == 0:
-                    yd_partial = None
-                    revealed_mass = 0.0
-                    tv_partial = np.nan
-                    js_partial = np.nan
-                else:
-                    rev_trips = t_true_support[rev_indices]
-                    rev_bins = bin_idx_support[rev_indices]
-                    revealed_mass = float(np.sum(rev_trips))
-                    
-                    counts_k = np.bincount(rev_bins, weights=rev_trips, minlength=8).astype(np.float64)
-                    if revealed_mass > 0:
-                        yd_partial = counts_k / revealed_mass
-                    else:
-                        yd_partial = None
-                        
-                    if yd_partial is not None:
-                        tv_partial = float(0.5 * np.sum(np.abs(yd_partial - yd_full)))
-                        js_partial = float(jensenshannon(yd_partial, yd_full))
-                    else:
-                        tv_partial = np.nan
-                        js_partial = np.nan
-
-                frac_pairs_rev = float(n_reveal) / float(n_pairs)
-                frac_mass_rev = float(revealed_mass) / float(total_trip_mass) if total_trip_mass > 0 else 0.0
-                unseen_mass = total_trip_mass - revealed_mass
-                frac_unseen_mass = unseen_mass / total_trip_mass if total_trip_mass > 0 else 0.0
-                
-                # Target ground truth on unseen set U_p
-                t_true_unseen = t_true_support[unseen_indices]
-                sum_true_unseen = float(np.sum(t_true_unseen))
-
-                # Evaluate across all 3 model seeds with identical mask
-                for s in model_seeds:
-                    preds = seed_predictions[s]
-                    t0_support = preds["t0"]
-                    t0_unseen = t0_support[unseen_indices]
-                    t_full_unseen = preds["t_cal_full"][unseen_indices]
-                    
-                    # Compute M0 CPC on unseen set
-                    denom_m0 = sum_true_unseen + float(np.sum(t0_unseen))
-                    cpc_m0_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t0_unseen)) / denom_m0) if denom_m0 > 0 else 0.0
-                    
-                    # Compute Full Y_D CPC on unseen set
-                    denom_full = sum_true_unseen + float(np.sum(t_full_unseen))
-                    cpc_full_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_full_unseen)) / denom_full) if denom_full > 0 else 0.0
-                    
-                    # Compute Partial Y_D Calibrated CPC on unseen set
-                    if yd_partial is None:
-                        cpc_part_unseen = cpc_m0_unseen
-                    else:
-                        from src.calibration.bin_calibration import calibrate_kbins
-                        t_part_support = calibrate_kbins(
-                            t0_support,
-                            dist_support,
-                            np.ones(len(t0_support), dtype=bool),
-                            yd_partial,
-                            bin_edges,
-                            q=1.0,
-                        )
-                        t_part_unseen = t_part_support[unseen_indices]
-                        
-                        denom_part = sum_true_unseen + float(np.sum(t_part_unseen))
-                        cpc_part_unseen = (2.0 * np.sum(np.minimum(t_true_unseen, t_part_unseen)) / denom_part) if denom_part > 0 else 0.0
-
-                    gain_full = float(cpc_full_unseen - cpc_m0_unseen)
-                    gain_part = float(cpc_part_unseen - cpc_m0_unseen)
-                    diff_part_minus_yd = float(gain_part - gain_full)
-                    rel_gain = float(gain_part / gain_full) if abs(gain_full) > 1e-8 else 1.0
-
-                    city_rows.append((
-                        fold_id, city_name, s, rep_id, p_val, mask_seed,
-                        n_pairs, n_reveal, n_unseen, frac_pairs_rev,
-                        total_trip_mass, revealed_mass, frac_mass_rev,
-                        unseen_mass, frac_unseen_mass,
-                        tv_partial, js_partial,
-                        cpc_m0_unseen, cpc_full_unseen, cpc_part_unseen,
-                        gain_full, gain_part, diff_part_minus_yd,
-                        rel_gain, 8, 1.0
-                    ))
+        if num_workers > 1 and len(task_args) > 1:
+            with mp.Pool(processes=min(num_workers, len(task_args))) as pool:
+                chunk_results = pool.map(_process_city_replicates_chunk, task_args)
+            city_rows = [item for sublist in chunk_results for item in sublist]
+        else:
+            city_rows = _process_city_replicates_chunk(task_args[0])
 
         # Append city records to raw CSV incrementally
         with open(raw_csv_path, "a", encoding="utf-8") as f:
@@ -374,7 +429,12 @@ def run_fold_partial_od(
             }, f, indent=2)
 
         city_elapsed = time.perf_counter() - city_start
-        print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | Pairs: {n_pairs:>5} | B={B} reps done in {city_elapsed:.2f}s (Flushed {len(city_rows)} rows)")
+        global_city_idx = (fold_id - 1) * 10 + (city_idx + 1)
+        total_cities_count = 50 if not smoke else len(test_cities) * 5
+        pct = (global_city_idx / total_cities_count) * 100.0
+        timestamp_str = time.strftime("%H:%M:%S")
+        speed_str = f"{len(city_rows) / max(city_elapsed, 1e-4):.0f} rows/s"
+        print(f"  [{timestamp_str}] [Fold {fold_id}/5 | City {city_idx+1:>2}/{len(test_cities)} | Total {global_city_idx:>2}/{total_cities_count} ({pct:>5.1f}%)] {city_name:<16} | Pairs: {n_pairs:>5} | Mass: {total_trip_mass:>9.1f} | Done in {city_elapsed:>5.2f}s ({len(city_rows):>5} rows | {speed_str})", flush=True)
 
     # Read back raw.csv to generate per_seed, per_city, and fold_summary
     fold_df = pd.read_csv(raw_csv_path)
@@ -826,6 +886,7 @@ if __name__ == "__main__":
     parser.add_argument("--resume", action="store_true", help="Resume from progress.json")
     parser.add_argument("--aggregate_only", action="store_true", help="Only aggregate completed folds")
     parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--workers", type=int, default=8, help="Number of parallel worker processes")
     args = parser.parse_args()
 
     out_p = Path(args.output_dir)
@@ -833,6 +894,12 @@ if __name__ == "__main__":
     if args.aggregate_only:
         aggregate_combined_results(output_dir=out_p)
     else:
+        global_start = time.perf_counter()
+        print("=" * 85)
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] STARTING PARTIAL-OD EQUIVALENCE EXPERIMENT (V2)")
+        print(f"  Folds: {args.folds} | Replicates B={args.b} | Workers={args.workers} | Device={args.device}")
+        print("=" * 85, flush=True)
+
         for f_id in args.folds:
             run_fold_partial_od(
                 fold_id=f_id,
@@ -842,7 +909,13 @@ if __name__ == "__main__":
                 smoke=args.smoke,
                 smoke_cities=args.cities,
                 resume=args.resume,
+                num_workers=args.workers,
                 device=args.device
             )
         if not args.smoke and set(args.folds) == {1, 2, 3, 4, 5}:
             aggregate_combined_results(output_dir=out_p)
+
+        global_elapsed = time.perf_counter() - global_start
+        print("=" * 85)
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] ALL EXPERIMENTS COMPLETED IN {global_elapsed:.2f}s")
+        print("=" * 85, flush=True)
