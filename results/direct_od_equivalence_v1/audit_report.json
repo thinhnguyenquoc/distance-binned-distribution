@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-26 13:31:21",
+  "timestamp": "2026-08-26 17:05:03",
   "all_passed": true,
-  "elapsed_seconds": 532.7810964,
+  "elapsed_seconds": 821.1346509999967,
   "audit_1_production_yd": {
     "status": "PASS",
     "total_checks": 150,
