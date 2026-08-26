@@ -98,8 +98,10 @@ def run_experiment(args):
             for seed in seeds:
                 ckpt_path = Path("results/checkpoints") / f"5fold_fold{fold}_seed{seed}.pt"
                 if not ckpt_path.exists():
-                    print(f"WARNING: Checkpoint {ckpt_path} missing. Skipping.")
-                    continue
+                    raise FileNotFoundError(
+                        f"[FATAL] Mandatory checkpoint {ckpt_path} missing for fold {fold}, seed {seed}. "
+                        "K-sensitivity requires all canonical checkpoints to be present for certified evaluation."
+                    )
                 
                 model, scaler, _ = load_checkpoint(str(ckpt_path), device_str=args.device)
                 model.eval()
@@ -135,31 +137,32 @@ def run_experiment(args):
                     yd_sum = float(np.sum(yd_target))
                     assert abs(yd_sum - 1.0) < 1e-6 or yd_sum == 0, f"Y_D sum={yd_sum} != 1.0"
                     
-                    # Weights Diagnostics computation
+                    # Weights Diagnostics computation (aligned to k_active)
                     inter_T0 = t0_np[inter_mask]
                     N_hat = inter_T0.sum()
                     inter_dist = pair_dist_km[inter_mask]
-                    Y_hat = np.zeros(K, dtype=np.float64)
-                    active = np.zeros(K, dtype=bool)
-                    for k_idx in range(K):
+                    Y_hat = np.zeros(k_active, dtype=np.float64)
+                    active = np.zeros(k_active, dtype=bool)
+                    for k_idx in range(k_active):
                         lo, hi = float(edges[k_idx]), float(edges[k_idx + 1])
                         in_bin = (inter_dist > lo) & (inter_dist <= hi)
                         if N_hat > 0:
                             Y_hat[k_idx] = inter_T0[in_bin].sum() / N_hat
                         active[k_idx] = bool(in_bin.any())
                         
-                    yd_raw = yd_target / yd_sum if yd_sum > 0 else np.ones(K)/K
+                    yd_raw = yd_target / yd_sum if yd_sum > 0 else np.ones(k_active) / k_active
                     yd_active = yd_raw * active.astype(np.float64)
                     active_sum = yd_active.sum()
                     Y_D_cond = yd_active / active_sum if active_sum > 0 else Y_hat.copy()
                     
-                    w = np.ones(K, dtype=np.float64)
-                    for k_idx in range(K):
+                    w = np.ones(k_active, dtype=np.float64)
+                    for k_idx in range(k_active):
                         if active[k_idx] and Y_hat[k_idx] > 0:
                             w[k_idx] = Y_D_cond[k_idx] / Y_hat[k_idx]  # q=1.0
                             
                     w_active = w[active]
                     if len(w_active) == 0: w_active = np.array([1.0])
+
                     
                     min_pred_mass = np.min(Y_hat[active]) if active.any() else 0.0
                     max_ratio = np.max(w_active)

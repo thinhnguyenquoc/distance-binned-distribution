@@ -533,16 +533,31 @@ def run_fold_direct_od(
 
     print(f">>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | lambda={selected_lambda} | Workers={num_workers}")
 
-    # Check already completed cities if resume is True
+    # Check already completed cities if resume is True with protocol signature verification
     completed_cities = set()
     if resume and progress_json_path.exists():
         try:
-            with open(progress_json_path, "r") as f:
+            with open(progress_json_path, "r", encoding="utf-8") as f:
                 prog = json.load(f)
-                completed_cities = set(prog.get("completed_cities", []))
-                print(f"    Resuming fold {fold_id}: Found {len(completed_cities)} already completed cities.")
-        except Exception:
+                sig = prog.get("protocol_signature", {})
+                sig_valid = (
+                    prog.get("protocol_version") == "v1"
+                    and sig.get("model_seeds") == model_seeds
+                    and sig.get("B") == B
+                    and sig.get("selected_lambda") == selected_lambda
+                    and sig.get("n_p_levels") == len(p_grid)
+                    and sig.get("split_manifest_sha256") == split_manifest_sha256
+                )
+                if sig_valid:
+                    completed_cities = set(prog.get("completed_cities", []))
+                    print(f"    [RESUME VERIFIED] Resuming fold {fold_id}: Found {len(completed_cities)} verified completed cities.")
+                else:
+                    print(f"    [RESUME REJECTED] Incompatible protocol signature in {progress_json_path}. Restarting fold {fold_id} cleanly.")
+                    completed_cities = set()
+        except Exception as e:
+            print(f"    [RESUME WARNING] Failed to read {progress_json_path}: {e}. Restarting fold {fold_id} cleanly.")
             completed_cities = set()
+
 
     if not resume or not raw_csv_path.exists():
         with open(raw_csv_path, "w", encoding="utf-8") as f:
@@ -668,7 +683,7 @@ def run_fold_direct_od(
         completed_cities.add(city_name)
         rows_written_total += len(city_rows)
 
-        # Update progress.json
+        # Update progress.json with full protocol signature
         with open(progress_json_path, "w", encoding="utf-8") as f:
             json.dump({
                 "fold": fold_id,
@@ -676,8 +691,16 @@ def run_fold_direct_od(
                 "remaining_cities": [c for c in test_cities if c not in completed_cities],
                 "rows_written": rows_written_total,
                 "protocol_version": "v1",
+                "protocol_signature": {
+                    "model_seeds": model_seeds,
+                    "B": B,
+                    "selected_lambda": selected_lambda,
+                    "n_p_levels": len(p_grid),
+                    "split_manifest_sha256": split_manifest_sha256,
+                },
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             }, f, indent=2)
+
 
         city_elapsed = time.perf_counter() - city_start
         print(f"  [{city_idx+1}/{len(test_cities)}] {city_name:<16} | Pairs: {n_pairs:>7} | B={B} reps done in {city_elapsed:.2f}s (Flushed {len(city_rows)} rows)")
@@ -988,14 +1011,16 @@ def aggregate_combined_direct_od(
     # Generate Publication Figures
     generate_direct_od_figures(summary_df, per_city_combined, combined_dir, p_eq_interp, p_star_benefit)
 
-    # Write FROZEN.marker
-    frozen_marker_path = output_dir / "FROZEN.marker"
-    with open(frozen_marker_path, "w", encoding="utf-8") as f:
-        f.write("DIRECT PARTIAL-OD INFORMATION EQUIVALENCE v1 PROTOCOL FROZEN\n")
+    # Write completion markers; certification is a separate post-execution gate.
+    (output_dir / "FROZEN.marker").unlink(missing_ok=True)
+    with open(output_dir / "COMPLETED.marker", "w", encoding="utf-8") as f:
+        f.write("DIRECT PARTIAL-OD INFORMATION EQUIVALENCE v1 COMPUTATION COMPLETED\n")
         f.write(f"Completed At: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write("Status: COMPLETED; CERTIFICATION_PENDING\n")
         f.write("Protocol: 50 held-out test cities across 5 disjoint folds (N=50)\n")
         f.write("Evaluation Support: unseen positive interzonal pairs Omega_c^+ \\ S_p\n")
         f.write(f"Replicates: 200 per city (Total: 450,000 raw calibrations)\n")
+
 
 
 def generate_direct_od_figures(

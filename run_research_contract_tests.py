@@ -37,9 +37,8 @@ GATE_RESULTS: Dict[str, Tuple[bool, str]] = {}
 
 
 def _result_roots() -> list[Path]:
-    roots = [Path("results")]
-    roots.extend(sorted(Path(".").glob("results_archive_*/old_results"), reverse=True))
-    return roots
+    return [Path("results")]
+
 
 
 def _canonical_result_root() -> Path:

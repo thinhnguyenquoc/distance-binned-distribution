@@ -79,10 +79,35 @@ def _write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def _load_existing_completed(path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def _load_existing_completed(
+    path: Path,
+    expected_protocol: str,
+    expected_seeds: list[int],
+    expected_manifest_sha256: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if not path.exists():
         return [], []
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"[RESUME WARNING] Failed to read {path}: {e}. Starting fresh.")
+        return [], []
+
+    stored_protocol = payload.get("protocol")
+    stored_seeds = payload.get("seeds")
+    stored_manifest = payload.get("split_manifest_sha256")
+
+    if stored_protocol != expected_protocol:
+        print(f"[RESUME REJECTED] Protocol mismatch: expected '{expected_protocol}', got '{stored_protocol}'. Starting fresh.")
+        return [], []
+    if stored_seeds != expected_seeds:
+        print(f"[RESUME REJECTED] Seeds mismatch: expected {expected_seeds}, got {stored_seeds}. Starting fresh.")
+        return [], []
+    if stored_manifest != expected_manifest_sha256:
+        print(f"[RESUME REJECTED] Manifest SHA-256 mismatch: expected {expected_manifest_sha256[:8]}, got {str(stored_manifest)[:8]}. Starting fresh.")
+        return [], []
+
+    print(f"[RESUME VERIFIED] Valid protocol signature in {path}. Reusing {len(payload.get('per_city_seed_averaged', []))} completed city records.")
     return payload.get("per_city_seed_averaged", []), payload.get("per_city_per_seed", [])
 
 
@@ -113,7 +138,12 @@ def run_e1_specificity_from_checkpoints(
     with open(_manifest_path, "r", encoding="utf-8") as manifest_file:
         split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
 
-    all_averaged, raw_seed_results = _load_existing_completed(results_path) if resume else ([], [])
+    expected_protocol = "e1-v2-canonical-9-donor-specificity-from-checkpoints"
+    all_averaged, raw_seed_results = (
+        _load_existing_completed(results_path, expected_protocol, seeds, split_manifest_sha256)
+        if resume
+        else ([], [])
+    )
     completed = {(r["fold"], r["city"]) for r in all_averaged}
 
     start = time.time()

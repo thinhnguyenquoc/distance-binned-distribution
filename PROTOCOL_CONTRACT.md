@@ -164,10 +164,14 @@ LOCKED EXPERIMENT CONTRACT
        whether old results remain valid
        exactly which experiments, if any, need rerunning.
 
-22. Never create FROZEN.marker until all certification gates pass.
+22. Decouple execution completion from certification:
+    Runners write EXECUTION_COMPLETE.marker upon successful pipeline computation.
+    FROZEN.marker indicates that all post-execution scientific certification gates and contract tests have passed.
+    Never treat an unverified execution as certified.
 
 When uncertain, preserve existing frozen scientific behavior and fail loudly
 rather than silently changing the experiment.
+
 
 # AUDIT CLARIFICATIONS (Pre-paper freeze)
 

@@ -229,16 +229,10 @@ results/placebo_matched_v2/matched_placebo_raw.csv
 !results/*.json
 # results/
 !results/*.json
-results.zip
-results_archive/!results/**/*.json
-results_archive_20260824/
-
 # Ignore large result files > 100MB
 results/**/*.csv
 results/**/*.jsonl
-results_archive/**/*.csv
-results_archive/**/*.jsonl
-results_archive_20260824/**/*.jsonl
-results_archive_20260824/**/*.csv
-results_old/*
 audit.py
+
+
+results.zip

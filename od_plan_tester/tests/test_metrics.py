@@ -67,7 +67,8 @@ def test_evaluate_all_contract():
     t_true = torch.tensor([10.0, 20.0, 30.0])
     t_pred = torch.tensor([12.0, 18.0, 35.0])
 
-    res = evaluate_all(t_true, t_pred)
+    with pytest.warns(DeprecationWarning, match=r"evaluate_all\(\) computes over all pairs"):
+        res = evaluate_all(t_true, t_pred)
     assert isinstance(res, dict)
     assert "cpc" in res
     assert "cpc_norm" in res

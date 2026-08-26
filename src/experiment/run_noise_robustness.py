@@ -552,7 +552,9 @@ def generate_summary(
     plt.ylabel("Harm Rate (% Cities Worse than M0)")
     plt.ylim(0, 1.05)
     plt.grid(True, linestyle=':', alpha=0.6)
-    plt.legend()
+    handles, labels = plt.gca().get_legend_handles_labels()
+    if handles:
+        plt.legend()
     plt.savefig(f"{output_dir}/fig_noise_harm_rate.png", dpi=300, bbox_inches="tight")
     plt.close()
     
