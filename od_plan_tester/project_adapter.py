@@ -37,7 +37,7 @@ from src.data.urban_graph import (
 )
 from src.data.dataset import CityData, load_city, load_cities, assign_bins
 get_distance_bin_indices = assign_bins
-from src.data.city_splits import generate_5fold_splits, get_all_cities_sorted_by_size
+from src.data.city_splits import generate_5fold_splits, generate_35_5_10_splits, get_all_cities_sorted_by_size
 from src.data.trip_sampler import sample_multinomial_yd, M_GRID
 from src.data.yd_extractor import (
     extract_yd_4bin_oracle,

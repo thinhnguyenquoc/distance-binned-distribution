@@ -30,7 +30,7 @@ from src.data.city_splits import (
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.calibration.bin_calibration import calibrate_kbins
 from src.data.dataset import get_scaler_fingerprint, load_city, load_cities, clear_city_cache
-from src.experiment.run_e1 import compute_summary, compute_iqr, get_runtime_metadata, configure_cpu_threads
+from src.experiment.e1_core import compute_summary, compute_iqr, get_runtime_metadata, configure_cpu_threads
 
 
 def test_t51_splits_35_5_10_invariants_and_v1_locking():
