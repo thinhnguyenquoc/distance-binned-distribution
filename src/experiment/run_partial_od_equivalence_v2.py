@@ -58,6 +58,24 @@ PRIMARY_GRID_V2 = [
     0.10, 0.20, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90
 ]
 
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _checkpoint_hashes(fold_id: int, model_seeds: List[int]) -> Dict[str, str]:
+    hashes = {}
+    for seed in model_seeds:
+        path = Path("results/checkpoints") / f"5fold_fold{fold_id}_seed{seed}.pt"
+        if not path.exists():
+            raise RuntimeError(f"Required checkpoint missing for fold {fold_id} seed {seed}: {path}")
+        hashes[str(seed)] = _sha256_file(path)
+    return hashes
+
 RAW_COLUMNS = [
     "fold", "city", "model_seed", "replicate_id", "p", "mask_seed",
     "n_total_pairs", "n_revealed", "n_unseen", "fraction_pairs_revealed",
@@ -277,8 +295,21 @@ def run_fold_partial_od(
     test_cities = split["test"] if not smoke else split["test"][:smoke_cities]
     model_seeds = [1, 10, 100] if not smoke else [1, 10]
     B = replicates if not smoke else 20
+    manifest_path = Path("results/e1/splits_manifest_v2.json")
+    split_manifest_sha256 = _sha256_file(manifest_path)
 
     print(f"\n>>> [STARTING FOLD {fold_id}/5] {len(test_cities)} test cities | B={B} reps | {len(p_grid)} p-levels | Seeds: {model_seeds} | Workers={num_workers}")
+
+    checkpoint_sha256 = _checkpoint_hashes(fold_id, model_seeds)
+    expected_signature = {
+        "fold_id": fold_id,
+        "model_seeds": model_seeds,
+        "B": B,
+        "p_grid": [float(p) for p in p_grid],
+        "n_p_levels": len(p_grid),
+        "split_manifest_sha256": split_manifest_sha256,
+        "checkpoint_sha256": checkpoint_sha256,
+    }
 
     # Check already completed cities if resume is True with protocol signature verification
     completed_cities = set()
@@ -287,22 +318,21 @@ def run_fold_partial_od(
             with open(progress_json_path, "r", encoding="utf-8") as f:
                 prog = json.load(f)
                 sig = prog.get("protocol_signature", {})
-                sig_valid = (
-                    prog.get("protocol_version") == "v2"
-                    and sig.get("model_seeds") == model_seeds
-                    and sig.get("B") == B
-                    and sig.get("n_p_levels") == len(p_grid)
-                    and sig.get("split_manifest_sha256") == split_manifest_sha256
-                )
-                if sig_valid:
-                    completed_cities = set(prog.get("completed_cities", []))
-                    print(f"    [RESUME VERIFIED] Resuming fold {fold_id}: Found {len(completed_cities)} verified completed cities.")
-                else:
-                    print(f"    [RESUME REJECTED] Incompatible protocol signature in {progress_json_path}. Restarting fold {fold_id} cleanly.")
-                    completed_cities = set()
+                if prog.get("protocol_version") != "v2" or sig != expected_signature:
+                    raise RuntimeError(
+                        f"Resume protocol mismatch in {progress_json_path}; use a fresh output directory."
+                    )
+                completed_cities = set(prog.get("completed_cities", []))
+                print(f"    [RESUME VERIFIED] Resuming fold {fold_id}: Found {len(completed_cities)} verified completed cities.")
         except Exception as e:
-            print(f"    [RESUME WARNING] Failed to read {progress_json_path}: {e}. Restarting fold {fold_id} cleanly.")
-            completed_cities = set()
+            if isinstance(e, RuntimeError):
+                raise
+            raise RuntimeError(f"Cannot safely resume from {progress_json_path}: {e}") from e
+
+    if resume and not progress_json_path.exists() and raw_csv_path.exists():
+        raise RuntimeError(
+            f"Resume state is incomplete: {raw_csv_path} exists without progress metadata; use a fresh output directory."
+        )
 
     # If raw.csv doesn't exist or not resuming, initialize with header
     if not resume or not raw_csv_path.exists():
@@ -439,10 +469,7 @@ def run_fold_partial_od(
                 "rows_written": rows_written_total,
                 "protocol_version": "v2",
                 "protocol_signature": {
-                    "model_seeds": model_seeds,
-                    "B": B,
-                    "n_p_levels": len(p_grid),
-                    "split_manifest_sha256": split_manifest_sha256,
+                    **expected_signature,
                 },
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             }, f, indent=2)
@@ -539,7 +566,11 @@ def run_fold_partial_od(
         }, f, indent=2)
 
     # 5. QA Verification Before Writing completion.marker
+    expected_raw_rows = len(test_cities) * len(model_seeds) * B * len(p_grid)
     actual_raw_rows = len(fold_df)
+    assert actual_raw_rows == expected_raw_rows, (
+        f"Fold {fold_id} raw rows {actual_raw_rows} != expected {expected_raw_rows}"
+    )
     assert len(per_city_df) == len(test_cities) * len(p_grid), f"Fold {fold_id} per_city rows mismatch"
     
     # Non-null assertions:
@@ -549,10 +580,10 @@ def run_fold_partial_od(
     assert not fold_df[fold_df["p"] > 0]["empirical_tv_partial_vs_full"].isnull().any(), f"Fold {fold_id} contains NaN TV for p > 0!"
 
     with open(marker_path, "w", encoding="utf-8") as f:
-        f.write(f"FOLD {fold_id} COMPLETED AND CERTIFIED\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"FOLD {fold_id} EXECUTION COMPLETE -- LOCAL QA PASS\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
 
     fold_total_time = time.perf_counter() - fold_start_time
-    print(f">>> [FOLD {fold_id} COMPLETE] Certified {actual_raw_rows} rows in {fold_total_time:.2f}s | Marker: {marker_path.name}")
+    print(f">>> [FOLD {fold_id} COMPLETE] Local QA passed for {actual_raw_rows} rows in {fold_total_time:.2f}s | Marker: {marker_path.name}")
     
     return {
         "fold": fold_id,
