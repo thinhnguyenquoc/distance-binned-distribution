@@ -22,9 +22,10 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from src.calibration.bin_calibration import calibrate_kbins
 from src.data.city_splits import load_splits_manifest_v2
-from src.data.dataset import load_city
+from src.data.dataset import load_city, load_raw_city
 from src.data.urban_graph import build_radius_graph
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
+from src.experiment.run_backbone_robustness import fit_gravity_parameters
 from src.training.evaluate import compute_cpc_pair
 from src.training.train import infer_zero_shot, load_checkpoint
 
@@ -150,24 +151,80 @@ def _city_seed_diagnostic(
     }
 
 
+def _city_gravity_diagnostic(
+    city: str,
+    fold: int,
+    gravity_g: float,
+    gravity_alpha: float,
+    bin_edges: np.ndarray,
+    data_root: str,
+) -> dict[str, Any]:
+    raw = load_raw_city(city, data_root=data_root)
+    truth = raw.pair_trips.numpy().astype(np.float64)
+    distances_km = raw.dist_km.astype(np.float64)
+    origins = raw.pair_o_idx.numpy()
+    destinations = raw.pair_d_idx.numpy()
+    inter_mask = (origins != destinations) & (distances_km > 0.0)
+
+    population = raw.population.numpy()
+    p_i = np.clip(population[origins], 1.0, None)
+    p_j = np.clip(population[destinations], 1.0, None)
+    distance = np.clip(distances_km, 0.1, None)
+    prediction = np.exp(gravity_g) * p_i * p_j * (distance ** (-gravity_alpha))
+
+    yd_target = extract_yd_kbins(distances_km, truth, bin_edges, inter_mask)
+    calibrated = calibrate_kbins(prediction, distances_km, inter_mask, yd_target, bin_edges, q=1.0, tolerance=1e-5)
+    m0_cpc = float(compute_cpc_pair(truth[inter_mask], prediction[inter_mask]))
+    m1_cpc = float(compute_cpc_pair(truth[inter_mask], calibrated[inter_mask]))
+    q_alloc, q_rank, bins = _within_bin_metrics(truth, prediction, distances_km, inter_mask, bin_edges)
+    q_alloc_m1, q_rank_m1, _ = _within_bin_metrics(truth, calibrated, distances_km, inter_mask, bin_edges)
+
+    return {
+        "city": city,
+        "fold": fold,
+        "gravity_g": gravity_g,
+        "gravity_alpha": gravity_alpha,
+        "m0_cpc_inter": m0_cpc,
+        "m1_cpc_inter": m1_cpc,
+        "delta_cpc": m1_cpc - m0_cpc,
+        "d_pre_tv": _distance_marginal_tv(prediction, yd_target, distances_km, inter_mask, bin_edges),
+        "q_alloc": q_alloc,
+        "q_rank": q_rank,
+        "q_alloc_m1": q_alloc_m1,
+        "q_rank_m1": q_rank_m1,
+        "rank_invariance_abs_diff": abs(q_rank - q_rank_m1),
+        "bins": bins,
+    }
+
+
 def run_diagnostic(
     data_root: str = "data",
     output_path: Path = DEFAULT_OUTPUT,
     device_str: str = "cpu",
     backbone: str = "gnn",
 ) -> dict[str, Any]:
-    if backbone not in {"gnn", "mlp"}:
+    if backbone not in {"gnn", "mlp", "gravity"}:
         raise ValueError(f"Unsupported checkpoint backbone: {backbone}")
     manifest_path = Path("results/e1/splits_manifest_v2.json")
     splits = load_splits_manifest_v2(str(manifest_path), data_root=data_root)
     per_seed: list[dict[str, Any]] = []
     per_city: list[dict[str, Any]] = []
+    fold_parameters: list[dict[str, Any]] = []
 
     for fold in range(1, 6):
         split = splits[fold]
         bin_edges, k_active = compute_kbin_edges(split["train"], K=K_MOVE, data_root=data_root)
         if k_active != K_MOVE:
             raise RuntimeError(f"Expected K_active={K_MOVE}, got {k_active} in fold {fold}")
+        if backbone == "gravity":
+            gravity_g, gravity_alpha = fit_gravity_parameters(split["train"], data_root=data_root)
+            fold_parameters.append({"fold": fold, "G": gravity_g, "alpha": gravity_alpha})
+            for city in sorted(split["test"]):
+                per_city.append(_city_gravity_diagnostic(
+                    city, fold, gravity_g, gravity_alpha, bin_edges, data_root
+                ))
+            continue
+
         models = {}
         for seed in CANONICAL_SEEDS:
             checkpoint_name = f"5fold_fold{fold}_seed{seed}.pt" if backbone == "gnn" else f"mlp_fold{fold}_seed{seed}.pt"
@@ -203,7 +260,8 @@ def run_diagnostic(
     payload = {
         "diagnostic": "intra-bin allocation quality vs M1 city-oracle gain",
         "interpretation": "mechanistic evidence; not a causal claim",
-        "protocol": {"backbone": backbone, "folds": [1, 2, 3, 4, 5], "seeds": CANONICAL_SEEDS, "K": K_MOVE, "statistical_unit": "city"},
+        "protocol": {"backbone": backbone, "folds": [1, 2, 3, 4, 5], "seeds": [] if backbone == "gravity" else CANONICAL_SEEDS, "K": K_MOVE, "statistical_unit": "city"},
+        "fold_parameters": fold_parameters,
         "correlations": {
             "d_pre_tv_vs_delta_cpc": correlation(d_pre),
             "q_alloc_vs_delta_cpc": correlation(q_alloc),
@@ -223,7 +281,7 @@ if __name__ == "__main__":
     parser.add_argument("--data-root", default="data")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--device", default="cpu")
-    parser.add_argument("--backbone", choices=["gnn", "mlp"], default="gnn")
+    parser.add_argument("--backbone", choices=["gnn", "mlp", "gravity"], default="gnn")
     args = parser.parse_args()
     result = run_diagnostic(args.data_root, args.output, args.device, args.backbone)
     print(json.dumps(result["correlations"], indent=2))
