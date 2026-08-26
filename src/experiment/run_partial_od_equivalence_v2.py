@@ -1,4 +1,4 @@
-"""
+r"""
 Partial-OD Information Equivalence Experiment v2 (Final Paper Protocol)
 ========================================================================
 
@@ -677,6 +677,12 @@ def aggregate_combined_results(
             p_star_benefit = r["p"]
 
     # 3. Operational Equivalence Crossing p_eq
+    # NOTE (paper framing): p_eq is the MEAN-CROSSING CRITERION where D(p) = Gain_OD(p) - Gain_YD(p) >= 0.
+    # This is NOT a formal statistical equivalence test (TOST) with pre-specified margin delta.
+    # Report in paper as "operational equivalence point" or "operational equivalence crossing",
+    # NOT as "the two information sources were statistically equivalent."
+    # If TOST-style equivalence testing is desired in future work, add equivalence margin
+    # delta and compute TOST p-value separately.
     p_eq_grid = None
     p_eq_interp = None
     for r in summary_rows:

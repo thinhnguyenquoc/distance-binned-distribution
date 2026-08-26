@@ -1,11 +1,20 @@
-"""
+r"""
 Experiment Runner for Moving-Bin Calibration Framework.
 
 Experimental Conditions per Target City:
-    1. M_0:                 Zero-shot baseline (pure spatial transfer)
-    2. M_1^{city}:          Primary moving-bin Meta calibration on Omega_c^+ (q=1.0)
-    3. M_1^{county}:        County-level calibration
-    4. M_1^{subzone}:       Subzone-level calibration
+    1. M_0:                 Zero-shot baseline (pure spatial transfer, no target information)
+    2. M_1^{city}:          Oracle GT calibration -- Y_D extracted from target city ground-truth OD
+                            (Y_D^{GT,+}: deliberate target-information intervention, NOT external
+                            Meta observation). Calibrated on Omega_c^+ with q=1.0.
+    3. M_1^{county}:        County-level Oracle GT calibration (grouped by GADM GID-2)
+    4. M_1^{subzone}:       Tract-level (subzone) Oracle GT calibration
+
+Provenance Note:
+    All M1 conditions use Y_D derived directly from the target city's own ground-truth OD
+    flows (T^{GT}_ij). This is a deliberate experimental design to test whether target-city
+    distance-binned aggregate information provides marginal value over M0. It is NOT a case
+    where Y_D is obtained from an external source such as Meta/GAMD observations.
+    The 'oracle_obs' suffix in output keys refers to this oracle access to target GT.
 
 Primary Metric:
     Interzonal CPC (CPC_inter) on Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}
@@ -92,7 +101,8 @@ def run_target_city_experiments(
     )
 
     # -----------------------------------------------------------------------
-    # Condition M1_city: City-Level Oracle Y_D
+    # Condition M1_city: City-Level Oracle Y_D (from target ground-truth OD)
+    # Y_D^{GT,+}: deliberate target-information intervention for RQ evaluation.
     # -----------------------------------------------------------------------
     yd_city = extract_yd_kbins(pair_dist_km, t_true, bin_edges, inter_mask)
     t_pred_city = calibrate_kbins(t_pred_zs, pair_dist_km, inter_mask, yd_city, bin_edges, q=1.0)
@@ -133,8 +143,10 @@ def run_target_city_experiments(
         "total_trips": total_trips,
         "total_inter_trips": total_inter_trips,
         "M0": m0_metrics,
-        "M1_city_oracle_obs": m1_city_metrics,
-        "M1_county_oracle_obs": m1_county_metrics,
-        "M1_subzone_oracle_obs": m1_subzone_metrics,
+        # M1 conditions use Y_D^{GT,+} from target city ground-truth OD.
+        # yd_source confirms this is oracle GT access, not external Meta observation.
+        "M1_city_oracle_obs": {**m1_city_metrics, "yd_source": "target_ground_truth_positive_od"},
+        "M1_county_oracle_obs": {**m1_county_metrics, "yd_source": "target_ground_truth_positive_od_county_grouped"},
+        "M1_subzone_oracle_obs": {**m1_subzone_metrics, "yd_source": "target_ground_truth_positive_od_tract_grouped"},
         "mapping_stats": mapping_stats,
     }

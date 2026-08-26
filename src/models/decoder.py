@@ -1,4 +1,4 @@
-"""
+r"""
 Pairwise OD Decoder with Single Base Magnitude Head (ZTNB).
 
 Input edge representation:

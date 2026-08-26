@@ -4,7 +4,10 @@ Canonical E1-v2 9-donor specificity runner using frozen GNN checkpoints.
 This runner evaluates the E1-v2 target-vs-wrong-donor specificity estimand
 without retraining. It loads the 15 canonical GNN checkpoints from
 results/checkpoints/5fold_fold{fold}_seed{seed}.pt, averages seeds within city,
-and then applies the existing E1 city-level statistical summary.
+and then applies the E1 statistical summary from e1_core.
+
+Statistical infrastructure source: src.experiment.e1_core (canonical)
+Legacy training runner: src.experiment.run_e1 (for run_e1() function only)
 """
 
 from __future__ import annotations
@@ -21,7 +24,16 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.experiment import run_e1 as e1
+# Import statistical infrastructure from e1_core (canonical source of truth)
+from src.experiment.e1_core import (
+    K_MOVE,
+    run_city,
+    compute_summary,
+    write_tables,
+)
+# Import split loading and checkpoint utilities
+from src.data.city_splits import load_splits_manifest_v2
+from src.data.yd_extractor import compute_kbin_edges
 from src.training.train import load_checkpoint
 
 
@@ -42,6 +54,7 @@ def _average_city_seed_results(seed_results: list[dict[str, Any]], seeds: list[i
         "n_wrong_donors": first["n_wrong_donors"],
         "n_inter_pairs": first["n_inter_pairs"],
         "K_active": first["K_active"],
+        "yd_source": first["yd_source"],
         "model_seeds": seeds,
         "cpc_baseline": _mean_numeric(seed_results, "cpc_baseline"),
         "cpc_baseline_norm": _mean_numeric(seed_results, "cpc_baseline_norm"),
@@ -95,10 +108,9 @@ def run_e1_specificity_from_checkpoints(
     results_path = output_dir / "e1_specificity_results.json"
     tables_dir = output_dir / "tables"
 
-    e1.DATA_ROOT = data_root
-    e1.MANIFEST_PATH = Path("results/e1/splits_manifest_v2.json")
-    splits = e1.load_splits_manifest_v2(str(e1.MANIFEST_PATH), data_root=data_root)
-    with open(e1.MANIFEST_PATH, "r", encoding="utf-8") as manifest_file:
+    _manifest_path = Path("results/e1/splits_manifest_v2.json")
+    splits = load_splits_manifest_v2(str(_manifest_path), data_root=data_root)
+    with open(_manifest_path, "r", encoding="utf-8") as manifest_file:
         split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
 
     all_averaged, raw_seed_results = _load_existing_completed(results_path) if resume else ([], [])
@@ -112,9 +124,9 @@ def run_e1_specificity_from_checkpoints(
         run_cities = test_cities[:smoke_cities] if smoke else test_cities
 
         print(f"\n>>> [E1 canonical specificity] fold {fold_id}/5 | cities={len(run_cities)}/{len(test_cities)} | seeds={seeds}")
-        bin_edges, k_active = e1.compute_kbin_edges(train_cities, K=e1.K_MOVE, data_root=data_root)
-        if k_active != e1.K_MOVE:
-            raise RuntimeError(f"Expected K_active={e1.K_MOVE}, got {k_active} for fold {fold_id}")
+        bin_edges, k_active = compute_kbin_edges(train_cities, K=K_MOVE, data_root=data_root)
+        if k_active != K_MOVE:
+            raise RuntimeError(f"Expected K_active={K_MOVE}, got {k_active} for fold {fold_id}")
 
         models = {}
         for seed in seeds:
@@ -138,7 +150,7 @@ def run_e1_specificity_from_checkpoints(
             city_seed_results = []
             for seed in seeds:
                 model, scaler = models[seed]
-                result = e1.run_city(
+                result = run_city(
                     city=city,
                     model=model,
                     scaler=scaler,
@@ -147,6 +159,7 @@ def run_e1_specificity_from_checkpoints(
                     test_cities=test_cities,
                     fold_id=fold_id,
                     device=device,
+                    data_root=data_root,
                 )
                 result["model_seed"] = seed
                 raw_seed_results.append(result)
@@ -162,7 +175,7 @@ def run_e1_specificity_from_checkpoints(
                 f"specificity={averaged['delta_cpc_specificity']:+.4f}"
             )
 
-            summary = e1.compute_summary(all_averaged, bootstrap_seed=2024)
+            summary = compute_summary(all_averaged, bootstrap_seed=2024)
             _write_json(results_path, {
                 "protocol": "e1-v2-canonical-9-donor-specificity-from-checkpoints",
                 "checkpoint_source": "results/checkpoints/5fold_fold{fold}_seed{seed}.pt",
@@ -175,8 +188,8 @@ def run_e1_specificity_from_checkpoints(
                 "per_city_per_seed": raw_seed_results,
             })
 
-    summary = e1.compute_summary(all_averaged, bootstrap_seed=2024)
-    e1.write_tables(all_averaged, summary, table_dir=tables_dir)
+    summary = compute_summary(all_averaged, bootstrap_seed=2024)
+    write_tables(all_averaged, summary, table_dir=tables_dir)
     payload = {
         "protocol": "e1-v2-canonical-9-donor-specificity-from-checkpoints",
         "checkpoint_source": "results/checkpoints/5fold_fold{fold}_seed{seed}.pt",

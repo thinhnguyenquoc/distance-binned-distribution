@@ -1,3 +1,22 @@
+r"""
+K-Bin Number Sensitivity Experiment v1.
+
+Research Question:
+    How sensitive is the distance-binned calibration gain (Delta CPC) to the
+    choice of K (number of moving-distance bins)?
+
+Canonical K Grid (FROZEN for paper submission):
+    K in {2, 4, 6, 8, 10, 12, 14, 16, 18, 20} -- 10 resolution levels.
+    Primary production K = 8 (enforced by PROTOCOL_CONTRACT.md item 8).
+
+Protocol:
+    - 5-fold stratified city CV (35 train / 5 val / 10 test per fold).
+    - Model seeds: {1, 10, 100}. All three required for certified run.
+    - q = 1.0 fixed calibration strength.
+    - Pair-weighted quantile bin edges computed from training cities per fold.
+    - Evaluation: interzonal CPC on Omega_c^+ (positive OD support only).
+"""
+
 import os
 import sys
 import json
@@ -24,6 +43,13 @@ from src.training.evaluate import evaluate_moving_and_full
 
 from statsmodels.stats.multitest import multipletests
 
+# ---------------------------------------------------------------------------
+# Canonical K grid -- FROZEN before paper submission.
+# 10 resolution levels spanning coarse to fine distance binning.
+# Sync this with PROTOCOL_CONTRACT.md item 8 and paper Methods section.
+# ---------------------------------------------------------------------------
+CANONICAL_K_VALUES = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+
 def generate_file_hash(filepath: str) -> str:
     h = hashlib.sha256()
     with open(filepath, 'rb') as f:
@@ -37,7 +63,7 @@ def run_experiment(args):
     
     device = torch.device(args.device)
     splits = generate_35_5_10_splits(data_root=data_root)
-    K_values = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+    K_values = CANONICAL_K_VALUES  # Use module-level canonical constant
     seeds = [1, 10, 100]
     
     folds = [1, 2, 3, 4, 5] if not args.smoke_test else [2]

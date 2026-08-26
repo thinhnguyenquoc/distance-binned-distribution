@@ -1,4 +1,4 @@
-"""
+r"""
 Zero-Truncated Negative Binomial (ZTNB) Likelihood and Conditional Mean Conversion.
 
 Exact Mathematical Formulation:
