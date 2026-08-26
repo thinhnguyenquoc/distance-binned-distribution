@@ -1,0 +1,20 @@
+{
+  "fold": 5,
+  "completed_cities": [
+    "Albuquerque",
+    "Charlotte",
+    "Dallas",
+    "Denver",
+    "Kansas_City",
+    "Miami",
+    "Philadelphia"
+  ],
+  "remaining_cities": [
+    "San_Jose",
+    "Tucson",
+    "Wichita"
+  ],
+  "rows_written": 63000,
+  "protocol_version": "v1",
+  "timestamp": "2026-08-26 13:17:52"
+}

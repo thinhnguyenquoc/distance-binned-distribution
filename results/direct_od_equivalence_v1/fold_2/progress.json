@@ -1,0 +1,19 @@
+{
+  "fold": 2,
+  "completed_cities": [
+    "Atlanta",
+    "Boston",
+    "Fort_Worth",
+    "Indianapolis",
+    "Los_Angeles",
+    "Mesa",
+    "Oklahoma_City",
+    "Raleigh",
+    "Sacramento",
+    "San_Antonio"
+  ],
+  "remaining_cities": [],
+  "rows_written": 90000,
+  "protocol_version": "v1",
+  "timestamp": "2026-08-26 11:50:13"
+}

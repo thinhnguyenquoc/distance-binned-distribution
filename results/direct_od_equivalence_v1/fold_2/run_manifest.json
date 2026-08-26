@@ -1,18 +1,18 @@
 {
-  "fold": 1,
+  "fold": 2,
   "protocol_version": "v1",
   "selected_lambda": 10.0,
   "cities": [
-    "Arlington",
-    "Austin",
-    "El_Paso",
-    "Long_Beach",
-    "Memphis",
-    "Milwaukee",
-    "New_York",
-    "San_Diego",
-    "Seattle",
-    "Virginia_Beach"
+    "Atlanta",
+    "Boston",
+    "Fort_Worth",
+    "Indianapolis",
+    "Los_Angeles",
+    "Mesa",
+    "Oklahoma_City",
+    "Raleigh",
+    "Sacramento",
+    "San_Antonio"
   ],
   "model_seeds": [
     1,
@@ -40,5 +40,5 @@
   "raw_rows": 90000,
   "per_seed_rows": 450,
   "per_city_rows": 150,
-  "completed_at": "2026-08-26 12:36:01"
+  "completed_at": "2026-08-26 12:36:06"
 }

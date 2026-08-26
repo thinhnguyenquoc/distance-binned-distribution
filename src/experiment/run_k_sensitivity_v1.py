@@ -22,17 +22,7 @@ from src.data.urban_graph import build_radius_graph
 from src.calibration.bin_calibration import calibrate_kbins
 from src.training.evaluate import evaluate_moving_and_full
 
-def holm_bonferroni(p_values: list[float]) -> list[float]:
-    n = len(p_values)
-    sorted_indices = np.argsort(p_values)
-    adj_p = np.zeros(n)
-    for i, idx in enumerate(sorted_indices):
-        adj_p[idx] = min(1.0, p_values[idx] * (n - i))
-    for i in range(1, n):
-        idx = sorted_indices[i]
-        prev_idx = sorted_indices[i-1]
-        adj_p[idx] = max(adj_p[idx], adj_p[prev_idx])
-    return adj_p.tolist()
+from statsmodels.stats.multitest import multipletests
 
 def generate_file_hash(filepath: str) -> str:
     h = hashlib.sha256()
@@ -265,11 +255,11 @@ def run_experiment(args):
     # P-value adjustments
     secondary_ks = [K for K in K_values if K != 8]
     raw_ps = [next((s["p_1s_raw"] for s in summary_data if s["K"] == K), 1.0) for K in secondary_ks]
-    adj_ps = holm_bonferroni(raw_ps)
+    _, adj_ps, _, _ = multipletests(raw_ps, alpha=0.05, method="holm")
     adj_p_map = dict(zip(secondary_ks, adj_ps))
     
     for s in summary_data:
-        s["p_1s_adj"] = adj_p_map.get(s["K"], None)
+        s["p_1s_adj"] = float(adj_p_map.get(s["K"], 0.0)) if s["K"] in adj_p_map else None
         
     # Contrasts
     d8 = df_all[df_all["K"] == 8].set_index("city")
@@ -286,23 +276,34 @@ def run_experiment(args):
         dk_com = dk.loc[common]
         
         ck = dk_com["delta_cpc"] - d8_com["delta_cpc"]
-        _, p_ck = stats.wilcoxon(ck, alternative="two-sided") if len(ck) > 0 else (0, 1.0)
+        _, p_ck = stats.wilcoxon(ck.values, alternative="two-sided") if len(ck) > 0 else (0, 1.0)
         
         raw_contrast_ps.append(p_ck)
+        
+        boot_means = []
+        for _ in range(10000):
+            s = []
+            for fold in [1, 2, 3, 4, 5]:
+                f_cities = df_all[(df_all["K"] == 8) & (df_all["fold"] == fold)]["city"].values
+                f_vals = dk.loc[f_cities]["delta_cpc"].values - d8.loc[f_cities]["delta_cpc"].values
+                s.extend(rng.choice(f_vals, size=len(f_vals), replace=True))
+            boot_means.append(np.mean(s))
+        ci_low, ci_high = np.percentile(boot_means, [2.5, 97.5])
         
         rk = dk["delta_cpc"].mean() / mean_d8 if mean_d8 > 0 else None
         
         contrast_data.append({
             "contrast": f"K{K} - K8",
             "mean_diff": float(ck.mean()) if len(ck)>0 else 0.0,
-            "ci": [float(np.percentile(ck, 2.5)), float(np.percentile(ck, 97.5))] if len(ck)>0 else [0.0, 0.0],
+            "ci": [float(ci_low), float(ci_high)],
+            "raw_p": float(p_ck),
             "p_adj": 1.0, # Placeholder, will be updated
-            "r": rk
+            "r": float(rk) if rk is not None else None
         })
         
-    adj_contrast_ps = holm_bonferroni(raw_contrast_ps)
+    _, adj_contrast_ps, _, _ = multipletests(raw_contrast_ps, alpha=0.05, method="holm")
     for i in range(len(contrast_data)):
-        contrast_data[i]["p_adj"] = adj_contrast_ps[i]
+        contrast_data[i]["p_adj"] = float(adj_contrast_ps[i])
     
     # Save JSON summary
     out_sum = {
@@ -324,10 +325,10 @@ def run_experiment(args):
         md.append(f"| {s['K']} | {s['m0_cpc']:.4f} | {s['m1_cpc']:.4f} | {s['mean_delta']:.4f} | [{s['ci_low']:.4f}, {s['ci_high']:.4f}] | {s['pos_cities']}/{s['total_cities']} | {s['k_act_mean']:.1f} | {s['w_max_mean']:.1f} | {p_str} |")
         
     md.append("\n## Contrasts (vs K=8)")
-    md.append("| Contrast | Mean difference | 95% CI | Adjusted p |")
-    md.append("|---|--:|--:|--:|")
+    md.append("| Contrast | Mean difference | 95% CI | Raw p | Adjusted p |")
+    md.append("|---|--:|--:|--:|--:|")
     for c in contrast_data:
-        md.append(f"| {c['contrast']} | {c['mean_diff']:.4f} | [{c['ci'][0]:.4f}, {c['ci'][1]:.4f}] | {c['p_adj']:.4e} |")
+        md.append(f"| {c['contrast']} | {c['mean_diff']:+.4f} | [{c['ci'][0]:+.4f}, {c['ci'][1]:+.4f}] | {c['raw_p']:.4e} | {c['p_adj']:.4e} |")
         
     with open(output_dir / "k_sensitivity_summary.md", "w") as f:
         f.write("\n".join(md))
