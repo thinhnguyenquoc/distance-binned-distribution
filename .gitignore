@@ -232,6 +232,7 @@ results/placebo_matched_v2/matched_placebo_raw.csv
 # Ignore large result files > 100MB
 results/**/*.csv
 results/**/*.jsonl
+results*.zip
 results.zip
 results_v1.zip
 results
