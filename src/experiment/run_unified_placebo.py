@@ -281,9 +281,25 @@ def run_unified_placebo(
                     d_cpc_perm_list.append(cpc_perm - cpc0)
                 d_cpc_perm = float(np.mean(d_cpc_perm_list))
 
-                # 6. Global Train-Mean Condition
+                # 6. Global Train-Mean Condition (Raw)
                 cpc_mean = fast_eval_cpc(train_mean_yd, active_mask, Y_hat, t0_inter, t_true_inter, bin_masks, denom, K)
                 d_cpc_train_mean = float(cpc_mean - cpc0)
+
+                # 7. Global Train-Mean Condition (Dose-Matched)
+                r_M = safe_log_ratio(train_mean_yd, Y_hat, active_mask, delta=epsilon)
+                r_tilde_M = np.zeros_like(r_M)
+                r_tilde_M[active_mask] = r_M[active_mask] - np.mean(r_M[active_mask])
+                D_M = float(np.sqrt(np.mean(r_tilde_M[active_mask]**2)))
+                if D_M >= 1e-12:
+                    r_tilde_M_star = np.zeros_like(r_tilde_M)
+                    r_tilde_M_star[active_mask] = r_tilde_M[active_mask] * (D_T / D_M)
+                    p_M_star = np.zeros_like(Y_hat)
+                    p_M_star[active_mask] = np.maximum(Y_hat[active_mask], epsilon) * np.exp(r_tilde_M_star[active_mask])
+                    p_M_star[active_mask] /= p_M_star[active_mask].sum()
+                    cpc_matched_tm = fast_eval_cpc(p_M_star, active_mask, Y_hat, t0_inter, t_true_inter, bin_masks, denom, K)
+                    d_cpc_matched_train_mean = float(cpc_matched_tm - cpc0)
+                else:
+                    d_cpc_matched_train_mean = d_cpc_target
 
                 seed_runs.append({
                     "cpc0": cpc0,
@@ -294,6 +310,7 @@ def run_unified_placebo(
                     "d_cpc_matched": d_cpc_matched,
                     "d_cpc_perm": d_cpc_perm,
                     "d_cpc_train_mean": d_cpc_train_mean,
+                    "d_cpc_matched_train_mean": d_cpc_matched_train_mean,
                 })
 
             # Average across 3 model seeds for city
@@ -308,6 +325,7 @@ def run_unified_placebo(
                 "d_cpc_matched": float(np.mean([r["d_cpc_matched"] for r in seed_runs])),
                 "d_cpc_perm": float(np.mean([r["d_cpc_perm"] for r in seed_runs])),
                 "d_cpc_train_mean": float(np.mean([r["d_cpc_train_mean"] for r in seed_runs])),
+                "d_cpc_matched_train_mean": float(np.mean([r["d_cpc_matched_train_mean"] for r in seed_runs])),
             })
 
     df_city = pd.DataFrame(city_results)
@@ -321,8 +339,9 @@ def run_unified_placebo(
         ("raw_test_b", "d_cpc_raw_test_b", "Raw Test Donors (B=1000 draws)"),
         ("raw_train_b", "d_cpc_raw_train", "Raw Training Donors (B=1000 draws)"),
         ("matched_train_b", "d_cpc_matched", "Dose-Matched Training Donors (B=1000 draws)"),
+        ("train_mean", "d_cpc_train_mean", "Raw Fold Train-Mean Y_D"),
+        ("matched_train_mean", "d_cpc_matched_train_mean", "Dose-Matched Fold Train-Mean Y_D"),
         ("permuted_b", "d_cpc_perm", "Permuted Target Y_D (B=1000 draws)"),
-        ("train_mean", "d_cpc_train_mean", "Global Fold Train-Mean Y_D"),
     ]
 
     target_vals = df_city["d_cpc_target"].values
