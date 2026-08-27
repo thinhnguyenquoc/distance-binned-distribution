@@ -151,7 +151,10 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 | **4.0% ($\epsilon=0.04$)** | 0.71351 | `+0.00070` | `[-0.00025, +0.00167]` | 18/50 | 64.0% | **19.7%** | `0.9695` | `4.44e-15` |
 | **5.0% ($\epsilon=0.05$)** | 0.71193 | `-0.00087` | `[-0.00183, +0.00012]` | 17/50 | 66.0% | **-24.7%** | `0.9696` | `4.44e-15` |
 
-* **Điểm phá vỡ tín hiệu (Crossover Threshold $\epsilon_{\text{cross}}$)**: **`0.0444` (TV $\approx 4.44\%$)**. Khi nhiễu vượt quá $4.44\%$, $\Delta\text{CPC}$ chuyển sang âm.
+* **Điểm phá vỡ tín hiệu (Crossover Threshold $\epsilon_{\text{cross}}$)**:
+  - Qua **1,000 hướng nhiễu độc lập**: $\epsilon_{\text{cross}} = \mathbf{4.45\%} \ [95\%\text{ CI}: 4.16\%, 4.77\%]$.
+  - Qua **10,000 lần bootstrap resampling đô thị**: $\epsilon_{\text{cross}} = \mathbf{4.39\%} \ [95\%\text{ CI}: 3.66\%, 4.94\%]$.
+  - Chi tiết tại `results/noise_robustness_fine_v1/noise_crossover_uncertainty.md`.
 * **Giải thích về lưới $0\%, 5\%, 10\%, 20\%$**:
   - Tại mức nhiễu $5\%$ ($\epsilon=0.05$), mean $\Delta\text{CPC}$ đã âm ($-0.00087$, độ suy giảm $-24.7\%$, chỉ còn $17/50$ thành phố dương).
   - Do đó, tại mức $10\%$ và $20\%$, phân phối bị méo nghiêm trọng khiến hiệu chỉnh gây hại (đã được xác nhận qua pilot toy-test trong `test_noise_summary`). Runner chính thức chuyển sang lưới mịn $0\% - 5\%$ để định vị chính xác điểm phá vỡ sinh học của mô hình.
@@ -165,18 +168,23 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 * **Field / Function nguồn**: `e1_core.py`, `run_placebo_matched_v2.py`
 * **Protocol check**: **PASS**
 
-### Phân tích đối đầu Target $Y_D$ vs các điều kiện Placebo
+### Phân tích đối đầu Target $Y_D$ vs các điều kiện Placebo (50 Đô thị $\times$ 3 Seeds, $B=1000$ Draws, Fold-Stratified Bootstrap)
 
-| Điều kiện kiểm nghiệm | Mean $\Delta\text{CPC}$ | Median $\Delta\text{CPC}$ | Specificity Gain ($Target - Placebo$) | 95% Bootstrap CI | Win Rate | Paired Wilcoxon $p$ |
-|---|---|---|---|---|---|---|
-| **1. Target $Y_D$ (True Donor)** | `+0.003539` | `+0.001953` | — | `[+0.00261, +0.00451]` | 45/50 | `1.93e-09` |
-| **2. Wrong-City Donors (E1-v2, 9 donors)** | `-0.037721` | `-0.031978` | **`+0.041261`** | **`[+0.03630, +0.04705]`** | **50/50** | **`8.88e-16`** |
-| **3. Wrong-City Donors ($B=1000$ train draws)** | `-0.000107` | `-0.000258` | **`+0.003646`** | `[+0.00271, +0.00458]` | 46/50 | `7.74e-10` |
-| **4. Permuted-Bin Placebo ($B=1000$)** | `-0.006959` | `-0.004652` | **`+0.010499`** | `[+0.00812, +0.01288]` | **50/50** | **`8.88e-16`** |
-| **5. Train-Mean Global $Y_D$** | `+0.000914` | `+0.000072` | **`+0.002626`** | `[+0.00160, +0.00365]` | 42/50 | `1.28e-07` |
+| Điều kiện kiểm nghiệm | Mean $\Delta\text{CPC}$ | 95% Fold-Stratified CI | Benefit vs $M_0$ ($p_{\text{2-sided}}$) | Benefit vs $M_0$ ($p_{\text{1-sided}}$) | Specificity Gain ($Target - Placebo$) | Specificity 95% CI | Target vs Placebo ($p_{\text{1-sided}}$) | Win Rate ($Target > Placebo$) |
+|---|---|---|---|---|---|---|---|---|
+| **1. Oracle Target $Y_D$** | `+0.003539` | `[+0.00260, +0.00450]` | `1.93e-09` | `9.66e-10 (greater)` | **`—`** | `—` | `—` | **45/50 (vs M0)** |
+| **2. Raw Test Donors (E1-v2 exact 9 donors)** | `-0.037721` | `[-0.04357, -0.03268]` | `1.78e-15` | `8.88e-16 (less)` | **`+0.041261`** | `[+0.03641, +0.04688]` | `8.88e-16` | **50/50** |
+| **3. Raw Test Donors ($B=1000$ draws)** | `-0.037787` | `[-0.04358, -0.03278]` | `1.78e-15` | `8.88e-16 (less)` | **`+0.041326`** | `[+0.03646, +0.04688]` | `8.88e-16` | **50/50** |
+| **4. Raw Training Donors ($B=1000$ draws)** | `-0.035148` | `[-0.04014, -0.03067]` | `1.78e-15` | `8.88e-16 (less)` | **`+0.038687`** | `[+0.03431, +0.04349]` | `8.88e-16` | **50/50** |
+| **5. Dose-Matched Training Donors ($B=1000$)** | `-0.000091` | `[-0.00089, +0.00071]` | `0.4097` (n.s.) | `0.2049 (less)` | **`+0.003630`** | `[+0.00287, +0.00445]` | `2.19e-11` | **46/50** |
+| **6. Raw Fold Train-Mean $Y_D$** | `-0.017735` | `[-0.02365, -0.01243]` | `4.91e-12` | `2.46e-12 (less)` | **`+0.021275`** | `[+0.01613, +0.02706]` | `4.44e-15` | **48/50** |
+| **7. Dose-Matched Fold Train-Mean $Y_D$** | `+0.000914` | `[+0.00001, +0.00186]` | `0.4319` (n.s.) | `0.2160 (greater)` | **`+0.002626`** | `[+0.00197, +0.00336]` | `4.03e-11` | **47/50** |
+| **8. Permuted Target $Y_D$ ($B=1000$ draws)** | `-0.006964` | `[-0.00914, -0.00512]` | `1.78e-15` | `8.88e-16 (less)` | **`+0.010504`** | `[+0.00843, +0.01279]` | `1.78e-15` | **49/50** |
 
-* **Matching criteria**: Trong E1-v2, 9 donor cities được ghép đối ứng từ 9 test cities còn lại trong cùng fold. Trong `placebo_matched_v2`, donor được rút ngẫu nhiên từ 35 training cities trong fold ($B=1000$).
-* **Khẳng định chống rò rỉ (Zero-leakage confirmation)**: Cả 3 cơ chế placebo (wrong city, permutation, train-mean) hoàn toàn không sử dụng bất kỳ thông tin $Y_D$ đặc thù nào của target city.
+* **Giải thích thống nhất về chênh lệch Placebo (Reconciliation)**:
+  - **Dose-Matched Placebo làm bằng chứng chính (Primary Specificity Evidence)**: Khi chuẩn hóa độ lệch L2 về đúng liều lượng của target ($D_T$), can thiệp sai hướng không mang lại cải thiện ($\Delta\text{CPC} \approx -0.000091, p_{\text{spec}} = 2.19 \times 10^{-11}$). Hướng train-mean dose-matched tạo ra mean gain dương nhẹ ($+0.000914$, bootstrap CI $[+0.00001, +0.00186]$ do phản ánh quy luật trọng lực chung), nhưng không có cải thiện hệ thống theo cặp ($p_{\text{Wilcoxon}} = 0.4319$, n.s.). Ngược lại, Oracle Target $Y_D$ mang lại bước nhảy vọt hệ thống trên 45/50 đô thị ($+0.003539$, vượt trội áp đảo train-mean với $p = 4.03 \times 10^{-11}$).
+  - **Raw Donors làm kiểm tra áp lực (Secondary Stress-Test Evidence)**: Áp raw distribution ngoại lai ($-0.035$ đến $-0.038$) hoặc raw train-mean ($-0.0177$) gây méo cự ly nghiêm trọng do lệch bán kính vật lý đô thị ($p < 10^{-15}$).
+  - Chi tiết tại `results/unified_placebo_v1/unified_placebo_reconciled_summary.md`.
 
 ---
 
@@ -196,6 +204,7 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
   - Luận điểm: *"$Y_D$ gain không phụ thuộc vào một kiến trúc duy nhất mà mang tính tổng quát cho các neural mobility models."*
   - **XÁC NHẬN (CONFIRMED)**: Cả Urban GNN ($\Delta\text{CPC}=+0.00354, p=1.93\times 10^{-9}$) và Node MLP ($\Delta\text{CPC}=+0.00329, p=4.38\times 10^{-11}$) đều đạt mức tăng trưởng có ý nghĩa thống kê cực kỳ vững chắc với win rate $\ge 90\%$.
   - Ngược lại, Classical Gravity truyền thống không có khả năng học biểu diễn không gian ($M_0 = 0.3887$), do đó hiệu chỉnh vĩ mô không tạo ra bước nhảy vọt thống kê ($p=0.3545$, không có ý nghĩa).
+  - **Khoảng tin cậy chuẩn thống nhất (Primary 95% CI)**: Đạt mức đồng nhất tuyệt đối giữa Fold-Stratified City Bootstrap $[+0.00261, +0.00451]$ và Fold-Stratified Hierarchical City $\times$ Seed Bootstrap $[+0.00259, +0.00451]$. Do đó, paper sử dụng duy nhất một primary CI chuẩn là **`[+0.0026, +0.0045]`** (chi tiết tại `results/audit/fold_stratified_hierarchical_bootstrap.json`).
 
 ---
 
@@ -211,9 +220,9 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 | Sinh thêm OD pair mới | Hoàn toàn không sinh thêm bất kỳ OD pair nào | **PASS** |
 | Empty-bin rate ($K=8$) | **`0.0%`** (Tất cả 50 cities đều có đủ $8/8$ active bins) | **PASS** |
 | Số lượng active bins / city | Đúng **`8.0`** trên toàn bộ 50 đô thị | **PASS** |
-| Phân bố trọng số hiệu chỉnh $w_k$ | $w_{\min} = 1.017, w_{\text{mean}} = 1.3102, w_{\max} = 3.345$ | **PASS** |
+| Phân bố trọng số hiệu chỉnh $w_k$ | 100% đô thị có $w_{\min} < 1.0$ (mean $0.755$, range $[0.224, 0.976]$) và $w_{\max} > 1.0$ (mean $1.310$). Thống kê $\max_k w_k$ qua 50 đô thị: $\min=1.017, \text{mean}=1.310, \max=3.345$ (xem `results/audit/calibration_weight_audit.md`) | **PASS** |
 | Clipping / Truncation | Không dùng ad-hoc clipping; chuẩn hóa bảo toàn khối lượng chính tắc | **PASS** |
-| Bảo toàn tổng flow dự đoán | Sai số khối lượng tương đối $< 1.12 \times 10^{-16}$ (mức máy tính) | **PASS** |
+| Bảo toàn tổng flow dự đoán | Sai số khối lượng tương đối $< 3.72 \times 10^{-16}$ (mức máy tính) | **PASS** |
 | Đồng nhất giữa Code và Methods | 100% tương đương toán học với công thức Soft KL Projection ($q=1.0$) | **PASS** |
 
 ---
