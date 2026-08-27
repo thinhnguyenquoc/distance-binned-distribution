@@ -123,6 +123,13 @@ TASKS = [
         checker=lambda p: _check_json_exists(p, "direct-OD v1 combined"),
     ),
     Task(
+        name="Finite-sample Y_D robustness v1",
+        role="observation robustness on canonical checkpoints",
+        artifact=Path("results/finite_sample_yd_robustness_v1/summary.json"),
+        command="python src/experiment/run_finite_sample_yd_robustness.py",
+        checker=lambda p: _check_json_exists(p, "finite-sample Y_D"),
+    ),
+    Task(
         name="Spatial-resolution summary",
         role="summary from existing frozen checkpoints/results",
         artifact=Path("results/spatial_resolution/spatial_resolution_summary.json"),

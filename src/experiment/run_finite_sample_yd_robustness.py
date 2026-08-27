@@ -214,8 +214,8 @@ def run_experiment(
                 "sample_trips": None,
                 "delta_cpc": float(np.mean(clean_results)),
                 "empirical_tv": 0.0,
-                "win_rate": float(np.mean(np.asarray(clean_results) > 0.0)),
-                "harm_rate": float(np.mean(np.asarray(clean_results) < 0.0)),
+                "win_rate": float(np.mean(clean_results) > 0.0),
+                "harm_rate": float(np.mean(clean_results) < 0.0),
             })
             for replicate in range(replicate_count):
                 raw_rows.append({

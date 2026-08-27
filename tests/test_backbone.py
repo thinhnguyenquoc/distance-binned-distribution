@@ -9,10 +9,15 @@ Tests:
 """
 
 import os
+import sys
 import tempfile
 import torch
 import numpy as np
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from src.models.node_encoder import UrbanGNN, NodeMLP, MLPLayer, GraphConvLayer
 from src.models.zero_shot_model import ZeroShotODModel, ZeroShotMLPModel

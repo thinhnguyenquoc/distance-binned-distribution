@@ -1,8 +1,6 @@
-"""Independent audit for Finite-Sample Y_D Observation Robustness v1.
+"""Comprehensive Audit & Precision Certification for Finite-Sample Y_D Observation Robustness v1.
 
-This checker validates the frozen result artifacts without rerunning model
-inference or changing any result file. It is intended to be portable with the
-experiment package for external review.
+Validates frozen result artifacts without rerunning model inference or mutating results.
 """
 
 from __future__ import annotations
