@@ -1,4 +1,4 @@
-"""
+r"""
 Pairwise OD Decoder with Single Base Magnitude Head (ZTNB).
 
 Input edge representation:
@@ -40,7 +40,8 @@ class PairwiseODDecoder(nn.Module):
             nn.Linear(hidden_dim // 2, 1),
         )
 
-        # Zero-init final layer so the model starts as a pure gravity prior (residual == 0)
+        # Zero-init final layer so the gravity prior is supplied as a log-scale decoder feature/offset 
+        # with a zero-initialized neural residual, yielding softplus(log_t_grav) at initialization.
         nn.init.zeros_(self.net[-1].weight)
         nn.init.zeros_(self.net[-1].bias)
 
@@ -70,7 +71,8 @@ class PairwiseODDecoder(nn.Module):
         e_ij = torch.cat([h_i, h_j, log_distance, log_t_grav], dim=-1)
 
         residual = self.net(e_ij)  # (E, 1), ~0 at init
-        # Residual-gravity: mu_nb starts equal to the gravity prior, GNN learns the deviation
+        # Residual-gravity: gravity prior serves as log-scale feature, GNN learns the deviation.
+        # Yields softplus(log_t_grav) at initialization.
         log_mu_nb = log_t_grav + residual
         mu_nb = F.softplus(log_mu_nb.squeeze(-1)) + 1e-4
         return mu_nb

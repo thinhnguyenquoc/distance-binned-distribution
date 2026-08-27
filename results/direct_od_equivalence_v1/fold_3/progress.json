@@ -1,0 +1,19 @@
+{
+  "fold": 3,
+  "completed_cities": [
+    "Baltimore",
+    "Chicago",
+    "Detroit",
+    "Fresno",
+    "Jacksonville",
+    "Las_Vegas",
+    "Louisville",
+    "Oakland",
+    "Tulsa",
+    "Washington_DC"
+  ],
+  "remaining_cities": [],
+  "rows_written": 72000,
+  "protocol_version": "v1",
+  "timestamp": "2026-08-26 12:40:41"
+}

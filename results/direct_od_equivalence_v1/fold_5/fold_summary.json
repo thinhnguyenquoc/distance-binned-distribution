@@ -1,0 +1,156 @@
+{
+  "fold": 5,
+  "selected_lambda": 10.0,
+  "summary_by_p": [
+    {
+      "p": 0.0,
+      "n_cities": 10,
+      "mean_both_cov": 0.0,
+      "mean_gain_full_yd": 0.003661571345360216,
+      "mean_gain_direct_od": 0.0,
+      "mean_diff_vs_yd": -0.003661571345360216,
+      "pos_cities": 0,
+      "match_yd_cities": 0
+    },
+    {
+      "p": 0.001,
+      "n_cities": 10,
+      "mean_both_cov": 0.032118418253521346,
+      "mean_gain_full_yd": 0.0036618403426698933,
+      "mean_gain_direct_od": 0.001440984906496411,
+      "mean_diff_vs_yd": -0.0022208554361734614,
+      "pos_cities": 10,
+      "match_yd_cities": 4
+    },
+    {
+      "p": 0.0025,
+      "n_cities": 10,
+      "mean_both_cov": 0.13877760495394298,
+      "mean_gain_full_yd": 0.0036617238907227837,
+      "mean_gain_direct_od": 0.00356379917324339,
+      "mean_diff_vs_yd": -9.792471747939509e-05,
+      "pos_cities": 10,
+      "match_yd_cities": 6
+    },
+    {
+      "p": 0.005,
+      "n_cities": 10,
+      "mean_both_cov": 0.3324558264926653,
+      "mean_gain_full_yd": 0.003661533630510383,
+      "mean_gain_direct_od": 0.0069776463621503805,
+      "mean_diff_vs_yd": 0.0033161127316399808,
+      "pos_cities": 10,
+      "match_yd_cities": 7
+    },
+    {
+      "p": 0.01,
+      "n_cities": 10,
+      "mean_both_cov": 0.6149933878191425,
+      "mean_gain_full_yd": 0.0036598123085784563,
+      "mean_gain_direct_od": 0.013231106738782712,
+      "mean_diff_vs_yd": 0.009571294430204224,
+      "pos_cities": 10,
+      "match_yd_cities": 9
+    },
+    {
+      "p": 0.02,
+      "n_cities": 10,
+      "mean_both_cov": 0.8756962749547844,
+      "mean_gain_full_yd": 0.0036587864832128398,
+      "mean_gain_direct_od": 0.023162291743510643,
+      "mean_diff_vs_yd": 0.019503505260297767,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.05,
+      "n_cities": 10,
+      "mean_both_cov": 0.9954942530983913,
+      "mean_gain_full_yd": 0.0036567205797235847,
+      "mean_gain_direct_od": 0.04024420484851887,
+      "mean_diff_vs_yd": 0.036587484268795246,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.1,
+      "n_cities": 10,
+      "mean_both_cov": 0.9999711170848269,
+      "mean_gain_full_yd": 0.0036580143301583557,
+      "mean_gain_direct_od": 0.05142906435715441,
+      "mean_diff_vs_yd": 0.04777105002699601,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.2,
+      "n_cities": 10,
+      "mean_both_cov": 1.0,
+      "mean_gain_full_yd": 0.0036559482747277024,
+      "mean_gain_direct_od": 0.057605635930521995,
+      "mean_diff_vs_yd": 0.053949687655794255,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.4,
+      "n_cities": 10,
+      "mean_both_cov": 1.0,
+      "mean_gain_full_yd": 0.0036532563795865862,
+      "mean_gain_direct_od": 0.059161269743020065,
+      "mean_diff_vs_yd": 0.05550801336343344,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.5,
+      "n_cities": 10,
+      "mean_both_cov": 1.0,
+      "mean_gain_full_yd": 0.003647456701845337,
+      "mean_gain_direct_od": 0.059113520858606564,
+      "mean_diff_vs_yd": 0.05546606415676118,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.6,
+      "n_cities": 10,
+      "mean_both_cov": 1.0,
+      "mean_gain_full_yd": 0.0036329551333986855,
+      "mean_gain_direct_od": 0.058977950380614895,
+      "mean_diff_vs_yd": 0.055344995247216165,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.7,
+      "n_cities": 10,
+      "mean_both_cov": 1.0,
+      "mean_gain_full_yd": 0.0036285505521152462,
+      "mean_gain_direct_od": 0.05884285836692758,
+      "mean_diff_vs_yd": 0.05521430781481231,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.8,
+      "n_cities": 10,
+      "mean_both_cov": 1.0,
+      "mean_gain_full_yd": 0.003629080656717124,
+      "mean_gain_direct_od": 0.05864586661434851,
+      "mean_diff_vs_yd": 0.055016785957631355,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    },
+    {
+      "p": 0.9,
+      "n_cities": 10,
+      "mean_both_cov": 1.0,
+      "mean_gain_full_yd": 0.0036423605023573726,
+      "mean_gain_direct_od": 0.05867795957691642,
+      "mean_diff_vs_yd": 0.055035599074559,
+      "pos_cities": 10,
+      "match_yd_cities": 10
+    }
+  ]
+}

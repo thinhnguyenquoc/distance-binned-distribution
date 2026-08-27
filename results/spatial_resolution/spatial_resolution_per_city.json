@@ -1,0 +1,1606 @@
+[
+  {
+    "city": "Arlington",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.44.220_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 68,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7822193670776082,
+    "cpc_city": 0.7854597591274869,
+    "cpc_county": 0.7854597591274869,
+    "cpc_wrong": 0.7347310881282055,
+    "delta_cpc_city": 0.0032403920498785452,
+    "delta_cpc_county": 0.0032403920498785452,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.050728670999281356,
+    "delta_cpc_spec_county": 0.050728670999281356,
+    "elapsed_sec": 0.5788453420003256
+  },
+  {
+    "city": "Austin",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.44.227_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 169,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7115735115441529,
+    "cpc_city": 0.7121161979087741,
+    "cpc_county": 0.7121161979087741,
+    "cpc_wrong": 0.6873976653161016,
+    "delta_cpc_city": 0.000542686364621033,
+    "delta_cpc_county": 0.000542686364621033,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.024718532592672537,
+    "delta_cpc_spec_county": 0.024718532592672537,
+    "elapsed_sec": 0.12202294667561848
+  },
+  {
+    "city": "El_Paso",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.44.70_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 128,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6636583948896734,
+    "cpc_city": 0.6608167615951495,
+    "cpc_county": 0.6608167615951495,
+    "cpc_wrong": 0.6482491487120776,
+    "delta_cpc_city": -0.0028416332945240264,
+    "delta_cpc_county": -0.0028416332945240264,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.012567612883071769,
+    "delta_cpc_spec_county": 0.012567612883071769,
+    "elapsed_sec": 0.07019495964050293
+  },
+  {
+    "city": "Long_Beach",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.19_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 103,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7416660105434599,
+    "cpc_city": 0.7415631571178345,
+    "cpc_county": 0.7415631571178345,
+    "cpc_wrong": 0.6653286368295726,
+    "delta_cpc_city": -0.00010285342562543764,
+    "delta_cpc_county": -0.00010285342562543764,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.07623452028826194,
+    "delta_cpc_spec_county": 0.07623452028826194,
+    "elapsed_sec": 0.04457592964172363
+  },
+  {
+    "city": "Memphis",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.43.79_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 173,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7276595043701746,
+    "cpc_city": 0.729661057023585,
+    "cpc_county": 0.729661057023585,
+    "cpc_wrong": 0.6851076150583805,
+    "delta_cpc_city": 0.002001552653410362,
+    "delta_cpc_county": 0.002001552653410362,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.04455344196520461,
+    "delta_cpc_spec_county": 0.04455344196520461,
+    "elapsed_sec": 0.11532958348592122
+  },
+  {
+    "city": "Milwaukee",
+    "fold": 1,
+    "n_counties": 2,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.50.34_1",
+      "USA.50.43_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 207,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7412763584566776,
+    "cpc_city": 0.7428675999251051,
+    "cpc_county": 0.7428539220505188,
+    "cpc_wrong": 0.7042321973204387,
+    "delta_cpc_city": 0.0015912414684274474,
+    "delta_cpc_county": 0.0015775635938412025,
+    "delta_cpc_resolution": -1.3677874586244995e-05,
+    "delta_cpc_spec_city": 0.03863540260466636,
+    "delta_cpc_spec_county": 0.03862172473008011,
+    "elapsed_sec": 0.14860065778096518
+  },
+  {
+    "city": "New_York",
+    "fold": 1,
+    "n_counties": 7,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.33.24_1",
+      "USA.33.31_1",
+      "USA.33.32_1",
+      "USA.33.3_1",
+      "USA.33.42_1",
+      "USA.33.44_1",
+      "USA.33.61_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 2037,
+      "n_nearest_fallback": 51,
+      "fallback_details": [
+        {
+          "tract_idx": 1,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 102.4086317841172
+        },
+        {
+          "tract_idx": 55,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 88.62895076402359
+        },
+        {
+          "tract_idx": 71,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 135.3969255703122
+        },
+        {
+          "tract_idx": 74,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 610.9246603166717
+        },
+        {
+          "tract_idx": 87,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 751.4657835067535
+        },
+        {
+          "tract_idx": 182,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 28.23904665204558
+        },
+        {
+          "tract_idx": 313,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 54.3971070147132
+        },
+        {
+          "tract_idx": 314,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 159.82752698786942
+        },
+        {
+          "tract_idx": 324,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 259.58920727838404
+        },
+        {
+          "tract_idx": 333,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 706.6357639740029
+        },
+        {
+          "tract_idx": 337,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 467.2828261086152
+        },
+        {
+          "tract_idx": 341,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 365.8542173002958
+        },
+        {
+          "tract_idx": 343,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 234.88859798521503
+        },
+        {
+          "tract_idx": 346,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 316.69562063644554
+        },
+        {
+          "tract_idx": 348,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 161.20535768010492
+        },
+        {
+          "tract_idx": 349,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 334.6871010489307
+        },
+        {
+          "tract_idx": 350,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 536.5566645492862
+        },
+        {
+          "tract_idx": 352,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 41.257788258054084
+        },
+        {
+          "tract_idx": 353,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 187.96430623947597
+        },
+        {
+          "tract_idx": 597,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 12.991609713108836
+        },
+        {
+          "tract_idx": 816,
+          "GID_2": "USA.33.24_1",
+          "nearest_distance_m": 125.56755424773827
+        },
+        {
+          "tract_idx": 857,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 427.41387066354434
+        },
+        {
+          "tract_idx": 1053,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 30.359050914656308
+        },
+        {
+          "tract_idx": 1058,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 186.4008481040828
+        },
+        {
+          "tract_idx": 1059,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 229.2121007962067
+        },
+        {
+          "tract_idx": 1060,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 43.66348066214888
+        },
+        {
+          "tract_idx": 1069,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 32.34443638689138
+        },
+        {
+          "tract_idx": 1072,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 257.33377544076944
+        },
+        {
+          "tract_idx": 1092,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 47.66871303681341
+        },
+        {
+          "tract_idx": 1105,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 265.38339312986795
+        },
+        {
+          "tract_idx": 1107,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 249.6425764864307
+        },
+        {
+          "tract_idx": 1129,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 293.5375462919151
+        },
+        {
+          "tract_idx": 1130,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 216.1536789957007
+        },
+        {
+          "tract_idx": 1131,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 54.8167751920367
+        },
+        {
+          "tract_idx": 1150,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 38.29146072536471
+        },
+        {
+          "tract_idx": 1197,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 134.84608342253466
+        },
+        {
+          "tract_idx": 1208,
+          "GID_2": "USA.33.3_1",
+          "nearest_distance_m": 13.76744858481983
+        },
+        {
+          "tract_idx": 1285,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 12.279080425619608
+        },
+        {
+          "tract_idx": 1322,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 86.6042280669063
+        },
+        {
+          "tract_idx": 1323,
+          "GID_2": "USA.33.32_1",
+          "nearest_distance_m": 80.53826249422691
+        },
+        {
+          "tract_idx": 1851,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 151.07518915240618
+        },
+        {
+          "tract_idx": 1853,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 69.89068893759159
+        },
+        {
+          "tract_idx": 1858,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 103.1371944311551
+        },
+        {
+          "tract_idx": 1863,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 136.4284566094174
+        },
+        {
+          "tract_idx": 1876,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 126.96064462975299
+        },
+        {
+          "tract_idx": 1891,
+          "GID_2": "USA.33.42_1",
+          "nearest_distance_m": 358.51162549842377
+        },
+        {
+          "tract_idx": 1979,
+          "GID_2": "USA.33.44_1",
+          "nearest_distance_m": 426.2680137617252
+        },
+        {
+          "tract_idx": 1980,
+          "GID_2": "USA.33.44_1",
+          "nearest_distance_m": 277.52015883951634
+        },
+        {
+          "tract_idx": 1989,
+          "GID_2": "USA.33.44_1",
+          "nearest_distance_m": 156.22885869255654
+        },
+        {
+          "tract_idx": 2038,
+          "GID_2": "USA.33.44_1",
+          "nearest_distance_m": 293.261825049535
+        },
+        {
+          "tract_idx": 2065,
+          "GID_2": "USA.33.44_1",
+          "nearest_distance_m": 37.14637505968589
+        }
+      ]
+    },
+    "cpc_baseline": 0.5244635364777247,
+    "cpc_city": 0.5257745013655475,
+    "cpc_county": 0.527870360150943,
+    "cpc_wrong": 0.5085613441179663,
+    "delta_cpc_city": 0.0013109648878228408,
+    "delta_cpc_county": 0.0034068236732184474,
+    "delta_cpc_resolution": 0.0020958587853956065,
+    "delta_cpc_spec_city": 0.017213157247581084,
+    "delta_cpc_spec_county": 0.01930901603297669,
+    "elapsed_sec": 10.515913327534994
+  },
+  {
+    "city": "San_Diego",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.37_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 275,
+      "n_nearest_fallback": 2,
+      "fallback_details": [
+        {
+          "tract_idx": 121,
+          "GID_2": "USA.5.37_1",
+          "nearest_distance_m": 141.126593822719
+        },
+        {
+          "tract_idx": 244,
+          "GID_2": "USA.5.37_1",
+          "nearest_distance_m": 14.357939852981355
+        }
+      ]
+    },
+    "cpc_baseline": 0.676694114103325,
+    "cpc_city": 0.6768590667237159,
+    "cpc_county": 0.6768590667237159,
+    "cpc_wrong": 0.652761205107084,
+    "delta_cpc_city": 0.0001649526203908088,
+    "delta_cpc_county": 0.0001649526203908088,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.024097861616631966,
+    "delta_cpc_spec_county": 0.024097861616631966,
+    "elapsed_sec": 0.5511352221171061
+  },
+  {
+    "city": "Seattle",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.48.17_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 132,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6837938726830989,
+    "cpc_city": 0.6849883225428504,
+    "cpc_county": 0.6849883225428504,
+    "cpc_wrong": 0.6581422331630956,
+    "delta_cpc_city": 0.0011944498597514415,
+    "delta_cpc_county": 0.0011944498597514415,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.026846089379754856,
+    "delta_cpc_spec_county": 0.026846089379754856,
+    "elapsed_sec": 0.06593918800354004
+  },
+  {
+    "city": "Virginia_Beach",
+    "fold": 1,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.47.124_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 100,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7645646893772137,
+    "cpc_city": 0.7670821187549586,
+    "cpc_county": 0.7670821187549586,
+    "cpc_wrong": 0.7299806282064969,
+    "delta_cpc_city": 0.0025174293777448322,
+    "delta_cpc_county": 0.0025174293777448322,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.037101490548461645,
+    "delta_cpc_spec_county": 0.037101490548461645,
+    "elapsed_sec": 0.04192288716634115
+  },
+  {
+    "city": "Atlanta",
+    "fold": 2,
+    "n_counties": 2,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.11.44_1",
+      "USA.11.60_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 126,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7108141629311113,
+    "cpc_city": 0.7196757344490653,
+    "cpc_county": 0.719644683426207,
+    "cpc_wrong": 0.6800090350960021,
+    "delta_cpc_city": 0.008861571517954006,
+    "delta_cpc_county": 0.008830520495095695,
+    "delta_cpc_resolution": -3.1051022858311995e-05,
+    "delta_cpc_spec_city": 0.03966669935306333,
+    "delta_cpc_spec_county": 0.03963564833020502,
+    "elapsed_sec": 0.07077558835347493
+  },
+  {
+    "city": "Boston",
+    "fold": 2,
+    "n_counties": 3,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.22.11_1",
+      "USA.22.13_1",
+      "USA.22.9_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 175,
+      "n_nearest_fallback": 3,
+      "fallback_details": [
+        {
+          "tract_idx": 165,
+          "GID_2": "USA.22.11_1",
+          "nearest_distance_m": 269.15162976280544
+        },
+        {
+          "tract_idx": 171,
+          "GID_2": "USA.22.13_1",
+          "nearest_distance_m": 45.844563429284015
+        },
+        {
+          "tract_idx": 177,
+          "GID_2": "USA.22.13_1",
+          "nearest_distance_m": 715.7391895310884
+        }
+      ]
+    },
+    "cpc_baseline": 0.6871795189545904,
+    "cpc_city": 0.687560500451585,
+    "cpc_county": 0.6875779977358256,
+    "cpc_wrong": 0.603587481915119,
+    "delta_cpc_city": 0.0003809814969946516,
+    "delta_cpc_county": 0.00039847878123529706,
+    "delta_cpc_resolution": 1.7497284240645488e-05,
+    "delta_cpc_spec_city": 0.08397301853646603,
+    "delta_cpc_spec_county": 0.08399051582070667,
+    "elapsed_sec": 0.49613364537556964
+  },
+  {
+    "city": "Fort_Worth",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.44.220_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 139,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7265933813218927,
+    "cpc_city": 0.7371837958098207,
+    "cpc_county": 0.7371837958098207,
+    "cpc_wrong": 0.7075757708282335,
+    "delta_cpc_city": 0.010590414487928005,
+    "delta_cpc_county": 0.010590414487928005,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.029608024981587138,
+    "delta_cpc_spec_county": 0.029608024981587138,
+    "elapsed_sec": 0.0626540978749593
+  },
+  {
+    "city": "Indianapolis",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.15.50_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 203,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7118474389668449,
+    "cpc_city": 0.7172264625453991,
+    "cpc_county": 0.7172264625453991,
+    "cpc_wrong": 0.6780283970031563,
+    "delta_cpc_city": 0.005379023578554243,
+    "delta_cpc_county": 0.005379023578554243,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03919806554224303,
+    "delta_cpc_spec_county": 0.03919806554224303,
+    "elapsed_sec": 0.15289775530497232
+  },
+  {
+    "city": "Los_Angeles",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.19_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 990,
+      "n_nearest_fallback": 3,
+      "fallback_details": [
+        {
+          "tract_idx": 901,
+          "GID_2": "USA.5.19_1",
+          "nearest_distance_m": 33.214111250490106
+        },
+        {
+          "tract_idx": 908,
+          "GID_2": "USA.5.19_1",
+          "nearest_distance_m": 159.65942787397663
+        },
+        {
+          "tract_idx": 976,
+          "GID_2": "USA.5.19_1",
+          "nearest_distance_m": 160.2824346584593
+        }
+      ]
+    },
+    "cpc_baseline": 0.6445651293632305,
+    "cpc_city": 0.6599958732707756,
+    "cpc_county": 0.6599958732707756,
+    "cpc_wrong": 0.6370048706890651,
+    "delta_cpc_city": 0.015430743907545138,
+    "delta_cpc_county": 0.015430743907545138,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.022991002581710496,
+    "delta_cpc_spec_county": 0.022991002581710496,
+    "elapsed_sec": 3.2109413146972656
+  },
+  {
+    "city": "Mesa",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.3.8_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 105,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7452920567143391,
+    "cpc_city": 0.7473993350359077,
+    "cpc_county": 0.7473993350359077,
+    "cpc_wrong": 0.7142989165624315,
+    "delta_cpc_city": 0.0021072783215685398,
+    "delta_cpc_county": 0.0021072783215685398,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03310041847347619,
+    "delta_cpc_spec_county": 0.03310041847347619,
+    "elapsed_sec": 0.07099612553914388
+  },
+  {
+    "city": "Oklahoma_City",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.37.55_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 166,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6850553112049159,
+    "cpc_city": 0.682445732758533,
+    "cpc_county": 0.682445732758533,
+    "cpc_wrong": 0.6662196975764659,
+    "delta_cpc_city": -0.0026095784463829506,
+    "delta_cpc_county": -0.0026095784463829506,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.016226035182067073,
+    "delta_cpc_spec_county": 0.016226035182067073,
+    "elapsed_sec": 0.13943703969319662
+  },
+  {
+    "city": "Raleigh",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.34.92_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 73,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7618535443907337,
+    "cpc_city": 0.7680378198060378,
+    "cpc_county": 0.7680378198060378,
+    "cpc_wrong": 0.7344311049194729,
+    "delta_cpc_city": 0.0061842754153042705,
+    "delta_cpc_county": 0.0061842754153042705,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.033606714886564935,
+    "delta_cpc_spec_county": 0.033606714886564935,
+    "elapsed_sec": 0.049265146255493164
+  },
+  {
+    "city": "Sacramento",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.34_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 100,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7321920690339391,
+    "cpc_city": 0.7427462523979992,
+    "cpc_county": 0.7427462523979992,
+    "cpc_wrong": 0.7099453628550233,
+    "delta_cpc_city": 0.010554183364060147,
+    "delta_cpc_county": 0.010554183364060147,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03280088954297592,
+    "delta_cpc_spec_county": 0.03280088954297592,
+    "elapsed_sec": 0.06498511632283528
+  },
+  {
+    "city": "San_Antonio",
+    "fold": 2,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.44.15_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 280,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7263886193809775,
+    "cpc_city": 0.7375167576536642,
+    "cpc_county": 0.7375167576536642,
+    "cpc_wrong": 0.6993927856670729,
+    "delta_cpc_city": 0.01112813827268666,
+    "delta_cpc_county": 0.01112813827268666,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03812397198659127,
+    "delta_cpc_spec_county": 0.03812397198659127,
+    "elapsed_sec": 0.38690821329752606
+  },
+  {
+    "city": "Baltimore",
+    "fold": 3,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.21.3_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 199,
+      "n_nearest_fallback": 1,
+      "fallback_details": [
+        {
+          "tract_idx": 144,
+          "GID_2": "USA.21.3_1",
+          "nearest_distance_m": 186.93604768727212
+        }
+      ]
+    },
+    "cpc_baseline": 0.7097431313190828,
+    "cpc_city": 0.7107909453817656,
+    "cpc_county": 0.7107909453817656,
+    "cpc_wrong": 0.6695814302179991,
+    "delta_cpc_city": 0.001047814062682691,
+    "delta_cpc_county": 0.001047814062682691,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.041209515163766364,
+    "delta_cpc_spec_county": 0.041209515163766364,
+    "elapsed_sec": 1.500846306482951
+  },
+  {
+    "city": "Chicago",
+    "fold": 3,
+    "n_counties": 2,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.14.16_1",
+      "USA.14.51_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 780,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6724325262890837,
+    "cpc_city": 0.6743371908266992,
+    "cpc_county": 0.6743579791232538,
+    "cpc_wrong": 0.6434860064931903,
+    "delta_cpc_city": 0.001904664537615471,
+    "delta_cpc_county": 0.001925452834170079,
+    "delta_cpc_resolution": 2.078829655460801e-05,
+    "delta_cpc_spec_city": 0.0308511843335089,
+    "delta_cpc_spec_county": 0.03087197263006351,
+    "elapsed_sec": 4.018528779347737
+  },
+  {
+    "city": "Detroit",
+    "fold": 3,
+    "n_counties": 2,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.23.46_1",
+      "USA.23.86_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 297,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6844991557896057,
+    "cpc_city": 0.6850594531437393,
+    "cpc_county": 0.6852392815729464,
+    "cpc_wrong": 0.6504885999614181,
+    "delta_cpc_city": 0.0005602973541335432,
+    "delta_cpc_county": 0.000740125783340706,
+    "delta_cpc_resolution": 0.0001798284292071628,
+    "delta_cpc_spec_city": 0.034570853182321226,
+    "delta_cpc_spec_county": 0.03475068161152839,
+    "elapsed_sec": 0.6164037386576334
+  },
+  {
+    "city": "Fresno",
+    "fold": 3,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.10_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 100,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7606476858477037,
+    "cpc_city": 0.7613026225917562,
+    "cpc_county": 0.7613026225917562,
+    "cpc_wrong": 0.7256922064242394,
+    "delta_cpc_city": 0.0006549367440523701,
+    "delta_cpc_county": 0.0006549367440523701,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03561041616751692,
+    "delta_cpc_spec_county": 0.03561041616751692,
+    "elapsed_sec": 0.0989983081817627
+  },
+  {
+    "city": "Jacksonville",
+    "fold": 3,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.10.15_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 163,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6668266300967317,
+    "cpc_city": 0.6652746602857533,
+    "cpc_county": 0.6652746602857533,
+    "cpc_wrong": 0.5923050210693509,
+    "delta_cpc_city": -0.001551969810978419,
+    "delta_cpc_county": -0.001551969810978419,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.0729696392164025,
+    "delta_cpc_spec_county": 0.0729696392164025,
+    "elapsed_sec": 0.2161868413289388
+  },
+  {
+    "city": "Las_Vegas",
+    "fold": 3,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.29.3_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 140,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.749864342192823,
+    "cpc_city": 0.750215710771983,
+    "cpc_county": 0.750215710771983,
+    "cpc_wrong": 0.7174742962259432,
+    "delta_cpc_city": 0.0003513685791601828,
+    "delta_cpc_county": 0.0003513685791601828,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.032741414546039925,
+    "delta_cpc_spec_county": 0.032741414546039925,
+    "elapsed_sec": 0.18479410807291666
+  },
+  {
+    "city": "Louisville",
+    "fold": 3,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.18.56_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 75,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7662755173347482,
+    "cpc_city": 0.7660605321829718,
+    "cpc_county": 0.7660605321829718,
+    "cpc_wrong": 0.7159786979134249,
+    "delta_cpc_city": -0.00021498515177653665,
+    "delta_cpc_county": -0.00021498515177653665,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.0500818342695469,
+    "delta_cpc_spec_county": 0.0500818342695469,
+    "elapsed_sec": 0.08814144134521484
+  },
+  {
+    "city": "Oakland",
+    "fold": 3,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.1_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 111,
+      "n_nearest_fallback": 2,
+      "fallback_details": [
+        {
+          "tract_idx": 16,
+          "GID_2": "USA.5.1_1",
+          "nearest_distance_m": 38.89313119456294
+        },
+        {
+          "tract_idx": 61,
+          "GID_2": "USA.5.1_1",
+          "nearest_distance_m": 6.238821531847764
+        }
+      ]
+    },
+    "cpc_baseline": 0.7405810574875638,
+    "cpc_city": 0.7439592077998146,
+    "cpc_county": 0.7439592077998146,
+    "cpc_wrong": 0.6847252306327892,
+    "delta_cpc_city": 0.0033781503122508974,
+    "delta_cpc_county": 0.0033781503122508974,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.05923397716702539,
+    "delta_cpc_spec_county": 0.05923397716702539,
+    "elapsed_sec": 1.127323071161906
+  },
+  {
+    "city": "Tulsa",
+    "fold": 3,
+    "n_counties": 2,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.37.72_1",
+      "USA.37.73_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 121,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7797456795059556,
+    "cpc_city": 0.781563156026547,
+    "cpc_county": 0.7817503428790186,
+    "cpc_wrong": 0.7223041997897254,
+    "delta_cpc_city": 0.001817476520591536,
+    "delta_cpc_county": 0.0020046633730630425,
+    "delta_cpc_resolution": 0.00018718685247150665,
+    "delta_cpc_spec_city": 0.059258956236821723,
+    "delta_cpc_spec_county": 0.059446143089293225,
+    "elapsed_sec": 0.15554547309875488
+  },
+  {
+    "city": "Washington_DC",
+    "fold": 3,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.9.1_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 179,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7075033687693889,
+    "cpc_city": 0.7077385888097972,
+    "cpc_county": 0.7077385888097972,
+    "cpc_wrong": 0.6468385435199316,
+    "delta_cpc_city": 0.00023522004040836078,
+    "delta_cpc_county": 0.00023522004040836078,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.06090004528986551,
+    "delta_cpc_spec_county": 0.06090004528986551,
+    "elapsed_sec": 0.2573990027109782
+  },
+  {
+    "city": "Colorado_Springs",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.6.21_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 92,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7424310932565268,
+    "cpc_city": 0.7482008569024502,
+    "cpc_county": 0.7482008569024502,
+    "cpc_wrong": 0.7023690623527639,
+    "delta_cpc_city": 0.00576976364592352,
+    "delta_cpc_county": 0.00576976364592352,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.04583179454968641,
+    "delta_cpc_spec_county": 0.04583179454968641,
+    "elapsed_sec": 0.11706741650899251
+  },
+  {
+    "city": "Columbus",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.36.25_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 183,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6947314591587467,
+    "cpc_city": 0.6986582644597497,
+    "cpc_county": 0.6986582644597497,
+    "cpc_wrong": 0.659183169521064,
+    "delta_cpc_city": 0.003926805301003015,
+    "delta_cpc_county": 0.003926805301003015,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03947509493868554,
+    "delta_cpc_spec_county": 0.03947509493868554,
+    "elapsed_sec": 0.3166874249776204
+  },
+  {
+    "city": "Houston",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.44.101_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 463,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6462082810041725,
+    "cpc_city": 0.6574271982128543,
+    "cpc_county": 0.6574271982128543,
+    "cpc_wrong": 0.6083861936907297,
+    "delta_cpc_city": 0.011218917208681919,
+    "delta_cpc_county": 0.011218917208681919,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.04904100452212464,
+    "delta_cpc_spec_county": 0.04904100452212464,
+    "elapsed_sec": 1.6553583939870198
+  },
+  {
+    "city": "Minneapolis",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.24.27_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 114,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7271735444455115,
+    "cpc_city": 0.7281620018896563,
+    "cpc_county": 0.7281620018896563,
+    "cpc_wrong": 0.6473664429533635,
+    "delta_cpc_city": 0.0009884574441448117,
+    "delta_cpc_county": 0.0009884574441448117,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.0807955589362928,
+    "delta_cpc_spec_county": 0.0807955589362928,
+    "elapsed_sec": 0.1651946703592936
+  },
+  {
+    "city": "Nashville",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.43.19_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 152,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6884969976768929,
+    "cpc_city": 0.6911648011062131,
+    "cpc_county": 0.6911648011062131,
+    "cpc_wrong": 0.6454446935771775,
+    "delta_cpc_city": 0.0026678034293202333,
+    "delta_cpc_county": 0.0026678034293202333,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.045720107529035624,
+    "delta_cpc_spec_county": 0.045720107529035624,
+    "elapsed_sec": 0.25919127464294434
+  },
+  {
+    "city": "Omaha",
+    "fold": 4,
+    "n_counties": 2,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.16.78_1",
+      "USA.28.28_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 119,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7470053826447551,
+    "cpc_city": 0.7526209780239485,
+    "cpc_county": 0.7528277807503544,
+    "cpc_wrong": 0.7136148244536303,
+    "delta_cpc_city": 0.005615595379193243,
+    "delta_cpc_county": 0.005822398105599258,
+    "delta_cpc_resolution": 0.00020680272640601535,
+    "delta_cpc_spec_city": 0.03900615357031815,
+    "delta_cpc_spec_county": 0.039212956296724166,
+    "elapsed_sec": 0.15117398897806802
+  },
+  {
+    "city": "Phoenix",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.3.8_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 348,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6959234304212113,
+    "cpc_city": 0.7083044677856641,
+    "cpc_county": 0.7083044677856641,
+    "cpc_wrong": 0.6667567344530925,
+    "delta_cpc_city": 0.012381037364452766,
+    "delta_cpc_county": 0.012381037364452766,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.04154773333257163,
+    "delta_cpc_spec_county": 0.04154773333257163,
+    "elapsed_sec": 0.7462089856465658
+  },
+  {
+    "city": "Portland",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.38.26_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 141,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7099856472532049,
+    "cpc_city": 0.7145300872593249,
+    "cpc_county": 0.7145300872593249,
+    "cpc_wrong": 0.6793324617847508,
+    "delta_cpc_city": 0.004544440006119939,
+    "delta_cpc_county": 0.004544440006119939,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03519762547457398,
+    "delta_cpc_spec_county": 0.03519762547457398,
+    "elapsed_sec": 0.18956716855367026
+  },
+  {
+    "city": "San_Francisco",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.38_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 190,
+      "n_nearest_fallback": 3,
+      "fallback_details": [
+        {
+          "tract_idx": 66,
+          "GID_2": "USA.5.38_1",
+          "nearest_distance_m": 456.103095312729
+        },
+        {
+          "tract_idx": 177,
+          "GID_2": "USA.5.38_1",
+          "nearest_distance_m": 517.313733616277
+        },
+        {
+          "tract_idx": 179,
+          "GID_2": "USA.5.38_1",
+          "nearest_distance_m": 334.63669809790207
+        }
+      ]
+    },
+    "cpc_baseline": 0.6523769897120195,
+    "cpc_city": 0.6538993191739656,
+    "cpc_county": 0.6538993191739656,
+    "cpc_wrong": 0.5867300046895895,
+    "delta_cpc_city": 0.0015223294619461185,
+    "delta_cpc_county": 0.0015223294619461185,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.0671693144843762,
+    "delta_cpc_spec_county": 0.0671693144843762,
+    "elapsed_sec": 1.2169090906778972
+  },
+  {
+    "city": "Tampa",
+    "fold": 4,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.10.28_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 93,
+      "n_nearest_fallback": 4,
+      "fallback_details": [
+        {
+          "tract_idx": 64,
+          "GID_2": "USA.10.28_1",
+          "nearest_distance_m": 71.10118579361946
+        },
+        {
+          "tract_idx": 67,
+          "GID_2": "USA.10.28_1",
+          "nearest_distance_m": 25.002721738367995
+        },
+        {
+          "tract_idx": 80,
+          "GID_2": "USA.10.28_1",
+          "nearest_distance_m": 174.04423096120433
+        },
+        {
+          "tract_idx": 95,
+          "GID_2": "USA.10.28_1",
+          "nearest_distance_m": 1123.8481194299152
+        }
+      ]
+    },
+    "cpc_baseline": 0.7053076881893235,
+    "cpc_city": 0.7112231046918366,
+    "cpc_county": 0.7112231046918366,
+    "cpc_wrong": 0.6743312644234338,
+    "delta_cpc_city": 0.0059154165025130006,
+    "delta_cpc_county": 0.0059154165025130006,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03689184026840261,
+    "delta_cpc_spec_county": 0.03689184026840261,
+    "elapsed_sec": 1.1024192969004314
+  },
+  {
+    "city": "Albuquerque",
+    "fold": 5,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.32.1_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 115,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7541222596770645,
+    "cpc_city": 0.7555257958253048,
+    "cpc_county": 0.7555257958253048,
+    "cpc_wrong": 0.725354316831746,
+    "delta_cpc_city": 0.001403536148240329,
+    "delta_cpc_county": 0.001403536148240329,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.030171478993558876,
+    "delta_cpc_spec_county": 0.030171478993558876,
+    "elapsed_sec": 0.14491709073384604
+  },
+  {
+    "city": "Charlotte",
+    "fold": 5,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.34.60_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 185,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7133827165172638,
+    "cpc_city": 0.7147730906689082,
+    "cpc_county": 0.7147730906689082,
+    "cpc_wrong": 0.6827889543278762,
+    "delta_cpc_city": 0.0013903741516445207,
+    "delta_cpc_county": 0.0013903741516445207,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03198413634103207,
+    "delta_cpc_spec_county": 0.03198413634103207,
+    "elapsed_sec": 0.3443455696105957
+  },
+  {
+    "city": "Dallas",
+    "fold": 5,
+    "n_counties": 3,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.44.220_1",
+      "USA.44.43_1",
+      "USA.44.57_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 434,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.6852513360170901,
+    "cpc_city": 0.6957684355842227,
+    "cpc_county": 0.6969164571428762,
+    "cpc_wrong": 0.6669982950427582,
+    "delta_cpc_city": 0.010517099567132685,
+    "delta_cpc_county": 0.011665121125786104,
+    "delta_cpc_resolution": 0.0011480215586534188,
+    "delta_cpc_spec_city": 0.028770140541464578,
+    "delta_cpc_spec_county": 0.029918162100117995,
+    "elapsed_sec": 1.4603553613026936
+  },
+  {
+    "city": "Denver",
+    "fold": 5,
+    "n_counties": 3,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.6.17_1",
+      "USA.6.31_1",
+      "USA.6.3_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 144,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7155512872570565,
+    "cpc_city": 0.71571320506778,
+    "cpc_county": 0.7160526103985329,
+    "cpc_wrong": 0.6940531538191097,
+    "delta_cpc_city": 0.00016191781072335173,
+    "delta_cpc_county": 0.0005013231414761806,
+    "delta_cpc_resolution": 0.00033940533075282886,
+    "delta_cpc_spec_city": 0.02166005124867021,
+    "delta_cpc_spec_county": 0.021999456579423038,
+    "elapsed_sec": 0.20852979024251303
+  },
+  {
+    "city": "Kansas_City",
+    "fold": 5,
+    "n_counties": 3,
+    "is_multi_county": true,
+    "county_ids": [
+      "USA.26.24_1",
+      "USA.26.48_1",
+      "USA.26.83_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 144,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7210705442567353,
+    "cpc_city": 0.7268774115425048,
+    "cpc_county": 0.729612427387384,
+    "cpc_wrong": 0.7029044492698602,
+    "delta_cpc_city": 0.005806867285769475,
+    "delta_cpc_county": 0.008541883130648631,
+    "delta_cpc_resolution": 0.0027350158448791553,
+    "delta_cpc_spec_city": 0.023972962272644633,
+    "delta_cpc_spec_county": 0.02670797811752379,
+    "elapsed_sec": 0.2528168360392253
+  },
+  {
+    "city": "Miami",
+    "fold": 5,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.10.43_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 91,
+      "n_nearest_fallback": 6,
+      "fallback_details": [
+        {
+          "tract_idx": 23,
+          "GID_2": "USA.10.43_1",
+          "nearest_distance_m": 188.40806330561577
+        },
+        {
+          "tract_idx": 24,
+          "GID_2": "USA.10.43_1",
+          "nearest_distance_m": 259.854041440166
+        },
+        {
+          "tract_idx": 25,
+          "GID_2": "USA.10.43_1",
+          "nearest_distance_m": 856.6523307182609
+        },
+        {
+          "tract_idx": 79,
+          "GID_2": "USA.10.43_1",
+          "nearest_distance_m": 343.9183057656152
+        },
+        {
+          "tract_idx": 80,
+          "GID_2": "USA.10.43_1",
+          "nearest_distance_m": 334.9114543266878
+        },
+        {
+          "tract_idx": 86,
+          "GID_2": "USA.10.43_1",
+          "nearest_distance_m": 45.965980799493565
+        }
+      ]
+    },
+    "cpc_baseline": 0.7330887185849159,
+    "cpc_city": 0.7356925475445008,
+    "cpc_county": 0.7356925475445008,
+    "cpc_wrong": 0.6119724464815318,
+    "delta_cpc_city": 0.002603828959585034,
+    "delta_cpc_county": 0.002603828959585034,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.12372010106296905,
+    "delta_cpc_spec_county": 0.12372010106296905,
+    "elapsed_sec": 1.3141332467397053
+  },
+  {
+    "city": "Philadelphia",
+    "fold": 5,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.39.51_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 384,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.68446345415393,
+    "cpc_city": 0.6855446586513324,
+    "cpc_county": 0.6855446586513324,
+    "cpc_wrong": 0.6528977437827912,
+    "delta_cpc_city": 0.001081204497402492,
+    "delta_cpc_county": 0.001081204497402492,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.03264691486854121,
+    "delta_cpc_spec_county": 0.03264691486854121,
+    "elapsed_sec": 1.120332956314087
+  },
+  {
+    "city": "San_Jose",
+    "fold": 5,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.5.43_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 183,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7177155187686077,
+    "cpc_city": 0.7206917586345679,
+    "cpc_county": 0.7206917586345679,
+    "cpc_wrong": 0.6954804226817282,
+    "delta_cpc_city": 0.00297623986596011,
+    "delta_cpc_county": 0.00297623986596011,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.02521133595283968,
+    "delta_cpc_spec_county": 0.02521133595283968,
+    "elapsed_sec": 0.2876773675282796
+  },
+  {
+    "city": "Tucson",
+    "fold": 5,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.3.11_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 117,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7424216410322749,
+    "cpc_city": 0.7431447379610251,
+    "cpc_county": 0.7431447379610251,
+    "cpc_wrong": 0.7217482958567586,
+    "delta_cpc_city": 0.0007230969287500925,
+    "delta_cpc_county": 0.0007230969287500925,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.02139644210426646,
+    "delta_cpc_spec_county": 0.02139644210426646,
+    "elapsed_sec": 0.1343229611714681
+  },
+  {
+    "city": "Wichita",
+    "fold": 5,
+    "n_counties": 1,
+    "is_multi_county": false,
+    "county_ids": [
+      "USA.17.87_1"
+    ],
+    "mapping_stats": {
+      "n_strict_within": 96,
+      "n_nearest_fallback": 0,
+      "fallback_details": []
+    },
+    "cpc_baseline": 0.7761870525767772,
+    "cpc_city": 0.7861377074742443,
+    "cpc_county": 0.7861377074742443,
+    "cpc_wrong": 0.7427393815192408,
+    "delta_cpc_city": 0.009950654897467048,
+    "delta_cpc_county": 0.009950654897467048,
+    "delta_cpc_resolution": 0.0,
+    "delta_cpc_spec_city": 0.043398325955003446,
+    "delta_cpc_spec_county": 0.043398325955003446,
+    "elapsed_sec": 0.1301866372426351
+  }
+]

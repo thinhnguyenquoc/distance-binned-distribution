@@ -1,0 +1,152 @@
+{
+  "timestamp": "2026-08-26 17:15:30",
+  "all_passed": true,
+  "elapsed_seconds": 962.0580832999985,
+  "audit_1_production_yd": {
+    "status": "PASS",
+    "total_checks": 150,
+    "max_flow_diff": 1.8189894035458565e-12,
+    "max_cpc_diff": 2.220446049250313e-16,
+    "failures": []
+  },
+  "audit_2_solver_precision": {
+    "status": "PASS",
+    "max_a_diff": 9.759755240090762e-09,
+    "max_b_diff": 8.624821563538165e-08,
+    "max_cpc_diff": 5.605460540181184e-10,
+    "criterion_passed": true
+  },
+  "audit_3_lambda_selection": {
+    "status": "PASS",
+    "fold_gaps": {
+      "1": {
+        "selected_lambda": 10.0,
+        "best_score": 0.767499198565751,
+        "second_score": 0.7660603565232057,
+        "gap": 0.0014388420425452964,
+        "gap_exceeds_1e-6": true
+      },
+      "2": {
+        "selected_lambda": 10.0,
+        "best_score": 0.7471831489152939,
+        "second_score": 0.7467913700683247,
+        "gap": 0.00039177884696917076,
+        "gap_exceeds_1e-6": true
+      },
+      "3": {
+        "selected_lambda": 10.0,
+        "best_score": 0.7569527547447724,
+        "second_score": 0.7491885009606124,
+        "gap": 0.0077642537841600134,
+        "gap_exceeds_1e-6": true
+      },
+      "4": {
+        "selected_lambda": 10.0,
+        "best_score": 0.7601904541151792,
+        "second_score": 0.7601645451165899,
+        "gap": 2.5908998589230237e-05,
+        "gap_exceeds_1e-6": true
+      },
+      "5": {
+        "selected_lambda": 10.0,
+        "best_score": 0.7405924803079652,
+        "second_score": 0.73953966263776,
+        "gap": 0.0010528176702051528,
+        "gap_exceeds_1e-6": true
+      }
+    },
+    "all_gaps_exceed_tol": true
+  },
+  "audit_4_monte_carlo_precision": {
+    "status": "PASS",
+    "results_by_p": {
+      "0.001": {
+        "p": 0.001,
+        "mean_city_mc_std": 0.0006607544865382302,
+        "mean_city_mc_se": 4.672239781306179e-05,
+        "mcse_mean_D": 6.774720051487119e-06,
+        "passed_1e-4_gate": true
+      },
+      "0.0025": {
+        "p": 0.0025,
+        "mean_city_mc_std": 0.000993294264876423,
+        "mean_city_mc_se": 7.023651104078254e-05,
+        "mcse_mean_D": 1.0157863729681578e-05,
+        "passed_1e-4_gate": true
+      },
+      "0.005": {
+        "p": 0.005,
+        "mean_city_mc_std": 0.0013119580188861366,
+        "mean_city_mc_se": 9.276944117864557e-05,
+        "mcse_mean_D": 1.3394182095961888e-05,
+        "passed_1e-4_gate": true
+      }
+    },
+    "all_passed": true
+  },
+  "audit_5_crossing_uncertainty": {
+    "status": "PASS",
+    "n_boot": 10000,
+    "valid_crossings": 10000,
+    "p_crossing_le_050": 100.0,
+    "counts": {
+      "below_0.10%": 9,
+      "0.10-0.25%": 8860,
+      "0.25-0.50%": 1131,
+      "no_cross_le_0.50%": 0
+    },
+    "mean_crossing_conditional": 0.002014011850251113,
+    "median_crossing_conditional": 0.0019865049158794505,
+    "ci_95_crossing_conditional": [
+      0.0013312277188565673,
+      0.002869635643642518
+    ]
+  },
+  "audit_6_observation_counts": {
+    "status": "PASS",
+    "stats_by_p": {
+      "0.001": {
+        "p": 0.001,
+        "median_revealed_pairs": 21,
+        "iqr_revealed_pairs": [
+          13,
+          39
+        ],
+        "min_revealed_pairs": 5,
+        "max_revealed_pairs": 3095,
+        "mean_revealed_mass_pct": 0.09988493108665852,
+        "mean_origin_cov_pct": 17.650831466300755,
+        "mean_dest_cov_pct": 17.67054220912462,
+        "mean_both_cov_pct": 4.74981677171977
+      },
+      "0.0025": {
+        "p": 0.0025,
+        "median_revealed_pairs": 51,
+        "iqr_revealed_pairs": [
+          32,
+          97
+        ],
+        "min_revealed_pairs": 11,
+        "max_revealed_pairs": 7738,
+        "mean_revealed_mass_pct": 0.24997022303852812,
+        "mean_origin_cov_pct": 35.82792550853951,
+        "mean_dest_cov_pct": 35.82853952980101,
+        "mean_both_cov_pct": 15.839322594216988
+      },
+      "0.005": {
+        "p": 0.005,
+        "median_revealed_pairs": 103,
+        "iqr_revealed_pairs": [
+          63,
+          194
+        ],
+        "min_revealed_pairs": 23,
+        "max_revealed_pairs": 15476,
+        "mean_revealed_mass_pct": 0.5005418075053182,
+        "mean_origin_cov_pct": 55.754376581956,
+        "mean_dest_cov_pct": 55.77685500320345,
+        "mean_both_cov_pct": 34.01733088352523
+      }
+    }
+  }
+}

@@ -195,9 +195,9 @@ cython_debug/
 .abstra/
 
 # Visual Studio Code
-#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
+#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore
 #   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#   and can be added to the global gitignore or merged into this file. However, if you prefer, 
+#   and can be added to the global gitignore or merged into this file. However, if you prefer,
 #   you could uncomment the following to ignore the entire vscode folder
 # .vscode/
 # Temporary file for partial code execution
@@ -217,9 +217,26 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-NeuroGravity/*
+NeuroGravity
 data/*
 meta_prior/*
 data_gadm2/*
 gadm41_USA_shp/*
 results
+results/e1_rs/yd_oracles/*
+results/placebo_matched_v2/matched_placebo_raw.json
+results/placebo_matched_v2/matched_placebo_raw.csv
+# results/
+!results/*.json
+# results/
+!results/*.json
+# Ignore large result files > 100MB
+results/**/*.csv
+results/**/*.jsonl
+results*.zip
+results.zip
+results_v1.zip
+results
+results/direct_od_equivalence_v1/*
+.DS_Store
+results freeze.zip

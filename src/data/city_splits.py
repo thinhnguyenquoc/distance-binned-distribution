@@ -78,8 +78,22 @@ def get_all_cities_sorted_by_size(data_root: str = "data") -> List[Dict]:
 
 def generate_5fold_splits(data_root: str = "data") -> Dict[int, Dict[str, List[str]]]:
     """
-    Returns 5 outer folds with 40 train / 10 test cities using locked E1-v1 test sets.
+    DEPRECATED — Returns 5 outer folds with 40 train / 10 test cities.
+
+    WARNING: This function produces 40/0/10 splits (no validation set), which VIOLATES
+    the locked 35/5/10 protocol (Contract §7). It is retained only for backward
+    compatibility with legacy test code.
+
+    Use generate_35_5_10_splits() or load_splits_manifest_v2() instead.
     """
+    import warnings
+    warnings.warn(
+        "generate_5fold_splits() produces 40-train/0-val/10-test splits which VIOLATES "
+        "the locked 35/5/10 protocol. Use generate_35_5_10_splits() or "
+        "load_splits_manifest_v2() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     cities_info = get_all_cities_sorted_by_size(data_root)
     all_city_names = [c["city"] for c in cities_info]
     splits = {}
@@ -231,11 +245,18 @@ def load_splits_manifest_v2(
     """
     path = Path(manifest_path)
     if not path.exists():
-        # Auto-generate canonical manifest if not yet created
-        generate_splits_manifest_v2(data_root=data_root, output_path=str(path))
+        raise FileNotFoundError(f"Missing locked manifest at {path}. Protocol requires explicit locked splits.")
 
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
+        
+    stored_hash = data.get("manifest_sha256")
+    if not stored_hash:
+        raise ValueError(f"Manifest at {path} is missing 'manifest_sha256' field — integrity cannot be verified.")
+    canonical = json.dumps(data.get("folds", {}), sort_keys=True)
+    actual_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    if actual_hash != stored_hash:
+        raise ValueError(f"Manifest integrity compromised! Expected SHA-256 {stored_hash} but got {actual_hash}")
 
     cities_info = get_all_cities_sorted_by_size(data_root)
     all_city_names = set(c["city"] for c in cities_info)

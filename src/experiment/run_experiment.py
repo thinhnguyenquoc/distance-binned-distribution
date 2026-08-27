@@ -1,13 +1,20 @@
-"""
+r"""
 Experiment Runner for Moving-Bin Calibration Framework.
 
 Experimental Conditions per Target City:
-    1. M_0:                 Zero-shot baseline (pure spatial transfer)
-    2. M_1^{real, +}:       Primary moving-bin Meta calibration on Omega_c^+ (q=1.0)
-    3. M_1^{oracle, +}:     Oracle moving-bin reference on Omega_c^+ (q=1.0)
-    4. M_1^{real, 4bin}:    Ablation deliberately retaining Bin 0 semantic mismatch
-    5. M_q^{real, +}:       Soft-calibration curve across q in {0.0, 0.25, 0.5, 0.75, 1.0}
-    6. M_m^+:               Multinomial trip sampling curve on Omega_c^+ (S=20 seeds per m)
+    1. M_0:                 Zero-shot baseline (pure spatial transfer, no target information)
+    2. M_1^{city}:          Oracle GT calibration -- Y_D extracted from target city ground-truth OD
+                            (Y_D^{GT,+}: deliberate target-information intervention, NOT external
+                            Meta observation). Calibrated on Omega_c^+ with q=1.0.
+    3. M_1^{county}:        County-level Oracle GT calibration (grouped by GADM GID-2)
+    4. M_1^{subzone}:       Tract-level (subzone) Oracle GT calibration
+
+Provenance Note:
+    All M1 conditions use Y_D derived directly from the target city's own ground-truth OD
+    flows (T^{GT}_ij). This is a deliberate experimental design to test whether target-city
+    distance-binned aggregate information provides marginal value over M0. It is NOT a case
+    where Y_D is obtained from an external source such as Meta/GAMD observations.
+    The 'oracle_obs' suffix in output keys refers to this oracle access to target GT.
 
 Primary Metric:
     Interzonal CPC (CPC_inter) on Omega_c^+ = {(i,j) in Omega_c : i != j, D_ij > 0}
@@ -16,94 +23,33 @@ Primary Metric:
 import numpy as np
 import torch
 from typing import Dict, Any, List
-from sklearn.isotonic import IsotonicRegression
 
 from src.data.dataset import CityData, load_city
 from src.data.urban_graph import build_radius_graph, build_adaptive_radius_graph, build_knn_graph
 from src.data.yd_extractor import (
-    extract_yd_moving_real,
-    extract_yd_moving_oracle,
-    extract_yd_4bin_real,
-    extract_yd_4bin_oracle,
-    compute_distributional_overlap,
+    extract_M1_city_oracle_obs,
 )
-from src.data.trip_sampler import sample_multinomial_yd, M_GRID
-from src.calibration.bin_calibration import calibrate_moving_bins, calibrate_4bin_legacy_ablation
+from src.data.trip_sampler import M_GRID
 from src.training.evaluate import evaluate_moving_and_full
-from src.training.train import infer_zero_shot, ZeroShotODModel
+from src.training.train import infer_zero_shot
 
 
-def _interpolate_m_star(
-    target_cpc: float,
-    m_finite_values: List[float],
-    mean_cpcs: List[float],
-    oracle_cpc: float,
-    total_trips: float,
-) -> tuple[float, str]:
-    """
-    Isotonic monotonic regression inversion to find m* matching target_cpc.
-    Guarantees m* <= total_trips so that q* = m* / total_trips <= 1.0 strictly.
-    """
-    if total_trips <= 0:
-        return 0.0, "zero_total_trips"
-
-    # Filter finite values strictly below total_trips
-    all_m = []
-    all_cpc = []
-    for m, cpc in zip(m_finite_values, mean_cpcs):
-        if m < total_trips:
-            all_m.append(float(m))
-            all_cpc.append(float(cpc))
-
-    # Always append total_trips with oracle_cpc as the finite population oracle reference
-    all_m.append(float(total_trips))
-    all_cpc.append(float(oracle_cpc))
-
-    iso = IsotonicRegression(increasing=True, out_of_bounds="clip")
-    cpc_curve_monotonic = iso.fit_transform(all_m, all_cpc)
-
-    if target_cpc <= cpc_curve_monotonic[0]:
-        m_star = float(all_m[0])
-        status = "below_min_grid"
-    elif target_cpc >= cpc_curve_monotonic[-1]:
-        m_star = float(all_m[-1])
-        status = "at_oracle_reference"
-    else:
-        # Leftmost crossing rule for isotonic inversion
-        idx = int(np.searchsorted(cpc_curve_monotonic, target_cpc, side="left"))
-        if abs(cpc_curve_monotonic[idx] - target_cpc) < 1e-9:
-            m_star = float(all_m[idx])
-        else:
-            prev_cpc = cpc_curve_monotonic[idx - 1]
-            next_cpc = cpc_curve_monotonic[idx]
-            prev_m = all_m[idx - 1]
-            next_m = all_m[idx]
-            if next_cpc > prev_cpc:
-                frac = (target_cpc - prev_cpc) / (next_cpc - prev_cpc)
-                m_star = float(prev_m + frac * (next_m - prev_m))
-            else:
-                m_star = float(prev_m)
-        status = "interpolated" if m_star < total_trips else "at_oracle_reference"
-
-    # Clip to total_trips to strictly enforce q* <= 1.0
-    m_star = min(m_star, float(total_trips))
-    return m_star, status
 
 
 def run_target_city_experiments(
-    model: ZeroShotODModel,
+    model: torch.nn.Module,
     city_name: str,
     scaler: object,
     data_root: str = "data",
-    meta_prior_dir: str = "meta_prior",
     graph_type: str = "radius",
     radius_km: float = 5.0,
     knn_k: int = 10,
-    num_trip_seeds: int = 20,
-    m_grid: List[int | float] = M_GRID,
     device_str: str = "cpu",
+    bin_edges: np.ndarray = None,
 ) -> Dict[str, Any]:
     assert scaler is not None, "StandardScaler must be pre-fitted on source cities."
+    if bin_edges is None:
+        raise ValueError("bin_edges must be provided from training cities to avoid data leakage.")
 
     device = torch.device(device_str)
     city_data = load_city(city_name, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
@@ -116,185 +62,91 @@ def run_target_city_experiments(
     else:
         edge_index, edge_dist = build_knn_graph(coords, k=knn_k)
 
-    t_true = city_data.pair_trips
-    bin_labels = city_data.bin_labels
-    pair_o = city_data.pair_o_idx
-    pair_d = city_data.pair_d_idx
-    pair_dist = city_data.pair_distance
-    pair_dist_km = torch.expm1(pair_dist)
-
+    t_true = city_data.pair_trips.numpy().astype(np.float64)
+    pair_o = city_data.pair_o_idx.numpy()
+    pair_d = city_data.pair_d_idx.numpy()
+    pair_dist = city_data.pair_distance.numpy()
+    pair_dist_km = np.expm1(pair_dist)
     inter_mask = (pair_o != pair_d) & (pair_dist_km > 0.0)
-    n_inter_pairs = int(inter_mask.sum().item())
-    total_inter_trips = float(t_true[inter_mask].sum().item())
-    total_trips = float(t_true.sum().item())
+    n_inter_pairs = int(inter_mask.sum())
+    total_inter_trips = float(t_true[inter_mask].sum())
+    total_trips = float(t_true.sum())
+
+    # Extract county grouping (GADM 4.1 level-2 point-in-polygon mapping)
+    import pandas as pd
+    from pathlib import Path
+    from src.data.gadm_mapper import get_gadm_gid2_mapping
+    
+    meta_df = pd.read_csv(Path(data_root) / city_name / "meta.csv")
+    assert meta_df["idx"].is_unique, "Mapping invariant failed: meta_df['idx'] has duplicates"
+    assert set(pair_o).issubset(set(meta_df["idx"])), "Mapping invariant failed: some pair_o indices are not in meta.csv"
+    
+    # Get mapping robustly relative to repository root
+    repo_root = str(Path(__file__).resolve().parents[2])
+    tract_to_county, mapping_stats = get_gadm_gid2_mapping(meta_df, repo_root)
+    
+    pair_county_idx = np.array([tract_to_county[i] for i in pair_o])
+    assert len(pair_county_idx) == len(pair_o), "Mapping invariant failed: length mismatch after county mapping"
+
+    from src.data.yd_extractor import extract_yd_kbins, extract_yd_kbins_grouped
+    from src.calibration.bin_calibration import calibrate_kbins, calibrate_kbins_grouped
 
     # -----------------------------------------------------------------------
     # Condition M0: Pure Zero-Shot Inference
     # -----------------------------------------------------------------------
-    t_pred_zs = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
-    m0_metrics = evaluate_moving_and_full(t_true, t_pred_zs, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-
-    # -----------------------------------------------------------------------
-    # Moving-Bin Target Distributions (Oracle & Real)
-    # -----------------------------------------------------------------------
-    yd_moving_oracle = extract_yd_moving_oracle(t_true, bin_labels, pair_o, pair_d, pair_distance=pair_dist)
-    yd_moving_real = extract_yd_moving_real(city_name, meta_prior_dir=meta_prior_dir)
-
-    # Distributional Overlap on Moving Bins
-    if yd_moving_real is not None:
-        dist_overlap = compute_distributional_overlap(yd_moving_oracle, yd_moving_real)
-    else:
-        dist_overlap = None
-
-    # -----------------------------------------------------------------------
-    # Condition M1^{oracle, +}: Oracle Moving-Bin Reference (q=1.0)
-    # -----------------------------------------------------------------------
-    t_pred_oracle_plus = calibrate_moving_bins(
-        t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_oracle, q=1.0, pair_distance=pair_dist
+    t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
+    t_pred_zs = t_pred_zs_tensor.numpy().astype(np.float64)
+    m0_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, t_pred_zs_tensor, city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
     )
-    m1_oracle_plus_metrics = evaluate_moving_and_full(t_true, t_pred_oracle_plus, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
 
     # -----------------------------------------------------------------------
-    # Condition M1^{real, +}: Primary Meta Moving-Bin Calibration (q=1.0)
+    # Condition M1_city: City-Level Oracle Y_D (from target ground-truth OD)
+    # Y_D^{GT,+}: deliberate target-information intervention for RQ evaluation.
     # -----------------------------------------------------------------------
-    if yd_moving_real is not None:
-        t_pred_real_plus = calibrate_moving_bins(
-            t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=1.0, pair_distance=pair_dist
-        )
-        m1_real_plus_metrics = evaluate_moving_and_full(t_true, t_pred_real_plus, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-    else:
-        m1_real_plus_metrics = None
-
-    # -----------------------------------------------------------------------
-    # Condition M1^{real, 4bin}: Ablation Retaining Bin 0 Semantic Mismatch
-    # -----------------------------------------------------------------------
-    yd_4bin_real = extract_yd_4bin_real(city_name, meta_prior_dir=meta_prior_dir)
-    if yd_4bin_real is not None:
-        t_pred_4bin_ablation = calibrate_4bin_legacy_ablation(t_pred_zs, bin_labels, yd_4bin_real)
-        m1_4bin_ablation_metrics = evaluate_moving_and_full(t_true, t_pred_4bin_ablation, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-    else:
-        m1_4bin_ablation_metrics = None
-
-    # -----------------------------------------------------------------------
-    # Condition M_q^{real, +}: Soft Calibration Curve over q in [0, 1]
-    # -----------------------------------------------------------------------
-    q_curve = {}
-    if yd_moving_real is not None:
-        for q_val in [0.0, 0.25, 0.5, 0.75, 1.0]:
-            t_pred_q = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_moving_real, q=q_val, pair_distance=pair_dist)
-            q_metrics = evaluate_moving_and_full(t_true, t_pred_q, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-            q_curve[f"q_{q_val:.2f}"] = {
-                "q": q_val,
-                "cpc_inter": q_metrics["cpc_inter"],
-                "cpc_full": q_metrics["cpc_full"],
-            }
-
-    # -----------------------------------------------------------------------
-    # Condition M_m^+: Multinomial Sampling on Interzonal Pairs Omega_c^+
-    # -----------------------------------------------------------------------
-    mq_results = {}
-    m_finite_values = []
-    mean_cpcs_inter = []
-
-    # Filter GT trips for interzonal sampling
-    inter_trips = t_true[inter_mask]
-    inter_bins = bin_labels[inter_mask]
-
-    for m in m_grid:
-        seed_cpcs = []
-        for seed in range(num_trip_seeds):
-            # Sample m interzonal trips
-            yd_m_4 = sample_multinomial_yd(inter_trips, inter_bins, m=m, seed=seed)
-            # moving bins {1, 2, 3}
-            yd_m_moving = yd_m_4[1:]
-            total_m_moving = np.sum(yd_m_moving)
-            if total_m_moving > 0:
-                yd_m_moving = yd_m_moving / total_m_moving
-            else:
-                yd_m_moving = np.array([0.5, 0.4, 0.1])
-
-            t_pred_m = calibrate_moving_bins(t_pred_zs, bin_labels, pair_o, pair_d, yd_m_moving, q=1.0, pair_distance=pair_dist)
-            metrics_m = evaluate_moving_and_full(t_true, t_pred_m, pair_o, pair_d, bin_labels, pair_distance=pair_dist)
-            seed_cpcs.append(metrics_m["cpc_inter"])
-
-        m_key = "inf" if np.isinf(m) else str(int(m))
-        cpc_arr = np.array(seed_cpcs)
-
-        mq_results[m_key] = {
-            "m": m,
-            "num_seeds": len(cpc_arr),
-            "std_ddof": 1,
-            "per_seed_cpcs": [float(x) for x in cpc_arr],
-            "cpc_inter_mean": float(np.mean(cpc_arr)),
-            "cpc_inter_std": float(np.std(cpc_arr, ddof=1)) if len(cpc_arr) > 1 else 0.0,
-            "cpc_inter_median": float(np.median(cpc_arr)),
-            "cpc_inter_p25": float(np.percentile(cpc_arr, 25)),
-            "cpc_inter_p75": float(np.percentile(cpc_arr, 75)),
-        }
-
-        if not np.isinf(m):
-            m_finite_values.append(float(m))
-            mean_cpcs_inter.append(float(np.mean(cpc_arr)))
-
-    # -----------------------------------------------------------------------
-    # Primary Delta R Calculations on Interzonal Domain Omega_c^+
-    # -----------------------------------------------------------------------
-    delta_r_oracle_plus = m1_oracle_plus_metrics["cpc_inter"] - m0_metrics["cpc_inter"]
-    delta_r_real_plus = (m1_real_plus_metrics["cpc_inter"] - m0_metrics["cpc_inter"]) if m1_real_plus_metrics else None
-    realization_gap_plus = (m1_oracle_plus_metrics["cpc_inter"] - m1_real_plus_metrics["cpc_inter"]) if m1_real_plus_metrics else None
-
-    # Ablation Delta R (4-bin)
-    delta_r_4bin_ablation = (m1_4bin_ablation_metrics["cpc_inter"] - m0_metrics["cpc_inter"]) if m1_4bin_ablation_metrics else None
-
-    # -----------------------------------------------------------------------
-    # RQ2: Isotonic Interpolation for m* and q* on Interzonal Trips
-    # -----------------------------------------------------------------------
-    m_star_oracle, oracle_status = _interpolate_m_star(
-        m1_oracle_plus_metrics["cpc_inter"],
-        m_finite_values,
-        mean_cpcs_inter,
-        m1_oracle_plus_metrics["cpc_inter"],
-        total_inter_trips,
+    yd_city = extract_yd_kbins(pair_dist_km, t_true, bin_edges, inter_mask)
+    t_pred_city = calibrate_kbins(t_pred_zs, pair_dist_km, inter_mask, yd_city, bin_edges, q=1.0)
+    m1_city_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, torch.tensor(t_pred_city), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
     )
-    q_star_oracle = m_star_oracle / total_inter_trips if total_inter_trips > 0 else 0.0
 
-    if m1_real_plus_metrics is not None:
-        m_star_real, real_status = _interpolate_m_star(
-            m1_real_plus_metrics["cpc_inter"],
-            m_finite_values,
-            mean_cpcs_inter,
-            m1_oracle_plus_metrics["cpc_inter"],
-            total_inter_trips,
-        )
-        q_star_real = m_star_real / total_inter_trips if total_inter_trips > 0 else 0.0
-    else:
-        m_star_real = None
-        q_star_real = None
-        real_status = "no_meta_data"
+    # -----------------------------------------------------------------------
+    # Condition M1_county: County-Level Oracle Y_D
+    # -----------------------------------------------------------------------
+    yd_county_dict = extract_yd_kbins_grouped(pair_dist_km, t_true, bin_edges, inter_mask, pair_county_idx)
+    t_pred_county = calibrate_kbins_grouped(t_pred_zs, pair_dist_km, inter_mask, yd_county_dict, bin_edges, pair_county_idx, q=1.0)
+    m1_county_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, torch.tensor(t_pred_county), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
+    )
 
+    # -----------------------------------------------------------------------
+    # Condition M1_subzone: Tract-Level (Subzone) Oracle Y_D
+    # -----------------------------------------------------------------------
+    yd_subzone_dict = extract_yd_kbins_grouped(pair_dist_km, t_true, bin_edges, inter_mask, pair_o)
+    t_pred_subzone = calibrate_kbins_grouped(t_pred_zs, pair_dist_km, inter_mask, yd_subzone_dict, bin_edges, pair_o, q=1.0)
+    m1_subzone_metrics = evaluate_moving_and_full(
+        city_data.pair_trips, torch.tensor(t_pred_subzone), city_data.pair_o_idx, city_data.pair_d_idx, city_data.bin_labels, pair_distance=city_data.pair_distance
+    )
+
+    rho_c = float(n_inter_pairs) / (float(city_data.n_tracts) * float(city_data.n_tracts - 1)) if city_data.n_tracts > 1 else 0.0
+    average_flow = total_inter_trips / n_inter_pairs if n_inter_pairs > 0 else 0.0
+    mean_distance = float(np.mean(pair_dist_km[inter_mask])) if n_inter_pairs > 0 else 0.0
+    
     return {
         "city": city_name,
         "n_tracts": city_data.n_tracts,
         "n_pairs": city_data.n_pairs,
+        "rho_c": rho_c,
+        "average_flow": average_flow,
+        "mean_distance": mean_distance,
         "n_inter_pairs": n_inter_pairs,
         "total_trips": total_trips,
         "total_inter_trips": total_inter_trips,
-        "distributional_overlap": dist_overlap,
         "M0": m0_metrics,
-        "M1_real_plus": m1_real_plus_metrics,
-        "M1_oracle_plus": m1_oracle_plus_metrics,
-        "M1_4bin_ablation": m1_4bin_ablation_metrics,
-        "Mq_soft_curve": q_curve,
-        "Mm_sampling_curve": mq_results,
-        "delta_r_oracle_plus": delta_r_oracle_plus,
-        "delta_r_real_plus": delta_r_real_plus,
-        "realization_gap_plus": realization_gap_plus,
-        "delta_r_4bin_ablation": delta_r_4bin_ablation,
-        "m_star_real": m_star_real,
-        "q_star_real": q_star_real,
-        "m_star_real_status": real_status,
-        "m_star_oracle": m_star_oracle,
-        "q_star_oracle": q_star_oracle,
-        "yd_moving_oracle": yd_moving_oracle.tolist(),
-        "yd_moving_real": yd_moving_real.tolist() if yd_moving_real is not None else None,
+        # M1 conditions use Y_D^{GT,+} from target city ground-truth OD.
+        # yd_source confirms this is oracle GT access, not external Meta observation.
+        "M1_city_oracle_obs": {**m1_city_metrics, "yd_source": "target_ground_truth_positive_od"},
+        "M1_county_oracle_obs": {**m1_county_metrics, "yd_source": "target_ground_truth_positive_od_county_grouped"},
+        "M1_subzone_oracle_obs": {**m1_subzone_metrics, "yd_source": "target_ground_truth_positive_od_tract_grouped"},
+        "mapping_stats": mapping_stats,
     }

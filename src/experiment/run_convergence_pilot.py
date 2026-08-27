@@ -55,6 +55,7 @@ def run_convergence_pilot(fold_id: int = 1, device_str: str = "cpu"):
     print(f"Val   ({len(val5)} cities): {val5}")
     print(f"{'-'*70}")
 
+    _ckpt_path = RESULTS_DIR / "checkpoints" / f"convergence_pilot_fold{fold_id}.pt"
     model, scaler, info = train_zero_shot_model(
         train_city_names=train35,
         data_root=DATA_ROOT,
@@ -65,6 +66,8 @@ def run_convergence_pilot(fold_id: int = 1, device_str: str = "cpu"):
         patience=PATIENCE,
         min_delta=1e-4,
         return_info=True,
+        checkpoint_path=_ckpt_path,
+        run_tag=f"convergence_pilot_fold{fold_id}",
     )
 
     elapsed = time.time() - t0
@@ -94,6 +97,7 @@ def run_convergence_pilot(fold_id: int = 1, device_str: str = "cpu"):
         "elapsed_seconds": elapsed,
         "train_cities": train35,
         "val_cities": val5,
+        "checkpoint_path": str(_ckpt_path.resolve()),
         "epoch_history": history,
     }
 
@@ -125,7 +129,9 @@ def run_convergence_pilot(fold_id: int = 1, device_str: str = "cpu"):
     print(f"  Best Epoch: {info['best_epoch']} / {info['epochs_trained']}")
     print(f"  Best Validation CPC: {info['best_val_cpc']:.4f}")
     print(f"  Early stopping triggered: {info['stopped_early']}")
+    print(f"  Checkpoint saved: {_ckpt_path.resolve()}")
     print(f"{'='*70}\n")
+
 
     return pilot_results
 

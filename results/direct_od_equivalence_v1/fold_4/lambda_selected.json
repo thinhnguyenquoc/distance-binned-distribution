@@ -1,0 +1,26 @@
+{
+  "fold": 4,
+  "lambda_candidates": [
+    0.1,
+    1.0,
+    10.0,
+    100.0
+  ],
+  "selected_lambda": 10.0,
+  "selection_source": "validation_cities_only",
+  "test_city_information_used": false,
+  "val_cities": [
+    "Las_Vegas",
+    "Oakland",
+    "Raleigh",
+    "San_Diego",
+    "Washington_DC"
+  ],
+  "model_seeds": [
+    1,
+    10,
+    100
+  ],
+  "b_val": 50,
+  "timestamp": "2026-08-26 12:58:35"
+}
