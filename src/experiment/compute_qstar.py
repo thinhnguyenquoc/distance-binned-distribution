@@ -16,9 +16,9 @@ def _summary_stats(arr: np.ndarray, ddof: int = 1) -> Dict[str, Any]:
     std_val = float(np.std(arr, ddof=ddof)) if n > 1 else 0.0
     return {
         "n": n,
-        "mean": float(np.mean(arr)),
+        "mean": float(np.mean(arr)) if n > 0 else 0.0,
         "std": std_val,
-        "median": float(np.median(arr)),
+        "median": float(np.median(arr)) if n > 0 else 0.0,
         "p25": float(np.percentile(arr, 25)) if n > 0 else 0.0,
         "p75": float(np.percentile(arr, 75)) if n > 0 else 0.0,
         "min": float(np.min(arr)) if n > 0 else 0.0,
@@ -30,8 +30,8 @@ def analyze_qstar(city_results: List[Dict[str, Any]]) -> Dict[str, Any]:
     out = {"n_cities": len(city_results)}
 
     # Oracle
-    m_oracle = np.array([r["m_star_oracle"] for r in city_results if r["m_star_oracle"] is not None])
-    q_oracle = np.array([r["q_star_oracle"] for r in city_results if r["q_star_oracle"] is not None])
+    m_oracle = np.array([r["m_star_oracle"] for r in city_results if r.get("m_star_oracle") is not None])
+    q_oracle = np.array([r["q_star_oracle"] for r in city_results if r.get("q_star_oracle") is not None])
     if len(m_oracle) > 0:
         out["oracle"] = {
             "m_star": _summary_stats(m_oracle),
@@ -39,8 +39,8 @@ def analyze_qstar(city_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         }
 
     # Real (Primary)
-    m_real = np.array([r["m_star_real"] for r in city_results if r["m_star_real"] is not None])
-    q_real = np.array([r["q_star_real"] for r in city_results if r["q_star_real"] is not None])
+    m_real = np.array([r["m_star_real"] for r in city_results if r.get("m_star_real") is not None])
+    q_real = np.array([r["q_star_real"] for r in city_results if r.get("q_star_real") is not None])
     if len(m_real) > 0:
         out["real"] = {
             "n_cities": len(m_real),

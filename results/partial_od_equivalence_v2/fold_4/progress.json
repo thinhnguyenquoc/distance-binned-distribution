@@ -1,0 +1,19 @@
+{
+  "fold": 4,
+  "completed_cities": [
+    "Colorado_Springs",
+    "Columbus",
+    "Houston",
+    "Minneapolis",
+    "Nashville",
+    "Omaha",
+    "Phoenix",
+    "Portland",
+    "San_Francisco",
+    "Tampa"
+  ],
+  "remaining_cities": [],
+  "rows_written": 225000,
+  "protocol_version": "v2",
+  "timestamp": "2026-08-25 17:50:23"
+}

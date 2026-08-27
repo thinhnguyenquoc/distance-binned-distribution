@@ -1,59 +1,49 @@
 # Random Seed Registry & Version History
 
-This document logs all random seeds used across different versions of the experiments to guarantee absolute reproducibility and verify that observed performance gains are strictly invariant to seed initialization.
+This document logs all random seeds used across different steps of the project to guarantee absolute reproducibility and verify that observed performance gains are invariant to seed initialization.
 
 ---
 
 ## 1. Seed Architecture & Governance
 
-The experimental framework utilizes seeds across three independent levels:
-1. **Model Weight Initialization (`MODEL_TRAIN_SEED`)**: Controls PyTorch and NumPy weight initialization per fold (`seed = SEED_BASE + fold_id`).
-2. **Bootstrap Resampling (`BOOTSTRAP_SEED`)**: Controls the 10,000 fold-stratified bootstrap resamples for 95% Confidence Intervals.
-3. **Inner Validation City Partitioning (`VALIDATION_SEED`)**: Controls the 5-stratum size stratification across the 40 non-test pool (locked in `splits_manifest_v2.json`).
+The experimental framework utilizes seeds across multiple independent components:
+
+1. **Model Weight Initialization (`MODEL_TRAIN_SEED`)**: Controls PyTorch and NumPy weight initialization. We use an ensemble of 3 seeds (`1, 10, 100`) to prove robustness.
+2. **Bootstrap Resampling (`BOOTSTRAP_SEED`)**: Controls the fold-stratified bootstrap resamples for 95% Confidence Intervals.
+3. **Validation City Partitioning (`VALIDATION_STRATA_SEED`)**: Controls the 5-fold stratification across the 50 cities.
+4. **Placebo Donor Sampling (`PLACEBO_SEED`)**: Controls the random assignment of wrong-city donors and random bin permutations in the placebo tests.
 
 ---
 
-## 2. Version Registry
+## 2. Seed Configuration Registry
 
-### Version 1.0 (Baseline Protocol Lock)
-- **Date**: 2026-08-18
-- **Learning Rate**: $2.0 \times 10^{-3}$
-- **Architecture**: Residual-Gravity Zero-Shot Decoder + AdamW + ReduceLROnPlateau (`threshold=1e-4, mode='abs'`)
-- **Seed Configuration**:
-  - `MODEL_TRAIN_SEED_BASE`: **`42`**
-    - Fold 1: `43`
-    - Fold 2: `44`
-    - Fold 3: `45`
-    - Fold 4: `46`
-    - Fold 5: `47`
-  - `BOOTSTRAP_SEED`: **`42`**
-  - `VALIDATION_STRATA_SEED`: **`20260818`** (Locked in `results/e1/splits_manifest_v2.json`)
-- **Outcome & Verification**:
-  - Confirmatory Specificity Gain: $+0.0413$ ($p = 9.09 \times 10^{-13}$)
-  - Full 50-City Specificity Win Rate: **50/50 ($100.0\%$)**
-  - Gate Status: All 5 Folds PASSED.
+### 2.1. Dataset Splitting
+- **City 5-Fold Splits (Validation Strata Seed)**: `20260818` (Fixed in `src/data/city_splits.py`, locked in `results/e1/splits_manifest_v2.json`)
+
+### 2.2. Model Training (3 Seeds)
+- **Model Seed 1**: `SEED = 1` 
+- **Model Seed 2**: `SEED = 10`
+- **Model Seed 3**: `SEED = 100`
+
+All experiments report metrics averaged over these 3 seeds.
+
+### 2.3. Placebo Test Experiment (Target-Y_D)
+- **Placebo Random Seed**: `20260821` (Fixed for donor sampling and permutation generation to ensure all model seeds face the same placebo assignments)
+- **Bootstrap Resampling Seed**: `42` (Fixed for 95% CI calculation with 10,000 resamples)
 
 ---
 
-### Version 2.0 (Seed Sensitivity & Robustness Protocol — Active)
-- **Date**: 2026-08-18
-- **Learning Rate**: $2.0 \times 10^{-3}$
-- **Architecture**: Residual-Gravity Zero-Shot Decoder + AdamW + ReduceLROnPlateau (`threshold=1e-4, mode='abs'`)
-- **Seed Configuration**:
-  - `MODEL_TRAIN_SEED_BASE`: **`2024`**
-    - Fold 1: `2025`
-    - Fold 2: `2026`
-    - Fold 3: `2027`
-    - Fold 4: `2028`
-    - Fold 5: `2029`
-  - `BOOTSTRAP_SEED`: **`2024`**
-  - `VALIDATION_STRATA_SEED`: **`20260818`** (Locked in `results/e1/splits_manifest_v2.json`)
-- **Purpose**: Verify that model convergence and $\Delta_{\text{spec}} > 0$ superiority hold invariant under a completely disjoint seed initialization while maintaining standard learning rate ($2.0 \times 10^{-3}$).
+## 3. Environment & Hardware Controls
 
----
+To ensure numerical exactness down to floating-point precision ($< 10^{-6}$), the following environment factors are locked. Without these, macro-level conclusions (e.g., p-values, effect sizes) will remain robust, but byte-for-byte exactness may experience minor non-associative drift.
 
-### Version 2.1+ (Pre-Registered Multi-Seed Suite for Batch Sensitivity)
-For multi-seed sensitivity loops and Monte Carlo verification:
-- **Suite A**: `SEED_BASE = 1337` (Folds: 1338, 1339, 1340, 1341, 1342) | `BOOTSTRAP_SEED = 1337`
-- **Suite B**: `SEED_BASE = 999` (Folds: 1000, 1001, 1002, 1003, 1004) | `BOOTSTRAP_SEED = 999`
-- **Suite C**: `SEED_BASE = 777` (Folds: 778, 779, 780, 781, 782) | `BOOTSTRAP_SEED = 777`
+### 3.1. Package Versions
+The official reference experiments were executed using:
+- **PyTorch**: `2.12.0+cpu`
+- **NumPy**: `2.4.6`
+- **Pandas**: `3.0.3`
+- **SciPy**: `1.17.1`
+
+### 3.2. Hardware Execution
+All inference passes (M0) for testing and calibration steps are strictly mandated to run on **CPU** (`device="cpu"`). This bypasses non-deterministic execution paths often encountered in CUDA kernels during graph aggregations.
+

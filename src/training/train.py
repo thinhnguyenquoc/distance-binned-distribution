@@ -2,29 +2,215 @@ r"""
 Cross-City Training and Transfer Pipeline.
 
 Stage A: Cross-city Training
-    Trains ZeroShotODModel on a list of source cities using ZTNB likelihood:
-        L_train = - 1 / |Omega^+| * sum_{(i,j) in Omega^+} log P_ZTNB(T_ij; mu_nb_ij, phi)
+    Trains ZeroShotODModel on a list of source cities using ZTNB likelihood on all positive observed support (including intrazonal):
+        L_train = - 1 / |Omega^+_all| * sum_{(i,j) in Omega^+_all} log P_ZTNB(T_ij; mu_nb_ij, phi)
+    City-level losses are averaged within city and optimization proceeds city-by-city, preventing large-support cities from dominating solely through pair count.
     After convergence, freezes parameters -> theta*.
 
 Stage B: Zero-Shot Transfer Evaluation
-    Evaluates theta* on held-out target city:
+    Evaluates theta* on held-out target city, evaluating the primary reconstruction estimand on positive interzonal support (Omega_c^+):
         (X^{c*}, G^{urban, c*}, D^{c*}) -> \hat{T}^{ZS} = E[T | T >= 1].
 """
 
+import copy
 import time
+import datetime
+from pathlib import Path
+from typing import List, Dict, Optional, Union
+
 import torch
 import torch.optim as optim
-from typing import List, Dict
 
-from src.data.dataset import CityData, load_cities, load_city
+from src.data.dataset import (
+    CityData,
+    NODE_FEATURE_COLUMNS,
+    get_scaler_fingerprint,
+    load_cities,
+    load_city,
+    validate_feature_scaler,
+)
 from src.data.urban_graph import build_radius_graph, build_knn_graph
 from src.models.zero_shot_model import ZeroShotODModel
 from src.loss.ztnb import ztnb_nll, nb_nll
 from src.training.evaluate import evaluate_all
 
 
+# ---------------------------------------------------------------------------
+# Checkpoint utilities
+# ---------------------------------------------------------------------------
+
+def save_checkpoint(
+    path: Union[str, Path],
+    model: "ZeroShotODModel",
+    scaler: object,
+    train_info: dict,
+    hyperparams: dict,
+    seed: Optional[int] = None,
+    run_tag: Optional[str] = None,
+) -> Path:
+    """
+    Persists a trained ZeroShotODModel checkpoint to disk.
+
+    Saved bundle contains:
+        - model_state_dict   : weights (best validation checkpoint)
+        - scaler_*           : StandardScaler statistics for feature normalization
+        - train_info         : best_epoch, best_val_cpc, epochs_trained, histories
+        - hyperparams        : architecture + training config needed to reconstruct model
+        - seed               : random seed used for this run (None if not set)
+        - run_tag            : human-readable label, e.g. "e1_fold1"
+        - saved_at           : ISO-8601 UTC timestamp
+
+    Args:
+        path:        Full file path to write (created with parents if needed).
+        model:       Trained (and eval-mode) ZeroShotODModel instance.
+        scaler:      Fitted sklearn StandardScaler from load_cities().
+        train_info:  Dict returned by train_zero_shot_model() when return_info=True.
+        hyperparams: Dict of architecture / training hyper-parameters.
+        seed:        Random seed (optional).
+        run_tag:     Short label for this run (optional).
+
+    Returns:
+        Resolved Path of the saved file.
+    """
+    import numpy as _np
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    scaler_data: dict = {}
+    if scaler is not None and hasattr(scaler, "mean_") and scaler.mean_ is not None:
+        validate_feature_scaler(scaler)
+        scaler_data = {
+            "scaler_mean_":  _np.asarray(scaler.mean_,  dtype=_np.float64),
+            "scaler_scale_": _np.asarray(scaler.scale_, dtype=_np.float64),
+            "scaler_var_":   _np.asarray(scaler.var_,   dtype=_np.float64),
+            "scaler_n_features_in_": int(getattr(scaler, "n_features_in_", len(scaler.mean_))),
+            "scaler_fingerprint": get_scaler_fingerprint(scaler),
+            "scaler_feature_columns": list(NODE_FEATURE_COLUMNS),
+        }
+        if hasattr(scaler, "n_samples_seen_"):
+            scaler_data["scaler_n_samples_seen_"] = _np.asarray(
+                scaler.n_samples_seen_
+            ).copy()
+
+    bundle = {
+        "model_state_dict": model.state_dict(),
+        **scaler_data,
+        "train_info":   train_info,
+        "hyperparams":  hyperparams,
+        "seed":         seed,
+        "run_tag":      run_tag,
+        "saved_at":     datetime.datetime.utcnow().isoformat() + "Z",
+    }
+
+    torch.save(bundle, path)
+    return path.resolve()
+
+
+def load_checkpoint(
+    path: Union[str, Path],
+    device_str: str = "cpu",
+    expected_config: Optional[dict] = None,
+) -> tuple:
+    """
+    Loads a checkpoint saved by save_checkpoint() and reconstructs the model and scaler.
+
+    Args:
+        path:       Path to the .pt checkpoint file.
+        device_str: Device to map model weights onto ("cpu" or "cuda").
+        expected_config: Optional dictionary of hyperparams to validate against the checkpoint.
+
+    Returns:
+        (model, scaler, metadata) where:
+            model    — ZeroShotODModel in eval mode with frozen weights
+            scaler   — Reconstructed sklearn StandardScaler (or None if not saved)
+            metadata — Full checkpoint dict (train_info, hyperparams, seed, run_tag, saved_at)
+    """
+    import numpy as _np
+
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"Checkpoint not found: {path}")
+
+    bundle = torch.load(path, map_location=torch.device(device_str), weights_only=False)
+
+    hp = bundle["hyperparams"]
+    if expected_config is not None:
+        for k, v in expected_config.items():
+            if k not in hp:
+                raise ValueError(f"Checkpoint config missing key '{k}' in {path}. Expected {v}. Checkpoint may be incomplete.")
+            if hp[k] != v:
+                raise ValueError(f"Checkpoint config mismatch in {path} for key '{k}': expected {v}, got {hp[k]}. Delete the stale checkpoint to retrain.")
+
+    # --- Reconstruct model ---
+    hp = bundle["hyperparams"]
+    backbone = hp.get("backbone", "gnn")
+    
+    from src.models.zero_shot_model import ZeroShotODModel, ZeroShotMLPModel
+    
+    if backbone == "mlp":
+        model = ZeroShotMLPModel(
+            node_in_dim       = hp["node_in_dim"],
+            node_hidden_dim   = hp["hidden_dim"],
+            node_out_dim      = hp["hidden_dim"],
+            num_gnn_layers    = hp["num_gnn_layers"],
+            decoder_hidden_dim= hp["hidden_dim"],
+        ).to(torch.device(device_str))
+    else:
+        model = ZeroShotODModel(
+            node_in_dim       = hp["node_in_dim"],
+            node_hidden_dim   = hp["hidden_dim"],
+            node_out_dim      = hp["hidden_dim"],
+            num_gnn_layers    = hp["num_gnn_layers"],
+            decoder_hidden_dim= hp["hidden_dim"],
+        ).to(torch.device(device_str))
+        
+    model.load_state_dict(bundle["model_state_dict"])
+    model.eval()
+    for p in model.parameters():
+        p.requires_grad = False
+
+    # --- Reconstruct scaler ---
+    scaler = None
+    if "scaler_mean_" in bundle:
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        scaler.mean_  = bundle["scaler_mean_"]
+        scaler.scale_ = bundle["scaler_scale_"]
+        scaler.var_   = bundle["scaler_var_"]
+        scaler.n_features_in_ = bundle.get("scaler_n_features_in_", len(scaler.mean_))
+        if "scaler_n_samples_seen_" in bundle:
+            scaler.n_samples_seen_ = bundle["scaler_n_samples_seen_"]
+        validate_feature_scaler(scaler)
+
+        expected_columns = bundle.get("scaler_feature_columns")
+        if expected_columns is not None and tuple(expected_columns) != NODE_FEATURE_COLUMNS:
+            raise ValueError(f"Checkpoint feature schema mismatch in {path}")
+
+        expected_fingerprint = bundle.get("scaler_fingerprint")
+        actual_fingerprint = get_scaler_fingerprint(scaler)
+        if expected_fingerprint is not None and actual_fingerprint != expected_fingerprint:
+            raise ValueError(f"Checkpoint scaler fingerprint mismatch in {path}")
+
+    metadata = {
+        "train_info":  bundle.get("train_info"),
+        "hyperparams": bundle.get("hyperparams"),
+        "seed":        bundle.get("seed"),
+        "run_tag":     bundle.get("run_tag"),
+        "saved_at":    bundle.get("saved_at"),
+        "scaler_provenance": {
+            "fingerprint": bundle.get("scaler_fingerprint"),
+            "n_features_in": bundle.get("scaler_n_features_in_"),
+            "n_samples_seen": bundle.get("scaler_n_samples_seen_"),
+            "feature_columns": bundle.get("scaler_feature_columns"),
+        },
+    }
+
+    return model, scaler, metadata
+
+
 def train_epoch(
-    model: ZeroShotODModel,
+    model: torch.nn.Module,
     train_cities: List[CityData],
     city_graphs: List[tuple[torch.Tensor, torch.Tensor]],
     optimizer: optim.Optimizer,
@@ -57,9 +243,8 @@ def train_epoch(
         else:
             raise ValueError(f"Unknown loss type {loss_type}")
 
-        if torch.isnan(loss) or torch.isinf(loss):
-            print(f"Warning: NaN/Inf loss encountered for {city_data.city_name}, skipping.")
-            continue
+        if not torch.isfinite(loss):
+            raise FloatingPointError(f"NaN/Inf loss encountered for {city_data.city_name}. Stopping training to avoid invalid checkpoint.")
 
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
@@ -72,7 +257,7 @@ def train_epoch(
 
 @torch.no_grad()
 def infer_zero_shot(
-    model: ZeroShotODModel,
+    model: torch.nn.Module,
     city_data: CityData,
     edge_index: torch.Tensor,
     edge_dist: torch.Tensor,
@@ -105,6 +290,8 @@ def train_zero_shot_model(
     radius_km: float = 5.0,
     knn_k: int = 10,
     loss_type: str = "ztnb",
+    backbone: str = "gnn",
+    dropout: float = 0.1,
     device_str: str = "cuda" if torch.cuda.is_available() else "cpu",
     verbose: bool = True,
     # --- Validation / early stopping ---
@@ -118,7 +305,13 @@ def train_zero_shot_model(
     min_lr: float = 1e-5,
     return_info: bool = False,
     seed: int | None = None,
+    # --- Checkpoint provenance ---
+    fold: int | None = None,
+    split_manifest_sha256: str | None = None,
+    checkpoint_path: Optional[Union[str, Path]] = None,
+    run_tag: Optional[str] = None,
 ) -> tuple:
+
     """
     Train ZeroShotODModel with AdamW, ReduceLROnPlateau, and validation-based early stopping.
 
@@ -130,6 +323,9 @@ def train_zero_shot_model(
         min_delta:        Minimum improvement to count as improvement.
         return_info:      If True, returns (model, scaler, train_info_dict).
         seed:             Optional random seed for reproducible weight initialization.
+        checkpoint_path:  If provided, saves the trained model to this path as a .pt file.
+                          Parent directories are created automatically.
+        run_tag:          Short label embedded in the checkpoint (e.g. "e1_fold1_seed2025").
 
     Returns:
         (best_model, scaler) or (best_model, scaler, info)
@@ -139,6 +335,7 @@ def train_zero_shot_model(
 
     if seed is not None:
         torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
         _np.random.seed(seed)
 
     device = torch.device(device_str)
@@ -208,13 +405,26 @@ def train_zero_shot_model(
                 "has_inter": bool(inter_cpu.sum() > 0),
             })
 
-    model = ZeroShotODModel(
-        node_in_dim=train_cities[0].node_features.shape[1],
-        node_hidden_dim=hidden_dim,
-        node_out_dim=hidden_dim,
-        num_gnn_layers=num_gnn_layers,
-        decoder_hidden_dim=hidden_dim,
-    ).to(device)
+    from src.models.zero_shot_model import ZeroShotODModel, ZeroShotMLPModel
+
+    if backbone == "mlp":
+        model = ZeroShotMLPModel(
+            node_in_dim=train_cities[0].node_features.shape[1],
+            node_hidden_dim=hidden_dim,
+            node_out_dim=hidden_dim,
+            num_gnn_layers=num_gnn_layers,
+            decoder_hidden_dim=hidden_dim,
+            dropout=dropout,
+        ).to(device)
+    else:
+        model = ZeroShotODModel(
+            node_in_dim=train_cities[0].node_features.shape[1],
+            node_hidden_dim=hidden_dim,
+            node_out_dim=hidden_dim,
+            num_gnn_layers=num_gnn_layers,
+            decoder_hidden_dim=hidden_dim,
+            dropout=dropout,
+        ).to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     if val_city_names:
@@ -259,6 +469,7 @@ def train_zero_shot_model(
             with torch.no_grad():
                 for item in val_data_on_device:
                     if not item["has_inter"]:
+                        print(f"    [WARNING] Validation city '{item.get('city_name', '?')}' has no interzonal pairs — skipped in CPC computation. Check data integrity.", flush=True)
                         continue
                     t_hat = model(
                         item["x"], item["ei"], item["ed"],
@@ -271,7 +482,12 @@ def train_zero_shot_model(
                     cpc_val = (2.0 * sum_min / sum_total).item() if sum_total > 0 else 0.0
                     val_cpcs.append(cpc_val)
 
-            mean_val_cpc = float(_np.mean(val_cpcs)) if val_cpcs else 0.0
+            if not val_cpcs:
+                raise RuntimeError(
+                    "All validation cities were skipped (no interzonal pairs). "
+                    "Cannot compute validation CPC. Check dataset construction."
+                )
+            mean_val_cpc = float(_np.mean(val_cpcs))
             val_history.append(mean_val_cpc)
             val_cpc_str = f" | ValCPC: {mean_val_cpc:.4f}"
 
@@ -324,8 +540,55 @@ def train_zero_shot_model(
         "train_loss_history": loss_history,
     }
 
+    # --- Persist checkpoint to disk if requested ---
+    if checkpoint_path is not None:
+        # C1: split_manifest_sha256 must be passed explicitly; raise if caller forgot.
+        if split_manifest_sha256 is None:
+            raise ValueError(
+                "split_manifest_sha256 must be provided when saving a checkpoint. "
+                "Load the split manifest and pass its SHA256 hash to train_zero_shot_model()."
+            )
+        hp = {
+            "node_in_dim":           train_cities[0].node_features.shape[1],
+            "hidden_dim":            hidden_dim,
+            "num_gnn_layers":        num_gnn_layers,
+            "dropout":               dropout,
+            "graph_type":            graph_type,
+            "radius_km":             radius_km,
+            "knn_k":                 knn_k,
+            "loss_type":             loss_type,
+            "epochs":                epochs,
+            "lr":                    lr,
+            "weight_decay":          weight_decay,
+            "backbone":              backbone,
+            "patience":              patience,
+            "min_delta":             min_delta,
+            "lr_plateau_patience":   lr_plateau_patience,
+            "lr_plateau_factor":     lr_plateau_factor,
+            "lr_plateau_threshold":  lr_plateau_threshold,
+            "threshold_mode":        threshold_mode,
+            "min_lr":                min_lr,
+            # Provenance fields (C2, C1)
+            "fold":                  fold,
+            "split_manifest_sha256": split_manifest_sha256,
+            "scaler_fit_scope":      "training_split_only",
+            "scaler_weighting":      "per_tract",
+            "scaler_fit_cities":     sorted(train_city_names),
+            "scaler_fit_n_cities":   len(train_city_names),
+            "scaler_fit_n_rows":     int(scaler.n_samples_seen_),
+        }
+        saved_path = save_checkpoint(
+            path=checkpoint_path,
+            model=model,
+            scaler=scaler,
+            train_info=info,
+            hyperparams=hp,
+            seed=seed,
+            run_tag=run_tag,
+        )
+        if verbose:
+            print(f"    -> Checkpoint saved: {saved_path}", flush=True)
+
     if return_info:
         return model, scaler, info
     return model, scaler
-
-

@@ -1,115 +1,31 @@
 {
-  "bundle_name": "Moving-Bin RQ1 v1",
-  "git_commit_hash": "aa06f9e5f0a5efbeab7ffdb02694a21868a1bc70",
-  "timestamp": "2026-08-17T17:58:00Z",
-  "test_suite_status": "48/48 PASS (100%)",
-  "environment": {
-    "python_version": "3.11.9",
-    "torch_version": "2.x",
-    "platform": "win32"
-  },
-  "formal_model_specifications": {
-    "M0_name": "Gravity-informed urban-GNN zero-shot model",
-    "M0_origin": "neuroGravity-inspired",
-    "formula_gravity_prior": "T_ij^grav = exp(G_0) * P_i * P_j * D_ij^(-alpha_0)",
-    "formula_zero_shot": "\\hat{T}_ij^ZS = f_theta*(X_i, X_j, D_ij, T_ij^grav)",
-    "likelihood_loss": "Zero-Truncated Negative Binomial (ZTNB)",
-    "intrazonal_handling": "Clamped distance min=0.1 km for gravity prior; strictly preserved in calibration via \\hat{T}_ii^cal == \\hat{T}_ii^ZS"
-  },
-  "confirmatory_evaluation_folds_2_5": {
-    "n_cities": 40,
-    "primary_cpc_inter": {
-      "m0_mean": 0.3954,
-      "m0_std": 0.0486,
-      "m1_mean": 0.4227,
-      "m1_std": 0.0549,
-      "delta_mean": 0.0272,
-      "delta_std": 0.0316,
-      "fold_stratified_bootstrap_95_ci": [
-        0.0179,
-        0.0368
-      ],
-      "wilcoxon_one_sided_p": 3.9401e-07,
-      "win_rate": 0.825,
-      "n_improved": "33/40"
+    "protocol_version": "1.0",
+    "timestamp": "2026-08-25T07:17:12Z",
+    "contract_conditions": {
+        "total_cities": 50,
+        "unique_cities": 50,
+        "folds": 5,
+        "cities_per_fold": 10,
+        "primary_k_bins": 8,
+        "model_seeds": [
+            1,
+            10,
+            100
+        ],
+        "primary_treatment": "M1_city_oracle_obs",
+        "ceiling_treatment": "M1_subzone_oracle_obs",
+        "primary_metric": "cpc_inter",
+        "support_domain": "Omega_c_plus"
     },
-    "scale_normalized_cpc_1_minus_tvd": {
-      "m0_mean": 0.4861,
-      "m1_mean": 0.5231,
-      "delta_mean": 0.0371,
-      "fold_stratified_bootstrap_95_ci": [
-        0.0272,
-        0.0469
-      ],
-      "wilcoxon_one_sided_p": 2.5319e-08,
-      "win_rate": 0.825
+    "locked_results": {
+        "M0_mean_cpc": 0.7128,
+        "M1_city_mean_cpc": 0.7163,
+        "mean_delta_cpc": 0.00354,
+        "win_rate_percent": 90.0,
+        "wilcoxon_two_sided_p": 1.9326e-09,
+        "matched_pairs_rank_biserial": 0.8698
     },
-    "log_rmse_rmse_log1p": {
-      "m0_mean": 1.5342,
-      "m1_mean": 1.4007,
-      "delta_mean": -0.1335,
-      "fold_stratified_bootstrap_95_ci": [
-        -0.1949,
-        -0.0766
-      ],
-      "wilcoxon_one_sided_p": 9.7504e-06,
-      "win_rate": 0.725
+    "file_hashes": {
+        "5fold_results.json": "390840afbcac9e726cf2297b7f59c2e2ce68cf65772a88950cae939c2613db0f"
     }
-  },
-  "backbone_robustness_summary": {
-    "gravity_informed_urban_gnn": {
-      "delta_cpc_inter": "+0.0272",
-      "p_improved": "82.5% (33/40)",
-      "wilcoxon_p1": "3.9401e-07"
-    },
-    "classical_2parameter_gravity": {
-      "delta_cpc_inter": "-0.0065",
-      "p_improved": "30.0% (12/40)",
-      "wilcoxon_two_sided_p2": "8.2638e-03"
-    }
-  },
-  "generated_table_artifacts": [
-    "results/tables/confirmatory_fold2_5.md",
-    "results/tables/table1_primary_rq1.md",
-    "results/tables/table2_ablation.md",
-    "results/tables/table3_city_breakdown.md",
-    "results/tables/table4_ablation_city_breakdown.md",
-    "results/tables/table5_rq2_censoring_breakdown.md",
-    "results/tables/table6_correlational_diagnostics.md",
-    "results/tables/table7_backbone_robustness.md",
-    "results/tables/table8_multimetric_evaluation.md"
-  ],
-  "file_sha256_hashes": {
-    "results/5fold_results.json": "12fa73f6a3a553bc886e6f18923ac038c813c0bd9f036042f76dfdd872c9803b",
-    "results/backbone_robustness_results.json": "382c9061d5e68d3ae138cecc28868d998036194c1dd559367d029a49a81b491d",
-    "results/pytest_raw_output.txt": "67cf2db3d9aac7fc98ffc4456945f7289d98afd5b764260e699001196285a54b",
-    "src/data/city_splits.py": "f77e2f880baff2b001f210a0d6da17b6aa04f2b55f942ad472ad6f54dfdfe8e9",
-    "src/data/dataset.py": "bcb1bb22b03c187ab2b07667985962570f111624ac8e049af1a3808ebed8802d",
-    "src/models/zero_shot_model.py": "521d9d4e6792eb182b60568e2e619ec516cc04920a251d21d11549f8138415d0",
-    "src/models/gravity.py": "ba30e77822b4e487ab28b6e26b365073c0639dcf4448b06d43b436e5c2bc7e27",
-    "src/calibration/bin_calibration.py": "1e3c47e43941e37ed02150e4406fa2ffa9dff8dba6923731776b7c712fa28160",
-    "src/experiment/generate_tables.py": "6fa44316a7a3edf55f7b49de16b4aebaa66764931093ef8f98b220ab8796defc",
-    "src/experiment/run_backbone_robustness.py": "1424f712756d6be1b9fb61dfc21c39b03bd78a1eddfffba0f95129db4e91796c",
-    "src/experiment/compute_mechanism_and_secondary_metrics.py": "2b27243d5b48244c0a6ceb5eb66e9fe8b5be832653e78c2598f300c6f083a5c8",
-    "od_plan_tester/tests/test_experiment_contracts.py": "363ac1fab8e5334d77f0c2eafb3b680a01fc6b69bf41e38279e0663252224edd",
-    "results/tables/confirmatory_fold2_5.md": "12245deebdc52be0ea72af1e0cea21f2dd5f955eec9f7eb5551b51e930f16f06",
-    "results/tables/table1_primary_rq1.md": "fc6c2f6062b37963e9895fb2ea9dcc8bebe6c20cfa30869045be8d97cdeaba77",
-    "results/tables/table2_ablation.md": "76cedb4df3d2db880a7333b29e24fea7d036b67c48187357a8e72c93298294dd",
-    "results/tables/table6_correlational_diagnostics.md": "3ef23b25baf8f641582b803e6dcd22628481efc61babce58005463975bbea7aa",
-    "results/tables/table7_backbone_robustness.md": "253cb4e5dc53b273dbf51e9ef4c71249cf4f1c6e191caf2f66f7319f94f5eb1f",
-    "results/tables/table8_multimetric_evaluation.md": "0e6eec3d6986ec48c81d723b24499f0201be5d0680b39df004457e5e0fc6316d"
-  },
-  "working_tree_provenance": {
-    "dirty": true,
-    "dirty_rationale": "New analysis scripts, test T45, and tables added post-commit aa06f9e5f0a5efbeab7ffdb02694a21868a1bc70",
-    "tracked_files_hash_count": 16
-  },
-  "task_scope_bounding": "Positive-edge flow-intensity reconstruction conditional on candidate target topology Omega_c (mean coverage 98.03% across 50 cities)",
-  "scientific_contract_audit": {
-    "T38_shared_support_check": "PASSED (exact n_inter_pairs match & candidate dataset alignment)",
-    "T40_production_manifest_check": "PASSED (valid 40-char hash, strict 5-fold disjointness, on-disk SHA256 match)",
-    "T43_live_runtime_metadata_check": "PASSED (live test city Mm curve verifies std_ddof=1, num_seeds=4, cpc_inter_std formula)",
-    "T44_omega_plus_invariants_check": "PASSED (distance threshold <=> bin_labels {1,2,3} on real Denver & Portland datasets)",
-    "T45_ground_truth_invariance_check": "PASSED (torch.testing.assert_close with rtol=0, atol=1e-6 under random GT permutations and zeros)"
-  }
 }

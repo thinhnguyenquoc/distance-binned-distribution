@@ -44,10 +44,12 @@ class GravityPrior(nn.Module):
         Returns:
             log_T_grav: (E,) log-expected gravity flow.
         """
-        eps = 1e-4
         log_pi = torch.log(torch.clamp(population_i, min=1.0))
         log_pj = torch.log(torch.clamp(population_j, min=1.0))
-        log_d  = torch.log(torch.clamp(distance_km, min=0.1))  # avoid log(0) for intrazonal
+        # Clamp at 0.1 km to avoid log(0) for intrazonal pairs (D_ii = 0).
+        # This floor is an explicit design choice: intrazonal log_d = log(0.1) ≈ -2.3.
+        # The model is trained on this behaviour; do not change without a full retrain.
+        log_d  = torch.log(torch.clamp(distance_km, min=0.1))
 
         log_t_grav = self.G + log_pi + log_pj - self.alpha * log_d
         return log_t_grav

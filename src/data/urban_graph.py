@@ -47,7 +47,9 @@ def haversine_distance_matrix(
     else:
         lon_lat = np.asarray(lon_lat, dtype=np.float64)
 
-    key = cache_key or hash(lon_lat.tobytes())
+    import hashlib
+    coord_hash = hashlib.sha256(lon_lat.tobytes()).hexdigest()
+    key = f"{cache_key}_{coord_hash}" if cache_key else coord_hash
     if use_cache and key in _DISTANCE_MATRIX_CACHE:
         return _DISTANCE_MATRIX_CACHE[key]
 
@@ -82,7 +84,10 @@ def build_knn_graph(
     else:
         lon_lat = np.asarray(lon_lat)
 
-    key = (cache_key or hash(lon_lat.tobytes()), "knn", k, include_self_loop)
+    import hashlib
+    coord_hash = hashlib.sha256(lon_lat.tobytes()).hexdigest()
+    base_key = f"{cache_key}_{coord_hash}" if cache_key else coord_hash
+    key = (base_key, "knn", k, include_self_loop)
     if use_cache and key in _GRAPH_CACHE:
         return _GRAPH_CACHE[key]
 
@@ -138,7 +143,10 @@ def build_radius_graph(
     else:
         lon_lat = np.asarray(lon_lat)
 
-    key = (cache_key or hash(lon_lat.tobytes()), "radius", float(radius_km), include_self_loop)
+    import hashlib
+    coord_hash = hashlib.sha256(lon_lat.tobytes()).hexdigest()
+    base_key = f"{cache_key}_{coord_hash}" if cache_key else coord_hash
+    key = (base_key, "radius", float(radius_km), include_self_loop)
     if use_cache and key in _GRAPH_CACHE:
         return _GRAPH_CACHE[key]
 

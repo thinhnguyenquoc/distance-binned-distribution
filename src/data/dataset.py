@@ -68,6 +68,8 @@ ROAD_COLS = [
     "motorway_length", "primary_length",
 ]
 
+NODE_FEATURE_COLUMNS = tuple(CENSUS_COLS + POI_COLS + ROAD_COLS)
+
 
 # ---------------------------------------------------------------------------
 # Data class
@@ -127,7 +129,12 @@ def _load_csv_columns(path: Path, cols: List[str], key_col: str = "idx") -> np.n
                 except ValueError:
                     vals.append(0.0)
             data[key] = vals
-    n = max(data.keys()) + 1
+    if not data:
+        return np.zeros((0, len(cols)), dtype=np.float32)
+    keys = sorted(data.keys())
+    n = max(keys) + 1
+    if keys != list(range(n)):
+        raise ValueError(f"Feature CSV {path} has missing indices. Expected 0 to {n-1}.")
     arr = np.zeros((n, len(cols)), dtype=np.float32)
     for k, v in data.items():
         arr[k] = v
@@ -143,7 +150,11 @@ def _load_meta(path: Path):
             idx_list.append(int(row["idx"]))
             lons.append(float(row["lon"]))
             lats.append(float(row["lat"]))
+    if not idx_list:
+        return np.zeros((0, 2), dtype=np.float32)
     n = max(idx_list) + 1
+    if sorted(idx_list) != list(range(n)):
+        raise ValueError(f"Meta CSV {path} has missing indices. Expected 0 to {n-1}.")
     lon_arr = np.zeros(n, dtype=np.float32)
     lat_arr = np.zeros(n, dtype=np.float32)
     for i, lon, lat in zip(idx_list, lons, lats):
@@ -158,22 +169,34 @@ def _load_pairs(od_path: Path, dist_path: Path):
     with open(od_path, newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            od[(int(row["o_idx"]), int(row["d_idx"]))] = int(row["trip_count"])
+            trip = int(row["trip_count"])
+            if trip > 0:
+                od[(int(row["o_idx"]), int(row["d_idx"]))] = trip
 
-    origins, dests, trips, dists = [], [], [], []
+    dist_map: Dict[tuple, float] = {}
     with open(dist_path, newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            o, d = int(row["o_idx"]), int(row["d_idx"])
-            dist_km = float(row["distance_km"])
-            trip_count = od.get((o, d), None)
-            if trip_count is None:
-                # distance file has pair not in OD — skip (Portland has 6 such pairs)
-                continue
-            origins.append(o)
-            dests.append(d)
-            trips.append(trip_count)
-            dists.append(dist_km)
+            dist_map[(int(row["o_idx"]), int(row["d_idx"]))] = float(row["distance_km"])
+            
+    od_keys = set(od.keys())
+    dist_keys = set(dist_map.keys())
+    
+    missing_dist = od_keys - dist_keys
+    if len(missing_dist) > 0:
+        raise ValueError(f"Found {len(missing_dist)} positive OD pairs missing from distance.csv (e.g. {list(missing_dist)[:3]}). Support integrity compromised.")
+
+    # Iterate over distance pairs that have positive OD trips
+    origins, dests, trips, dists = [], [], [], []
+    for pair in dist_keys:
+        trip_count = od.get(pair)
+        if trip_count is None:
+            # Pair has distance but trip=0 or missing OD, which is fine (zero-trip pairs are ignored in GNN but safe to skip for support)
+            continue
+        origins.append(pair[0])
+        dests.append(pair[1])
+        trips.append(trip_count)
+        dists.append(dist_map[pair])
 
     return (
         np.array(origins, dtype=np.int64),
@@ -218,6 +241,33 @@ def get_scaler_fingerprint(scaler: Optional[object]) -> Optional[str]:
         s_bytes = np.ascontiguousarray(getattr(scaler, "scale_", np.ones_like(scaler.mean_)), dtype=np.float64).tobytes()
         return hashlib.sha256(m_bytes + v_bytes + s_bytes).hexdigest()
     return f"unfitted_{id(scaler)}"
+
+
+def validate_feature_scaler(scaler: object) -> None:
+    """Validate that a fitted scaler is safe for the fixed node-feature schema."""
+    expected_features = len(NODE_FEATURE_COLUMNS)
+    for attribute in ("mean_", "var_", "scale_"):
+        if not hasattr(scaler, attribute):
+            raise ValueError(f"Feature scaler is not fitted: missing {attribute}")
+        values = np.asarray(getattr(scaler, attribute), dtype=np.float64)
+        if values.shape != (expected_features,):
+            raise ValueError(
+                f"Feature scaler {attribute} has shape {values.shape}; "
+                f"expected ({expected_features},)"
+            )
+        if not np.isfinite(values).all():
+            raise ValueError(f"Feature scaler {attribute} contains NaN or Inf")
+
+    if np.any(np.asarray(scaler.var_) < 0.0):
+        raise ValueError("Feature scaler var_ contains negative values")
+    if np.any(np.asarray(scaler.scale_) <= 0.0):
+        raise ValueError("Feature scaler scale_ must be strictly positive")
+
+    n_features = getattr(scaler, "n_features_in_", expected_features)
+    if int(n_features) != expected_features:
+        raise ValueError(
+            f"Feature scaler expects {n_features} features; expected {expected_features}"
+        )
 
 
 def clear_city_cache() -> None:
@@ -311,6 +361,11 @@ def load_city(
     Returns:
         CityData instance.
     """
+    if feature_scaler is not None and fit_scaler:
+        raise ValueError("Pass either feature_scaler or fit_scaler=True, not both")
+    if feature_scaler is not None:
+        validate_feature_scaler(feature_scaler)
+
     scaler_key = get_scaler_fingerprint(feature_scaler)
     resolved_root = str(Path(data_root).resolve())
     cache_key = (city_name, resolved_root, scaler_key)
@@ -369,12 +424,18 @@ def load_cities(
     """
     from sklearn.preprocessing import StandardScaler
 
+    if not city_names:
+        raise ValueError("At least one training city is required to fit the feature scaler")
+    if len(city_names) != len(set(city_names)):
+        raise ValueError("Training city names must be unique when fitting the feature scaler")
+
     # First pass: collect raw features from memory cache
     raw_list = [load_raw_city(name, data_root=data_root, use_cache=use_cache) for name in city_names]
     all_X = [r.X_raw for r in raw_list]
 
     scaler = StandardScaler()
     scaler.fit(np.concatenate(all_X, axis=0))
+    validate_feature_scaler(scaler)
     scaler_key = get_scaler_fingerprint(scaler)
     resolved_root = str(Path(data_root).resolve())
 

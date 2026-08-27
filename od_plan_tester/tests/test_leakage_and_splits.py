@@ -7,7 +7,7 @@ import pytest
 import torch
 import numpy as np
 from od_plan_tester.project_adapter import (
-    generate_5fold_splits,
+    generate_35_5_10_splits,
     load_city,
     load_cities,
 )
@@ -15,21 +15,24 @@ from od_plan_tester.project_adapter import (
 
 @pytest.mark.reference
 def test_stratified_5fold_split_structure():
-    """T11: 5-Fold split contains 5 folds, each with 40 train and 10 test cities."""
-    splits = generate_5fold_splits(data_root="data")
+    """T11: Canonical 5-Fold split contains 5 folds, each with 35 train, 5 val, and 10 test cities."""
+    splits = generate_35_5_10_splits(data_root="data")
 
     assert len(splits) == 5
     for fold_id, split in splits.items():
-        assert len(split["train"]) == 40
+        assert len(split["train"]) == 35
+        assert len(split["val"]) == 5
         assert len(split["test"]) == 10
-        # Disjoint
+        # All pairwise disjoint
         assert len(set(split["train"]) & set(split["test"])) == 0
+        assert len(set(split["train"]) & set(split["val"])) == 0
+        assert len(set(split["val"]) & set(split["test"])) == 0
 
 
 @pytest.mark.scientific
 def test_stratified_5fold_exact_single_coverage():
     """T12: Across all 5 folds, every single city of the 50 cities is tested exactly once."""
-    splits = generate_5fold_splits(data_root="data")
+    splits = generate_35_5_10_splits(data_root="data")
 
     all_test_cities = []
     for split in splits.values():

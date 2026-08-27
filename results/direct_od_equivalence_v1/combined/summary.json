@@ -1,0 +1,423 @@
+{
+  "experiment": "direct_partial_od_information_equivalence",
+  "protocol_version": "v1",
+  "n_evaluation_cities": 50,
+  "fold_lambdas": {
+    "1": 10.0,
+    "2": 10.0,
+    "3": 10.0,
+    "4": 10.0,
+    "5": 10.0
+  },
+  "p_pos_mean_crossing": 0.001,
+  "p_star_benefit_threshold": 0.001,
+  "p_eq_grid": 0.0025,
+  "p_eq_interp": 0.0019735801623770957,
+  "results_by_p": [
+    {
+      "p": 0.0,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.0,
+      "mean_both_coverage": 0.0,
+      "mean_origin_coverage": 0.0,
+      "mean_destination_coverage": 0.0,
+      "mean_m0_cpc": 0.712807294580449,
+      "mean_gain_full_yd": 0.00353951259265857,
+      "ci_95_gain_full": [
+        0.002604460662901337,
+        0.0044979493488692774
+      ],
+      "mean_gain_direct_od": 0.0,
+      "ci_95_gain_direct": [
+        0.0,
+        0.0
+      ],
+      "mean_diff_vs_yd": -0.00353951259265857,
+      "ci_95_diff": [
+        -0.004497949348869278,
+        -0.002604460662901337
+      ],
+      "pos_cities_vs_m0": 0,
+      "match_yd_cities": 5,
+      "holm_pval_benefit": 1.0
+    },
+    {
+      "p": 0.001,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.000998849310866536,
+      "mean_both_coverage": 0.047498167717197635,
+      "mean_origin_coverage": 0.17650831466300748,
+      "mean_destination_coverage": 0.17670542209124612,
+      "mean_m0_cpc": 0.7128069194209554,
+      "mean_gain_full_yd": 0.003539392069538334,
+      "ci_95_gain_full": [
+        0.002604340705964552,
+        0.00449745121357759
+      ],
+      "mean_gain_direct_od": 0.001803497974709334,
+      "ci_95_gain_direct": [
+        0.0013731134070169343,
+        0.0023591613961382743
+      ],
+      "mean_diff_vs_yd": -0.001735894094828965,
+      "ci_95_diff": [
+        -0.0027933114505290643,
+        -0.0006785608033331706
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 22,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.0025,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.0024997022303852303,
+      "mean_both_coverage": 0.15839322594216984,
+      "mean_origin_coverage": 0.358279255085395,
+      "mean_destination_coverage": 0.35828539529801007,
+      "mean_m0_cpc": 0.7128049229275475,
+      "mean_gain_full_yd": 0.003539468445722332,
+      "ci_95_gain_full": [
+        0.0026045699888649705,
+        0.004497456086403252
+      ],
+      "mean_gain_direct_od": 0.004478075375940837,
+      "ci_95_gain_direct": [
+        0.0033893207504318147,
+        0.005890333379625193
+      ],
+      "mean_diff_vs_yd": 0.0009386069302185282,
+      "ci_95_diff": [
+        -0.0005137094416829897,
+        0.0025947134133286584
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 29,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.005,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.005005418075053126,
+      "mean_both_coverage": 0.3401733088352523,
+      "mean_origin_coverage": 0.55754376581956,
+      "mean_destination_coverage": 0.5577685500320345,
+      "mean_m0_cpc": 0.7128041679411851,
+      "mean_gain_full_yd": 0.0035394960579732014,
+      "ci_95_gain_full": [
+        0.002604248777285102,
+        0.004497641237262709
+      ],
+      "mean_gain_direct_od": 0.008585664591138235,
+      "ci_95_gain_direct": [
+        0.006626292477264422,
+        0.011074215460035322
+      ],
+      "mean_diff_vs_yd": 0.005046168533165007,
+      "ci_95_diff": [
+        0.002891129514014876,
+        0.007648256052095892
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 36,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.01,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.010015501360960473,
+      "mean_both_coverage": 0.6125742126435558,
+      "mean_origin_coverage": 0.7732270807481075,
+      "mean_destination_coverage": 0.7734532811618625,
+      "mean_m0_cpc": 0.7128062361869485,
+      "mean_gain_full_yd": 0.003539433501280958,
+      "ci_95_gain_full": [
+        0.0026040277654004232,
+        0.0044982501996006855
+      ],
+      "mean_gain_direct_od": 0.015490006378182748,
+      "ci_95_gain_direct": [
+        0.012504928082686315,
+        0.019073406818997614
+      ],
+      "mean_diff_vs_yd": 0.011950572876901721,
+      "ci_95_diff": [
+        0.008827334183517272,
+        0.015600723004694474
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 46,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.02,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.020002664873576558,
+      "mean_both_coverage": 0.8684689603638988,
+      "mean_origin_coverage": 0.931106461889501,
+      "mean_destination_coverage": 0.9310965060272081,
+      "mean_m0_cpc": 0.7128037660138683,
+      "mean_gain_full_yd": 0.003538854327486296,
+      "ci_95_gain_full": [
+        0.002603405387029891,
+        0.004496977312590469
+      ],
+      "mean_gain_direct_od": 0.025843350792467367,
+      "ci_95_gain_direct": [
+        0.021953875264775984,
+        0.030180167163642028
+      ],
+      "mean_diff_vs_yd": 0.022304496464980995,
+      "ci_95_diff": [
+        0.018266748573091157,
+        0.02672820476274561
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 49,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.05,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.050023044566438815,
+      "mean_both_coverage": 0.9932287930918935,
+      "mean_origin_coverage": 0.9967590809296937,
+      "mean_destination_coverage": 0.996751272946081,
+      "mean_m0_cpc": 0.7128106823420077,
+      "mean_gain_full_yd": 0.003538665647347628,
+      "ci_95_gain_full": [
+        0.002603867835314481,
+        0.00449698484171047
+      ],
+      "mean_gain_direct_od": 0.04363057551702543,
+      "ci_95_gain_direct": [
+        0.03890298559934621,
+        0.04864442139578515
+      ],
+      "mean_diff_vs_yd": 0.04009190986967772,
+      "ci_95_diff": [
+        0.03506562738828439,
+        0.04541669833584811
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.1,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.10003049809009318,
+      "mean_both_coverage": 0.9998982098286388,
+      "mean_origin_coverage": 0.9999516761037256,
+      "mean_destination_coverage": 0.9999567066660121,
+      "mean_m0_cpc": 0.7128023407698789,
+      "mean_gain_full_yd": 0.0035375745753016,
+      "ci_95_gain_full": [
+        0.002603101896068674,
+        0.004495984313750389
+      ],
+      "mean_gain_direct_od": 0.05581202107647019,
+      "ci_95_gain_direct": [
+        0.050837258455356235,
+        0.061166690048606726
+      ],
+      "mean_diff_vs_yd": 0.05227444650116852,
+      "ci_95_diff": [
+        0.046843155729188596,
+        0.05812147701499919
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.2,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.2001234259691493,
+      "mean_both_coverage": 1.0,
+      "mean_origin_coverage": 1.0,
+      "mean_destination_coverage": 1.0,
+      "mean_m0_cpc": 0.7128203161428682,
+      "mean_gain_full_yd": 0.0035355873750293034,
+      "ci_95_gain_full": [
+        0.002600793681933275,
+        0.0044943719587394884
+      ],
+      "mean_gain_direct_od": 0.06296866142450677,
+      "ci_95_gain_direct": [
+        0.05782849284621739,
+        0.0685057765071159
+      ],
+      "mean_diff_vs_yd": 0.05943307404947739,
+      "ci_95_diff": [
+        0.0537910290762647,
+        0.06550617440420353
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.4,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.4000004585730266,
+      "mean_both_coverage": 1.0,
+      "mean_origin_coverage": 1.0,
+      "mean_destination_coverage": 1.0,
+      "mean_m0_cpc": 0.7127966555014311,
+      "mean_gain_full_yd": 0.0035336300711832297,
+      "ci_95_gain_full": [
+        0.0025998827419486978,
+        0.004491640881919152
+      ],
+      "mean_gain_direct_od": 0.06527140905948114,
+      "ci_95_gain_direct": [
+        0.06012251784986407,
+        0.07084023817799572
+      ],
+      "mean_diff_vs_yd": 0.06173777898829784,
+      "ci_95_diff": [
+        0.05602443565767805,
+        0.06791539965839515
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.5,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.5000159001564386,
+      "mean_both_coverage": 1.0,
+      "mean_origin_coverage": 1.0,
+      "mean_destination_coverage": 1.0,
+      "mean_m0_cpc": 0.7128043768331209,
+      "mean_gain_full_yd": 0.003528212046611093,
+      "ci_95_gain_full": [
+        0.002595630684720308,
+        0.0044862948535588695
+      ],
+      "mean_gain_direct_od": 0.0653873221798417,
+      "ci_95_gain_direct": [
+        0.060241982558231315,
+        0.0709898700379916
+      ],
+      "mean_diff_vs_yd": 0.06185911013323052,
+      "ci_95_diff": [
+        0.05614202680873632,
+        0.06803862521755995
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.6,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.600021993516521,
+      "mean_both_coverage": 1.0,
+      "mean_origin_coverage": 1.0,
+      "mean_destination_coverage": 1.0,
+      "mean_m0_cpc": 0.7127890358978387,
+      "mean_gain_full_yd": 0.0035323830427315935,
+      "ci_95_gain_full": [
+        0.0025983961613217895,
+        0.004490351626101777
+      ],
+      "mean_gain_direct_od": 0.06538308331336455,
+      "ci_95_gain_direct": [
+        0.060212868215727494,
+        0.07100406253269444
+      ],
+      "mean_diff_vs_yd": 0.06185070027063288,
+      "ci_95_diff": [
+        0.0561387669128617,
+        0.06800568248134789
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.7,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.7000390089148836,
+      "mean_both_coverage": 1.0,
+      "mean_origin_coverage": 1.0,
+      "mean_destination_coverage": 1.0,
+      "mean_m0_cpc": 0.7127896132819933,
+      "mean_gain_full_yd": 0.003541536675751165,
+      "ci_95_gain_full": [
+        0.002604241631621069,
+        0.004500914011234945
+      ],
+      "mean_gain_direct_od": 0.06532694037830784,
+      "ci_95_gain_direct": [
+        0.060164295810634524,
+        0.07095232485471598
+      ],
+      "mean_diff_vs_yd": 0.06178540370255663,
+      "ci_95_diff": [
+        0.05607789103198619,
+        0.06795424200443292
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.8,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.8000737197749135,
+      "mean_both_coverage": 1.0,
+      "mean_origin_coverage": 1.0,
+      "mean_destination_coverage": 1.0,
+      "mean_m0_cpc": 0.7127699410128793,
+      "mean_gain_full_yd": 0.0035376546196757047,
+      "ci_95_gain_full": [
+        0.0026037148822763466,
+        0.004496037588177935
+      ],
+      "mean_gain_direct_od": 0.0652236059485314,
+      "ci_95_gain_direct": [
+        0.06004342362534063,
+        0.0708731476826028
+      ],
+      "mean_diff_vs_yd": 0.0616859513288556,
+      "ci_95_diff": [
+        0.05598269907104206,
+        0.06783220893959999
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    },
+    {
+      "p": 0.9,
+      "n_cities": 50,
+      "mean_revealed_mass": 0.9000822043768878,
+      "mean_both_coverage": 1.0,
+      "mean_origin_coverage": 1.0,
+      "mean_destination_coverage": 1.0,
+      "mean_m0_cpc": 0.7128525332517992,
+      "mean_gain_full_yd": 0.00353924857850605,
+      "ci_95_gain_full": [
+        0.002611224160108961,
+        0.004495117241875925
+      ],
+      "mean_gain_direct_od": 0.065153749589245,
+      "ci_95_gain_direct": [
+        0.060005056493772156,
+        0.07075452499715201
+      ],
+      "mean_diff_vs_yd": 0.061614501010738856,
+      "ci_95_diff": [
+        0.05595186955626946,
+        0.06771531545990522
+      ],
+      "pos_cities_vs_m0": 50,
+      "match_yd_cities": 50,
+      "holm_pval_benefit": 1.2434497875801753e-14
+    }
+  ]
+}

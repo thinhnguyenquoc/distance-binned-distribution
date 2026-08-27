@@ -1,0 +1,3969 @@
+{
+  "experiment_config": {
+    "device": "cpu",
+    "epochs_per_fold": 200,
+    "hidden_dim": 64,
+    "graph_type": "radius",
+    "radius_km": 5.0,
+    "knn_k": 10,
+    "loss_type": "ztnb",
+    "total_cities_evaluated": 50,
+    "total_runtime_sec": 8514.032089233398,
+    "run_signature": {
+      "backbone": "mlp",
+      "seeds": [
+        1,
+        10,
+        100
+      ],
+      "folds": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "epochs_per_fold": 200,
+      "hidden_dim": 64,
+      "num_gnn_layers": 2,
+      "graph_type": "radius",
+      "radius_km": 5.0,
+      "knn_k": 10,
+      "loss_type": "ztnb",
+      "split_manifest_sha256": "7f9afe02725c7798dab018b6a353ed99ceaf6c36a9f77316aa47ea21297ebd14"
+    }
+  },
+  "rq1_delta_r": {
+    "n_cities_evaluated": 50,
+    "std_definition": "sample_sd_ddof_1",
+    "missingness_correlations": {
+      "city": {
+        "corr_with_rho_c": -0.4055740457380164,
+        "corr_with_n_tracts": 0.27722658156666735,
+        "corr_with_mean_distance": 0.584383331690622,
+        "corr_with_average_flow": -0.1877468604274804
+      },
+      "county": {
+        "corr_with_rho_c": -0.4579213167287981,
+        "corr_with_n_tracts": 0.33767812532998587,
+        "corr_with_mean_distance": 0.6000067450144271,
+        "corr_with_average_flow": -0.21987702492515382
+      },
+      "subzone": {
+        "corr_with_rho_c": -0.38834304628574734,
+        "corr_with_n_tracts": 0.28194566952308653,
+        "corr_with_mean_distance": 0.7145031435740713,
+        "corr_with_average_flow": -0.17993339239532224
+      }
+    },
+    "city": {
+      "m0_cpc_inter": {
+        "n": 50,
+        "mean": 0.7091305209204506,
+        "std": 0.04754032483898306,
+        "median": 0.7117291874971479,
+        "iqr": 0.057623710757582214,
+        "p25": 0.6853870039433884,
+        "p75": 0.7430107147009706,
+        "min": 0.5229916743491247,
+        "max": 0.7839209949979615
+      },
+      "m1_cpc_inter": {
+        "n": 50,
+        "mean": 0.7124182171378759,
+        "std": 0.04737282062934389,
+        "median": 0.7134832972874989,
+        "iqr": 0.05958459685564366,
+        "p25": 0.6873263849913481,
+        "p75": 0.7469109818469918,
+        "min": 0.5274065562923808,
+        "max": 0.7850295965336654
+      },
+      "delta_cpc_inter": {
+        "n": 50,
+        "mean": 0.0032876962174252845,
+        "std": 0.003554371424034485,
+        "median": 0.0020603991951245737,
+        "iqr": 0.0038220306446720975,
+        "p25": 0.001028815459542004,
+        "p75": 0.0048508461042141016,
+        "min": -0.00260168782099901,
+        "max": 0.013761621935178492,
+        "ci_95_lower": 0.002492912758575697,
+        "ci_95_upper": 0.004173333093005746
+      },
+      "p_improved": 0.94,
+      "wilcoxon_one_sided_p": 2.1903368008224788e-11,
+      "wilcoxon_two_sided_p": 4.3806736016449577e-11,
+      "rank_biserial_r": 0.9247058823529412
+    },
+    "county": {
+      "m0_cpc_inter": {
+        "n": 50,
+        "mean": 0.7091305209204506,
+        "std": 0.04754032483898306,
+        "median": 0.7117291874971479,
+        "iqr": 0.057623710757582214,
+        "p25": 0.6853870039433884,
+        "p75": 0.7430107147009706,
+        "min": 0.5229916743491247,
+        "max": 0.7839209949979615
+      },
+      "m1_cpc_inter": {
+        "n": 50,
+        "mean": 0.7125538349752162,
+        "std": 0.04720832837818459,
+        "median": 0.7134832972874989,
+        "iqr": 0.05958459685564366,
+        "p25": 0.6873263849913481,
+        "p75": 0.7469109818469918,
+        "min": 0.5296300232893372,
+        "max": 0.7851622805935823
+      },
+      "delta_cpc_inter": {
+        "n": 50,
+        "mean": 0.0034233140547655916,
+        "std": 0.003684185826918397,
+        "median": 0.0022096015336521835,
+        "iqr": 0.0040896390368993785,
+        "p25": 0.001028815459542004,
+        "p75": 0.0051184544964413825,
+        "min": -0.00260168782099901,
+        "max": 0.01469325432457147,
+        "ci_95_lower": 0.0025825038806791107,
+        "ci_95_upper": 0.004340608680116788
+      },
+      "p_improved": 0.94,
+      "wilcoxon_one_sided_p": 1.9318768806897424e-11,
+      "wilcoxon_two_sided_p": 3.863753761379485e-11,
+      "rank_biserial_r": 0.9262745098039216
+    },
+    "subzone": {
+      "m0_cpc_inter": {
+        "n": 50,
+        "mean": 0.7091305209204506,
+        "std": 0.04754032483898306,
+        "median": 0.7117291874971479,
+        "iqr": 0.057623710757582214,
+        "p25": 0.6853870039433884,
+        "p75": 0.7430107147009706,
+        "min": 0.5229916743491247,
+        "max": 0.7839209949979615
+      },
+      "m1_cpc_inter": {
+        "n": 50,
+        "mean": 0.720216230517785,
+        "std": 0.046772665044131884,
+        "median": 0.7204929009178265,
+        "iqr": 0.062474010597917795,
+        "p25": 0.6950359830266795,
+        "p75": 0.7575099936245973,
+        "min": 0.5377306640939966,
+        "max": 0.7898890233197354
+      },
+      "delta_cpc_inter": {
+        "n": 50,
+        "mean": 0.011085709597334369,
+        "std": 0.005821803419847264,
+        "median": 0.009152925689089486,
+        "iqr": 0.007571349850119147,
+        "p25": 0.0069009314568645175,
+        "p75": 0.014472281306983664,
+        "min": 0.0038089861798316083,
+        "max": 0.027965262292343307,
+        "ci_95_lower": 0.00975195252115246,
+        "ci_95_upper": 0.012527022754701675
+      },
+      "p_improved": 1.0,
+      "wilcoxon_one_sided_p": 8.881784197001252e-16,
+      "wilcoxon_two_sided_p": 1.7763568394002505e-15,
+      "rank_biserial_r": 1.0
+    }
+  },
+  "city_level_results": [
+    {
+      "city": "Arlington",
+      "n_tracts": 68,
+      "n_pairs": 4624,
+      "rho_c": 1.0,
+      "average_flow": 812.7528533801582,
+      "mean_distance": 8.15912914276123,
+      "n_inter_pairs": 4556,
+      "total_trips": 5038398.0,
+      "total_inter_trips": 3702902.0,
+      "M0": {
+        "cpc": 0.7907170111772647,
+        "cpc_inter": 0.7818163015900516,
+        "rmse_log1p_inter": 0.6319331251258542,
+        "rmse_inter": 838.7971716899025,
+        "nrmse_inter": 1.0320445732074994,
+        "mae_inter": 338.4446650313326,
+        "spearman_inter": 0.8687736691044061,
+        "rel_error_total": 0.09086089414700473,
+        "cpc_inflow": 0.8919340466085436,
+        "cpc_outflow": 0.8985712551898053
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7919081297526515,
+        "cpc_inter": 0.784121663198583,
+        "rmse_log1p_inter": 0.6183769561376912,
+        "rmse_inter": 825.5313243301297,
+        "nrmse_inter": 1.0157224559677978,
+        "mae_inter": 334.8844031218687,
+        "spearman_inter": 0.8703531603589717,
+        "rel_error_total": 0.09086089414700467,
+        "cpc_inflow": 0.8925481543219446,
+        "cpc_outflow": 0.8990387934706932
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7919081297526515,
+        "cpc_inter": 0.784121663198583,
+        "rmse_log1p_inter": 0.6183769561376912,
+        "rmse_inter": 825.5313243301297,
+        "nrmse_inter": 1.0157224559677978,
+        "mae_inter": 334.8844031218687,
+        "spearman_inter": 0.8703531603589717,
+        "rel_error_total": 0.09086089414700467,
+        "cpc_inflow": 0.8925481543219446,
+        "cpc_outflow": 0.8990387934706932
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7964242890738291,
+        "cpc_inter": 0.7883429655265678,
+        "rmse_log1p_inter": 0.5828143167327149,
+        "rmse_inter": 818.5045461986902,
+        "nrmse_inter": 1.0070768042149731,
+        "mae_inter": 328.33594682912076,
+        "spearman_inter": 0.884933801807872,
+        "rel_error_total": 0.09086089414700473,
+        "cpc_inflow": 0.8947976592198975,
+        "cpc_outflow": 0.8985712551898053
+      },
+      "mapping_stats": {
+        "n_strict_within": 68,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0023053616085314532,
+      "delta_county": 0.0023053616085314532,
+      "delta_subzone": 0.0065266639365162415,
+      "fold": 1
+    },
+    {
+      "city": "Austin",
+      "n_tracts": 169,
+      "n_pairs": 28534,
+      "rho_c": 0.9990490278951819,
+      "average_flow": 472.50294376872904,
+      "mean_distance": 12.778569221496582,
+      "n_inter_pairs": 28365,
+      "total_trips": 16936351.0,
+      "total_inter_trips": 13402546.0,
+      "M0": {
+        "cpc": 0.7130613205554739,
+        "cpc_inter": 0.7112052605152771,
+        "rmse_log1p_inter": 0.8759730332044545,
+        "rmse_inter": 708.9828306513855,
+        "nrmse_inter": 1.500483414974032,
+        "mae_inter": 258.40168645882187,
+        "spearman_inter": 0.7761836958181402,
+        "rel_error_total": 0.10647003115195508,
+        "cpc_inflow": 0.8522416164545898,
+        "cpc_outflow": 0.8528648700395206
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7138291320423467,
+        "cpc_inter": 0.7124317168940597,
+        "rmse_log1p_inter": 0.8741133977055733,
+        "rmse_inter": 707.4284726280501,
+        "nrmse_inter": 1.4971937888588218,
+        "mae_inter": 257.30113795733297,
+        "spearman_inter": 0.7786049547434836,
+        "rel_error_total": 0.10647003115195502,
+        "cpc_inflow": 0.8523080020259614,
+        "cpc_outflow": 0.8529190961555173
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7138291320423467,
+        "cpc_inter": 0.7124317168940597,
+        "rmse_log1p_inter": 0.8741133977055733,
+        "rmse_inter": 707.4284726280501,
+        "nrmse_inter": 1.4971937888588218,
+        "mae_inter": 257.30113795733297,
+        "spearman_inter": 0.7786049547434836,
+        "rel_error_total": 0.10647003115195502,
+        "cpc_inflow": 0.8523080020259614,
+        "cpc_outflow": 0.8529190961555173
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.720000088919816,
+        "cpc_inter": 0.7185761390811406,
+        "rmse_log1p_inter": 0.8391851810083787,
+        "rmse_inter": 696.3538099787506,
+        "nrmse_inter": 1.4737554954146221,
+        "mae_inter": 251.80436342928328,
+        "spearman_inter": 0.7990604035677823,
+        "rel_error_total": 0.10647003115195508,
+        "cpc_inflow": 0.8556655700166441,
+        "cpc_outflow": 0.8528648700395206
+      },
+      "mapping_stats": {
+        "n_strict_within": 169,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0012264563787826033,
+      "delta_county": 0.0012264563787826033,
+      "delta_subzone": 0.007370878565863492,
+      "fold": 1
+    },
+    {
+      "city": "El_Paso",
+      "n_tracts": 128,
+      "n_pairs": 16384,
+      "rho_c": 1.0,
+      "average_flow": 635.0816313976378,
+      "mean_distance": 13.96358871459961,
+      "n_inter_pairs": 16256,
+      "total_trips": 12752117.0,
+      "total_inter_trips": 10323887.0,
+      "M0": {
+        "cpc": 0.6581172660175806,
+        "cpc_inter": 0.652321009038139,
+        "rmse_log1p_inter": 0.8634043194979175,
+        "rmse_inter": 897.485722196909,
+        "nrmse_inter": 1.413181672758812,
+        "mae_inter": 345.3441542905225,
+        "spearman_inter": 0.8060696003609443,
+        "rel_error_total": 0.4358890805212072,
+        "cpc_inflow": 0.7137186330559544,
+        "cpc_outflow": 0.7136465811651885
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6549820089506359,
+        "cpc_inter": 0.64971932121714,
+        "rmse_log1p_inter": 0.812843193592902,
+        "rmse_inter": 922.2103592820089,
+        "nrmse_inter": 1.4521131043460993,
+        "mae_inter": 347.9280120387804,
+        "spearman_inter": 0.8071307463113816,
+        "rel_error_total": 0.4358890805212072,
+        "cpc_inflow": 0.7121125919836521,
+        "cpc_outflow": 0.7120277702513885
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6549820089506359,
+        "cpc_inter": 0.64971932121714,
+        "rmse_log1p_inter": 0.812843193592902,
+        "rmse_inter": 922.2103592820089,
+        "nrmse_inter": 1.4521131043460993,
+        "mae_inter": 347.9280120387804,
+        "spearman_inter": 0.8071307463113816,
+        "rel_error_total": 0.4358890805212072,
+        "cpc_inflow": 0.7121125919836521,
+        "cpc_outflow": 0.7120277702513885
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.662878064681462,
+        "cpc_inter": 0.6570566021281989,
+        "rmse_log1p_inter": 0.7870903641590914,
+        "rmse_inter": 909.4085739522728,
+        "nrmse_inter": 1.431955403828824,
+        "mae_inter": 340.6375567851733,
+        "spearman_inter": 0.8305914442623048,
+        "rel_error_total": 0.4358890805212072,
+        "cpc_inflow": 0.7151090353406571,
+        "cpc_outflow": 0.7136465811651885
+      },
+      "mapping_stats": {
+        "n_strict_within": 128,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": -0.00260168782099901,
+      "delta_county": -0.00260168782099901,
+      "delta_subzone": 0.004735593090059886,
+      "fold": 1
+    },
+    {
+      "city": "Long_Beach",
+      "n_tracts": 103,
+      "n_pairs": 10598,
+      "rho_c": 0.9989529792499524,
+      "average_flow": 375.2969032872796,
+      "mean_distance": 6.238588333129883,
+      "n_inter_pairs": 10495,
+      "total_trips": 5152792.0,
+      "total_inter_trips": 3938741.0,
+      "M0": {
+        "cpc": 0.7466141766511709,
+        "cpc_inter": 0.7423913841385198,
+        "rmse_log1p_inter": 0.7831188535784479,
+        "rmse_inter": 432.48598957391124,
+        "nrmse_inter": 1.1523835816008716,
+        "mae_inter": 174.5081609343998,
+        "spearman_inter": 0.7986761830091966,
+        "rel_error_total": 0.1945206490772385,
+        "cpc_inflow": 0.8351118252420594,
+        "cpc_outflow": 0.8373852434346324
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7471169852557292,
+        "cpc_inter": 0.7428102223081071,
+        "rmse_log1p_inter": 0.7799288330540733,
+        "rmse_inter": 431.2194441650152,
+        "nrmse_inter": 1.1490087991345037,
+        "mae_inter": 174.2247466223936,
+        "spearman_inter": 0.7998064361930822,
+        "rel_error_total": 0.19452064907723857,
+        "cpc_inflow": 0.8351388786921521,
+        "cpc_outflow": 0.8374210770783984
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7471169852557292,
+        "cpc_inter": 0.7428102223081071,
+        "rmse_log1p_inter": 0.7799288330540733,
+        "rmse_inter": 431.2194441650152,
+        "nrmse_inter": 1.1490087991345037,
+        "mae_inter": 174.2247466223936,
+        "spearman_inter": 0.7998064361930822,
+        "rel_error_total": 0.19452064907723857,
+        "cpc_inflow": 0.8351388786921521,
+        "cpc_outflow": 0.8374210770783984
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7502346368465459,
+        "cpc_inter": 0.7462003703183514,
+        "rmse_log1p_inter": 0.7467449604697359,
+        "rmse_inter": 427.71254383367653,
+        "nrmse_inter": 1.1396644632217339,
+        "mae_inter": 171.92727420366157,
+        "spearman_inter": 0.8139352469134554,
+        "rel_error_total": 0.1945206490772385,
+        "cpc_inflow": 0.8385617951184763,
+        "cpc_outflow": 0.8373852434346324
+      },
+      "mapping_stats": {
+        "n_strict_within": 103,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0004188381695873211,
+      "delta_county": 0.0004188381695873211,
+      "delta_subzone": 0.0038089861798316083,
+      "fold": 1
+    },
+    {
+      "city": "Memphis",
+      "n_tracts": 173,
+      "n_pairs": 29875,
+      "rho_c": 0.9981852399516064,
+      "average_flow": 335.68527371894146,
+      "mean_distance": 12.67488956451416,
+      "n_inter_pairs": 29702,
+      "total_trips": 12447475.0,
+      "total_inter_trips": 9970524.0,
+      "M0": {
+        "cpc": 0.7242309635324199,
+        "cpc_inter": 0.7250673925104238,
+        "rmse_log1p_inter": 0.8106939499903669,
+        "rmse_inter": 424.9239884092178,
+        "nrmse_inter": 1.2658404215997663,
+        "mae_inter": 167.32495593872682,
+        "spearman_inter": 0.7545492808493431,
+        "rel_error_total": 0.18684447012142755,
+        "cpc_inflow": 0.8547509568828543,
+        "cpc_outflow": 0.8556825276046892
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7255828861771595,
+        "cpc_inter": 0.7267189331670524,
+        "rmse_log1p_inter": 0.8153439375717134,
+        "rmse_inter": 435.85536468525567,
+        "nrmse_inter": 1.298404782123935,
+        "mae_inter": 166.31919529383467,
+        "spearman_inter": 0.7621473632106399,
+        "rel_error_total": 0.18684447012142755,
+        "cpc_inflow": 0.8564235277708011,
+        "cpc_outflow": 0.857348671804123
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7255828861771595,
+        "cpc_inter": 0.7267189331670524,
+        "rmse_log1p_inter": 0.8153439375717134,
+        "rmse_inter": 435.85536468525567,
+        "nrmse_inter": 1.298404782123935,
+        "mae_inter": 166.31919529383467,
+        "spearman_inter": 0.7621473632106399,
+        "rel_error_total": 0.18684447012142755,
+        "cpc_inflow": 0.8564235277708011,
+        "cpc_outflow": 0.857348671804123
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7319327992900753,
+        "cpc_inter": 0.7334769493761417,
+        "rmse_log1p_inter": 0.7778720771339644,
+        "rmse_inter": 423.87532292427596,
+        "nrmse_inter": 1.2627164672084283,
+        "mae_inter": 162.20605941341026,
+        "spearman_inter": 0.7799513937627145,
+        "rel_error_total": 0.18684447012142755,
+        "cpc_inflow": 0.8603181512902337,
+        "cpc_outflow": 0.8556825276046892
+      },
+      "mapping_stats": {
+        "n_strict_within": 173,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0016515406566285362,
+      "delta_county": 0.0016515406566285362,
+      "delta_subzone": 0.008409556865717871,
+      "fold": 1
+    },
+    {
+      "city": "Milwaukee",
+      "n_tracts": 207,
+      "n_pairs": 42706,
+      "rho_c": 0.996646498757094,
+      "average_flow": 161.88333843149252,
+      "mean_distance": 7.989790916442871,
+      "n_inter_pairs": 42499,
+      "total_trips": 8581893.0,
+      "total_inter_trips": 6879880.0,
+      "M0": {
+        "cpc": 0.7305543240683242,
+        "cpc_inter": 0.7294375774795266,
+        "rmse_log1p_inter": 0.9481650023162618,
+        "rmse_inter": 237.10936404785755,
+        "nrmse_inter": 1.4646928235187093,
+        "mae_inter": 98.35316245957198,
+        "spearman_inter": 0.7449175425164842,
+        "rel_error_total": 0.2457401928777221,
+        "cpc_inflow": 0.8369780434667905,
+        "cpc_outflow": 0.8388062851700125
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7309737694351557,
+        "cpc_inter": 0.7304239187670275,
+        "rmse_log1p_inter": 0.9338259379673891,
+        "rmse_inter": 238.87386402415495,
+        "nrmse_inter": 1.4755926480058605,
+        "mae_inter": 97.99705868770424,
+        "spearman_inter": 0.7452116619774909,
+        "rel_error_total": 0.2457401928777221,
+        "cpc_inflow": 0.8368238520640906,
+        "cpc_outflow": 0.8386672982342002
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7309548113067634,
+        "cpc_inter": 0.7303984173278829,
+        "rmse_log1p_inter": 0.9330498894313255,
+        "rmse_inter": 239.58344711074832,
+        "nrmse_inter": 1.4799759470746132,
+        "mae_inter": 98.00633591548883,
+        "spearman_inter": 0.7463266767302051,
+        "rel_error_total": 0.24574019287772209,
+        "cpc_inflow": 0.8367820624399931,
+        "cpc_outflow": 0.8386700460446338
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7368478668830457,
+        "cpc_inter": 0.7363595351885931,
+        "rmse_log1p_inter": 0.9003333776961205,
+        "rmse_inter": 233.94669726588157,
+        "nrmse_inter": 1.445156120034463,
+        "mae_inter": 95.83984027676463,
+        "spearman_inter": 0.7637293780086182,
+        "rel_error_total": 0.2457401928777221,
+        "cpc_inflow": 0.8404936897112356,
+        "cpc_outflow": 0.8388062851700125
+      },
+      "mapping_stats": {
+        "n_strict_within": 207,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0009863412875008581,
+      "delta_county": 0.0009608398483562652,
+      "delta_subzone": 0.006921957709066451,
+      "fold": 1
+    },
+    {
+      "city": "New_York",
+      "n_tracts": 2088,
+      "n_pairs": 3097336,
+      "rho_c": 0.7103013638524932,
+      "average_flow": 48.919936974375894,
+      "mean_distance": 12.573524475097656,
+      "n_inter_pairs": 3095249,
+      "total_trips": 171155786.0,
+      "total_inter_trips": 151419386.0,
+      "M0": {
+        "cpc": 0.5313799639372643,
+        "cpc_inter": 0.5229916743491247,
+        "rmse_log1p_inter": 1.7665042894599026,
+        "rmse_inter": 184.48344080768388,
+        "nrmse_inter": 3.771129977217994,
+        "mae_inter": 64.4705136247975,
+        "spearman_inter": 0.5303274088995292,
+        "rel_error_total": 0.7594749893635958,
+        "cpc_inflow": 0.6605141419893577,
+        "cpc_outflow": 0.6603033941062192
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.5353523355075049,
+        "cpc_inter": 0.5274065562923808,
+        "rmse_log1p_inter": 1.6454510849936872,
+        "rmse_inter": 196.22619760235776,
+        "nrmse_inter": 4.011170286362806,
+        "mae_inter": 63.87711588827322,
+        "spearman_inter": 0.5410763399787556,
+        "rel_error_total": 0.7594749893635958,
+        "cpc_inflow": 0.6570208739098685,
+        "cpc_outflow": 0.6568136444305013
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.5374929152853293,
+        "cpc_inter": 0.5296300232893372,
+        "rmse_log1p_inter": 1.630600217696057,
+        "rmse_inter": 195.4505393822667,
+        "nrmse_inter": 3.9953146195720373,
+        "mae_inter": 63.57622518354947,
+        "spearman_inter": 0.5453252698585227,
+        "rel_error_total": 0.7594749893635958,
+        "cpc_inflow": 0.6572501179172542,
+        "cpc_outflow": 0.657609866093262
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.5457575143561553,
+        "cpc_inter": 0.5377306640939966,
+        "rmse_log1p_inter": 1.5787569299788349,
+        "rmse_inter": 196.25326708207425,
+        "nrmse_inter": 4.011723628852406,
+        "mae_inter": 62.48483744076842,
+        "spearman_inter": 0.5534880588530803,
+        "rel_error_total": 0.7594749893635958,
+        "cpc_inflow": 0.6612857915503317,
+        "cpc_outflow": 0.6603033941062192
+      },
+      "mapping_stats": {
+        "n_strict_within": 2037,
+        "n_nearest_fallback": 51,
+        "fallback_details": [
+          {
+            "tract_idx": 1,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 102.4086317834647
+          },
+          {
+            "tract_idx": 55,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 88.62895076403166
+          },
+          {
+            "tract_idx": 71,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 135.39692557259372
+          },
+          {
+            "tract_idx": 74,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 610.924660311125
+          },
+          {
+            "tract_idx": 87,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 751.4657835063017
+          },
+          {
+            "tract_idx": 182,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 28.23904665123178
+          },
+          {
+            "tract_idx": 313,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 54.397107015266954
+          },
+          {
+            "tract_idx": 314,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 159.8275269883144
+          },
+          {
+            "tract_idx": 324,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 259.5892072783596
+          },
+          {
+            "tract_idx": 333,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 706.6357639740029
+          },
+          {
+            "tract_idx": 337,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 467.2828261086152
+          },
+          {
+            "tract_idx": 341,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 365.85421730061375
+          },
+          {
+            "tract_idx": 343,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 234.88859798524467
+          },
+          {
+            "tract_idx": 346,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 316.69562063644554
+          },
+          {
+            "tract_idx": 348,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 161.20535768004336
+          },
+          {
+            "tract_idx": 349,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 334.6871010492585
+          },
+          {
+            "tract_idx": 350,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 536.5566645492403
+          },
+          {
+            "tract_idx": 352,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 41.25778825794888
+          },
+          {
+            "tract_idx": 353,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 187.96430623972674
+          },
+          {
+            "tract_idx": 597,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 12.991609712348831
+          },
+          {
+            "tract_idx": 816,
+            "GID_2": "USA.33.24_1",
+            "nearest_distance_m": 125.56755424816767
+          },
+          {
+            "tract_idx": 857,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 427.41387066316605
+          },
+          {
+            "tract_idx": 1053,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 30.359050914385296
+          },
+          {
+            "tract_idx": 1058,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 186.40084810269707
+          },
+          {
+            "tract_idx": 1059,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 229.2121007962309
+          },
+          {
+            "tract_idx": 1060,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 43.66348066212038
+          },
+          {
+            "tract_idx": 1069,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 32.34443638687448
+          },
+          {
+            "tract_idx": 1072,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 257.33377544060977
+          },
+          {
+            "tract_idx": 1092,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 47.66871303682076
+          },
+          {
+            "tract_idx": 1105,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 265.3833931291042
+          },
+          {
+            "tract_idx": 1107,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 249.64257648634415
+          },
+          {
+            "tract_idx": 1129,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 293.5375462916603
+          },
+          {
+            "tract_idx": 1130,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 216.15367899706118
+          },
+          {
+            "tract_idx": 1131,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 54.81677519296485
+          },
+          {
+            "tract_idx": 1150,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 38.29146072560743
+          },
+          {
+            "tract_idx": 1197,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 134.8460834226121
+          },
+          {
+            "tract_idx": 1208,
+            "GID_2": "USA.33.3_1",
+            "nearest_distance_m": 13.76744858529368
+          },
+          {
+            "tract_idx": 1285,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 12.279080425804402
+          },
+          {
+            "tract_idx": 1322,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 86.6042280667271
+          },
+          {
+            "tract_idx": 1323,
+            "GID_2": "USA.33.32_1",
+            "nearest_distance_m": 80.53826249437236
+          },
+          {
+            "tract_idx": 1851,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 151.07518915210932
+          },
+          {
+            "tract_idx": 1853,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 69.89068893727057
+          },
+          {
+            "tract_idx": 1858,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 103.13719443099812
+          },
+          {
+            "tract_idx": 1863,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 136.42845661048844
+          },
+          {
+            "tract_idx": 1876,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 126.96064462975299
+          },
+          {
+            "tract_idx": 1891,
+            "GID_2": "USA.33.42_1",
+            "nearest_distance_m": 358.5116254984859
+          },
+          {
+            "tract_idx": 1979,
+            "GID_2": "USA.33.44_1",
+            "nearest_distance_m": 426.26801376173944
+          },
+          {
+            "tract_idx": 1980,
+            "GID_2": "USA.33.44_1",
+            "nearest_distance_m": 277.5201588396798
+          },
+          {
+            "tract_idx": 1989,
+            "GID_2": "USA.33.44_1",
+            "nearest_distance_m": 156.228858691926
+          },
+          {
+            "tract_idx": 2038,
+            "GID_2": "USA.33.44_1",
+            "nearest_distance_m": 293.2618250497092
+          },
+          {
+            "tract_idx": 2065,
+            "GID_2": "USA.33.44_1",
+            "nearest_distance_m": 37.14637506097425
+          }
+        ]
+      },
+      "delta_city": 0.0044148819432560105,
+      "delta_county": 0.006638348940212424,
+      "delta_subzone": 0.014738989744871867,
+      "fold": 1
+    },
+    {
+      "city": "San_Diego",
+      "n_tracts": 277,
+      "n_pairs": 75503,
+      "rho_c": 0.9839637942761471,
+      "average_flow": 271.1880599792625,
+      "mean_distance": 15.597249984741211,
+      "n_inter_pairs": 75226,
+      "total_trips": 25280273.0,
+      "total_inter_trips": 20400393.0,
+      "M0": {
+        "cpc": 0.6760752197962183,
+        "cpc_inter": 0.6769714256564741,
+        "rmse_log1p_inter": 1.0148073908745445,
+        "rmse_inter": 528.9659700642861,
+        "nrmse_inter": 1.9505503675373308,
+        "mae_inter": 168.39081318938221,
+        "spearman_inter": 0.7654373735463672,
+        "rel_error_total": 0.07775237176539102,
+        "cpc_inflow": 0.8147823255060772,
+        "cpc_outflow": 0.8160341272173234
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6767338415982767,
+        "cpc_inter": 0.6779879304895484,
+        "rmse_log1p_inter": 1.0229158208390328,
+        "rmse_inter": 527.03735638177,
+        "nrmse_inter": 1.9434386470483693,
+        "mae_inter": 167.8626871275055,
+        "spearman_inter": 0.7657130220784651,
+        "rel_error_total": 0.07775237176539102,
+        "cpc_inflow": 0.8159915057534467,
+        "cpc_outflow": 0.8172957889925606
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6767338415982767,
+        "cpc_inter": 0.6779879304895484,
+        "rmse_log1p_inter": 1.0229158208390328,
+        "rmse_inter": 527.03735638177,
+        "nrmse_inter": 1.9434386470483693,
+        "mae_inter": 167.8626871275055,
+        "spearman_inter": 0.7657130220784651,
+        "rel_error_total": 0.07775237176539102,
+        "cpc_inflow": 0.8159915057534467,
+        "cpc_outflow": 0.8172957889925606
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6869199536859747,
+        "cpc_inter": 0.6886395395585104,
+        "rmse_log1p_inter": 0.9928131507882435,
+        "rmse_inter": 506.2578357593143,
+        "nrmse_inter": 1.8668146222884123,
+        "mae_inter": 162.31207393520378,
+        "spearman_inter": 0.7755434276710867,
+        "rel_error_total": 0.07775237176539102,
+        "cpc_inflow": 0.8277933574981526,
+        "cpc_outflow": 0.8160341272173234
+      },
+      "mapping_stats": {
+        "n_strict_within": 275,
+        "n_nearest_fallback": 2,
+        "fallback_details": [
+          {
+            "tract_idx": 121,
+            "GID_2": "USA.5.37_1",
+            "nearest_distance_m": 141.12659382255455
+          },
+          {
+            "tract_idx": 244,
+            "GID_2": "USA.5.37_1",
+            "nearest_distance_m": 14.357939854009949
+          }
+        ]
+      },
+      "delta_city": 0.001016504833074361,
+      "delta_county": 0.001016504833074361,
+      "delta_subzone": 0.01166811390203637,
+      "fold": 1
+    },
+    {
+      "city": "Seattle",
+      "n_tracts": 132,
+      "n_pairs": 17383,
+      "rho_c": 0.9976289613694194,
+      "average_flow": 580.7548547910266,
+      "mean_distance": 8.955789566040039,
+      "n_inter_pairs": 17251,
+      "total_trips": 12787775.0,
+      "total_inter_trips": 10018602.0,
+      "M0": {
+        "cpc": 0.6918937785834881,
+        "cpc_inter": 0.687616624228189,
+        "rmse_log1p_inter": 0.9152070010442449,
+        "rmse_inter": 941.6710591460578,
+        "nrmse_inter": 1.6214605033046172,
+        "mae_inter": 355.36790264788164,
+        "spearman_inter": 0.7712085033574341,
+        "rel_error_total": 0.041225016264581506,
+        "cpc_inflow": 0.8207931232170087,
+        "cpc_outflow": 0.8232518565219675
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6924568339519612,
+        "cpc_inter": 0.6887678935514984,
+        "rmse_log1p_inter": 0.9050864904953101,
+        "rmse_inter": 938.0076482742198,
+        "nrmse_inter": 1.615152487380831,
+        "mae_inter": 354.0572588602108,
+        "spearman_inter": 0.7720715934132037,
+        "rel_error_total": 0.04122501626458144,
+        "cpc_inflow": 0.82100210330485,
+        "cpc_outflow": 0.8235402361796895
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6924568339519612,
+        "cpc_inter": 0.6887678935514984,
+        "rmse_log1p_inter": 0.9050864904953101,
+        "rmse_inter": 938.0076482742198,
+        "nrmse_inter": 1.615152487380831,
+        "mae_inter": 354.0572588602108,
+        "spearman_inter": 0.7720715934132037,
+        "rel_error_total": 0.04122501626458144,
+        "cpc_inflow": 0.82100210330485,
+        "cpc_outflow": 0.8235402361796895
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6981438510352894,
+        "cpc_inter": 0.6946042251638084,
+        "rmse_log1p_inter": 0.8676815241905965,
+        "rmse_inter": 937.1181120460759,
+        "nrmse_inter": 1.613620797682836,
+        "mae_inter": 347.41764284926893,
+        "spearman_inter": 0.7938316562234041,
+        "rel_error_total": 0.041225016264581506,
+        "cpc_inflow": 0.8250125767563659,
+        "cpc_outflow": 0.8232518565219675
+      },
+      "mapping_stats": {
+        "n_strict_within": 132,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.001151269323309334,
+      "delta_county": 0.001151269323309334,
+      "delta_subzone": 0.0069876009356193425,
+      "fold": 1
+    },
+    {
+      "city": "Virginia_Beach",
+      "n_tracts": 100,
+      "n_pairs": 9993,
+      "rho_c": 0.9992929292929293,
+      "average_flow": 600.0755079349035,
+      "mean_distance": 10.090116500854492,
+      "n_inter_pairs": 9893,
+      "total_trips": 7512014.0,
+      "total_inter_trips": 5936547.0,
+      "M0": {
+        "cpc": 0.7625894514252506,
+        "cpc_inter": 0.7583478732699822,
+        "rmse_log1p_inter": 0.7633279881796344,
+        "rmse_inter": 623.8225749995494,
+        "nrmse_inter": 1.0395734649233876,
+        "mae_inter": 287.3507485926169,
+        "spearman_inter": 0.8153715657964516,
+        "rel_error_total": 0.018102121212721922,
+        "cpc_inflow": 0.8712955925641638,
+        "cpc_outflow": 0.874805527139446
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7649744671923153,
+        "cpc_inter": 0.7609829336243471,
+        "rmse_log1p_inter": 0.7767058419302632,
+        "rmse_inter": 623.5125088394149,
+        "nrmse_inter": 1.0390567530162453,
+        "mae_inter": 284.217545008165,
+        "spearman_inter": 0.818590371985282,
+        "rel_error_total": 0.018102121212721922,
+        "cpc_inflow": 0.8746249962255859,
+        "cpc_outflow": 0.8783631566615323
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7649744671923153,
+        "cpc_inter": 0.7609829336243471,
+        "rmse_log1p_inter": 0.7767058419302632,
+        "rmse_inter": 623.5125088394149,
+        "nrmse_inter": 1.0390567530162453,
+        "mae_inter": 284.217545008165,
+        "spearman_inter": 0.818590371985282,
+        "rel_error_total": 0.018102121212721922,
+        "cpc_inflow": 0.8746249962255859,
+        "cpc_outflow": 0.8783631566615323
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7721729658076514,
+        "cpc_inter": 0.7683479210573293,
+        "rmse_log1p_inter": 0.7386640267506293,
+        "rmse_inter": 598.5726223187329,
+        "nrmse_inter": 0.9974955058216879,
+        "mae_inter": 275.46466030894817,
+        "spearman_inter": 0.8300270811556828,
+        "rel_error_total": 0.01810212121272187,
+        "cpc_inflow": 0.8823454893491105,
+        "cpc_outflow": 0.874805527139446
+      },
+      "mapping_stats": {
+        "n_strict_within": 100,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.002635060354364893,
+      "delta_county": 0.002635060354364893,
+      "delta_subzone": 0.010000047787347088,
+      "fold": 1
+    },
+    {
+      "city": "Atlanta",
+      "n_tracts": 126,
+      "n_pairs": 15814,
+      "rho_c": 0.9960634920634921,
+      "average_flow": 381.6532381438042,
+      "mean_distance": 8.310260772705078,
+      "n_inter_pairs": 15688,
+      "total_trips": 7987756.0,
+      "total_inter_trips": 5987376.0,
+      "M0": {
+        "cpc": 0.7062162451341665,
+        "cpc_inter": 0.7003604004504395,
+        "rmse_log1p_inter": 0.920376688515058,
+        "rmse_inter": 670.4754895924083,
+        "nrmse_inter": 1.75676614943269,
+        "mae_inter": 205.60318935604377,
+        "spearman_inter": 0.7675636931426203,
+        "rel_error_total": 0.20208295809286828,
+        "cpc_inflow": 0.8274791700614101,
+        "cpc_outflow": 0.829720546158739
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7114540973960696,
+        "cpc_inter": 0.7055982574367752,
+        "rmse_log1p_inter": 0.9056273814728407,
+        "rmse_inter": 657.3053495938285,
+        "nrmse_inter": 1.7222580182751146,
+        "mae_inter": 202.01407137582876,
+        "spearman_inter": 0.7664865333049358,
+        "rel_error_total": 0.20208295809286828,
+        "cpc_inflow": 0.8274913022972689,
+        "cpc_outflow": 0.8299311710465949
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7113471966703078,
+        "cpc_inter": 0.7055394315103295,
+        "rmse_log1p_inter": 0.9054252312090556,
+        "rmse_inter": 657.7073657973812,
+        "nrmse_inter": 1.7233113729001346,
+        "mae_inter": 202.05424555493778,
+        "spearman_inter": 0.7667692981791531,
+        "rel_error_total": 0.20208295809286825,
+        "cpc_inflow": 0.8274617613680147,
+        "cpc_outflow": 0.8297993838456913
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7171650598530914,
+        "cpc_inter": 0.7121477499825599,
+        "rmse_log1p_inter": 0.8636804941369989,
+        "rmse_inter": 649.2981458877517,
+        "nrmse_inter": 1.7012777070768648,
+        "mae_inter": 197.51670821164228,
+        "spearman_inter": 0.7896474338597264,
+        "rel_error_total": 0.20208295809286828,
+        "cpc_inflow": 0.8330417014387362,
+        "cpc_outflow": 0.829720546158739
+      },
+      "mapping_stats": {
+        "n_strict_within": 126,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0052378569863357205,
+      "delta_county": 0.005179031059890038,
+      "delta_subzone": 0.011787349532120461,
+      "fold": 2
+    },
+    {
+      "city": "Boston",
+      "n_tracts": 178,
+      "n_pairs": 31101,
+      "rho_c": 0.9815273281279756,
+      "average_flow": 307.10105419738716,
+      "mean_distance": 6.073319911956787,
+      "n_inter_pairs": 30924,
+      "total_trips": 11845965.0,
+      "total_inter_trips": 9496793.0,
+      "M0": {
+        "cpc": 0.6792675478674765,
+        "cpc_inter": 0.676659958694338,
+        "rmse_log1p_inter": 1.0706859146157683,
+        "rmse_inter": 520.3258735691523,
+        "nrmse_inter": 1.6943148402047372,
+        "mae_inter": 187.22879062329886,
+        "spearman_inter": 0.7042270501168231,
+        "rel_error_total": 0.11434045139707906,
+        "cpc_inflow": 0.8056111075210893,
+        "cpc_outflow": 0.8047754536803895
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6794048997894466,
+        "cpc_inter": 0.6767391597773936,
+        "rmse_log1p_inter": 1.0697720621579003,
+        "rmse_inter": 520.4710050262223,
+        "nrmse_inter": 1.6947874255478557,
+        "mae_inter": 187.18258723344033,
+        "spearman_inter": 0.705052537178671,
+        "rel_error_total": 0.114340451397079,
+        "cpc_inflow": 0.8058600746464304,
+        "cpc_outflow": 0.8050227804417709
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6793788386265529,
+        "cpc_inter": 0.6767070629102916,
+        "rmse_log1p_inter": 1.069813611642465,
+        "rmse_inter": 520.5034054219498,
+        "nrmse_inter": 1.6948929295677366,
+        "mae_inter": 187.20114328429042,
+        "spearman_inter": 0.70495755939036,
+        "rel_error_total": 0.11434045139707906,
+        "cpc_inflow": 0.8058794714210329,
+        "cpc_outflow": 0.8050433243695673
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6839826360111512,
+        "cpc_inter": 0.6814726887826241,
+        "rmse_log1p_inter": 1.0217400605987894,
+        "rmse_inter": 518.0830756813804,
+        "nrmse_inter": 1.6870117135722562,
+        "mae_inter": 184.44244129696344,
+        "spearman_inter": 0.7292840966680599,
+        "rel_error_total": 0.11434045139707906,
+        "cpc_inflow": 0.8081274565464396,
+        "cpc_outflow": 0.8047754536803895
+      },
+      "mapping_stats": {
+        "n_strict_within": 175,
+        "n_nearest_fallback": 3,
+        "fallback_details": [
+          {
+            "tract_idx": 165,
+            "GID_2": "USA.22.11_1",
+            "nearest_distance_m": 269.15162976220057
+          },
+          {
+            "tract_idx": 171,
+            "GID_2": "USA.22.13_1",
+            "nearest_distance_m": 45.84456342980347
+          },
+          {
+            "tract_idx": 177,
+            "GID_2": "USA.22.13_1",
+            "nearest_distance_m": 715.739189531821
+          }
+        ]
+      },
+      "delta_city": 7.920108305559115e-05,
+      "delta_county": 4.710421595355285e-05,
+      "delta_subzone": 0.004812730088286088,
+      "fold": 2
+    },
+    {
+      "city": "Fort_Worth",
+      "n_tracts": 139,
+      "n_pairs": 19288,
+      "rho_c": 0.9982796371598374,
+      "average_flow": 430.2096715233171,
+      "mean_distance": 13.596250534057617,
+      "n_inter_pairs": 19149,
+      "total_trips": 11393723.0,
+      "total_inter_trips": 8238085.0,
+      "M0": {
+        "cpc": 0.7382620472012218,
+        "cpc_inter": 0.7358800294534286,
+        "rmse_log1p_inter": 0.9135590772802727,
+        "rmse_inter": 646.6448801959563,
+        "nrmse_inter": 1.503092382619549,
+        "mae_inter": 230.65743749816977,
+        "spearman_inter": 0.796928278240027,
+        "rel_error_total": 0.029846128407091336,
+        "cpc_inflow": 0.8791408066581173,
+        "cpc_outflow": 0.8830551632588953
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7470663977862909,
+        "cpc_inter": 0.7450074645172093,
+        "rmse_log1p_inter": 0.8381842714506377,
+        "rmse_inter": 632.833505044283,
+        "nrmse_inter": 1.4709885596097851,
+        "mae_inter": 222.68634079249964,
+        "spearman_inter": 0.8075302264394435,
+        "rel_error_total": 0.029846128407091336,
+        "cpc_inflow": 0.8778632930088769,
+        "cpc_outflow": 0.8814739503913436
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7470663977862909,
+        "cpc_inter": 0.7450074645172093,
+        "rmse_log1p_inter": 0.8381842714506377,
+        "rmse_inter": 632.833505044283,
+        "nrmse_inter": 1.4709885596097851,
+        "mae_inter": 222.68634079249964,
+        "spearman_inter": 0.8075302264394435,
+        "rel_error_total": 0.029846128407091336,
+        "cpc_inflow": 0.8778632930088769,
+        "cpc_outflow": 0.8814739503913436
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7631299273763967,
+        "cpc_inter": 0.7617865495470563,
+        "rmse_log1p_inter": 0.7820869302113099,
+        "rmse_inter": 561.5128516708359,
+        "nrmse_inter": 1.3052074112666763,
+        "mae_inter": 208.02951189670668,
+        "spearman_inter": 0.8307681490479456,
+        "rel_error_total": 0.029846128407091336,
+        "cpc_inflow": 0.8870539972856938,
+        "cpc_outflow": 0.8830551632588953
+      },
+      "mapping_stats": {
+        "n_strict_within": 139,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.009127435063780776,
+      "delta_county": 0.009127435063780776,
+      "delta_subzone": 0.025906520093627705,
+      "fold": 2
+    },
+    {
+      "city": "Indianapolis",
+      "n_tracts": 203,
+      "n_pairs": 41165,
+      "rho_c": 0.9989269862946886,
+      "average_flow": 297.0272447634393,
+      "mean_distance": 13.267685890197754,
+      "n_inter_pairs": 40962,
+      "total_trips": 15467070.0,
+      "total_inter_trips": 12166830.0,
+      "M0": {
+        "cpc": 0.7030116483037161,
+        "cpc_inter": 0.7052900296198868,
+        "rmse_log1p_inter": 0.9925282440270875,
+        "rmse_inter": 533.9549842705477,
+        "nrmse_inter": 1.7976633244394942,
+        "mae_inter": 179.9120040317979,
+        "spearman_inter": 0.7324249857971689,
+        "rel_error_total": 0.05529700403251289,
+        "cpc_inflow": 0.8516862271917153,
+        "cpc_outflow": 0.8509434857607534
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.707463036973819,
+        "cpc_inter": 0.7093880423872722,
+        "rmse_log1p_inter": 0.9530472197077812,
+        "rmse_inter": 529.2713310573628,
+        "nrmse_inter": 1.7818948947894968,
+        "mae_inter": 177.40771926456455,
+        "spearman_inter": 0.7399884970245317,
+        "rel_error_total": 0.05529700403251289,
+        "cpc_inflow": 0.849161666830764,
+        "cpc_outflow": 0.8482600845951279
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.707463036973819,
+        "cpc_inter": 0.7093880423872722,
+        "rmse_log1p_inter": 0.9530472197077812,
+        "rmse_inter": 529.2713310573628,
+        "nrmse_inter": 1.7818948947894968,
+        "mae_inter": 177.40771926456455,
+        "spearman_inter": 0.7399884970245317,
+        "rel_error_total": 0.05529700403251289,
+        "cpc_inflow": 0.849161666830764,
+        "cpc_outflow": 0.8482600845951279
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7170988755188357,
+        "cpc_inter": 0.7199068453107209,
+        "rmse_log1p_inter": 0.9121909006323295,
+        "rmse_inter": 505.8623411345197,
+        "nrmse_inter": 1.7030839764796741,
+        "mae_inter": 170.98352588709577,
+        "spearman_inter": 0.758451481831873,
+        "rel_error_total": 0.05529700403251289,
+        "cpc_inflow": 0.8611219884752691,
+        "cpc_outflow": 0.8509434857607534
+      },
+      "mapping_stats": {
+        "n_strict_within": 203,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.004098012767385306,
+      "delta_county": 0.004098012767385306,
+      "delta_subzone": 0.014616815690834062,
+      "fold": 2
+    },
+    {
+      "city": "Los_Angeles",
+      "n_tracts": 993,
+      "n_pairs": 786365,
+      "rho_c": 0.7972866517233538,
+      "average_flow": 69.71943486653458,
+      "mean_distance": 17.441654205322266,
+      "n_inter_pairs": 785372,
+      "total_trips": 65329401.0,
+      "total_inter_trips": 54755692.0,
+      "M0": {
+        "cpc": 0.6164545369953608,
+        "cpc_inter": 0.6194728713928433,
+        "rmse_log1p_inter": 1.5039701099805913,
+        "rmse_inter": 184.7789449753122,
+        "nrmse_inter": 2.6503218984640156,
+        "mae_inter": 65.77810046369972,
+        "spearman_inter": 0.6648448237450814,
+        "rel_error_total": 0.4788880610565623,
+        "cpc_inflow": 0.7589990243369842,
+        "cpc_outflow": 0.7605122413647029
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6268486734703034,
+        "cpc_inter": 0.6315304373323333,
+        "rmse_log1p_inter": 1.3098054804565393,
+        "rmse_inter": 202.31827671762173,
+        "nrmse_inter": 2.9018920922827895,
+        "mae_inter": 63.69578030219111,
+        "spearman_inter": 0.6749348403277451,
+        "rel_error_total": 0.4788880610565623,
+        "cpc_inflow": 0.754871094273554,
+        "cpc_outflow": 0.7562176296537975
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6268486734703034,
+        "cpc_inter": 0.6315304373323333,
+        "rmse_log1p_inter": 1.3098054804565393,
+        "rmse_inter": 202.31827671762173,
+        "nrmse_inter": 2.9018920922827895,
+        "mae_inter": 63.69578030219111,
+        "spearman_inter": 0.6749348403277451,
+        "rel_error_total": 0.4788880610565623,
+        "cpc_inflow": 0.754871094273554,
+        "cpc_outflow": 0.7562176296537975
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6375644457824502,
+        "cpc_inter": 0.6420424829372523,
+        "rmse_log1p_inter": 1.2639250940079798,
+        "rmse_inter": 208.70339875958072,
+        "nrmse_inter": 2.9934751932385297,
+        "mae_inter": 61.878390980936565,
+        "spearman_inter": 0.6860096560073691,
+        "rel_error_total": 0.4788880610565623,
+        "cpc_inflow": 0.7608594635284979,
+        "cpc_outflow": 0.7605122413647029
+      },
+      "mapping_stats": {
+        "n_strict_within": 990,
+        "n_nearest_fallback": 3,
+        "fallback_details": [
+          {
+            "tract_idx": 901,
+            "GID_2": "USA.5.19_1",
+            "nearest_distance_m": 33.21411124867559
+          },
+          {
+            "tract_idx": 908,
+            "GID_2": "USA.5.19_1",
+            "nearest_distance_m": 159.65942787397663
+          },
+          {
+            "tract_idx": 976,
+            "GID_2": "USA.5.19_1",
+            "nearest_distance_m": 160.28243465732987
+          }
+        ]
+      },
+      "delta_city": 0.012057565939489923,
+      "delta_county": 0.012057565939489923,
+      "delta_subzone": 0.022569611544408952,
+      "fold": 2
+    },
+    {
+      "city": "Mesa",
+      "n_tracts": 105,
+      "n_pairs": 11015,
+      "rho_c": 0.9990842490842491,
+      "average_flow": 371.88753437213563,
+      "mean_distance": 10.217183113098145,
+      "n_inter_pairs": 10910,
+      "total_trips": 5501851.0,
+      "total_inter_trips": 4057293.0,
+      "M0": {
+        "cpc": 0.7470714187964312,
+        "cpc_inter": 0.7457733484500931,
+        "rmse_log1p_inter": 0.8998053252321748,
+        "rmse_inter": 434.3213381282517,
+        "nrmse_inter": 1.1678835615222332,
+        "mae_inter": 198.94303044389957,
+        "spearman_inter": 0.8032621975437122,
+        "rel_error_total": 0.10420350719437706,
+        "cpc_inflow": 0.8543165591226879,
+        "cpc_outflow": 0.8598985446404815
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7499399525973285,
+        "cpc_inter": 0.7503665584486633,
+        "rmse_log1p_inter": 0.8615932590119053,
+        "rmse_inter": 430.1450927768322,
+        "nrmse_inter": 1.1566537004340676,
+        "mae_inter": 195.3418734713057,
+        "spearman_inter": 0.8044060337977011,
+        "rel_error_total": 0.10420350719437699,
+        "cpc_inflow": 0.8521910918489471,
+        "cpc_outflow": 0.8577708036889437
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7499399525973285,
+        "cpc_inter": 0.7503665584486633,
+        "rmse_log1p_inter": 0.8615932590119053,
+        "rmse_inter": 430.1450927768322,
+        "nrmse_inter": 1.1566537004340676,
+        "mae_inter": 195.3418734713057,
+        "spearman_inter": 0.8044060337977011,
+        "rel_error_total": 0.10420350719437699,
+        "cpc_inflow": 0.8521910918489471,
+        "cpc_outflow": 0.8577708036889437
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.758500794853906,
+        "cpc_inter": 0.7594442089141201,
+        "rmse_log1p_inter": 0.8126901915843852,
+        "rmse_inter": 416.22381724928255,
+        "nrmse_inter": 1.1192195994200254,
+        "mae_inter": 188.2401870245932,
+        "spearman_inter": 0.8224139939325074,
+        "rel_error_total": 0.10420350719437706,
+        "cpc_inflow": 0.8615594101305054,
+        "cpc_outflow": 0.8598985446404815
+      },
+      "mapping_stats": {
+        "n_strict_within": 105,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.004593209998570158,
+      "delta_county": 0.004593209998570158,
+      "delta_subzone": 0.01367086046402699,
+      "fold": 2
+    },
+    {
+      "city": "Oklahoma_City",
+      "n_tracts": 166,
+      "n_pairs": 27466,
+      "rho_c": 0.9967141292442497,
+      "average_flow": 256.4868131868132,
+      "mean_distance": 11.947696685791016,
+      "n_inter_pairs": 27300,
+      "total_trips": 8876079.0,
+      "total_inter_trips": 7002090.0,
+      "M0": {
+        "cpc": 0.6771812911943402,
+        "cpc_inter": 0.6880844751806521,
+        "rmse_log1p_inter": 0.9710636628590787,
+        "rmse_inter": 409.96656195317127,
+        "nrmse_inter": 1.5983923573278227,
+        "mae_inter": 154.6421905628549,
+        "spearman_inter": 0.6716336850091603,
+        "rel_error_total": 0.06729425770173093,
+        "cpc_inflow": 0.8171467946847866,
+        "cpc_outflow": 0.8180751903218032
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6757405942467873,
+        "cpc_inter": 0.6868458821379647,
+        "rmse_log1p_inter": 0.9808824763023747,
+        "rmse_inter": 410.77074255762926,
+        "nrmse_inter": 1.6015277255538385,
+        "mae_inter": 155.25633057027923,
+        "spearman_inter": 0.6693350782310898,
+        "rel_error_total": 0.06729425770173093,
+        "cpc_inflow": 0.8187467531142838,
+        "cpc_outflow": 0.8192744592271998
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6757405942467873,
+        "cpc_inter": 0.6868458821379647,
+        "rmse_log1p_inter": 0.9808824763023747,
+        "rmse_inter": 410.77074255762926,
+        "nrmse_inter": 1.6015277255538385,
+        "mae_inter": 155.25633057027923,
+        "spearman_inter": 0.6693350782310898,
+        "rel_error_total": 0.06729425770173093,
+        "cpc_inflow": 0.8187467531142838,
+        "cpc_outflow": 0.8192744592271998
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6870829259698142,
+        "cpc_inter": 0.6968166165311916,
+        "rmse_log1p_inter": 0.9464893111985194,
+        "rmse_inter": 397.70581536984514,
+        "nrmse_inter": 1.550589718155118,
+        "mae_inter": 150.309732827335,
+        "spearman_inter": 0.6888840612495711,
+        "rel_error_total": 0.06729425770173093,
+        "cpc_inflow": 0.8349249457818061,
+        "cpc_outflow": 0.8180751903218032
+      },
+      "mapping_stats": {
+        "n_strict_within": 166,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": -0.0012385930426873637,
+      "delta_county": -0.0012385930426873637,
+      "delta_subzone": 0.008732141350539568,
+      "fold": 2
+    },
+    {
+      "city": "Raleigh",
+      "n_tracts": 73,
+      "n_pairs": 5328,
+      "rho_c": 0.9998097412480974,
+      "average_flow": 870.6660323501427,
+      "mean_distance": 9.564995765686035,
+      "n_inter_pairs": 5255,
+      "total_trips": 6306409.0,
+      "total_inter_trips": 4575350.0,
+      "M0": {
+        "cpc": 0.7681261909871476,
+        "cpc_inter": 0.7672186076526538,
+        "rmse_log1p_inter": 0.7069147892771063,
+        "rmse_inter": 903.8278998116654,
+        "nrmse_inter": 1.0380879306523658,
+        "mae_inter": 397.6913393865719,
+        "spearman_inter": 0.828826271752634,
+        "rel_error_total": 0.03781662895411102,
+        "cpc_inflow": 0.8893462312791637,
+        "cpc_outflow": 0.8921457904809581
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.77190572492565,
+        "cpc_inter": 0.7721553324587492,
+        "rmse_log1p_inter": 0.6842616438993937,
+        "rmse_inter": 871.4140130416532,
+        "nrmse_inter": 1.0008590902409404,
+        "mae_inter": 389.24920895185505,
+        "spearman_inter": 0.8302242648845478,
+        "rel_error_total": 0.03781662895411102,
+        "cpc_inflow": 0.8876282950738766,
+        "cpc_outflow": 0.8903277735948186
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.77190572492565,
+        "cpc_inter": 0.7721553324587492,
+        "rmse_log1p_inter": 0.6842616438993937,
+        "rmse_inter": 871.4140130416532,
+        "nrmse_inter": 1.0008590902409404,
+        "mae_inter": 389.24920895185505,
+        "spearman_inter": 0.8302242648845478,
+        "rel_error_total": 0.03781662895411102,
+        "cpc_inflow": 0.8876282950738766,
+        "cpc_outflow": 0.8903277735948186
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.782588116850587,
+        "cpc_inter": 0.7838285116913912,
+        "rmse_log1p_inter": 0.6545314806513368,
+        "rmse_inter": 796.5243263336556,
+        "nrmse_inter": 0.9148448391671371,
+        "mae_inter": 369.2994532676037,
+        "spearman_inter": 0.846246846283445,
+        "rel_error_total": 0.03781662895411102,
+        "cpc_inflow": 0.9010626215110488,
+        "cpc_outflow": 0.8921457904809581
+      },
+      "mapping_stats": {
+        "n_strict_within": 73,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.004936724806095416,
+      "delta_county": 0.004936724806095416,
+      "delta_subzone": 0.01660990403873741,
+      "fold": 2
+    },
+    {
+      "city": "Sacramento",
+      "n_tracts": 100,
+      "n_pairs": 9994,
+      "rho_c": 0.9993939393939394,
+      "average_flow": 474.5676167374166,
+      "mean_distance": 9.033552169799805,
+      "n_inter_pairs": 9894,
+      "total_trips": 6411562.0,
+      "total_inter_trips": 4695372.0,
+      "M0": {
+        "cpc": 0.7580425293510994,
+        "cpc_inter": 0.7543544616859542,
+        "rmse_log1p_inter": 0.8199410638654898,
+        "rmse_inter": 592.8453595265461,
+        "nrmse_inter": 1.2492326459236132,
+        "mae_inter": 231.22749742980628,
+        "spearman_inter": 0.7919536384152507,
+        "rel_error_total": 0.016402491425646887,
+        "cpc_inflow": 0.8749217240752246,
+        "cpc_outflow": 0.8773961177032791
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7613846951587625,
+        "cpc_inter": 0.7578849954271623,
+        "rmse_log1p_inter": 0.8048256369445483,
+        "rmse_inter": 586.1637239035841,
+        "nrmse_inter": 1.2351532283921403,
+        "mae_inter": 227.905228275668,
+        "spearman_inter": 0.7930390118693764,
+        "rel_error_total": 0.016402491425646887,
+        "cpc_inflow": 0.8753240708460837,
+        "cpc_outflow": 0.8780118815674697
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7613846951587625,
+        "cpc_inter": 0.7578849954271623,
+        "rmse_log1p_inter": 0.8048256369445483,
+        "rmse_inter": 586.1637239035841,
+        "nrmse_inter": 1.2351532283921403,
+        "mae_inter": 227.905228275668,
+        "spearman_inter": 0.7930390118693764,
+        "rel_error_total": 0.016402491425646887,
+        "cpc_inflow": 0.8753240708460837,
+        "cpc_outflow": 0.8780118815674697
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7692140154974435,
+        "cpc_inter": 0.7661678580122464,
+        "rmse_log1p_inter": 0.7575310613845382,
+        "rmse_inter": 575.7717442536435,
+        "nrmse_inter": 1.213255443369673,
+        "mae_inter": 220.10682410887458,
+        "spearman_inter": 0.8175950803152406,
+        "rel_error_total": 0.016402491425646887,
+        "cpc_inflow": 0.8807116261617414,
+        "cpc_outflow": 0.8773961177032791
+      },
+      "mapping_stats": {
+        "n_strict_within": 100,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0035305337412080418,
+      "delta_county": 0.0035305337412080418,
+      "delta_subzone": 0.011813396326292191,
+      "fold": 2
+    },
+    {
+      "city": "San_Antonio",
+      "n_tracts": 280,
+      "n_pairs": 77821,
+      "rho_c": 0.9925883256528417,
+      "average_flow": 296.77374550237937,
+      "mean_distance": 15.257075309753418,
+      "n_inter_pairs": 77541,
+      "total_trips": 28590574.0,
+      "total_inter_trips": 23012133.0,
+      "M0": {
+        "cpc": 0.7297967821668271,
+        "cpc_inter": 0.7285276229212703,
+        "rmse_log1p_inter": 0.9389921935414942,
+        "rmse_inter": 467.3767587756151,
+        "nrmse_inter": 1.574858847383681,
+        "mae_inter": 158.76965114821832,
+        "spearman_inter": 0.7945260744276945,
+        "rel_error_total": 0.02931468237343912,
+        "cpc_inflow": 0.8761725354984039,
+        "cpc_outflow": 0.8767857382285077
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.738481164882879,
+        "cpc_inter": 0.7379014016707267,
+        "rmse_log1p_inter": 0.8938528479833335,
+        "rmse_inter": 444.0649933712277,
+        "nrmse_inter": 1.4963082149315914,
+        "mae_inter": 153.28846201109468,
+        "spearman_inter": 0.7957067242862556,
+        "rel_error_total": 0.02931468237343912,
+        "cpc_inflow": 0.8754115360721603,
+        "cpc_outflow": 0.8760641856249006
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.738481164882879,
+        "cpc_inter": 0.7379014016707267,
+        "rmse_log1p_inter": 0.8938528479833335,
+        "rmse_inter": 444.0649933712277,
+        "nrmse_inter": 1.4963082149315914,
+        "mae_inter": 153.28846201109468,
+        "spearman_inter": 0.7957067242862556,
+        "rel_error_total": 0.02931468237343912,
+        "cpc_inflow": 0.8754115360721603,
+        "cpc_outflow": 0.8760641856249006
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7470597654853577,
+        "cpc_inter": 0.7462391180690999,
+        "rmse_log1p_inter": 0.8599169065637522,
+        "rmse_inter": 429.6292365274649,
+        "nrmse_inter": 1.4476659173478685,
+        "mae_inter": 148.4120848680371,
+        "spearman_inter": 0.8102922731618688,
+        "rel_error_total": 0.02931468237343912,
+        "cpc_inflow": 0.8824636633505109,
+        "cpc_outflow": 0.8767857382285077
+      },
+      "mapping_stats": {
+        "n_strict_within": 280,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.00937377874945644,
+      "delta_county": 0.00937377874945644,
+      "delta_subzone": 0.01771149514782966,
+      "fold": 2
+    },
+    {
+      "city": "Baltimore",
+      "n_tracts": 200,
+      "n_pairs": 39732,
+      "rho_c": 0.9932663316582916,
+      "average_flow": 186.3635535768491,
+      "mean_distance": 6.4683918952941895,
+      "n_inter_pairs": 39532,
+      "total_trips": 9231165.0,
+      "total_inter_trips": 7367324.0,
+      "M0": {
+        "cpc": 0.6877429713712335,
+        "cpc_inter": 0.6846437971817881,
+        "rmse_log1p_inter": 1.1162679030821554,
+        "rmse_inter": 309.0292171829326,
+        "nrmse_inter": 1.658206292227095,
+        "mae_inter": 138.19298434424766,
+        "spearman_inter": 0.6999683512705542,
+        "rel_error_total": 0.35126562005353473,
+        "cpc_inflow": 0.7955404574093697,
+        "cpc_outflow": 0.7971662949954622
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6882269901325944,
+        "cpc_inter": 0.6851447555784617,
+        "rmse_log1p_inter": 1.098897034187351,
+        "rmse_inter": 311.35859275532795,
+        "nrmse_inter": 1.6707053862167083,
+        "mae_inter": 137.973968444702,
+        "spearman_inter": 0.7021887413546047,
+        "rel_error_total": 0.35126562005353473,
+        "cpc_inflow": 0.7959750155132954,
+        "cpc_outflow": 0.7975262485902105
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6882269901325944,
+        "cpc_inter": 0.6851447555784617,
+        "rmse_log1p_inter": 1.098897034187351,
+        "rmse_inter": 311.35859275532795,
+        "nrmse_inter": 1.6707053862167083,
+        "mae_inter": 137.973968444702,
+        "spearman_inter": 0.7021887413546047,
+        "rel_error_total": 0.35126562005353473,
+        "cpc_inflow": 0.7959750155132954,
+        "cpc_outflow": 0.7975262485902105
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.693470806887576,
+        "cpc_inter": 0.6903524099233457,
+        "rmse_log1p_inter": 1.0750405090396724,
+        "rmse_inter": 316.0687764666911,
+        "nrmse_inter": 1.6959795539440414,
+        "mae_inter": 135.69279604689748,
+        "spearman_inter": 0.7212881716356749,
+        "rel_error_total": 0.35126562005353473,
+        "cpc_inflow": 0.7975242749979725,
+        "cpc_outflow": 0.7971662949954622
+      },
+      "mapping_stats": {
+        "n_strict_within": 199,
+        "n_nearest_fallback": 1,
+        "fallback_details": [
+          {
+            "tract_idx": 144,
+            "GID_2": "USA.21.3_1",
+            "nearest_distance_m": 186.93604768659227
+          }
+        ]
+      },
+      "delta_city": 0.0005009583966735232,
+      "delta_county": 0.0005009583966735232,
+      "delta_subzone": 0.005708612741557539,
+      "fold": 3
+    },
+    {
+      "city": "Chicago",
+      "n_tracts": 780,
+      "n_pairs": 528714,
+      "rho_c": 0.8688555347091933,
+      "average_flow": 73.85575848496214,
+      "mean_distance": 12.409200668334961,
+      "n_inter_pairs": 527934,
+      "total_trips": 46470427.0,
+      "total_inter_trips": 38990966.0,
+      "M0": {
+        "cpc": 0.6595830266354407,
+        "cpc_inter": 0.6569117882685505,
+        "rmse_log1p_inter": 1.3412168424980402,
+        "rmse_inter": 230.71096225528842,
+        "nrmse_inter": 3.123804656373054,
+        "mae_inter": 58.26933333583549,
+        "spearman_inter": 0.6943421262797749,
+        "rel_error_total": 0.299613444442157,
+        "cpc_inflow": 0.7931641187188795,
+        "cpc_outflow": 0.7940911734029906
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6622357610874876,
+        "cpc_inter": 0.6603127215426887,
+        "rmse_log1p_inter": 1.2798057428046044,
+        "rmse_inter": 231.9989943975958,
+        "nrmse_inter": 3.141244490026237,
+        "mae_inter": 57.69201325929752,
+        "spearman_inter": 0.6952541688475297,
+        "rel_error_total": 0.2996134444421573,
+        "cpc_inflow": 0.7920802136861412,
+        "cpc_outflow": 0.7929795376545344
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6622578269169611,
+        "cpc_inter": 0.660342471183729,
+        "rmse_log1p_inter": 1.2797094403733302,
+        "rmse_inter": 231.99943044720976,
+        "nrmse_inter": 3.141250394096859,
+        "mae_inter": 57.6869654658224,
+        "spearman_inter": 0.6952369889478004,
+        "rel_error_total": 0.29961344444215693,
+        "cpc_inflow": 0.7920972170835548,
+        "cpc_outflow": 0.7929725800851178
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.669790604812358,
+        "cpc_inter": 0.6677481441182377,
+        "rmse_log1p_inter": 1.2263124093213857,
+        "rmse_inter": 229.00824387654794,
+        "nrmse_inter": 3.100750010213172,
+        "mae_inter": 56.4291213577932,
+        "spearman_inter": 0.7084286514545873,
+        "rel_error_total": 0.299613444442157,
+        "cpc_inflow": 0.7977464275702006,
+        "cpc_outflow": 0.7940911734029906
+      },
+      "mapping_stats": {
+        "n_strict_within": 780,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0034009332741382625,
+      "delta_county": 0.0034306829151785623,
+      "delta_subzone": 0.01083635584968723,
+      "fold": 3
+    },
+    {
+      "city": "Detroit",
+      "n_tracts": 297,
+      "n_pairs": 85793,
+      "rho_c": 0.9725179725179726,
+      "average_flow": 83.80725414054459,
+      "mean_distance": 10.733064651489258,
+      "n_inter_pairs": 85496,
+      "total_trips": 9016292.0,
+      "total_inter_trips": 7165185.0,
+      "M0": {
+        "cpc": 0.6398525521221594,
+        "cpc_inter": 0.6416807861847013,
+        "rmse_log1p_inter": 1.3806818997993038,
+        "rmse_inter": 175.79842642417134,
+        "nrmse_inter": 2.0976516678300636,
+        "mae_inter": 79.85422599501925,
+        "spearman_inter": 0.6581666465746581,
+        "rel_error_total": 0.6591336959934346,
+        "cpc_inflow": 0.7387617024784553,
+        "cpc_outflow": 0.7382089994968575
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6398586858591271,
+        "cpc_inter": 0.6420929683485538,
+        "rmse_log1p_inter": 1.3578104218362386,
+        "rmse_inter": 181.5130078108726,
+        "nrmse_inter": 2.165838860517679,
+        "mae_inter": 79.76258407080546,
+        "spearman_inter": 0.6590690629463829,
+        "rel_error_total": 0.6591336959934347,
+        "cpc_inflow": 0.7387358494257223,
+        "cpc_outflow": 0.7382385995581773
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6400365222306014,
+        "cpc_inter": 0.6422586822306529,
+        "rmse_log1p_inter": 1.357182391648993,
+        "rmse_inter": 181.33709390592603,
+        "nrmse_inter": 2.1637398309438,
+        "mae_inter": 79.72564594034934,
+        "spearman_inter": 0.6594656965443969,
+        "rel_error_total": 0.6591336959934346,
+        "cpc_inflow": 0.7387931594764364,
+        "cpc_outflow": 0.7383449190597782
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.64701786678707,
+        "cpc_inter": 0.6486151818970177,
+        "rmse_log1p_inter": 1.3025353910385224,
+        "rmse_inter": 183.14524139413552,
+        "nrmse_inter": 2.1853149022995235,
+        "mae_inter": 78.30881151460028,
+        "spearman_inter": 0.690187553026321,
+        "rel_error_total": 0.6591336959934346,
+        "cpc_inflow": 0.7390619553113389,
+        "cpc_outflow": 0.7382089994968575
+      },
+      "mapping_stats": {
+        "n_strict_within": 297,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0004121821638525258,
+      "delta_county": 0.000577896045951598,
+      "delta_subzone": 0.006934395712316466,
+      "fold": 3
+    },
+    {
+      "city": "Fresno",
+      "n_tracts": 100,
+      "n_pairs": 10000,
+      "rho_c": 1.0,
+      "average_flow": 640.3832323232323,
+      "mean_distance": 8.416534423828125,
+      "n_inter_pairs": 9900,
+      "total_trips": 8144338.0,
+      "total_inter_trips": 6339794.0,
+      "M0": {
+        "cpc": 0.757934390288059,
+        "cpc_inter": 0.7613086320716826,
+        "rmse_log1p_inter": 0.6973943365710241,
+        "rmse_inter": 662.810926815951,
+        "nrmse_inter": 1.0350223012731827,
+        "mae_inter": 304.0843963033503,
+        "spearman_inter": 0.7900159116414812,
+        "rel_error_total": 0.0368688234793431,
+        "cpc_inflow": 0.8695542880773305,
+        "cpc_outflow": 0.8710785860049004
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.759168547635777,
+        "cpc_inter": 0.7625772344406707,
+        "rmse_log1p_inter": 0.6893264061846699,
+        "rmse_inter": 658.9017483970306,
+        "nrmse_inter": 1.0289178653329436,
+        "mae_inter": 302.47014323209754,
+        "spearman_inter": 0.7931134247740693,
+        "rel_error_total": 0.03686882347934315,
+        "cpc_inflow": 0.8695869061355102,
+        "cpc_outflow": 0.8708918503346591
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.759168547635777,
+        "cpc_inter": 0.7625772344406707,
+        "rmse_log1p_inter": 0.6893264061846699,
+        "rmse_inter": 658.9017483970306,
+        "nrmse_inter": 1.0289178653329436,
+        "mae_inter": 302.47014323209754,
+        "spearman_inter": 0.7931134247740693,
+        "rel_error_total": 0.03686882347934315,
+        "cpc_inflow": 0.8695869061355102,
+        "cpc_outflow": 0.8708918503346591
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7648043758023085,
+        "cpc_inter": 0.7682580194730755,
+        "rmse_log1p_inter": 0.6649323235055596,
+        "rmse_inter": 650.6026593315256,
+        "nrmse_inter": 1.0159582988630396,
+        "mae_inter": 295.2339369166466,
+        "spearman_inter": 0.8102913058518192,
+        "rel_error_total": 0.0368688234793431,
+        "cpc_inflow": 0.8751337751271867,
+        "cpc_outflow": 0.8710785860049004
+      },
+      "mapping_stats": {
+        "n_strict_within": 100,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0012686023689880699,
+      "delta_county": 0.0012686023689880699,
+      "delta_subzone": 0.006949387401392837,
+      "fold": 3
+    },
+    {
+      "city": "Jacksonville",
+      "n_tracts": 163,
+      "n_pairs": 26547,
+      "rho_c": 0.9991668560175717,
+      "average_flow": 546.6711643420255,
+      "mean_distance": 16.21391487121582,
+      "n_inter_pairs": 26384,
+      "total_trips": 18293354.0,
+      "total_inter_trips": 14423372.0,
+      "M0": {
+        "cpc": 0.6692012065367451,
+        "cpc_inter": 0.66826085512049,
+        "rmse_log1p_inter": 0.9473867820463538,
+        "rmse_inter": 875.6440738709613,
+        "nrmse_inter": 1.6017747614782067,
+        "mae_inter": 316.4658630609103,
+        "spearman_inter": 0.7099809104765532,
+        "rel_error_total": 0.2549952276267196,
+        "cpc_inflow": 0.7980499198213681,
+        "cpc_outflow": 0.7973704253600739
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6692388972495507,
+        "cpc_inter": 0.6692546404974191,
+        "rmse_log1p_inter": 0.9429362214577021,
+        "rmse_inter": 873.2704095085049,
+        "nrmse_inter": 1.5974327282463765,
+        "mae_inter": 315.51750335035973,
+        "spearman_inter": 0.7126709710642675,
+        "rel_error_total": 0.2549952276267196,
+        "cpc_inflow": 0.7974996798644317,
+        "cpc_outflow": 0.7967866601802104
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6692388972495507,
+        "cpc_inter": 0.6692546404974191,
+        "rmse_log1p_inter": 0.9429362214577021,
+        "rmse_inter": 873.2704095085049,
+        "nrmse_inter": 1.5974327282463765,
+        "mae_inter": 315.51750335035973,
+        "spearman_inter": 0.7126709710642675,
+        "rel_error_total": 0.2549952276267196,
+        "cpc_inflow": 0.7974996798644317,
+        "cpc_outflow": 0.7967866601802104
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6819150753159715,
+        "cpc_inter": 0.6822995332759225,
+        "rmse_log1p_inter": 0.9034256076056155,
+        "rmse_inter": 825.431105853481,
+        "nrmse_inter": 1.5099225269124474,
+        "mae_inter": 303.0720577029077,
+        "spearman_inter": 0.7398363233587736,
+        "rel_error_total": 0.2549952276267196,
+        "cpc_inflow": 0.8076314754094724,
+        "cpc_outflow": 0.7973704253600739
+      },
+      "mapping_stats": {
+        "n_strict_within": 163,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0009937853769290683,
+      "delta_county": 0.0009937853769290683,
+      "delta_subzone": 0.014038678155432471,
+      "fold": 3
+    },
+    {
+      "city": "Las_Vegas",
+      "n_tracts": 140,
+      "n_pairs": 19527,
+      "rho_c": 0.9962487153134635,
+      "average_flow": 289.64187342033324,
+      "mean_distance": 10.436408996582031,
+      "n_inter_pairs": 19387,
+      "total_trips": 7390956.0,
+      "total_inter_trips": 5615287.0,
+      "M0": {
+        "cpc": 0.7556716329769962,
+        "cpc_inter": 0.7551848452591875,
+        "rmse_log1p_inter": 0.8232194916372375,
+        "rmse_inter": 348.80625488891724,
+        "nrmse_inter": 1.2042673622081004,
+        "mae_inter": 143.96096629882945,
+        "spearman_inter": 0.8226273165344603,
+        "rel_error_total": 0.03202457239029879,
+        "cpc_inflow": 0.8686102098234271,
+        "cpc_outflow": 0.8701001366368355
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7557010347427952,
+        "cpc_inter": 0.7554279145789841,
+        "rmse_log1p_inter": 0.841164292856829,
+        "rmse_inter": 347.75576065505237,
+        "nrmse_inter": 1.2006404894032128,
+        "mae_inter": 143.81714488837358,
+        "spearman_inter": 0.8240827376466121,
+        "rel_error_total": 0.03202457239029879,
+        "cpc_inflow": 0.8696879798740978,
+        "cpc_outflow": 0.8712398791378103
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7557010347427952,
+        "cpc_inter": 0.7554279145789841,
+        "rmse_log1p_inter": 0.841164292856829,
+        "rmse_inter": 347.75576065505237,
+        "nrmse_inter": 1.2006404894032128,
+        "mae_inter": 143.81714488837358,
+        "spearman_inter": 0.8240827376466121,
+        "rel_error_total": 0.03202457239029879,
+        "cpc_inflow": 0.8696879798740978,
+        "cpc_outflow": 0.8712398791378103
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.761751799557486,
+        "cpc_inter": 0.7614107073280496,
+        "rmse_log1p_inter": 0.7872569654566989,
+        "rmse_inter": 342.913844602183,
+        "nrmse_inter": 1.1839235831227366,
+        "mae_inter": 140.29943394023942,
+        "spearman_inter": 0.8412727989329994,
+        "rel_error_total": 0.03202457239029879,
+        "cpc_inflow": 0.8762638798116656,
+        "cpc_outflow": 0.8701001366368355
+      },
+      "mapping_stats": {
+        "n_strict_within": 140,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.00024306931979656277,
+      "delta_county": 0.00024306931979656277,
+      "delta_subzone": 0.006225862068862109,
+      "fold": 3
+    },
+    {
+      "city": "Louisville",
+      "n_tracts": 75,
+      "n_pairs": 5625,
+      "rho_c": 1.0,
+      "average_flow": 463.2972972972973,
+      "mean_distance": 6.686794281005859,
+      "n_inter_pairs": 5550,
+      "total_trips": 3455665.0,
+      "total_inter_trips": 2571300.0,
+      "M0": {
+        "cpc": 0.7754790242709821,
+        "cpc_inter": 0.7708268169431974,
+        "rmse_log1p_inter": 0.6646068981734029,
+        "rmse_inter": 489.5375667285285,
+        "nrmse_inter": 1.0566380800930786,
+        "mae_inter": 201.25785156152628,
+        "spearman_inter": 0.8382304780450677,
+        "rel_error_total": 0.10469646008280269,
+        "cpc_inflow": 0.8724156322134649,
+        "cpc_outflow": 0.8740188055087533
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7752507152736439,
+        "cpc_inter": 0.7706384209236972,
+        "rmse_log1p_inter": 0.6715615462081613,
+        "rmse_inter": 490.1204651175863,
+        "nrmse_inter": 1.057896232023725,
+        "mae_inter": 201.4231763155092,
+        "spearman_inter": 0.8357622261478698,
+        "rel_error_total": 0.10469646008280269,
+        "cpc_inflow": 0.8731445415112519,
+        "cpc_outflow": 0.8745922334208897
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7752507152736439,
+        "cpc_inter": 0.7706384209236972,
+        "rmse_log1p_inter": 0.6715615462081613,
+        "rmse_inter": 490.1204651175863,
+        "nrmse_inter": 1.057896232023725,
+        "mae_inter": 201.4231763155092,
+        "spearman_inter": 0.8357622261478698,
+        "rel_error_total": 0.10469646008280269,
+        "cpc_inflow": 0.8731445415112519,
+        "cpc_outflow": 0.8745922334208897
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7799991094963227,
+        "cpc_inter": 0.7761512378672722,
+        "rmse_log1p_inter": 0.6276302757685358,
+        "rmse_inter": 487.1030876577916,
+        "nrmse_inter": 1.0513834000314017,
+        "mae_inter": 196.577243575397,
+        "spearman_inter": 0.8587968171399013,
+        "rel_error_total": 0.10469646008280269,
+        "cpc_inflow": 0.8786952630626406,
+        "cpc_outflow": 0.8740188055087533
+      },
+      "mapping_stats": {
+        "n_strict_within": 75,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": -0.00018839601950026985,
+      "delta_county": -0.00018839601950026985,
+      "delta_subzone": 0.005324420924074813,
+      "fold": 3
+    },
+    {
+      "city": "Oakland",
+      "n_tracts": 113,
+      "n_pairs": 12757,
+      "rho_c": 0.9990518331226296,
+      "average_flow": 341.2258778867447,
+      "mean_distance": 6.06102180480957,
+      "n_inter_pairs": 12644,
+      "total_trips": 5451842.0,
+      "total_inter_trips": 4314460.0,
+      "M0": {
+        "cpc": 0.7372094513550955,
+        "cpc_inter": 0.7306056885642489,
+        "rmse_log1p_inter": 0.7943686010535531,
+        "rmse_inter": 349.74747097062414,
+        "nrmse_inter": 1.02497346665691,
+        "mae_inter": 160.98127503351336,
+        "spearman_inter": 0.772207848892513,
+        "rel_error_total": 0.24859904863156046,
+        "cpc_inflow": 0.8168854192309052,
+        "cpc_outflow": 0.821490116645859
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7396813092012275,
+        "cpc_inter": 0.7322628333471478,
+        "rmse_log1p_inter": 0.7637824018076153,
+        "rmse_inter": 355.5581815774023,
+        "nrmse_inter": 1.0420023937792156,
+        "mae_inter": 159.98999340488137,
+        "spearman_inter": 0.7766329351157109,
+        "rel_error_total": 0.24859904863156043,
+        "cpc_inflow": 0.8184476899965016,
+        "cpc_outflow": 0.823398623601435
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7396813092012275,
+        "cpc_inter": 0.7322628333471478,
+        "rmse_log1p_inter": 0.7637824018076153,
+        "rmse_inter": 355.5581815774023,
+        "nrmse_inter": 1.0420023937792156,
+        "mae_inter": 159.98999340488137,
+        "spearman_inter": 0.7766329351157109,
+        "rel_error_total": 0.24859904863156043,
+        "cpc_inflow": 0.8184476899965016,
+        "cpc_outflow": 0.823398623601435
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7446590557139074,
+        "cpc_inter": 0.7374136802539971,
+        "rmse_log1p_inter": 0.7416443011058248,
+        "rmse_inter": 347.2337874641173,
+        "nrmse_inter": 1.0176068404148606,
+        "mae_inter": 156.91267628580374,
+        "spearman_inter": 0.7937320610897699,
+        "rel_error_total": 0.24859904863156046,
+        "cpc_inflow": 0.8197916331881968,
+        "cpc_outflow": 0.821490116645859
+      },
+      "mapping_stats": {
+        "n_strict_within": 111,
+        "n_nearest_fallback": 2,
+        "fallback_details": [
+          {
+            "tract_idx": 16,
+            "GID_2": "USA.5.1_1",
+            "nearest_distance_m": 38.89313119627932
+          },
+          {
+            "tract_idx": 61,
+            "GID_2": "USA.5.1_1",
+            "nearest_distance_m": 6.238821531611151
+          }
+        ]
+      },
+      "delta_city": 0.0016571447828989117,
+      "delta_county": 0.0016571447828989117,
+      "delta_subzone": 0.006807991689748216,
+      "fold": 3
+    },
+    {
+      "city": "Tulsa",
+      "n_tracts": 121,
+      "n_pairs": 14639,
+      "rho_c": 0.999862258953168,
+      "average_flow": 407.370849979336,
+      "mean_distance": 9.690765380859375,
+      "n_inter_pairs": 14518,
+      "total_trips": 7347932.0,
+      "total_inter_trips": 5914210.0,
+      "M0": {
+        "cpc": 0.780886596253678,
+        "cpc_inter": 0.7839209949979615,
+        "rmse_log1p_inter": 0.6174398674325751,
+        "rmse_inter": 378.0811117632982,
+        "nrmse_inter": 0.9281005545253826,
+        "mae_inter": 171.33259900507312,
+        "spearman_inter": 0.8286072255088639,
+        "rel_error_total": 0.053268447583354826,
+        "cpc_inflow": 0.8869972395841471,
+        "cpc_outflow": 0.8887637418070442
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7828874419547488,
+        "cpc_inter": 0.7850295965336654,
+        "rmse_log1p_inter": 0.6223568569813605,
+        "rmse_inter": 376.6927720962035,
+        "nrmse_inter": 0.9246925058955774,
+        "mae_inter": 170.453613652882,
+        "spearman_inter": 0.8276296532466737,
+        "rel_error_total": 0.05326844758335477,
+        "cpc_inflow": 0.8868334747803436,
+        "cpc_outflow": 0.8886653933777285
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7829998048800865,
+        "cpc_inter": 0.7851622805935823,
+        "rmse_log1p_inter": 0.6216415060883714,
+        "rmse_inter": 376.47277578122277,
+        "nrmse_inter": 0.9241524664818788,
+        "mae_inter": 170.34846851935527,
+        "spearman_inter": 0.8276956447823905,
+        "rel_error_total": 0.05326844758335477,
+        "cpc_inflow": 0.8869334347525788,
+        "cpc_outflow": 0.8886527334165114
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.787587207679057,
+        "cpc_inter": 0.7898890233197354,
+        "rmse_log1p_inter": 0.603264785265904,
+        "rmse_inter": 366.36432554844254,
+        "nrmse_inter": 0.899338589314936,
+        "mae_inter": 166.600436677949,
+        "spearman_inter": 0.8384727441555557,
+        "rel_error_total": 0.053268447583354826,
+        "cpc_inflow": 0.8916197405595353,
+        "cpc_outflow": 0.8887637418070442
+      },
+      "mapping_stats": {
+        "n_strict_within": 121,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0011086015357039125,
+      "delta_county": 0.0012412855956207558,
+      "delta_subzone": 0.005968028321773899,
+      "fold": 3
+    },
+    {
+      "city": "Washington_DC",
+      "n_tracts": 179,
+      "n_pairs": 31892,
+      "rho_c": 0.9953235829514783,
+      "average_flow": 307.165168858197,
+      "mean_distance": 6.424212455749512,
+      "n_inter_pairs": 31713,
+      "total_trips": 12246177.0,
+      "total_inter_trips": 9741129.0,
+      "M0": {
+        "cpc": 0.6876379249168355,
+        "cpc_inter": 0.6916219530258733,
+        "rmse_log1p_inter": 0.9515376371887846,
+        "rmse_inter": 590.705755567551,
+        "nrmse_inter": 1.9230883428721397,
+        "mae_inter": 184.6319640429283,
+        "spearman_inter": 0.7690359611186336,
+        "rel_error_total": 0.05549315361580081,
+        "cpc_inflow": 0.8244922538176468,
+        "cpc_outflow": 0.8279936171711437
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6888391629743038,
+        "cpc_inter": 0.6927076373667376,
+        "rmse_log1p_inter": 0.9414249994784787,
+        "rmse_inter": 588.8214421598628,
+        "nrmse_inter": 1.9169538146159164,
+        "mae_inter": 183.9846104326356,
+        "spearman_inter": 0.7711810081200904,
+        "rel_error_total": 0.05549315361580074,
+        "cpc_inflow": 0.8244870332210456,
+        "cpc_outflow": 0.8279688120659943
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6888391629743038,
+        "cpc_inter": 0.6927076373667376,
+        "rmse_log1p_inter": 0.9414249994784787,
+        "rmse_inter": 588.8214421598628,
+        "nrmse_inter": 1.9169538146159164,
+        "mae_inter": 183.9846104326356,
+        "spearman_inter": 0.7711810081200904,
+        "rel_error_total": 0.05549315361580074,
+        "cpc_inflow": 0.8244870332210456,
+        "cpc_outflow": 0.8279688120659943
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.691722342261736,
+        "cpc_inter": 0.6963312566152927,
+        "rmse_log1p_inter": 0.904080049706205,
+        "rmse_inter": 589.1897234671172,
+        "nrmse_inter": 1.918152782938475,
+        "mae_inter": 181.80527102308199,
+        "spearman_inter": 0.7915273843193095,
+        "rel_error_total": 0.05549315361580081,
+        "cpc_inflow": 0.826926246774966,
+        "cpc_outflow": 0.8279936171711437
+      },
+      "mapping_stats": {
+        "n_strict_within": 179,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0010856843408643124,
+      "delta_county": 0.0010856843408643124,
+      "delta_subzone": 0.004709303589419456,
+      "fold": 3
+    },
+    {
+      "city": "Colorado_Springs",
+      "n_tracts": 92,
+      "n_pairs": 8464,
+      "rho_c": 1.0,
+      "average_flow": 753.0065695174391,
+      "mean_distance": 9.002531051635742,
+      "n_inter_pairs": 8372,
+      "total_trips": 8038546.0,
+      "total_inter_trips": 6304171.0,
+      "M0": {
+        "cpc": 0.7499882679853457,
+        "cpc_inter": 0.7430514284664174,
+        "rmse_log1p_inter": 0.6774111463088085,
+        "rmse_inter": 787.6688782713833,
+        "nrmse_inter": 1.0460318809385123,
+        "mae_inter": 382.97979276714517,
+        "spearman_inter": 0.7636466336485416,
+        "rel_error_total": 0.020093611734100198,
+        "cpc_inflow": 0.8595685183417396,
+        "cpc_outflow": 0.8589796924533449
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7550476289782966,
+        "cpc_inter": 0.748626959091767,
+        "rmse_log1p_inter": 0.6645775807304345,
+        "rmse_inter": 775.7918503106972,
+        "nrmse_inter": 1.030259073048805,
+        "mae_inter": 374.6739091846127,
+        "spearman_inter": 0.7693477810139951,
+        "rel_error_total": 0.020093611734100247,
+        "cpc_inflow": 0.8617535417062107,
+        "cpc_outflow": 0.8613698369609835
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7550476289782966,
+        "cpc_inter": 0.748626959091767,
+        "rmse_log1p_inter": 0.6645775807304345,
+        "rmse_inter": 775.7918503106972,
+        "nrmse_inter": 1.030259073048805,
+        "mae_inter": 374.6739091846127,
+        "spearman_inter": 0.7693477810139951,
+        "rel_error_total": 0.020093611734100247,
+        "cpc_inflow": 0.8617535417062107,
+        "cpc_outflow": 0.8613698369609835
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7640914742709517,
+        "cpc_inter": 0.7591296323543576,
+        "rmse_log1p_inter": 0.6354283312839356,
+        "rmse_inter": 741.8197790259173,
+        "nrmse_inter": 0.9851438341385378,
+        "mae_inter": 359.0271356354594,
+        "spearman_inter": 0.7881643078368504,
+        "rel_error_total": 0.020093611734100198,
+        "cpc_inflow": 0.8758509546427682,
+        "cpc_outflow": 0.8589796924533449
+      },
+      "mapping_stats": {
+        "n_strict_within": 92,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.005575530625349656,
+      "delta_county": 0.005575530625349656,
+      "delta_subzone": 0.016078203887940234,
+      "fold": 4
+    },
+    {
+      "city": "Columbus",
+      "n_tracts": 183,
+      "n_pairs": 33368,
+      "rho_c": 0.996367020957185,
+      "average_flow": 259.4063582944101,
+      "mean_distance": 11.670419692993164,
+      "n_inter_pairs": 33185,
+      "total_trips": 11340302.0,
+      "total_inter_trips": 8608400.0,
+      "M0": {
+        "cpc": 0.6936476181979095,
+        "cpc_inter": 0.6902204070559897,
+        "rmse_log1p_inter": 1.0801632290972092,
+        "rmse_inter": 597.3385680822394,
+        "nrmse_inter": 2.3027136729019464,
+        "mae_inter": 179.9447882200184,
+        "spearman_inter": 0.7687121337853461,
+        "rel_error_total": 0.23895739133991356,
+        "cpc_inflow": 0.820332906988891,
+        "cpc_outflow": 0.8203683072993359
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6954802762997009,
+        "cpc_inter": 0.6933759743150719,
+        "rmse_log1p_inter": 1.0286701276490384,
+        "rmse_inter": 593.64398913106,
+        "nrmse_inter": 2.288471234993057,
+        "mae_inter": 178.11616893236973,
+        "spearman_inter": 0.7692811402524232,
+        "rel_error_total": 0.23895739133991367,
+        "cpc_inflow": 0.8184755723503593,
+        "cpc_outflow": 0.8183994762783847
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6954802762997009,
+        "cpc_inter": 0.6933759743150719,
+        "rmse_log1p_inter": 1.0286701276490384,
+        "rmse_inter": 593.64398913106,
+        "nrmse_inter": 2.288471234993057,
+        "mae_inter": 178.11616893236973,
+        "spearman_inter": 0.7692811402524232,
+        "rel_error_total": 0.23895739133991367,
+        "cpc_inflow": 0.8184755723503593,
+        "cpc_outflow": 0.8183994762783847
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7074348270202078,
+        "cpc_inter": 0.7066175770393541,
+        "rmse_log1p_inter": 0.9810721442831727,
+        "rmse_inter": 573.7987237832167,
+        "nrmse_inter": 2.211968617715957,
+        "mae_inter": 170.42986661406587,
+        "spearman_inter": 0.7836895829189966,
+        "rel_error_total": 0.23895739133991356,
+        "cpc_inflow": 0.827819474274201,
+        "cpc_outflow": 0.8203683072993359
+      },
+      "mapping_stats": {
+        "n_strict_within": 183,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0031555672590821704,
+      "delta_county": 0.0031555672590821704,
+      "delta_subzone": 0.01639716998336438,
+      "fold": 4
+    },
+    {
+      "city": "Houston",
+      "n_tracts": 463,
+      "n_pairs": 206950,
+      "rho_c": 0.9653165409104933,
+      "average_flow": 159.7572922266293,
+      "mean_distance": 19.237462997436523,
+      "n_inter_pairs": 206487,
+      "total_trips": 41715577.0,
+      "total_inter_trips": 32987804.0,
+      "M0": {
+        "cpc": 0.6562037354855754,
+        "cpc_inter": 0.6475557155482252,
+        "rmse_log1p_inter": 1.3213256944285023,
+        "rmse_inter": 374.0679305014285,
+        "nrmse_inter": 2.341476406415185,
+        "mae_inter": 129.07630023813184,
+        "spearman_inter": 0.7188209939165832,
+        "rel_error_total": 0.29212131825973214,
+        "cpc_inflow": 0.8030398607908561,
+        "cpc_outflow": 0.8019034439822711
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6628512932314237,
+        "cpc_inter": 0.6572044618103057,
+        "rmse_log1p_inter": 1.2366190423014214,
+        "rmse_inter": 375.94772242394134,
+        "nrmse_inter": 2.3532429548857627,
+        "mae_inter": 125.5466481645667,
+        "spearman_inter": 0.7212966733888503,
+        "rel_error_total": 0.29212131825973214,
+        "cpc_inflow": 0.8016585062127349,
+        "cpc_outflow": 0.8004971574010314
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6628512932314237,
+        "cpc_inter": 0.6572044618103057,
+        "rmse_log1p_inter": 1.2366190423014214,
+        "rmse_inter": 375.94772242394134,
+        "nrmse_inter": 2.3532429548857627,
+        "mae_inter": 125.5466481645667,
+        "spearman_inter": 0.7212966733888503,
+        "rel_error_total": 0.29212131825973214,
+        "cpc_inflow": 0.8016585062127349,
+        "cpc_outflow": 0.8004971574010314
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6726555547354888,
+        "cpc_inter": 0.6679402099058529,
+        "rmse_log1p_inter": 1.177074414580493,
+        "rmse_inter": 372.42670950842444,
+        "nrmse_inter": 2.3312031915269666,
+        "mae_inter": 121.61970957980385,
+        "spearman_inter": 0.7427575093979768,
+        "rel_error_total": 0.29212131825973214,
+        "cpc_inflow": 0.8087847023865645,
+        "cpc_outflow": 0.8019034439822711
+      },
+      "mapping_stats": {
+        "n_strict_within": 463,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.009648746262080454,
+      "delta_county": 0.009648746262080454,
+      "delta_subzone": 0.02038449435762768,
+      "fold": 4
+    },
+    {
+      "city": "Minneapolis",
+      "n_tracts": 114,
+      "n_pairs": 12976,
+      "rho_c": 0.9984474460487501,
+      "average_flow": 332.4858497900793,
+      "mean_distance": 5.953653335571289,
+      "n_inter_pairs": 12862,
+      "total_trips": 5772699.0,
+      "total_inter_trips": 4276433.0,
+      "M0": {
+        "cpc": 0.7331604374835168,
+        "cpc_inter": 0.7268526291773861,
+        "rmse_log1p_inter": 0.8401415709186906,
+        "rmse_inter": 647.225408202034,
+        "nrmse_inter": 1.946625423640347,
+        "mae_inter": 191.77062596685562,
+        "spearman_inter": 0.7729500950850997,
+        "rel_error_total": 0.1112402615066837,
+        "cpc_inflow": 0.8574516236110509,
+        "cpc_outflow": 0.8621547789593245
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7336009199819497,
+        "cpc_inter": 0.7280366161378158,
+        "rmse_log1p_inter": 0.832265436206836,
+        "rmse_inter": 643.990862409879,
+        "nrmse_inter": 1.9368970523601945,
+        "mae_inter": 190.94112257120275,
+        "spearman_inter": 0.7722719446672098,
+        "rel_error_total": 0.1112402615066837,
+        "cpc_inflow": 0.8564702661453983,
+        "cpc_outflow": 0.8615644234610457
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7336009199819497,
+        "cpc_inter": 0.7280366161378158,
+        "rmse_log1p_inter": 0.832265436206836,
+        "rmse_inter": 643.990862409879,
+        "nrmse_inter": 1.9368970523601945,
+        "mae_inter": 190.94112257120275,
+        "spearman_inter": 0.7722719446672098,
+        "rel_error_total": 0.1112402615066837,
+        "cpc_inflow": 0.8564702661453983,
+        "cpc_outflow": 0.8615644234610457
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7393339006511355,
+        "cpc_inter": 0.7337465518835167,
+        "rmse_log1p_inter": 0.8072533743145748,
+        "rmse_inter": 624.0153167015596,
+        "nrmse_inter": 1.8768176663624707,
+        "mae_inter": 186.92511530724562,
+        "spearman_inter": 0.7862868159253974,
+        "rel_error_total": 0.11124026150668363,
+        "cpc_inflow": 0.8661402573160988,
+        "cpc_outflow": 0.8621547789593245
+      },
+      "mapping_stats": {
+        "n_strict_within": 114,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0011839869604296505,
+      "delta_county": 0.0011839869604296505,
+      "delta_subzone": 0.00689392270613054,
+      "fold": 4
+    },
+    {
+      "city": "Nashville",
+      "n_tracts": 152,
+      "n_pairs": 23059,
+      "rho_c": 0.9980393865458348,
+      "average_flow": 444.364561051207,
+      "mean_distance": 14.396759033203125,
+      "n_inter_pairs": 22907,
+      "total_trips": 12846518.0,
+      "total_inter_trips": 10179059.0,
+      "M0": {
+        "cpc": 0.7021949290681487,
+        "cpc_inter": 0.6984416589330342,
+        "rmse_log1p_inter": 0.8708499289143593,
+        "rmse_inter": 621.4800847117823,
+        "nrmse_inter": 1.398581568344657,
+        "mae_inter": 240.06375848448155,
+        "spearman_inter": 0.7889909482019491,
+        "rel_error_total": 0.20804627584441474,
+        "cpc_inflow": 0.8364028487756449,
+        "cpc_outflow": 0.8377894771706117
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.703093533378372,
+        "cpc_inter": 0.7001145061891948,
+        "rmse_log1p_inter": 0.8532621652399867,
+        "rmse_inter": 622.0205365466383,
+        "nrmse_inter": 1.3997978035763268,
+        "mae_inter": 238.73231392388246,
+        "spearman_inter": 0.793436591559257,
+        "rel_error_total": 0.2080462758444147,
+        "cpc_inflow": 0.8360503899646107,
+        "cpc_outflow": 0.8374408767705456
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.703093533378372,
+        "cpc_inter": 0.7001145061891948,
+        "rmse_log1p_inter": 0.8532621652399867,
+        "rmse_inter": 622.0205365466383,
+        "nrmse_inter": 1.3997978035763268,
+        "mae_inter": 238.73231392388246,
+        "spearman_inter": 0.793436591559257,
+        "rel_error_total": 0.2080462758444147,
+        "cpc_inflow": 0.8360503899646107,
+        "cpc_outflow": 0.8374408767705456
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7104621807483583,
+        "cpc_inter": 0.7076984043832737,
+        "rmse_log1p_inter": 0.8140110476227383,
+        "rmse_inter": 608.6581131924531,
+        "nrmse_inter": 1.3697269461646233,
+        "mae_inter": 232.6916342674102,
+        "spearman_inter": 0.8123544579393146,
+        "rel_error_total": 0.20804627584441474,
+        "cpc_inflow": 0.8425171269636618,
+        "cpc_outflow": 0.8377894771706117
+      },
+      "mapping_stats": {
+        "n_strict_within": 152,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.00167284725616057,
+      "delta_county": 0.00167284725616057,
+      "delta_subzone": 0.009256745450239467,
+      "fold": 4
+    },
+    {
+      "city": "Omaha",
+      "n_tracts": 119,
+      "n_pairs": 14158,
+      "rho_c": 0.9997863552200541,
+      "average_flow": 378.62518697912964,
+      "mean_distance": 9.086835861206055,
+      "n_inter_pairs": 14039,
+      "total_trips": 6741393.0,
+      "total_inter_trips": 5315519.0,
+      "M0": {
+        "cpc": 0.7483904216789712,
+        "cpc_inter": 0.7499548901470156,
+        "rmse_log1p_inter": 0.7559629828648672,
+        "rmse_inter": 404.8296105778017,
+        "nrmse_inter": 1.0692094041808067,
+        "mae_inter": 202.69779167245034,
+        "spearman_inter": 0.7877211895235074,
+        "rel_error_total": 0.14100262281649265,
+        "cpc_inflow": 0.860500371023491,
+        "cpc_outflow": 0.8606170556989806
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7543050873699833,
+        "cpc_inter": 0.7552448778718547,
+        "rmse_log1p_inter": 0.7887183897596112,
+        "rmse_inter": 397.67834515298904,
+        "nrmse_inter": 1.0503219511778272,
+        "mae_inter": 198.4051822249606,
+        "spearman_inter": 0.798125931663274,
+        "rel_error_total": 0.14100262281649256,
+        "cpc_inflow": 0.8636046860774229,
+        "cpc_outflow": 0.8643100180765159
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.754725474346486,
+        "cpc_inter": 0.7554889843753415,
+        "rmse_log1p_inter": 0.7899506050129711,
+        "rmse_inter": 397.35908641558626,
+        "nrmse_inter": 1.0494787459490629,
+        "mae_inter": 198.20624203153434,
+        "spearman_inter": 0.7986162784051891,
+        "rel_error_total": 0.14100262281649265,
+        "cpc_inflow": 0.8637628172101331,
+        "cpc_outflow": 0.8646287010766874
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7599301496524605,
+        "cpc_inter": 0.7609118773851877,
+        "rmse_log1p_inter": 0.745550550820424,
+        "rmse_inter": 395.54648003498215,
+        "nrmse_inter": 1.044691408912491,
+        "mae_inter": 193.81231433998394,
+        "spearman_inter": 0.8171807420154468,
+        "rel_error_total": 0.14100262281649265,
+        "cpc_inflow": 0.8678587751053245,
+        "cpc_outflow": 0.8606170556989806
+      },
+      "mapping_stats": {
+        "n_strict_within": 119,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.005289987724839129,
+      "delta_county": 0.005534094228325959,
+      "delta_subzone": 0.010956987238172178,
+      "fold": 4
+    },
+    {
+      "city": "Phoenix",
+      "n_tracts": 348,
+      "n_pairs": 117474,
+      "rho_c": 0.9699393818940673,
+      "average_flow": 184.49282823625836,
+      "mean_distance": 17.01962661743164,
+      "n_inter_pairs": 117126,
+      "total_trips": 27207000.0,
+      "total_inter_trips": 21608907.0,
+      "M0": {
+        "cpc": 0.7016388890387957,
+        "cpc_inter": 0.6947335258615627,
+        "rmse_log1p_inter": 1.1463160481438572,
+        "rmse_inter": 347.09817484655156,
+        "nrmse_inter": 1.8813640517346482,
+        "mae_inter": 117.85071921415745,
+        "spearman_inter": 0.7758169137351132,
+        "rel_error_total": 0.09253956352404265,
+        "cpc_inflow": 0.8530829893588713,
+        "cpc_outflow": 0.856342914409621
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7103223121307953,
+        "cpc_inter": 0.7066402115959055,
+        "rmse_log1p_inter": 1.0519842114259268,
+        "rmse_inter": 337.9508899197363,
+        "nrmse_inter": 1.8317833443745692,
+        "mae_inter": 113.25686326697557,
+        "spearman_inter": 0.7808416203799248,
+        "rel_error_total": 0.09253956352404265,
+        "cpc_inflow": 0.8528328263547592,
+        "cpc_outflow": 0.8558882384256109
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7103223121307953,
+        "cpc_inter": 0.7066402115959055,
+        "rmse_log1p_inter": 1.0519842114259268,
+        "rmse_inter": 337.9508899197363,
+        "nrmse_inter": 1.8317833443745692,
+        "mae_inter": 113.25686326697557,
+        "spearman_inter": 0.7808416203799248,
+        "rel_error_total": 0.09253956352404265,
+        "cpc_inflow": 0.8528328263547592,
+        "cpc_outflow": 0.8558882384256109
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7175324875625659,
+        "cpc_inter": 0.7144921136465449,
+        "rmse_log1p_inter": 0.9977058234400974,
+        "rmse_inter": 334.42010881176253,
+        "nrmse_inter": 1.8126455754882234,
+        "mae_inter": 110.22526444338314,
+        "spearman_inter": 0.8012035234535843,
+        "rel_error_total": 0.09253956352404265,
+        "cpc_inflow": 0.8586374719081472,
+        "cpc_outflow": 0.856342914409621
+      },
+      "mapping_stats": {
+        "n_strict_within": 348,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.011906685734342837,
+      "delta_county": 0.011906685734342837,
+      "delta_subzone": 0.019758587784982184,
+      "fold": 4
+    },
+    {
+      "city": "Portland",
+      "n_tracts": 141,
+      "n_pairs": 19871,
+      "rho_c": 0.9994934143870314,
+      "average_flow": 439.72508869741506,
+      "mean_distance": 8.356160163879395,
+      "n_inter_pairs": 19730,
+      "total_trips": 11051146.0,
+      "total_inter_trips": 8675776.0,
+      "M0": {
+        "cpc": 0.70587267163471,
+        "cpc_inter": 0.6887627930295425,
+        "rmse_log1p_inter": 1.0321064417257118,
+        "rmse_inter": 599.0477021766216,
+        "nrmse_inter": 1.3623232277948096,
+        "mae_inter": 322.16163163817515,
+        "spearman_inter": 0.7472497595375724,
+        "rel_error_total": 0.3540884668406439,
+        "cpc_inflow": 0.8091692884103168,
+        "cpc_outflow": 0.8099236606055472
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7071752311533185,
+        "cpc_inter": 0.6921508670896594,
+        "rmse_log1p_inter": 1.0024217172061434,
+        "rmse_inter": 599.0961690169164,
+        "nrmse_inter": 1.3624334485703364,
+        "mae_inter": 318.6654682429348,
+        "spearman_inter": 0.7472636480082153,
+        "rel_error_total": 0.3540884668406439,
+        "cpc_inflow": 0.8100828523030624,
+        "cpc_outflow": 0.8109601538347991
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7071752311533185,
+        "cpc_inter": 0.6921508670896594,
+        "rmse_log1p_inter": 1.0024217172061434,
+        "rmse_inter": 599.0961690169164,
+        "nrmse_inter": 1.3624334485703364,
+        "mae_inter": 318.6654682429348,
+        "spearman_inter": 0.7472636480082153,
+        "rel_error_total": 0.3540884668406439,
+        "cpc_inflow": 0.8100828523030624,
+        "cpc_outflow": 0.8109601538347991
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7144254752890971,
+        "cpc_inter": 0.6998406124130453,
+        "rmse_log1p_inter": 0.9622730055244434,
+        "rmse_inter": 605.9469126510124,
+        "nrmse_inter": 1.3780130545791494,
+        "mae_inter": 310.7125922752443,
+        "spearman_inter": 0.7757862080882952,
+        "rel_error_total": 0.3540884668406439,
+        "cpc_inflow": 0.8133675849409716,
+        "cpc_outflow": 0.8099236606055472
+      },
+      "mapping_stats": {
+        "n_strict_within": 141,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0033880740601169856,
+      "delta_county": 0.0033880740601169856,
+      "delta_subzone": 0.01107781938350283,
+      "fold": 4
+    },
+    {
+      "city": "San_Francisco",
+      "n_tracts": 193,
+      "n_pairs": 37109,
+      "rho_c": 0.9962219343696027,
+      "average_flow": 353.81953624444685,
+      "mean_distance": 5.217103481292725,
+      "n_inter_pairs": 36916,
+      "total_trips": 15567591.0,
+      "total_inter_trips": 13061602.0,
+      "M0": {
+        "cpc": 0.6776484018034822,
+        "cpc_inter": 0.671457826340944,
+        "rmse_log1p_inter": 0.9429023576258894,
+        "rmse_inter": 684.7159687967455,
+        "nrmse_inter": 1.9352124420955914,
+        "mae_inter": 216.7709777323505,
+        "spearman_inter": 0.7108937705639407,
+        "rel_error_total": 0.13410384474826942,
+        "cpc_inflow": 0.7892030237356681,
+        "cpc_outflow": 0.7893263082798931
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6798130736130268,
+        "cpc_inter": 0.6725235736798889,
+        "rmse_log1p_inter": 0.9484896709718106,
+        "rmse_inter": 687.359557284782,
+        "nrmse_inter": 1.9426840150790856,
+        "mae_inter": 216.0588534711968,
+        "spearman_inter": 0.7104870466145958,
+        "rel_error_total": 0.13410384474826942,
+        "cpc_inflow": 0.7919981880606733,
+        "cpc_outflow": 0.7920273655976025
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6798130736130268,
+        "cpc_inter": 0.6725235736798889,
+        "rmse_log1p_inter": 0.9484896709718106,
+        "rmse_inter": 687.359557284782,
+        "nrmse_inter": 1.9426840150790856,
+        "mae_inter": 216.0588534711968,
+        "spearman_inter": 0.7104870466145958,
+        "rel_error_total": 0.13410384474826942,
+        "cpc_inflow": 0.7919981880606733,
+        "cpc_outflow": 0.7920273655976025
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6820927289391034,
+        "cpc_inter": 0.6753750000248907,
+        "rmse_log1p_inter": 0.9264533502602843,
+        "rmse_inter": 684.3795642326273,
+        "nrmse_inter": 1.9342616620236688,
+        "mae_inter": 214.17833968446212,
+        "spearman_inter": 0.7250977086773954,
+        "rel_error_total": 0.13410384474826942,
+        "cpc_inflow": 0.7950158074462168,
+        "cpc_outflow": 0.7893263082798931
+      },
+      "mapping_stats": {
+        "n_strict_within": 190,
+        "n_nearest_fallback": 3,
+        "fallback_details": [
+          {
+            "tract_idx": 66,
+            "GID_2": "USA.5.38_1",
+            "nearest_distance_m": 456.10309531329244
+          },
+          {
+            "tract_idx": 177,
+            "GID_2": "USA.5.38_1",
+            "nearest_distance_m": 517.3137336167393
+          },
+          {
+            "tract_idx": 179,
+            "GID_2": "USA.5.38_1",
+            "nearest_distance_m": 334.63669809753486
+          }
+        ]
+      },
+      "delta_city": 0.0010657473389449335,
+      "delta_county": 0.0010657473389449335,
+      "delta_subzone": 0.003917173683946729,
+      "fold": 4
+    },
+    {
+      "city": "Tampa",
+      "n_tracts": 97,
+      "n_pairs": 9357,
+      "rho_c": 0.9944158075601375,
+      "average_flow": 503.1235421166307,
+      "mean_distance": 10.835758209228516,
+      "n_inter_pairs": 9260,
+      "total_trips": 6343735.0,
+      "total_inter_trips": 4658924.0,
+      "M0": {
+        "cpc": 0.7268430641528953,
+        "cpc_inter": 0.7183599730509123,
+        "rmse_log1p_inter": 0.9433121054268586,
+        "rmse_inter": 694.3725938794036,
+        "nrmse_inter": 1.380123440374489,
+        "mae_inter": 270.41152244496465,
+        "spearman_inter": 0.8268894744724135,
+        "rel_error_total": 0.09092291613273985,
+        "cpc_inflow": 0.8412223860446063,
+        "cpc_outflow": 0.8418187265603727
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7322237445271284,
+        "cpc_inter": 0.7238276595276466,
+        "rmse_log1p_inter": 0.8904987471490043,
+        "rmse_inter": 678.1401767147038,
+        "nrmse_inter": 1.3478601574909048,
+        "mae_inter": 265.16445125598244,
+        "spearman_inter": 0.8295620290391295,
+        "rel_error_total": 0.09092291613273985,
+        "cpc_inflow": 0.8376069170169842,
+        "cpc_outflow": 0.8378729220936477
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7322237445271284,
+        "cpc_inter": 0.7238276595276466,
+        "rmse_log1p_inter": 0.8904987471490043,
+        "rmse_inter": 678.1401767147038,
+        "nrmse_inter": 1.3478601574909048,
+        "mae_inter": 265.16445125598244,
+        "spearman_inter": 0.8295620290391295,
+        "rel_error_total": 0.09092291613273985,
+        "cpc_inflow": 0.8376069170169842,
+        "cpc_outflow": 0.8378729220936477
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7436780882095723,
+        "cpc_inter": 0.7367278529186899,
+        "rmse_log1p_inter": 0.82480084861513,
+        "rmse_inter": 641.9199562629102,
+        "nrmse_inter": 1.2758694486097106,
+        "mae_inter": 252.7677154678972,
+        "spearman_inter": 0.8481385708894766,
+        "rel_error_total": 0.09092291613273985,
+        "cpc_inflow": 0.8567953678056718,
+        "cpc_outflow": 0.8418187265603727
+      },
+      "mapping_stats": {
+        "n_strict_within": 93,
+        "n_nearest_fallback": 4,
+        "fallback_details": [
+          {
+            "tract_idx": 64,
+            "GID_2": "USA.10.28_1",
+            "nearest_distance_m": 71.10118579416444
+          },
+          {
+            "tract_idx": 67,
+            "GID_2": "USA.10.28_1",
+            "nearest_distance_m": 25.00272173835544
+          },
+          {
+            "tract_idx": 80,
+            "GID_2": "USA.10.28_1",
+            "nearest_distance_m": 174.0442309613727
+          },
+          {
+            "tract_idx": 95,
+            "GID_2": "USA.10.28_1",
+            "nearest_distance_m": 1123.848119429578
+          }
+        ]
+      },
+      "delta_city": 0.005467686476734346,
+      "delta_county": 0.005467686476734346,
+      "delta_subzone": 0.01836787986777766,
+      "fold": 4
+    },
+    {
+      "city": "Albuquerque",
+      "n_tracts": 115,
+      "n_pairs": 13222,
+      "rho_c": 0.9997711670480549,
+      "average_flow": 555.6867322804608,
+      "mean_distance": 10.218308448791504,
+      "n_inter_pairs": 13107,
+      "total_trips": 9054311.0,
+      "total_inter_trips": 7283386.0,
+      "M0": {
+        "cpc": 0.746992708142469,
+        "cpc_inter": 0.7428885734046302,
+        "rmse_log1p_inter": 0.6966700420373995,
+        "rmse_inter": 600.1480063656646,
+        "nrmse_inter": 1.080011401212948,
+        "mae_inter": 255.0497408427141,
+        "spearman_inter": 0.8223764339831101,
+        "rel_error_total": 0.21354658890159728,
+        "cpc_inflow": 0.8338340672232691,
+        "cpc_outflow": 0.8344526056286518
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.750039432251264,
+        "cpc_inter": 0.7450260132700149,
+        "rmse_log1p_inter": 0.6935447885346777,
+        "rmse_inter": 612.5955722999659,
+        "nrmse_inter": 1.102411730771327,
+        "mae_inter": 252.9128017170617,
+        "spearman_inter": 0.8273752567222661,
+        "rel_error_total": 0.21354658890159728,
+        "cpc_inflow": 0.8369806190627554,
+        "cpc_outflow": 0.8376782857642627
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.750039432251264,
+        "cpc_inter": 0.7450260132700149,
+        "rmse_log1p_inter": 0.6935447885346777,
+        "rmse_inter": 612.5955722999659,
+        "nrmse_inter": 1.102411730771327,
+        "mae_inter": 252.9128017170617,
+        "spearman_inter": 0.8273752567222661,
+        "rel_error_total": 0.21354658890159728,
+        "cpc_inflow": 0.8369806190627554,
+        "cpc_outflow": 0.8376782857642627
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7548788046768897,
+        "cpc_inter": 0.7498402520198161,
+        "rmse_log1p_inter": 0.648922348412797,
+        "rmse_inter": 597.3460108462641,
+        "nrmse_inter": 1.0749689998802732,
+        "mae_inter": 248.1369092903681,
+        "spearman_inter": 0.8441977981839731,
+        "rel_error_total": 0.21354658890159728,
+        "cpc_inflow": 0.8393666635424194,
+        "cpc_outflow": 0.8344526056286518
+      },
+      "mapping_stats": {
+        "n_strict_within": 115,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.002137439865384727,
+      "delta_county": 0.002137439865384727,
+      "delta_subzone": 0.006951678615185863,
+      "fold": 5
+    },
+    {
+      "city": "Charlotte",
+      "n_tracts": 185,
+      "n_pairs": 34048,
+      "rho_c": 0.9948002350176263,
+      "average_flow": 343.1202197088267,
+      "mean_distance": 14.023892402648926,
+      "n_inter_pairs": 33863,
+      "total_trips": 14731346.0,
+      "total_inter_trips": 11619080.0,
+      "M0": {
+        "cpc": 0.710933152103188,
+        "cpc_inter": 0.7083486001321143,
+        "rmse_log1p_inter": 0.9158603443804346,
+        "rmse_inter": 530.8112458670989,
+        "nrmse_inter": 1.5470124328946502,
+        "mae_inter": 185.03513859379336,
+        "spearman_inter": 0.7767915499002876,
+        "rel_error_total": 0.15095282646903266,
+        "cpc_inflow": 0.8487297789974253,
+        "cpc_outflow": 0.8504004417517855
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7107520807500889,
+        "cpc_inter": 0.7096254652099784,
+        "rmse_log1p_inter": 0.8990454895736922,
+        "rmse_inter": 527.9473065461783,
+        "nrmse_inter": 1.53866568106711,
+        "mae_inter": 184.22577923199648,
+        "spearman_inter": 0.7787627072165161,
+        "rel_error_total": 0.1509528264690326,
+        "cpc_inflow": 0.8482059480219043,
+        "cpc_outflow": 0.8498650854766084
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7107520807500889,
+        "cpc_inter": 0.7096254652099784,
+        "rmse_log1p_inter": 0.8990454895736922,
+        "rmse_inter": 527.9473065461783,
+        "nrmse_inter": 1.53866568106711,
+        "mae_inter": 184.22577923199648,
+        "spearman_inter": 0.7787627072165161,
+        "rel_error_total": 0.1509528264690326,
+        "cpc_inflow": 0.8482059480219043,
+        "cpc_outflow": 0.8498650854766084
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.717258933100033,
+        "cpc_inter": 0.7171761037155718,
+        "rmse_log1p_inter": 0.8580284029738485,
+        "rmse_inter": 504.81446300912677,
+        "nrmse_inter": 1.4712466185686008,
+        "mae_inter": 179.43539086798663,
+        "spearman_inter": 0.7958021022538334,
+        "rel_error_total": 0.15095282646903266,
+        "cpc_inflow": 0.854312617806746,
+        "cpc_outflow": 0.8504004417517855
+      },
+      "mapping_stats": {
+        "n_strict_within": 185,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0012768650778640644,
+      "delta_county": 0.0012768650778640644,
+      "delta_subzone": 0.008827503583457519,
+      "fold": 5
+    },
+    {
+      "city": "Dallas",
+      "n_tracts": 434,
+      "n_pairs": 161129,
+      "rho_c": 0.8551154202275412,
+      "average_flow": 162.10033292884034,
+      "mean_distance": 27.917530059814453,
+      "n_inter_pairs": 160695,
+      "total_trips": 34024526.0,
+      "total_inter_trips": 26048713.0,
+      "M0": {
+        "cpc": 0.6866314357799781,
+        "cpc_inter": 0.6793278115106594,
+        "rmse_log1p_inter": 1.3856196566103314,
+        "rmse_inter": 393.83720760280227,
+        "nrmse_inter": 2.4295891346237455,
+        "mae_inter": 110.50434585333882,
+        "spearman_inter": 0.8034539974455032,
+        "rel_error_total": 0.12582949530985707,
+        "cpc_inflow": 0.8442553507662929,
+        "cpc_outflow": 0.8445468732181972
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6938264237894247,
+        "cpc_inter": 0.6930894334458378,
+        "rmse_log1p_inter": 1.1595515480856224,
+        "rmse_inter": 389.76071216159045,
+        "nrmse_inter": 2.4044411576420988,
+        "mae_inter": 105.76115743507994,
+        "spearman_inter": 0.8147486257790187,
+        "rel_error_total": 0.12582949530985707,
+        "cpc_inflow": 0.838908110864962,
+        "cpc_outflow": 0.8390083947797718
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6945854511407297,
+        "cpc_inter": 0.6940210658352308,
+        "rmse_log1p_inter": 1.1573876200771849,
+        "rmse_inter": 387.3629422532537,
+        "nrmse_inter": 2.3896492700190834,
+        "mae_inter": 105.44025992874008,
+        "spearman_inter": 0.8150578775731322,
+        "rel_error_total": 0.12582949530985713,
+        "cpc_inflow": 0.84047873425819,
+        "cpc_outflow": 0.8400731619708762
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7066694157964266,
+        "cpc_inter": 0.7072930738030027,
+        "rmse_log1p_inter": 1.1041218432191229,
+        "rmse_inter": 364.83303198477734,
+        "nrmse_inter": 2.250661830194597,
+        "mae_inter": 100.86739583354101,
+        "spearman_inter": 0.8268513899841046,
+        "rel_error_total": 0.12582949530985707,
+        "cpc_inflow": 0.8496181273332862,
+        "cpc_outflow": 0.8445468732181972
+      },
+      "mapping_stats": {
+        "n_strict_within": 434,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.013761621935178492,
+      "delta_county": 0.01469325432457147,
+      "delta_subzone": 0.027965262292343307,
+      "fold": 5
+    },
+    {
+      "city": "Denver",
+      "n_tracts": 144,
+      "n_pairs": 20703,
+      "rho_c": 0.9983974358974358,
+      "average_flow": 392.4344569288389,
+      "mean_distance": 9.705127716064453,
+      "n_inter_pairs": 20559,
+      "total_trips": 10760695.0,
+      "total_inter_trips": 8068060.0,
+      "M0": {
+        "cpc": 0.6926196808558174,
+        "cpc_inter": 0.6989738639377278,
+        "rmse_log1p_inter": 1.0002614914916137,
+        "rmse_inter": 693.3863296826249,
+        "nrmse_inter": 1.7668844247495787,
+        "mae_inter": 261.3648198636444,
+        "spearman_inter": 0.7372549143347508,
+        "rel_error_total": 0.2118653422645346,
+        "cpc_inflow": 0.8148260384477147,
+        "cpc_outflow": 0.8161540373045274
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.693922647068766,
+        "cpc_inter": 0.7009572224625922,
+        "rmse_log1p_inter": 1.0120653008771978,
+        "rmse_inter": 689.672055585227,
+        "nrmse_inter": 1.757419725532121,
+        "mae_inter": 259.645118265204,
+        "spearman_inter": 0.7339403590395647,
+        "rel_error_total": 0.2118653422645346,
+        "cpc_inflow": 0.8221769242576501,
+        "cpc_outflow": 0.8233857809086832
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.694380680490898,
+        "cpc_inter": 0.7013014812123655,
+        "rmse_log1p_inter": 1.0129792863052216,
+        "rmse_inter": 688.8171112318036,
+        "nrmse_inter": 1.7552411595618587,
+        "mae_inter": 259.3462155835162,
+        "spearman_inter": 0.7332542323671963,
+        "rel_error_total": 0.2118653422645346,
+        "cpc_inflow": 0.822763293881347,
+        "cpc_outflow": 0.8234844565303066
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7034866545379933,
+        "cpc_inter": 0.7110469084800557,
+        "rmse_log1p_inter": 0.9422956893340976,
+        "rmse_inter": 667.7937720845271,
+        "nrmse_inter": 1.7016695662012669,
+        "mae_inter": 250.87550710770458,
+        "spearman_inter": 0.7657532039684494,
+        "rel_error_total": 0.2118653422645346,
+        "cpc_inflow": 0.8317649363070186,
+        "cpc_outflow": 0.8161540373045274
+      },
+      "mapping_stats": {
+        "n_strict_within": 144,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0019833585248644203,
+      "delta_county": 0.0023276172746377055,
+      "delta_subzone": 0.012073044542327938,
+      "fold": 5
+    },
+    {
+      "city": "Kansas_City",
+      "n_tracts": 144,
+      "n_pairs": 20685,
+      "rho_c": 0.99752331002331,
+      "average_flow": 262.84616133586485,
+      "mean_distance": 13.998374938964844,
+      "n_inter_pairs": 20541,
+      "total_trips": 7193886.0,
+      "total_inter_trips": 5399123.0,
+      "M0": {
+        "cpc": 0.7271725918207007,
+        "cpc_inter": 0.7207195813909334,
+        "rmse_log1p_inter": 1.008041654832202,
+        "rmse_inter": 373.35877341712074,
+        "nrmse_inter": 1.4204459807196608,
+        "mae_inter": 149.75032507176778,
+        "spearman_inter": 0.7450179548259038,
+        "rel_error_total": 0.040214827769175406,
+        "cpc_inflow": 0.8541096270744456,
+        "cpc_outflow": 0.8570812756978903
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7299232694434359,
+        "cpc_inter": 0.7257344216614837,
+        "rmse_log1p_inter": 0.9596021405235543,
+        "rmse_inter": 368.4016446963795,
+        "nrmse_inter": 1.4015865509469467,
+        "mae_inter": 147.06710731358012,
+        "spearman_inter": 0.7534872443823949,
+        "rel_error_total": 0.040214827769175406,
+        "cpc_inflow": 0.8516157439116337,
+        "cpc_outflow": 0.8543577892531995
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7320919414170362,
+        "cpc_inter": 0.7285601255385257,
+        "rmse_log1p_inter": 0.9549437751937718,
+        "rmse_inter": 359.6223213506682,
+        "nrmse_inter": 1.3681855558512142,
+        "mae_inter": 145.55426119127117,
+        "spearman_inter": 0.7537825937448117,
+        "rel_error_total": 0.040214827769175406,
+        "cpc_inflow": 0.8537892131736277,
+        "cpc_outflow": 0.8546945946714045
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7437047417145584,
+        "cpc_inter": 0.740175023541059,
+        "rmse_log1p_inter": 0.9051561424037318,
+        "rmse_inter": 335.33542994551766,
+        "nrmse_inter": 1.275785913103087,
+        "mae_inter": 139.3253025453381,
+        "spearman_inter": 0.7798905375686513,
+        "rel_error_total": 0.040214827769175406,
+        "cpc_inflow": 0.863464620554237,
+        "cpc_outflow": 0.8570812756978903
+      },
+      "mapping_stats": {
+        "n_strict_within": 144,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.005014840270550325,
+      "delta_county": 0.007840544147592277,
+      "delta_subzone": 0.019455442150125624,
+      "fold": 5
+    },
+    {
+      "city": "Miami",
+      "n_tracts": 97,
+      "n_pairs": 9397,
+      "rho_c": 0.9987113402061856,
+      "average_flow": 476.2611827956989,
+      "mean_distance": 5.374888896942139,
+      "n_inter_pairs": 9300,
+      "total_trips": 5793376.0,
+      "total_inter_trips": 4429229.0,
+      "M0": {
+        "cpc": 0.7179067827721305,
+        "cpc_inter": 0.7232621769934786,
+        "rmse_log1p_inter": 1.0360276602738139,
+        "rmse_inter": 534.778037543184,
+        "nrmse_inter": 1.122867151179497,
+        "mae_inter": 269.39454362226644,
+        "spearman_inter": 0.6598623362334345,
+        "rel_error_total": 0.06326764409331677,
+        "cpc_inflow": 0.8509995387918877,
+        "cpc_outflow": 0.8541131998065451
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7204147656843999,
+        "cpc_inter": 0.7272628160704809,
+        "rmse_log1p_inter": 1.006522660993292,
+        "rmse_inter": 532.0717127157742,
+        "nrmse_inter": 1.1171847127923844,
+        "mae_inter": 265.53155743992426,
+        "spearman_inter": 0.6759327203908013,
+        "rel_error_total": 0.0632676440933167,
+        "cpc_inflow": 0.8509740293877194,
+        "cpc_outflow": 0.8539961974625837
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7204147656843999,
+        "cpc_inter": 0.7272628160704809,
+        "rmse_log1p_inter": 1.006522660993292,
+        "rmse_inter": 532.0717127157742,
+        "nrmse_inter": 1.1171847127923844,
+        "mae_inter": 265.53155743992426,
+        "spearman_inter": 0.6759327203908013,
+        "rel_error_total": 0.0632676440933167,
+        "cpc_inflow": 0.8509740293877194,
+        "cpc_outflow": 0.8539961974625837
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7251641735417639,
+        "cpc_inter": 0.7323112829214181,
+        "rmse_log1p_inter": 0.9464812423870136,
+        "rmse_inter": 534.2535275689189,
+        "nrmse_inter": 1.1217658437599287,
+        "mae_inter": 260.60813249054326,
+        "spearman_inter": 0.7159017165803672,
+        "rel_error_total": 0.06326764409331677,
+        "cpc_inflow": 0.8548025388033881,
+        "cpc_outflow": 0.8541131998065451
+      },
+      "mapping_stats": {
+        "n_strict_within": 91,
+        "n_nearest_fallback": 6,
+        "fallback_details": [
+          {
+            "tract_idx": 23,
+            "GID_2": "USA.10.43_1",
+            "nearest_distance_m": 188.40806330605906
+          },
+          {
+            "tract_idx": 24,
+            "GID_2": "USA.10.43_1",
+            "nearest_distance_m": 259.85404144181643
+          },
+          {
+            "tract_idx": 25,
+            "GID_2": "USA.10.43_1",
+            "nearest_distance_m": 856.6523307185125
+          },
+          {
+            "tract_idx": 79,
+            "GID_2": "USA.10.43_1",
+            "nearest_distance_m": 343.9183057655576
+          },
+          {
+            "tract_idx": 80,
+            "GID_2": "USA.10.43_1",
+            "nearest_distance_m": 334.9114543262859
+          },
+          {
+            "tract_idx": 86,
+            "GID_2": "USA.10.43_1",
+            "nearest_distance_m": 45.965980799349126
+          }
+        ]
+      },
+      "delta_city": 0.0040006390770023215,
+      "delta_county": 0.0040006390770023215,
+      "delta_subzone": 0.009049105927939505,
+      "fold": 5
+    },
+    {
+      "city": "Philadelphia",
+      "n_tracts": 384,
+      "n_pairs": 145279,
+      "rho_c": 0.9851977262837249,
+      "average_flow": 158.6073363470099,
+      "mean_distance": 9.930608749389648,
+      "n_inter_pairs": 144895,
+      "total_trips": 27419366.0,
+      "total_inter_trips": 22981410.0,
+      "M0": {
+        "cpc": 0.650578217051291,
+        "cpc_inter": 0.6641560398393795,
+        "rmse_log1p_inter": 1.064386393497817,
+        "rmse_inter": 302.56669471173046,
+        "nrmse_inter": 1.9076462771542817,
+        "mae_inter": 100.72321748874975,
+        "spearman_inter": 0.67380396752468,
+        "rel_error_total": 0.12411093586175691,
+        "cpc_inflow": 0.8101160805991744,
+        "cpc_outflow": 0.8105887542118023
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.6497043471221239,
+        "cpc_inter": 0.6650306496095065,
+        "rmse_log1p_inter": 1.0583982851586375,
+        "rmse_inter": 302.002485627995,
+        "nrmse_inter": 1.9040890073789354,
+        "mae_inter": 100.45540382750399,
+        "spearman_inter": 0.6737070772930703,
+        "rel_error_total": 0.12411093586175691,
+        "cpc_inflow": 0.8098844002745723,
+        "cpc_outflow": 0.8102927717417071
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.6497043471221239,
+        "cpc_inter": 0.6650306496095065,
+        "rmse_log1p_inter": 1.0583982851586375,
+        "rmse_inter": 302.002485627995,
+        "nrmse_inter": 1.9040890073789354,
+        "mae_inter": 100.45540382750399,
+        "spearman_inter": 0.6737070772930703,
+        "rel_error_total": 0.12411093586175691,
+        "cpc_inflow": 0.8098844002745723,
+        "cpc_outflow": 0.8102927717417071
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.6559168158843709,
+        "cpc_inter": 0.671578169045587,
+        "rmse_log1p_inter": 1.0112620876202847,
+        "rmse_inter": 302.4331355675818,
+        "nrmse_inter": 1.9068042029651258,
+        "mae_inter": 98.47865612885938,
+        "spearman_inter": 0.7033262303815242,
+        "rel_error_total": 0.12411093586175691,
+        "cpc_inflow": 0.8145282459856924,
+        "cpc_outflow": 0.8105887542118023
+      },
+      "mapping_stats": {
+        "n_strict_within": 384,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0008746097701269884,
+      "delta_county": 0.0008746097701269884,
+      "delta_subzone": 0.0074221292062074395,
+      "fold": 5
+    },
+    {
+      "city": "San_Jose",
+      "n_tracts": 183,
+      "n_pairs": 33445,
+      "rho_c": 0.9986789167117035,
+      "average_flow": 334.64244483194034,
+      "mean_distance": 9.312341690063477,
+      "n_inter_pairs": 33262,
+      "total_trips": 14019747.0,
+      "total_inter_trips": 11130877.0,
+      "M0": {
+        "cpc": 0.7177345236947131,
+        "cpc_inter": 0.7122531144790186,
+        "rmse_log1p_inter": 0.9523157485468996,
+        "rmse_inter": 487.6568831080012,
+        "nrmse_inter": 1.4572475507489961,
+        "mae_inter": 216.72598216835334,
+        "spearman_inter": 0.76132864237806,
+        "rel_error_total": 0.24867620722630104,
+        "cpc_inflow": 0.8271046366412343,
+        "cpc_outflow": 0.8291829032679834
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7197558358269291,
+        "cpc_inter": 0.7145348776809383,
+        "rmse_log1p_inter": 0.9703045168647467,
+        "rmse_inter": 484.59168296273475,
+        "nrmse_inter": 1.4480879232343045,
+        "mae_inter": 215.00175588237718,
+        "spearman_inter": 0.7612137987788717,
+        "rel_error_total": 0.24867620722630104,
+        "cpc_inflow": 0.8292158571208857,
+        "cpc_outflow": 0.8313402664618136
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7197558358269291,
+        "cpc_inter": 0.7145348776809383,
+        "rmse_log1p_inter": 0.9703045168647467,
+        "rmse_inter": 484.59168296273475,
+        "nrmse_inter": 1.4480879232343045,
+        "mae_inter": 215.00175588237718,
+        "spearman_inter": 0.7612137987788717,
+        "rel_error_total": 0.24867620722630104,
+        "cpc_inflow": 0.8292158571208857,
+        "cpc_outflow": 0.8313402664618136
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7260105399004011,
+        "cpc_inter": 0.7210789565249319,
+        "rmse_log1p_inter": 0.9274506741199783,
+        "rmse_inter": 472.1997160963554,
+        "nrmse_inter": 1.4110574536756608,
+        "mae_inter": 210.06721613172752,
+        "spearman_inter": 0.7760751879012363,
+        "rel_error_total": 0.24867620722630104,
+        "cpc_inflow": 0.835944904361523,
+        "cpc_outflow": 0.8291829032679834
+      },
+      "mapping_stats": {
+        "n_strict_within": 183,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.00228176320191964,
+      "delta_county": 0.00228176320191964,
+      "delta_subzone": 0.008825842045913301,
+      "fold": 5
+    },
+    {
+      "city": "Tucson",
+      "n_tracts": 117,
+      "n_pairs": 13685,
+      "rho_c": 0.9997052755673446,
+      "average_flow": 519.0241008254717,
+      "mean_distance": 10.803373336791992,
+      "n_inter_pairs": 13568,
+      "total_trips": 8972522.0,
+      "total_inter_trips": 7042119.0,
+      "M0": {
+        "cpc": 0.7527369987723199,
+        "cpc_inter": 0.7470193147168424,
+        "rmse_log1p_inter": 0.7434063072597353,
+        "rmse_inter": 721.1603847680626,
+        "nrmse_inter": 1.389454523636007,
+        "mae_inter": 235.36348577007743,
+        "spearman_inter": 0.8269988824490521,
+        "rel_error_total": 0.20752506497291556,
+        "cpc_inflow": 0.8406362301201572,
+        "cpc_outflow": 0.8428122665534866
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.7529262436251577,
+        "cpc_inter": 0.7475393047059841,
+        "rmse_log1p_inter": 0.7393137014940346,
+        "rmse_inter": 719.6159280140696,
+        "nrmse_inter": 1.3864788299224846,
+        "mae_inter": 234.88101201499785,
+        "spearman_inter": 0.827702999449996,
+        "rel_error_total": 0.20752506497291556,
+        "cpc_inflow": 0.8407209600703824,
+        "cpc_outflow": 0.8428886660439362
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.7529262436251577,
+        "cpc_inter": 0.7475393047059841,
+        "rmse_log1p_inter": 0.7393137014940346,
+        "rmse_inter": 719.6159280140696,
+        "nrmse_inter": 1.3864788299224846,
+        "mae_inter": 234.88101201499785,
+        "spearman_inter": 0.827702999449996,
+        "rel_error_total": 0.20752506497291556,
+        "cpc_inflow": 0.8407209600703824,
+        "cpc_outflow": 0.8428886660439362
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7572006013567516,
+        "cpc_inter": 0.7526510774353161,
+        "rmse_log1p_inter": 0.6974593927098679,
+        "rmse_inter": 702.3923290549078,
+        "nrmse_inter": 1.353294245754295,
+        "mae_inter": 230.12325371899541,
+        "spearman_inter": 0.8466866441098677,
+        "rel_error_total": 0.20752506497291556,
+        "cpc_inflow": 0.8449198276542603,
+        "cpc_outflow": 0.8428122665534866
+      },
+      "mapping_stats": {
+        "n_strict_within": 117,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.0005199899891417115,
+      "delta_county": 0.0005199899891417115,
+      "delta_subzone": 0.005631762718473765,
+      "fold": 5
+    },
+    {
+      "city": "Wichita",
+      "n_tracts": 96,
+      "n_pairs": 9216,
+      "rho_c": 1.0,
+      "average_flow": 590.1169956140351,
+      "mean_distance": 9.037700653076172,
+      "n_inter_pairs": 9120,
+      "total_trips": 6787057.0,
+      "total_inter_trips": 5381867.0,
+      "M0": {
+        "cpc": 0.7848078551857829,
+        "cpc_inter": 0.7754316361117676,
+        "rmse_log1p_inter": 0.5780670899843765,
+        "rmse_inter": 553.7100351547862,
+        "nrmse_inter": 0.9383055212274196,
+        "mae_inter": 242.6469956305989,
+        "spearman_inter": 0.8222769570853125,
+        "rel_error_total": 0.16803409008754197,
+        "cpc_inflow": 0.8597737342660746,
+        "cpc_outflow": 0.8603876151558394
+      },
+      "M1_city_oracle_obs": {
+        "cpc": 0.795443129968215,
+        "cpc_inter": 0.7841276012058471,
+        "rmse_log1p_inter": 0.5499836015510832,
+        "rmse_inter": 569.205769273786,
+        "nrmse_inter": 0.9645642703130584,
+        "mae_inter": 233.19933091176827,
+        "spearman_inter": 0.8505364637747429,
+        "rel_error_total": 0.16803409008754197,
+        "cpc_inflow": 0.8675084500725957,
+        "cpc_outflow": 0.8679962250055316
+      },
+      "M1_county_oracle_obs": {
+        "cpc": 0.795443129968215,
+        "cpc_inter": 0.7841276012058471,
+        "rmse_log1p_inter": 0.5499836015510832,
+        "rmse_inter": 569.205769273786,
+        "nrmse_inter": 0.9645642703130584,
+        "mae_inter": 233.19933091176827,
+        "spearman_inter": 0.8505364637747429,
+        "rel_error_total": 0.16803409008754197,
+        "cpc_inflow": 0.8675084500725957,
+        "cpc_outflow": 0.8679962250055316
+      },
+      "M1_subzone_oracle_obs": {
+        "cpc": 0.7994017397959954,
+        "cpc_inter": 0.7875241111049295,
+        "rmse_log1p_inter": 0.5409871497829326,
+        "rmse_inter": 540.2923410255393,
+        "nrmse_inter": 0.9155681755333079,
+        "mae_inter": 229.53433557813287,
+        "spearman_inter": 0.8453178550504444,
+        "rel_error_total": 0.16803409008754197,
+        "cpc_inflow": 0.8742270914978164,
+        "cpc_outflow": 0.8603876151558394
+      },
+      "mapping_stats": {
+        "n_strict_within": 96,
+        "n_nearest_fallback": 0,
+        "fallback_details": []
+      },
+      "delta_city": 0.00869596509407955,
+      "delta_county": 0.00869596509407955,
+      "delta_subzone": 0.012092474993161906,
+      "fold": 5
+    }
+  ]
+}

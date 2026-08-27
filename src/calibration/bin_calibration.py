@@ -43,7 +43,6 @@ def calibrate_moving_bins(
     target_moving_yd: np.ndarray | torch.Tensor,
     q: float = 1.0,
     pair_distance: torch.Tensor | None = None,
-    eps: float = 1e-8,
     tolerance: float = 1e-5,
 ) -> torch.Tensor:
     """
@@ -78,7 +77,7 @@ def calibrate_moving_bins(
     # Mask for interzonal pairs Omega_c^+ (i != j and D_ij > 0)
     if pair_distance is not None:
         p_dist = pair_distance.to(device=t_pred_zero_shot.device)
-        dist_km = torch.expm1(p_dist) if p_dist.max() < 20.0 else p_dist
+        dist_km = p_dist
         inter_mask = (pair_o_idx != pair_d_idx) & (dist_km > 0.0)
     else:
         inter_mask = (pair_o_idx != pair_d_idx) & (bin_labels > 0)
@@ -117,7 +116,10 @@ def calibrate_moving_bins(
             ratio = p_cond[idx] / implied_p[idx]
             w[idx] = ratio ** q
         else:
-            w[idx] = 1.0
+            # Inactive bin (no candidate pairs in this bin) → zero weight.
+            # This is consistent with the mathematical spec: inactive bins carry no mass
+            # and must not contribute to the scaling normalization.
+            w[idx] = 0.0
 
     # Normalization to ensure interzonal mass preservation: \sum \hat{T}^{cal} == \sum \hat{T}^{ZS}
     weighted_mass = torch.sum(implied_p * w)
@@ -223,6 +225,11 @@ def calibrate_kbins(
         s_k        = w_k / sum_l(Y_hat_l * w_l)
         T_cal_ij   = s_{b(ij)} * T0_ij   for (i,j) in Omega_c^+
 
+    Notes on zero-behavior:
+        If target Y_D_k == 0, then w_k(q) = 0 for ANY q > 0.
+        This forces hard-zero predictions on that bin, making q mapping non-continuous at q=0 if the target contains exact zeros.
+        Smoothing/pseudocounts must be applied to Y_D prior to calling this function if a softer response is desired.
+
     Invariants:
         1. Interzonal mass preservation: sum(T_cal[inter]) == sum(T0[inter]) within tolerance.
         2. Intrazonal identity: T_cal[~inter] == T0[~inter] exactly.
@@ -315,6 +322,85 @@ def calibrate_kbins(
                         f"got={cal_prop:.6f}, err={bin_err:.6f}"
                     )
 
+    return t_cal
+
+
+def calibrate_kbins_grouped(
+    t0_np: np.ndarray,
+    dist_km: np.ndarray,
+    inter_mask: np.ndarray,
+    yd_target_dict: dict,
+    bin_edges: np.ndarray,
+    pair_group_idx: np.ndarray,
+    q: float = 1.0,
+    tolerance: float = 1e-5,
+) -> np.ndarray:
+    """
+    Group-conditioned K-bin calibration (e.g., per-county).
+    
+    Applies the closed-form K-bin calibration independently for each group
+    defined by pair_group_idx (e.g., origin county ID of each pair),
+    while preserving the zero-shot predicted outflow of each group.
+    
+    Args:
+        t0_np:          (E,) zero-shot predicted flows.
+        dist_km:        (E,) pairwise distances in km.
+        inter_mask:     (E,) boolean mask for interzonal pairs Omega_c^+.
+        yd_target_dict: Dict mapping group_id -> (K,) target distance distribution.
+        bin_edges:      (K+1,) strictly increasing edges.
+        pair_group_idx: (E,) group ID for each pair (e.g., origin county ID).
+        q:              Soft calibration strength.
+        tolerance:      Numerical precision.
+        
+    Returns:
+        t_cal: (E,) calibrated flows.
+    """
+    t_cal = t0_np.copy().astype(np.float64)
+    
+    # Intrazonal pairs are not modified
+    # We calibrate interzonal pairs group by group
+    
+    unique_groups = np.unique(pair_group_idx)
+    
+    for g in unique_groups:
+        if g not in yd_target_dict:
+            continue
+            
+        yd_g = yd_target_dict[g]
+        
+        # Mask for interzonal pairs belonging to group g
+        g_mask = (pair_group_idx == g)
+        inter_g_mask = inter_mask & g_mask
+        
+        if not inter_g_mask.any():
+            continue
+            
+        # Extract slices for this group
+        t0_g = t0_np[g_mask]
+        dist_g = dist_km[g_mask]
+        
+        # We need a local inter_mask for the group slice
+        # inter_g_mask is length E. We need a mask of length len(t0_g)
+        # Since t0_g is selected by g_mask, the local inter_mask is simply
+        # inter_mask[g_mask]
+        local_inter_mask = inter_mask[g_mask]
+        
+        # Apply city-level calibration logic locally to the group
+        # calibrate_kbins requires full E-length arrays if we pass them, 
+        # but it works on any size. We pass the local slices.
+        t_cal_g = calibrate_kbins(
+            t0_np=t0_g,
+            dist_km=dist_g,
+            inter_mask=local_inter_mask,
+            yd_target=yd_g,
+            bin_edges=bin_edges,
+            q=q,
+            tolerance=tolerance
+        )
+        
+        # Assign back to the global array
+        t_cal[g_mask] = t_cal_g
+        
     return t_cal
 
 

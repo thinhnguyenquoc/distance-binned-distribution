@@ -149,7 +149,7 @@ def extract_yd_4bin_real(city_name: str, meta_prior_dir: str = "meta_prior") -> 
     return mean_yd / total if total > 0 else None
 
 
-def extract_yd_moving_real(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
+def extract_M1_city_oracle_obs(city_name: str, meta_prior_dir: str = "meta_prior") -> np.ndarray | None:
     """
     Primary Meta extractor: extracts the 3 moving bins {1, 2, 3} normalized to sum to 1.0.
     Excludes stay-at-home / immobility Bin 0.
@@ -172,7 +172,10 @@ def extract_yd_4bin_oracle(pair_trips: torch.Tensor, bin_labels: torch.Tensor) -
     bins_np = bin_labels.detach().cpu().numpy()
     total_flow = float(np.sum(trips_np))
     if total_flow <= 0:
-        return np.array([0.25, 0.25, 0.25, 0.25])
+        raise ValueError(
+            "extract_yd_4bin_oracle: zero total flow — city data is degenerate. "
+            "Cannot compute 4-bin oracle Y_D. Check data integrity."
+        )
     for k in range(4):
         yd[k] = np.sum(trips_np[bins_np == k])
     return yd / total_flow
@@ -195,7 +198,7 @@ def extract_yd_moving_oracle(
 
     if pair_distance is not None:
         p_dist = pair_distance.detach().cpu().numpy()
-        dist_km = np.expm1(p_dist) if np.max(p_dist) < 20.0 else p_dist
+        dist_km = p_dist
         inter_mask = (o_np != d_np) & (dist_km > 0.0)
     else:
         inter_mask = (o_np != d_np) & (bins_np > 0)
@@ -205,7 +208,10 @@ def extract_yd_moving_oracle(
     yd_3 = np.zeros(3, dtype=np.float64)
     total_inter = np.sum(inter_trips)
     if total_inter <= 0:
-        return np.array([0.5, 0.4, 0.1])
+        raise ValueError(
+            "extract_yd_moving_oracle: zero total interzonal flow — city data is degenerate. "
+            "Cannot compute oracle Y_D. Check data integrity."
+        )
 
     for idx, bin_k in enumerate([1, 2, 3]):
         yd_3[idx] = np.sum(inter_trips[inter_bins == bin_k])
@@ -276,6 +282,38 @@ def compute_kbin_edges(
     return edges, K_active
 
 
+def compute_equal_width_kbin_edges(
+    train_city_names: list,
+    K: int = 8,
+    data_root: str = "data",
+) -> tuple:
+    """Compute K equal-width moving-distance bins from training-city distances.
+
+    The final bin is an overflow bin so test-city distances above the training
+    maximum remain covered without using test data to define the edges.
+    """
+    from src.data.dataset import load_raw_city
+
+    max_distance = 0.0
+    for city_name in train_city_names:
+        raw = load_raw_city(city_name, data_root=data_root)
+        origins = raw.pair_o_idx.numpy()
+        destinations = raw.pair_d_idx.numpy()
+        inter = (origins != destinations) & (raw.dist_km > 0.0)
+        if inter.any():
+            max_distance = max(max_distance, float(np.max(raw.dist_km[inter])))
+
+    if max_distance <= 0.0:
+        raise ValueError("No positive interzonal distances found in training cities")
+
+    width = max_distance / K
+    edges = np.concatenate([
+        np.arange(K, dtype=np.float64) * width,
+        [np.inf],
+    ])
+    return edges, K
+
+
 def extract_yd_kbins(
     dist_km: np.ndarray,
     trips: np.ndarray,
@@ -319,6 +357,47 @@ def extract_yd_kbins(
         yd = np.ones(K, dtype=np.float64) / K
 
     return yd   # shape: (K,) summing to 1.0
+
+
+def extract_yd_kbins_grouped(
+    dist_km: np.ndarray,
+    trips: np.ndarray,
+    bin_edges: np.ndarray,
+    inter_mask: np.ndarray,
+    pair_group_idx: np.ndarray,
+) -> dict:
+    """
+    Extract K-bin oracle trip-length distribution per group (e.g., origin county).
+    
+    Args:
+        dist_km:        (E,) pairwise distances in km.
+        trips:          (E,) ground-truth flow counts T_ij^GT.
+        bin_edges:      (K+1,) strictly increasing bin edges.
+        inter_mask:     (E,) boolean mask for interzonal pairs Omega_c^+.
+        pair_group_idx: (E,) group ID for each pair.
+        
+    Returns:
+        dict: Mapping group_id -> (K,) normalized oracle distance distribution.
+    """
+    yd_dict = {}
+    unique_groups = np.unique(pair_group_idx)
+    
+    for g in unique_groups:
+        g_mask = (pair_group_idx == g)
+        inter_g_mask = inter_mask & g_mask
+        
+        if not inter_g_mask.any():
+            continue
+            
+        yd_g = extract_yd_kbins(
+            dist_km=dist_km[g_mask],
+            trips=trips[g_mask],
+            bin_edges=bin_edges,
+            inter_mask=inter_mask[g_mask]
+        )
+        yd_dict[g] = yd_g
+        
+    return yd_dict
 
 
 if __name__ == "__main__":

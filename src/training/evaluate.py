@@ -8,10 +8,8 @@ Primary Metric:
 Secondary Metrics:
     1. Scale-Normalized Interzonal CPC (CPC_inter_norm = 1 - TVD):
         Evaluates pure structural flow geometry independent of total flow scale.
-    2. Full CPC (CPC_full) on all Omega_c (with intact intrazonal diagonal).
-    3. Full Scale-Normalized CPC (CPC_full_norm).
-    4. RMSE-log1p on Omega_c^+ and full Omega_c.
-    5. Pearson correlation r on Omega_c^+ and full Omega_c.
+    2. RMSE-log1p on Omega_c^+.
+    3. Pearson/Spearman correlation on Omega_c^+.
 """
 
 import math
@@ -65,6 +63,38 @@ def compute_spearman_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
     return float(rho) if not np.isnan(rho) else 0.0
 
 
+def compute_rmse_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes standard RMSE."""
+    return float(np.sqrt(np.mean((t_true - t_pred) ** 2)))
+
+def compute_nrmse_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes Normalized RMSE (RMSE / mean(true))."""
+    mean_t = np.mean(t_true)
+    if mean_t <= 0:
+        return 0.0
+    rmse = compute_rmse_pair(t_true, t_pred)
+    return float(rmse / mean_t)
+
+def compute_mae_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes Mean Absolute Error."""
+    return float(np.mean(np.abs(t_true - t_pred)))
+
+def compute_inflow_outflow_cpc(t_true: np.ndarray, t_pred: np.ndarray, o_idx: np.ndarray, d_idx: np.ndarray, n_nodes: int) -> tuple[float, float]:
+    """Computes CPC for tract-level inflows and outflows on observed support."""
+    outflow_t = np.zeros(n_nodes, dtype=np.float64)
+    outflow_p = np.zeros(n_nodes, dtype=np.float64)
+    inflow_t = np.zeros(n_nodes, dtype=np.float64)
+    inflow_p = np.zeros(n_nodes, dtype=np.float64)
+    
+    np.add.at(outflow_t, o_idx, t_true)
+    np.add.at(outflow_p, o_idx, t_pred)
+    np.add.at(inflow_t, d_idx, t_true)
+    np.add.at(inflow_p, d_idx, t_pred)
+    
+    cpc_out = compute_cpc_pair(outflow_t, outflow_p)
+    cpc_in = compute_cpc_pair(inflow_t, inflow_p)
+    return cpc_in, cpc_out
+
 def evaluate_moving_and_full(
     t_true: torch.Tensor,
     t_pred: torch.Tensor,
@@ -74,7 +104,8 @@ def evaluate_moving_and_full(
     pair_distance: torch.Tensor | None = None,
 ) -> dict[str, float]:
     """
-    Computes all locked metrics partitioned by Interzonal Omega_c^+ and Full Support Omega_c.
+    Computes all locked metrics partitioned by Interzonal Omega_c^+ as per partial_od.md.
+    No full-matrix CPC or missing pair performance is reported.
     """
     t_t = t_true.detach().cpu().numpy().astype(np.float64)
     t_p = t_pred.detach().cpu().numpy().astype(np.float64)
@@ -84,47 +115,62 @@ def evaluate_moving_and_full(
 
     if pair_distance is not None:
         p_dist = pair_distance.detach().cpu().numpy()
-        dist_km = np.expm1(p_dist) if np.max(p_dist) < 20.0 else p_dist
-        inter_mask = (o_np != d_np) & (dist_km > 0.0)
+        # NOTE: pair_distance is stored as log1p(km) in CityData. The > 0.0 check is equivalent
+        # to distance_km > 0 since log1p is monotone. Do NOT use dist_log1p for metric computation.
+        dist_log1p = p_dist
+        inter_mask = (o_np != d_np) & (dist_log1p > 0.0)
     else:
         inter_mask = (o_np != d_np) & (b_np > 0)
 
-    # 1. Interzonal Domain Omega_c^+ (Primary)
+    # All evaluations only on observed pairs!
+    # Primary: Interzonal Domain Omega_c^+
     t_t_inter = t_t[inter_mask]
     t_p_inter = t_p[inter_mask]
 
     cpc_inter = compute_cpc_pair(t_t_inter, t_p_inter)
-    cpc_inter_norm = compute_cpc_norm_pair(t_t_inter, t_p_inter)
-    rmse_inter = compute_rmse_log1p_pair(t_t_inter, t_p_inter)
-    pearson_inter = compute_pearson_pair(t_t_inter, t_p_inter)
+    rmse_log1p_inter = compute_rmse_log1p_pair(t_t_inter, t_p_inter)
+    rmse_inter = compute_rmse_pair(t_t_inter, t_p_inter)
+    nrmse_inter = compute_nrmse_pair(t_t_inter, t_p_inter)
+    mae_inter = compute_mae_pair(t_t_inter, t_p_inter)
     spearman_inter = compute_spearman_pair(t_t_inter, t_p_inter)
-
-    # 2. Full Matrix Domain Omega_c (Secondary)
-    cpc_full = compute_cpc_pair(t_t, t_p)
-    cpc_full_norm = compute_cpc_norm_pair(t_t, t_p)
-    rmse_full = compute_rmse_log1p_pair(t_t, t_p)
-    pearson_full = compute_pearson_pair(t_t, t_p)
-    spearman_full = compute_spearman_pair(t_t, t_p)
-
-    return {
-        # Primary interzonal metrics
+    
+    total_flow_true = np.sum(t_t_inter)
+    total_flow_pred = np.sum(t_p_inter)
+    rel_error = float(abs(total_flow_pred - total_flow_true) / max(total_flow_true, 1e-9))
+    
+    # Inflow/Outflow CPC on observed support
+    max_node = max(np.max(o_np), np.max(d_np)) + 1 if len(o_np) > 0 else 0
+    cpc_inflow, cpc_outflow = compute_inflow_outflow_cpc(t_t_inter, t_p_inter, o_np[inter_mask], d_np[inter_mask], max_node)
+    
+    result = {
         "cpc": cpc_inter,                     # primary shorthand
         "cpc_inter": cpc_inter,
-        "cpc_inter_norm": cpc_inter_norm,
+        "rmse_log1p_inter": rmse_log1p_inter,
         "rmse_inter": rmse_inter,
-        "pearson_inter": pearson_inter,
+        "nrmse_inter": nrmse_inter,
+        "mae_inter": mae_inter,
         "spearman_inter": spearman_inter,
-        # Secondary full-matrix metrics
-        "cpc_full": cpc_full,
-        "cpc_full_norm": cpc_full_norm,
-        "rmse_full": rmse_full,
-        "pearson_full": pearson_full,
-        "spearman_full": spearman_full,
+        "rel_error_total": rel_error,
+        "cpc_inflow": cpc_inflow,
+        "cpc_outflow": cpc_outflow,
     }
-
+    return result
 
 def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]:
-    """Compatibility helper for raw full-pair evaluation."""
+    """
+    DEPRECATED — Compatibility helper for raw full-pair evaluation WITHOUT interzonal filtering.
+
+    WARNING: This function computes CPC over ALL pairs including intrazonal.
+    For scientific claims, use evaluate_moving_and_full() which correctly filters to Omega_c^+.
+    This function must NOT be used to report primary metrics in any experiment.
+    """
+    import warnings
+    warnings.warn(
+        "evaluate_all() computes over all pairs without interzonal filtering. "
+        "Use evaluate_moving_and_full() for scientifically valid metrics on Omega_c^+.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     t_t = t_true.detach().cpu().numpy().astype(np.float64)
     t_p = t_pred.detach().cpu().numpy().astype(np.float64)
     return {
