@@ -73,6 +73,10 @@ In addition to tests using alternative distributions from other sources, we cond
 
 ## 4.3 The value of $Y_D$ depends on observation resolution and quality
 
+The contribution of the target-city distance-binned mobility distribution may depend on the amount of structured information preserved during aggregation. We therefore examine two dimensions of observational resolution: distance resolution and spatial resolution. For distance resolution, the number of distance bins ($K$) is varied to test whether a finer representation of the mobility-distance profile increases the value of the aggregate observation. For spatial resolution, the distance-binned distribution is constructed and applied at two distinct administrative tiers: city-wide and per U.S. county. These experiments investigate whether retaining finer-grained structure within the same aggregate observation format provides stronger, more effective constraints for zero-shot OD reconstruction.
+
+*(Tiếng Việt: Mức độ đóng góp của phân phối di chuyển theo nhóm khoảng cách tại thành phố mục tiêu có thể phụ thuộc vào lượng thông tin tổng hợp mà quan sát này còn giữ lại được. Vì vậy, chúng tôi xem xét hai khía cạnh của độ phân giải quan sát: độ phân giải theo khoảng cách và độ phân giải theo không gian. Với độ phân giải theo khoảng cách, số lượng nhóm $K$ được thay đổi để kiểm tra liệu việc biểu diễn chi tiết hơn cấu trúc di chuyển theo khoảng cách có làm tăng giá trị của quan sát hay không. Với độ phân giải theo không gian, phân phối di chuyển theo nhóm khoảng cách được xây dựng và sử dụng ở hai cấp: toàn thành phố và từng hạt (county) của Hoa Kỳ. Các thí nghiệm này nhằm kiểm tra liệu việc giữ lại nhiều cấu trúc hơn trong cùng một dạng thông tin tổng hợp có cung cấp thêm các ràng buộc hữu ích cho quá trình tái tạo OD hay không.)*
+
 ### Table 3: Information Resolution Scaling Across Distance Bins ($K \in \{2, 4, 8, 16, 32\}$)
 
 | Bins ($K$) | Mean Interzonal CPC | Median CPC | Mean $\Delta\text{CPC}$ | Median $\Delta\text{CPC}$ | 95% Fold-Stratified CI | City Win Rate | Wilcoxon $p$ (Two-Sided) |
