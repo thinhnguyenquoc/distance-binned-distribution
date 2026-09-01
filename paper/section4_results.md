@@ -77,15 +77,28 @@ The contribution of the target-city distance-binned mobility distribution may de
 
 *(Tiếng Việt: Mức độ đóng góp của phân phối di chuyển theo nhóm khoảng cách tại thành phố mục tiêu có thể phụ thuộc vào lượng thông tin tổng hợp mà quan sát này còn giữ lại được. Vì vậy, chúng tôi xem xét hai khía cạnh của độ phân giải quan sát: độ phân giải theo khoảng cách và độ phân giải theo không gian. Với độ phân giải theo khoảng cách, số lượng nhóm $K$ được thay đổi để kiểm tra liệu việc biểu diễn chi tiết hơn cấu trúc di chuyển theo khoảng cách có làm tăng giá trị của quan sát hay không. Với độ phân giải theo không gian, phân phối di chuyển theo nhóm khoảng cách được xây dựng và sử dụng ở hai cấp: toàn thành phố và từng hạt (county) của Hoa Kỳ. Các thí nghiệm này nhằm kiểm tra liệu việc giữ lại nhiều cấu trúc hơn trong cùng một dạng thông tin tổng hợp có cung cấp thêm các ràng buộc hữu ích cho quá trình tái tạo OD hay không.)*
 
-### Table 3: Information Resolution Scaling Across Distance Bins ($K \in \{2, 4, 8, 16, 32\}$)
+---
 
-| Bins ($K$) | Mean Interzonal CPC | Median CPC | Mean $\Delta\text{CPC}$ | Median $\Delta\text{CPC}$ | 95% Fold-Stratified CI | City Win Rate | Wilcoxon $p$ (Two-Sided) |
+### 4.3.1 Higher distance resolution provides more informative constraints
+
+The results indicate that the improvement in OD reconstruction increases consistently as the number of distance bins ($K$) grows. Even at the coarsest resolution ($K=2$), calibration with $Y_D$ improves mean CPC by $+0.00098$ over the frozen zero-shot baseline, with a 95% bootstrap confidence interval of $[+0.00052, +0.00151]$ and positive gains across 39 of 50 cities. The performance improvement continues to rise with resolution, reaching $+0.00354$ CPC at the canonical configuration ($K=8$) and $+0.00639$ CPC at $K=20$. At the highest tested resolution, 47 of 50 cities exhibit better performance than the zero-shot baseline, with the 95% bootstrap confidence interval remaining strictly positive ($[+0.00508, +0.00769]$).
+
+*(Tiếng Việt: Kết quả cho thấy mức cải thiện trong tái tạo OD tăng nhất quán khi số lượng nhóm khoảng cách ($K$) tăng. Ngay tại độ phân giải thấp nhất ($K=2$), việc hiệu chỉnh bằng $Y_D$ đã cải thiện CPC trung bình $+0.00098$ so với mô hình zero-shot cố định, với khoảng tin cậy bootstrap 95% là $[+0.00052, +0.00151]$, đồng thời cải thiện kết quả ở 39 trên 50 thành phố. Mức cải thiện tiếp tục tăng theo độ phân giải, đạt $+0.00354$ CPC tại cấu hình tham chiếu ($K=8$) và $+0.00639$ CPC tại $K=20$. Ở độ phân giải cao nhất được kiểm tra, 47 trên 50 thành phố có kết quả tốt hơn so với zero-shot baseline, với khoảng tin cậy bootstrap 95% vẫn hoàn toàn nằm trên 0, $[+0.00508, +0.00769]$.)*
+
+### Table 3: Information Resolution Scaling Across Distance Bins ($K \in \{2, 4, \dots, 20\}$)
+
+| Resolution ($K$) | Mean Interzonal CPC | Median CPC | Mean $\Delta\text{CPC}$ | Median $\Delta\text{CPC}$ | 95% Fold-Stratified CI | City Win Rate | Marginal Gain / Bin |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Baseline ($M_0$)** | $0.71281 \pm 0.04434$ | $0.71632$ | — | — | — | — | — |
-| **$K = 2$** | $0.71348 \pm 0.04443$ | $0.71701$ | **$+0.00067$** | $+0.00030$ | $[+0.00037, +0.00099]$ | **39 / 50 (78.0%)** | $7.72 \times 10^{-7}$ |
-| **$K = 4$** | $0.71506 \pm 0.04439$ | $0.71887$ | **$+0.00225$** | $+0.00115$ | $[+0.00160, +0.00293]$ | **44 / 50 (88.0%)** | $7.15 \times 10^{-9}$ |
-| **$K = 8$ (Default)** | $0.71635 \pm 0.04454$ | $0.71988$ | **$+0.00354$** | $+0.00195$ | $[+0.00260, +0.00450]$ | **45 / 50 (90.0%)** | $1.93 \times 10^{-9}$ |
-| **$K = 16$** | $0.71692 \pm 0.04446$ | $0.72037$ | **$+0.00411$** | $+0.00227$ | $[+0.00305, +0.00520]$ | **45 / 50 (90.0%)** | $9.87 \times 10^{-10}$ |
-| **$K = 32$** | $0.71708 \pm 0.04451$ | $0.72049$ | **$+0.00427$** | $+0.00244$ | $[+0.00318, +0.00540]$ | **46 / 50 (92.0%)** | $7.55 \times 10^{-10}$ |
+| **$K = 2$** | $0.71379 \pm 0.04441$ | $0.71665$ | **$+0.00098$** | $+0.00034$ | $[+0.00052, +0.00151]$ | **39 / 50 (78.0%)** | $0.000488$ |
+| **$K = 4$** | $0.71479 \pm 0.04439$ | $0.71720$ | **$+0.00198$** | $+0.00088$ | $[+0.00125, +0.00279]$ | **39 / 50 (78.0%)** | $0.000494$ |
+| **$K = 6$** | $0.71570 \pm 0.04445$ | $0.71784$ | **$+0.00289$** | $+0.00152$ | $[+0.00201, +0.00384]$ | **44 / 50 (88.0%)** | $0.000481$ |
+| **$K = 8$ (Anchor)** | $0.71635 \pm 0.04454$ | $0.71988$ | **$+0.00354$** | $+0.00195$ | $[+0.00262, +0.00447]$ | **45 / 50 (90.0%)** | $0.000442$ |
+| **$K = 10$** | $0.71694 \pm 0.04450$ | $0.72007$ | **$+0.00413$** | $+0.00235$ | $[+0.00311, +0.00514]$ | **45 / 50 (90.0%)** | $0.000413$ |
+| **$K = 12$** | $0.71761 \pm 0.04453$ | $0.72060$ | **$+0.00480$** | $+0.00288$ | $[+0.00372, +0.00590]$ | **46 / 50 (92.0%)** | $0.000400$ |
+| **$K = 14$** | $0.71819 \pm 0.04456$ | $0.72145$ | **$+0.00538$** | $+0.00373$ | $[+0.00424, +0.00654]$ | **46 / 50 (92.0%)** | $0.000384$ |
+| **$K = 16$** | $0.71855 \pm 0.04458$ | $0.72205$ | **$+0.00574$** | $+0.00433$ | $[+0.00455, +0.00694]$ | **46 / 50 (92.0%)** | $0.000359$ |
+| **$K = 18$** | $0.71884 \pm 0.04460$ | $0.72230$ | **$+0.00603$** | $+0.00458$ | $[+0.00480, +0.00726]$ | **47 / 50 (94.0%)** | $0.000335$ |
+| **$K = 20$** | $0.71920 \pm 0.04462$ | $0.72266$ | **$+0.00639$** | $+0.00494$ | $[+0.00508, +0.00769]$ | **47 / 50 (94.0%)** | $0.000319$ |
 
-*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds on $\Omega_c^+$. Bins are defined by equal-width distance quantiles on observed target flows.*
+*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds on $\Omega_c^+$. Bins are defined by pair-weighted distance quantiles from 35 training cities per fold. Bootstrap confidence intervals computed via $B=10,000$ fold-stratified resamples.*
