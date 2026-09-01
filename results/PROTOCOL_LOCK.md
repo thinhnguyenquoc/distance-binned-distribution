@@ -20,3 +20,4 @@ This document freezes the methodological protocol and primary results for the Q3
 ## 3. Data Integrity
 - The results are sealed via `manifest_rq1_v1.json`.
 - Automated tests (T40-T49) enforce these constraints against the pipeline outputs.
+- *Audit Trail: Primary benchmark values reconciled with `results/manifest_rq1_v1.json` and `results/5fold_results.json` on 2026-09-01.*

@@ -68,7 +68,7 @@ In addition to tests using alternative distributions from other sources, we cond
 | **7. Raw Fold Train-Mean $Y_D$** | **$-0.017735$** | $[-0.02365, -0.01243]$ | $4.91 \times 10^{-12}$ | **$+0.021275$** | $[+0.01613, +0.02706]$ | $4.44 \times 10^{-15}$ | **48 / 50 (96.0%)** |
 | **8. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
 
-*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. In Row 2, $p=2.19\times 10^{-11}$ ($46/50$) reflects the unified training-donor sample ($B=1000$), while the pooled 50-city fair weight-matched permutation benchmark yields $+0.00367$, $47/50$, $p=6.74\times 10^{-12}$. For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
+*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. The primary placebo result reported here is the unified training-donor arm (Row 2, $p=2.19\times 10^{-11}$, $46/50$); the fair weight-matched permutation summary ($+0.00367$, $47/50$, $p=6.74\times 10^{-12}$) is reported as a separate robustness analysis arm and is not pooled with Table 2. For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
 
 ---
 
@@ -165,7 +165,7 @@ Synthesized with our distance-resolution and spatial-resolution experiments, the
 
 ### Table 4: Perturbation Tolerance and Noise Sensitivity Across Total Variation Error Levels
 
-| TV Noise Level ($\epsilon$) | Mean Calibrated CPC | Mean $\Delta\text{CPC}$ | 95% Fold-Stratified CI | Positive Cities | Degradation vs Clean ($p_{\text{2-sided}}$) |
+| TV Noise Level ($\epsilon$) | Mean Calibrated CPC | Mean $\Delta\text{CPC}$ | 95% Fold-Stratified CI | Positive Cities | Degradation vs Clean (Holm-adjusted $p$) |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | **$\epsilon = 0.00$ (Clean Target $Y_D$)** | $0.71635$ | **$+0.00354$** | $[+0.00261, +0.00451]$ | **45 / 50 (90.0%)** | — |
 | **$\epsilon = 0.01$ (1% TV Error)** | $0.71617$ | **$+0.00336$** | $[+0.00243, +0.00432]$ | **44 / 50 (88.0%)** | $4.44 \times 10^{-15}$ |
@@ -174,7 +174,7 @@ Synthesized with our distance-resolution and spatial-resolution experiments, the
 | **$\epsilon = 0.04$ (4% TV Error)** | $0.71351$ | **$+0.00070$** | $[-0.00025, +0.00167]$ | **18 / 50 (36.0%)** | $4.44 \times 10^{-15}$ |
 | **$\epsilon = 0.05$ (5% TV Error)** | $0.71193$ | **$-0.00087$** | $[-0.00183, +0.00012]$ | 17 / 50 (34.0%) | $4.44 \times 10^{-15}$ |
 
-*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds at $K=8$. Synthetic noise directions are sampled uniformly on the simplex at specified Total Variation error magnitudes $\epsilon = \frac{1}{2}\sum_k |Y_k - \tilde{Y}_k|$. The mean signal breakdown crossover threshold across $B=1,000$ noise directions is $\epsilon_{\text{cross}} = 4.44\%$ [95% CI: 4.16%, 4.77%].*
+*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds at $K=8$. Synthetic perturbations use centered Gaussian directions in log-ratio space ($z \sim \mathcal{N}(0, I)$, zero-mean centered) and are scaled numerically via exponential tilting ($p_\sigma \propto p \exp(\sigma z)$) to achieve the specified Total Variation error magnitudes $\epsilon = \frac{1}{2}\sum_k |Y_k - \tilde{Y}_k|$. Degradation $p$-values are family-wise error rate controlled across noise levels via Holm-Bonferroni adjustment. The mean signal breakdown crossover threshold across $B=1,000$ noise directions is $\epsilon_{\text{cross}} = 4.44\%$ [95% CI: 4.16%, 4.77%].*
 
 ---
 
@@ -188,7 +188,7 @@ The results demonstrate that calibration efficacy critically depends on preservi
 
 *(Tiếng Việt: Kết quả cho thấy hiệu quả hiệu chỉnh phụ thuộc mạnh vào việc bảo toàn đúng cấu trúc khoảng cách. Khi sử dụng $Y_D$ với thứ tự khoảng cách đúng, CPC trung bình cải thiện khoảng $+0.00354$ so với zero-shot baseline. Ngược lại, khi thứ tự các khoảng bị hoán vị, mức thay đổi CPC trung bình giảm xuống khoảng $-0.00696$, tức là hiệu chỉnh không chỉ mất lợi ích mà còn làm chất lượng dự báo thấp hơn baseline. Chênh lệch giữa điều kiện đúng thứ tự và điều kiện hoán vị đạt khoảng $+0.01050$ CPC.)*
 
-This outcome demonstrates that the utility of $Y_D$ does not merely stem from injecting an aggregate numerical vector into the calibration pipeline. What proves decisive is that each component of the distribution is strictly bound to the physical distance interval it represents. When the mapping between mobility flow and distance is scrambled, the calibration operator rescales predicted flow mass according to erroneous distance constraints, thereby severely distorting zero-shot OD reconstruction.
+This outcome demonstrates that the utility of $Y_D$ does not merely stem from injecting an aggregate numerical vector into the calibration pipeline. Crucially, each component of the distribution must correspond to the physical distance interval it represents. When the mapping between mobility flow and distance is scrambled, the calibration operator rescales predicted flow mass according to erroneous distance constraints, thereby severely distorting zero-shot OD reconstruction.
 
 *(Tiếng Việt: Kết quả này cho thấy lợi ích của $Y_D$ không đơn thuần đến từ việc bổ sung một vector phân phối tổng hợp vào quá trình hiệu chỉnh. Điều quyết định là mỗi thành phần của phân phối phải được liên kết đúng với khoảng cách mà nó đại diện. Khi ánh xạ giữa khối lượng di chuyển và khoảng cách bị phá vỡ, quy trình hiệu chỉnh phân bổ lại khối lượng dự báo theo các ràng buộc sai và từ đó làm suy giảm chất lượng tái tạo OD.)*
 
@@ -387,9 +387,9 @@ To quantify this comparison empirically, we conduct a direct-OD information equi
 
 *(Tiếng Việt: Để kiểm tra khả năng này, chúng tôi xây dựng thí nghiệm direct-OD equivalence, trong đó $Y_D$ được so sánh với một lượng quan sát OD trực tiếp có quy mô thông tin tương đương. Các quan sát pair-level này được đưa vào cùng protocol đánh giá, trong khi mô hình zero-shot, tập thành phố mục tiêu và quy trình so sánh được giữ nguyên. Mục tiêu của thiết kế này không phải là giả định rằng hai loại quan sát mang cùng nội dung thông tin, mà là kiểm tra liệu một lượng nhỏ supervision trực tiếp ở mức OD có thể tái tạo lợi ích đạt được từ một quan sát tổng hợp có cấu trúc hay không.)*
 
-The empirical results in Table 7 establish an operational equivalence crossing point at $p_{\mathrm{eq}} \approx 0.20\%$ of positive interzonal pairs. Specifically, directly observing $0.10\%$ of pairs yields an unseen-pair gain of $\Delta\mathrm{CPC} = +0.00180$, falling short of the $+0.00354$ achieved by $Y_D$ (difference $D = -0.00174$, 95% CI: $[-0.00279, -0.00068]$). Observing $0.25\%$ of pairs produces $\Delta\mathrm{CPC} = +0.00448$ ($D = +0.00094$). Thus, observing just 8 aggregate distance scalars provides an informational constraint equivalent to directly surveying approximately $0.20\%$ of the entire positive interzonal OD support ($\approx 35$ individually surveyed tract-to-tract flows per city on average).
+The empirical results in Table 7 establish an operational equivalence crossing point via linear interpolation at $p_{\mathrm{eq}} \approx 0.20\%$ of positive interzonal pairs. Specifically, directly observing $0.10\%$ of pairs yields an unseen-pair gain of $\Delta\mathrm{CPC} = +0.00180$, falling short of the $+0.00354$ achieved by $Y_D$ (difference $D = -0.00174$, 95% CI: $[-0.00279, -0.00068]$). Observing $0.25\%$ of pairs produces $\Delta\mathrm{CPC} = +0.00448$ ($D = +0.00094$). Linear interpolation between the $0.10\%$ and $0.25\%$ evaluated conditions places the operational crossing at approximately $0.20\%$, indicating that observing just 8 aggregate distance scalars provides an informational constraint equivalent to directly surveying approximately $0.20\%$ of the entire positive interzonal OD support (corresponding to an interpolated $\approx 35$ individually surveyed tract-to-tract flows per city on average).
 
-*(Tiếng Việt: Kết quả thực nghiệm tại Bảng 7 xác định điểm tương đương vận hành tại $p_{\mathrm{eq}} \approx 0.20\%$ tổng số cặp OD liên vùng dương. Cụ thể, quan sát trực tiếp $0.10\%$ số cặp mang lại mức cải thiện $\Delta\mathrm{CPC} = +0.00180$ trên các cặp chưa thấy, thấp hơn mức $+0.00354$ của $Y_D$ (chênh lệch $D = -0.00174$). Khi tăng tỷ lệ lên $0.25\%$, mức cải thiện đạt $+0.00448$ ($D = +0.00094$). Như vậy, việc cung cấp 8 đại lượng khoảng cách tổng hợp mang lại ràng buộc thông tin tương đương với việc khảo sát trực tiếp khoảng $0.20\%$ toàn bộ các luồng OD dương trong đô thị.)*
+*(Tiếng Việt: Kết quả thực nghiệm tại Bảng 7 xác định điểm tương đương vận hành qua nội suy tuyến tính tại $p_{\mathrm{eq}} \approx 0.20\%$ tổng số cặp OD liên vùng dương. Cụ thể, quan sát trực tiếp $0.10\%$ số cặp mang lại mức cải thiện $\Delta\mathrm{CPC} = +0.00180$ trên các cặp chưa thấy, thấp hơn mức $+0.00354$ của $Y_D$ (chênh lệch $D = -0.00174$). Khi tăng tỷ lệ lên $0.25\%$, mức cải thiện đạt $+0.00448$ ($D = +0.00094$). Nội suy tuyến tính giữa hai mốc $0.10\%$ và $0.25\%$ cho thấy 8 đại lượng khoảng cách tổng hợp mang lại ràng buộc thông tin tương đương với việc khảo sát trực tiếp khoảng $0.20\%$ toàn bộ các luồng OD dương trong đô thị, tương ứng khoảng 35 luồng OD nội suy trên mỗi thành phố.)*
 
 This fundamental difference stems from the structural breadth of aggregate constraints. A direct OD observation provides high-precision signal for a single isolated pair, whereas each component of $Y_D$ constrains total flow volume across hundreds of pairs sharing a common distance band. Consequently, despite having an extremely low dimensionality ($K=8$ scalars), $Y_D$ simultaneously regularizes a vast region of the OD prediction space through the shared geometric decay structure.
 
@@ -407,13 +407,13 @@ Therefore, the value of $Y_D$ lies not merely in providing supplementary target 
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **$0.00\%$** | $0.7128$ | $+0.00354$ | $+0.00000$ | $-0.00354$ | $[-0.00450, -0.00260]$ | 5 / 50 |
 | **$0.10\%$** | $0.7128$ | $+0.00354$ | $+0.00180$ | $-0.00174$ | $[-0.00279, -0.00068]$ | 22 / 50 |
-| **$0.20\%$ (Equiv. Crossing $p_{\text{eq}}$)** | $0.7128$ | $+0.00354$ | **$+0.00354$** | **$0.00000$** | $[-0.00140, +0.00150]$ | 26 / 50 |
+| **$0.20\%$ (Interpolated Crossing $p_{\text{eq}}$)** | $0.7128$ | $+0.00354$ | **$+0.00354$** | **$0.00000$** | $[-0.00140, +0.00150]$ | 26 / 50 |
 | **$0.25\%$** | $0.7128$ | $+0.00354$ | $+0.00448$ | $+0.00094$ | $[-0.00051, +0.00259]$ | 29 / 50 |
 | **$0.50\%$** | $0.7128$ | $+0.00354$ | $+0.00859$ | $+0.00505$ | $[+0.00289, +0.00765]$ | 36 / 50 |
 | **$1.00\%$** | $0.7128$ | $+0.00354$ | $+0.01549$ | $+0.01195$ | $[+0.00883, +0.01560]$ | 46 / 50 |
 | **$5.00\%$** | $0.7128$ | $+0.00354$ | $+0.04363$ | $+0.04009$ | $[+0.03507, +0.04542]$ | 50 / 50 |
 
-*Note: Evaluated across $N=50$ held-out test cities on strictly unseen OD pairs. The operational equivalence crossing threshold where direct OD supervision equals full $Y_D$ utility is $p_{\mathrm{eq}} \approx 0.20\%$.*
+*Note: Evaluated across $N=50$ held-out test cities on strictly unseen OD pairs. Linear interpolation between the 0.10% and 0.25% evaluated conditions places the operational crossing where direct OD supervision equals full $Y_D$ utility at approximately $p_{\mathrm{eq}} \approx 0.20\%$ (corresponding to an interpolated $\approx 35$ individually surveyed flows per city).*
 
 ---
 
@@ -488,35 +488,22 @@ Our empirical results establish that target-city distance-binned mobility distri
 
 *(Tiếng Việt: Các kết quả thực nghiệm cho thấy phân phối di chuyển theo khoảng cách của thành phố mục tiêu, $Y_D$, cung cấp một nguồn thông tin bổ sung hữu ích cho tái tạo OD trong bối cảnh zero-shot. Trên toàn bộ tập thành phố đánh giá, việc hiệu chỉnh dự báo bằng $Y_D$ tạo ra mức cải thiện CPC dương trong phần lớn trường hợp, cho thấy quan sát tổng hợp này chứa thông tin mà mô hình cross-city baseline chưa khai thác đầy đủ.)*
 
-The informational value of $Y_D$ is non-binary and scales continuously with observational granularity and fidelity. Increasing the number of distance bins ($K$) monotonically improves reconstruction accuracy (albeit with diminishing marginal returns), while refining spatial resolution to county-level sub-distributions confers additional gains primarily in multi-county metropolises characterized by spatial heterogeneity. Synthetic perturbation experiments show that utility degrades gracefully as observation noise increases (breaking down at $\approx 4.44\%$ Total Variation error), while permutation controls confirm that preserving the authentic distance-decay ordering is an indispensable requirement for calibration benefit.
+The informational value of $Y_D$ is non-binary and scales continuously with observational granularity and fidelity. Increasing the number of distance bins ($K$) monotonically improves reconstruction accuracy (while gain normalized by the number of bins, $\Delta\mathrm{CPC}/K$, declines), while refining spatial resolution to county-level sub-distributions confers additional gains primarily in multi-county metropolises characterized by spatial heterogeneity. Synthetic perturbation experiments show that utility degrades gracefully as observation noise increases (breaking down at $\approx 4.44\%$ Total Variation error), while permutation controls indicate that preserving the authentic distance-decay ordering is essential for calibration benefit.
 
-*(Tiếng Việt: Giá trị của $Y_D$ không mang tính nhị phân mà thay đổi theo mức độ chi tiết và chất lượng của quan sát. Khi tăng số lượng khoảng khoảng cách, mức cải thiện CPC tăng theo, mặc dù lợi ích biên giảm dần. Tương tự, việc tăng độ phân giải không gian từ cấp thành phố xuống cấp hạt mang lại lợi ích bổ sung chủ yếu ở các khu vực đô thị có cấu trúc di chuyển không đồng nhất. Các thí nghiệm gây nhiễu cho thấy lợi ích của $Y_D$ suy giảm khi chất lượng quan sát giảm, trong khi thí nghiệm hoán vị xác nhận rằng việc bảo toàn đúng cấu trúc khoảng cách là điều kiện thiết yếu để quan sát này tạo ra hiệu quả hiệu chỉnh.)*
+*(Tiếng Việt: Giá trị của $Y_D$ không mang tính nhị phân mà thay đổi theo mức độ chi tiết và chất lượng của quan sát. Khi tăng số lượng khoảng khoảng cách, mức cải thiện CPC tăng theo, trong khi mức tăng trung bình chuẩn hóa theo số bin có xu hướng giảm. Tương tự, việc tăng độ phân giải không gian từ cấp thành phố xuống cấp hạt mang lại lợi ích bổ sung chủ yếu ở các khu vực đô thị có cấu trúc di chuyển không đồng nhất. Các thí nghiệm gây nhiễu cho thấy lợi ích của $Y_D$ suy giảm khi chất lượng quan sát giảm, trong khi thí nghiệm hoán vị cho thấy việc bảo toàn đúng cấu trúc khoảng cách là yếu tố then chốt để quan sát này tạo ra hiệu quả hiệu chỉnh.)*
 
-Cross-city placebo benchmarks further prove that $Y_D$ possesses strict target specificity. Substituting the true target distribution with dose-matched donor distributions from other cities collapses performance gains to near zero ($p = 2.19 \times 10^{-11}$), establishing that the utility of $Y_D$ cannot be attributed to a generic distance decay regularizer, but requires the target city's own travel behavior profile.
+Cross-city placebo benchmarks provide evidence that the calibration gain is target-city specific under the tested donor controls. Substituting the true target distribution with dose-matched donor distributions from other cities collapses performance gains to near zero ($p = 2.19 \times 10^{-11}$), indicating that the utility of $Y_D$ cannot be attributed to a generic distance decay regularizer, but requires the target city's own travel behavior profile.
 
-*(Tiếng Việt: Các kiểm tra placebo tiếp tục cho thấy $Y_D$ mang tính đặc thù theo thành phố mục tiêu. Khi phân phối đúng của thành phố mục tiêu được thay bằng phân phối lấy từ thành phố khác, lợi ích hiệu chỉnh suy giảm, cho thấy giá trị của $Y_D$ không thể được giải thích chỉ bằng một prior chung về khoảng cách. Thay vào đó, quan sát này bổ sung thông tin về cách khối lượng di chuyển được phân bố theo khoảng cách trong chính khu vực cần tái tạo.)*
+*(Tiếng Việt: Các kiểm tra placebo tiếp tục cho thấy bằng chứng rằng $Y_D$ mang tính đặc thù theo thành phố mục tiêu trong các điều kiện donor được thử nghiệm. Khi phân phối đúng của thành phố mục tiêu được thay bằng phân phối lấy từ thành phố khác, lợi ích hiệu chỉnh suy giảm, cho thấy giá trị của $Y_D$ không thể được giải thích chỉ bằng một prior chung về khoảng cách. Thay vào đó, quan sát này bổ sung thông tin về cách khối lượng di chuyển được phân bố theo khoảng cách trong chính khu vực cần tái tạo.)*
 
 Mechanistically, the degree of improvement across cities is closely coupled with baseline error characteristics. Because bin-wise scaling rescales aggregate distance mass while leaving intra-bin pairwise proportions strictly invariant, calibration is most potent when the baseline already preserves intra-bin relative structures while suffering from inter-bin distance allocation mismatch ($d_{\mathrm{pre}}$, accounting for $73.7\%$ of cross-city gain variance in linear regression).
 
 *(Tiếng Việt: Các phân tích cơ chế cũng cho thấy hiệu quả của $Y_D$ có liên quan đến trạng thái ban đầu của zero-shot baseline. Do cơ chế hiệu chỉnh chỉ thay đổi tổng khối lượng giữa các khoảng mà không trực tiếp thay đổi cấu trúc tương đối của các OD pair bên trong cùng một khoảng, $Y_D$ được kỳ vọng sẽ hữu ích nhất khi baseline đã bảo toàn tương đối tốt cấu trúc OD nội bin nhưng vẫn còn sai lệch ở cấp phân bổ khối lượng giữa các khoảng cách.)*
 
-Finally, extensive robustness stress tests demonstrate that our core conclusions replicate across independent model seeds, survive substitutions of the neural backbone (Urban GNN vs. Node MLP), and hold across distinct spatial binning schemes (quantile vs. equal-width). Furthermore, direct-OD equivalence analyses show that observing just 8 aggregate scalars matches the reconstruction benefit of surveying approximately $0.20\%$ of all positive pairwise OD flows.
+Finally, extensive robustness stress tests demonstrate that our core conclusions replicate across independent model seeds, survive substitutions of the neural backbone (Urban GNN vs. Node MLP), and hold across distinct spatial binning schemes (quantile vs. equal-width). Furthermore, direct-OD equivalence analyses show that observing just 8 aggregate scalars matches the reconstruction benefit of surveying approximately $0.20\%$ of all positive pairwise OD flows (interpolated operational crossing).
 
 *(Tiếng Việt: Cuối cùng, các kiểm tra robustness cho thấy finding chính được duy trì trước nhiều nguồn biến thiên của thiết kế thực nghiệm, bao gồm model seeds, kiến trúc backbone và cách xây dựng các khoảng khoảng cách. Điều này cho thấy hiệu ứng quan sát được không phải là sản phẩm của một cấu hình kỹ thuật duy nhất, mà phản ánh giá trị tương đối ổn định của thông tin target-city được cung cấp thông qua $Y_D$.)*
 
 In synthesis, our empirical findings demonstrate that a compact aggregate mobility signal can systematically enhance zero-shot OD reconstruction. However, its value is fundamentally conditional—governed by observational resolution, signal fidelity, target specificity, and baseline structural compatibility. Consequently, $Y_D$ should be understood as a structured, conditional observational constraint rather than a static prior that confers uniform benefits in all settings.
 
 *(Tiếng Việt: Tổng hợp lại, các kết quả cho thấy một lượng nhỏ thông tin tổng hợp về cấu trúc di chuyển theo khoảng cách có thể tạo ra cải thiện có hệ thống cho tái tạo OD zero-shot. Tuy nhiên, giá trị của thông tin này phụ thuộc vào độ phân giải, chất lượng quan sát, tính đặc thù theo thành phố và mức độ phù hợp giữa loại thông tin mà $Y_D$ cung cấp với loại sai số còn tồn tại trong baseline. Vì vậy, $Y_D$ nên được xem như một nguồn ràng buộc bổ sung có điều kiện, thay vì một tín hiệu luôn tạo ra cùng một mức lợi ích trong mọi bối cảnh.)*
-
-
-
-
-
-
-
-
-
-
-
-
-
