@@ -12,11 +12,11 @@ This document freezes the methodological protocol and primary results for the Q3
 - **Metric:** Interzonal Common Part of Commuters (CPC) on strictly positive support $\Omega_c^+$.
 
 ## 2. Locked Primary Results
-- Mean $\Delta$ CPC: +0.00357
-- Win Rate: 47/50 (94.0%)
-- Wilcoxon Two-Sided p-value: .79 \times 10^{-10}$
-- Matched-pairs rank-biserial correlation ({rb}$): 0.892
+- Mean $\Delta$ CPC: +0.00354
+- Win Rate: 45/50 (90.0%)
+- Wilcoxon Two-Sided p-value: $1.9326 \times 10^{-9}$
+- Matched-pairs rank-biserial correlation ($r_{\text{rb}}$): 0.8698
 
 ## 3. Data Integrity
-- The results are sealed via \manifest_rq1_v1.json\.
+- The results are sealed via `manifest_rq1_v1.json`.
 - Automated tests (T40-T49) enforce these constraints against the pipeline outputs.
