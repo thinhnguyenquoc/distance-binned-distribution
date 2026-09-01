@@ -115,7 +115,7 @@ def generate_figure2():
         k_data = json.load(f)
 
     k_map = {row["K"]: row for row in k_data["summary"]}
-    k_vals = [2, 4, 6, 8, 10, 12, 16, 20]
+    k_vals = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
     k_means = [k_map[k]["mean_delta"] for k in k_vals]
     k_ci_low = [k_map[k]["ci_low"] for k in k_vals]
     k_ci_high = [k_map[k]["ci_high"] for k in k_vals]
@@ -281,7 +281,7 @@ def generate_figure5():
     ax.text(
         0.05, 0.92,
         f"Pearson $r = +{r_val:.4f}$ ($p = {p_val:.2e}$)\n"
-        f"Partial $r = +0.7963$ ($p = 5.21 \\times 10^{{-12}}$)\n"
+        f"Partial $r = +0.7951$ ($p = 5.35 \\times 10^{{-12}}$)\n"
         f"Multivariate $R^2 = 73.7\\%$",
         transform=ax.transAxes,
         fontsize=8.5,
