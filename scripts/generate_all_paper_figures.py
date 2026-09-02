@@ -217,10 +217,25 @@ def generate_figure4():
 
 def generate_figure5():
     """Figure 5: Structural Validity and Specificity Controls (Correct vs Permuted vs Donor Placebo)."""
+    csv_path = Path("results/placebo_matched_v2/matched_placebo_per_city.csv")
+    df = pd.read_csv(csv_path)
+
+    def bootstrap_ci(values: np.ndarray, folds: np.ndarray) -> tuple[float, float]:
+        rng = np.random.default_rng(2024)
+        boot_means = np.empty(10_000, dtype=np.float64)
+        unique_folds = sorted(np.unique(folds))
+        for index in range(len(boot_means)):
+            samples = [rng.choice(values[folds == fold], size=np.sum(folds == fold), replace=True) for fold in unique_folds]
+            boot_means[index] = np.mean(np.concatenate(samples))
+        return tuple(np.percentile(boot_means, [2.5, 97.5]))
+
     conditions = ["Correct $Y_D$\n(Target MSA)", "Cross-City Placebo\n(Donor $Y_D$)", "Permuted Bins\n(Shuffled Order)"]
-    means = [+0.003539, -0.000091, -0.006958]
-    ci_low = [+0.002607, -0.000520, -0.008400]
-    ci_high = [+0.004483, +0.000340, -0.005500]
+    columns = ["target_delta_mean", "wrong_delta_mean", "permuted_delta_mean"]
+    values = [df[column].to_numpy(dtype=np.float64) for column in columns]
+    means = [float(value.mean()) for value in values]
+    confidence_intervals = [bootstrap_ci(value, df["fold"].to_numpy()) for value in values]
+    ci_low = [interval[0] for interval in confidence_intervals]
+    ci_high = [interval[1] for interval in confidence_intervals]
 
     yerr_low = np.array(means) - np.array(ci_low)
     yerr_high = np.array(ci_high) - np.array(means)
@@ -239,7 +254,7 @@ def generate_figure5():
     ax.grid(axis="y", linestyle="--", alpha=0.35)
 
     # Annotations
-    ax.text(0, means[0] + 0.0009, f"+{means[0]:.5f}\n($p < 10^{{-8}}$)", ha="center", fontsize=8.5, fontweight="bold", color=PRIMARY_BLUE)
+    ax.text(0, means[0] + 0.0009, f"{means[0]:+.5f}\n($p < 10^{{-8}}$)", ha="center", fontsize=8.5, fontweight="bold", color=PRIMARY_BLUE)
     ax.text(1, means[1] + 0.0008, f"{means[1]:.5f}\n(n.s.)", ha="center", fontsize=8.5, color="#555555")
     ax.text(2, means[2] - 0.0018, f"{means[2]:.5f}\n($p < 10^{{-14}}$)", ha="center", fontsize=8.5, fontweight="bold", color=MUTED_RED)
 
