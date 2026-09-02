@@ -253,7 +253,7 @@ The primary accuracy metric is the Common Part of Commuters (CPC), computed on p
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{ij}^{\mathrm{GT}}, \widehat{T}_{ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{ij}^{\mathrm{GT}} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{ij}}$$
 
-where $\Omega_{c,\mathrm{inter}}^+ = \left\{(i,j) \in \Omega_c^+ : i \ne j\right\}$. CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows. CPC is standard in spatial mobility modeling and OD reconstruction benchmarks [@lenormand2016comparison].
+where $\Omega_{c,\mathrm{inter}}^+ = \left\{(i,j) \in \Omega_c^+ : i \ne j,\ d_{ij}>0\right\}$ denotes the known positive interzonal evaluation support, restricted to distinct origin–destination zones with positive geographic distance. CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows. CPC is standard in spatial mobility modeling and OD reconstruction benchmarks [@lenormand2016comparison].
 
 The incremental information value of $Y_D$ for city $c$ is measured by the paired gain:
 
@@ -261,7 +261,7 @@ $$\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \opera
 
 A positive value indicates that conditioning on $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
 
-*(Tiếng Việt: Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{ij}, \widehat{T}_{ij}) / (\sum_{(i,j)} t_{ij} + \sum_{(i,j)} \widehat{T}_{ij})$, trong đó $\Omega_{c,\mathrm{inter}}^+ = \{(i,j)\in\Omega_c^+ : i \ne j\}$. CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison]. Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.)*
+*(Tiếng Việt: Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{ij}, \widehat{T}_{ij}) / (\sum_{(i,j)} t_{ij} + \sum_{(i,j)} \widehat{T}_{ij})$, trong đó $\Omega_{c,\mathrm{inter}}^+ = \{(i,j)\in\Omega_c^+ : i \ne j,\ d_{ij}>0\}$ là tập hỗ trợ đánh giá liên vùng dương đã biết, được giới hạn ở các cặp có origin khác destination và khoảng cách địa lý dương. CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison]. Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.)*
 
 ---
 

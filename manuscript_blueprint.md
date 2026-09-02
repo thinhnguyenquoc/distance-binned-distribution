@@ -148,6 +148,7 @@ Figures 2--6 are empirical or diagnostic results; Figure 1 is the methods schema
 | $d_{\text{pre}}$ partial correlation and scatter plot | OLS regression diagnostic tables, VIF checks, residual plots |
 | Conceptual Method Diagram (Figure 1) | Intra-bin ranking diagnostic ($Q_c^{\text{intra}}$ null finding) |
 | Core Discussion & Boundary Definitions | Calibration weight audit ($w_k$ distributions, flow preservation) |
+| County-level spatial-resolution summary | Supplementary Table S1: Descriptive multi-county spatial-resolution results, sourced from `results/spatial_resolution/spatial_resolution_per_city.json` |
 
 ---
 
