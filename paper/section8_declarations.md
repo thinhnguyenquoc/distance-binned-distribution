@@ -7,22 +7,27 @@
 ## Acknowledgments
 *(Tiếng Việt: **Lời cảm ơn**)*
 
-The authors express their gratitude to **[Advisor/Collaborator names or institutions]** for their insightful guidance, technical discussions, and critical review throughout the research design, empirical analysis, and manuscript preparation. The authors also acknowledge the organizations and platforms that provided the underlying datasets utilized in this study.
+The authors thank **[Advisor/Collaborator names or institutions]** for **[specific contributions to be confirmed]**. The laboratory team responsible for compiling the benchmark dataset should be acknowledged here once contributor names, institutional wording, and any required data-provider attribution have been confirmed.
 
-*(Tiếng Việt: Tác giả xin chân thành cảm ơn **[tên người hướng dẫn, cộng tác viên hoặc đơn vị]** vì những góp ý chuyên môn quý báu đối với thiết kế nghiên cứu, phân tích thực nghiệm và quá trình hoàn thiện bản thảo. Tác giả cũng trân trọng ghi nhận các tổ chức đã cung cấp những nguồn dữ liệu được sử dụng trong nghiên cứu.)*
+*(Tiếng Việt: Tác giả cảm ơn **[tên người hướng dẫn, cộng tác viên hoặc đơn vị]** vì **[bổ sung đóng góp cụ thể sau khi xác nhận]**. Nhóm Lab chịu trách nhiệm tổng hợp benchmark cần được ghi nhận tại đây sau khi xác nhận tên người đóng góp, cách ghi cơ quan và mọi yêu cầu dẫn nguồn của nhà cung cấp dữ liệu.)*
 
 ---
 
 ## Funding
 *(Tiếng Việt: **Nguồn tài trợ**)*
 
-This research was supported by **[Funding Agency/Program Name]**, under Grant No. **[Grant Number]**.
+**[Select and verify one funding statement before submission; do not retain both options.]**
+
+If funded: “This research was supported by **[Funding Agency/Program Name]**, under Grant No. **[Grant Number]**.”
 
 *(If no specific funding was received:)*
 > *This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.*
 
-*(Tiếng Việt: Nghiên cứu này được hỗ trợ bởi **[tên cơ quan hoặc chương trình tài trợ]**, mã tài trợ **[mã số]**.*
-*Nếu nghiên cứu không nhận tài trợ:*
+*(Tiếng Việt: **[Chọn và xác minh một tuyên bố tài trợ trước khi nộp bài; không giữ đồng thời cả hai phương án.]**
+
+Nếu có tài trợ: “Nghiên cứu này được hỗ trợ bởi **[tên cơ quan hoặc chương trình tài trợ]**, mã tài trợ **[mã số]**.”
+
+Nếu nghiên cứu không nhận tài trợ:*
 > *Nghiên cứu này không nhận bất kỳ khoản tài trợ cụ thể nào từ các cơ quan tài trợ thuộc khu vực công, thương mại hoặc phi lợi nhuận.)*
 
 ---
@@ -45,7 +50,7 @@ Author contributions are structured according to the CRediT (Contributor Roles T
 * **Supervision:** [Advisor Name]
 * **Project Administration:** [Author/Advisor Name]
 
-All authors have read and approved the final version of the manuscript.
+**[Author-role assignments and final-manuscript approval must be confirmed before submission.]**
 
 *(Tiếng Việt: Đóng góp của các tác giả được trình bày theo hệ thống phân loại CRediT như sau:
 * **Khái niệm hóa (Conceptualization):** [Tên tác giả]
@@ -61,34 +66,34 @@ All authors have read and approved the final version of the manuscript.
 * **Hướng dẫn khoa học (Supervision):** [Tên người hướng dẫn]
 * **Quản lý dự án (Project Administration):** [Tên tác giả hoặc người hướng dẫn]
 
-Tất cả các tác giả đã đọc và đồng ý với phiên bản cuối cùng của bản thảo.)*
+**[Cần xác nhận phân công vai trò và việc phê duyệt bản thảo cuối trước khi nộp bài.]**)*
 
 ---
 
 ## Competing Interests / Conflict of Interest
 *(Tiếng Việt: **Xung đột lợi ích**)*
 
-The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+**[Author confirmation required before submission.]** If confirmed, use: “The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.”
 
-*(Tiếng Việt: Các tác giả tuyên bố không có xung đột lợi ích tài chính hoặc phi tài chính nào có thể ảnh hưởng đến các phân tích và kết luận được trình bày trong bài báo này.)*
+*(Tiếng Việt: **[Cần tất cả tác giả xác nhận trước khi nộp bài.]** Nếu được xác nhận, sử dụng: “Các tác giả tuyên bố không có xung đột lợi ích tài chính hoặc quan hệ cá nhân nào có thể ảnh hưởng đến công trình được báo cáo trong bài báo này.”)*
 
 ---
 
 ## Ethical Approval
 *(Tiếng Việt: **Phê duyệt đạo đức**)*
 
-This study relies exclusively on secondary, aggregate, and publicly accessible datasets; it does not involve human interventions, clinical trials, or direct collection of personally identifiable information. Ethical approval for this study was determined to be **[Not Applicable / Exempt / Approved by Institutional Review Board, Approval ID: XXX]**.
+This study analyzes a secondary, laboratory-compiled aggregate benchmark and does not involve participant recruitment, intervention, or direct collection of personally identifiable information by the authors. However, the benchmark's original provenance, access conditions, and privacy-processing details are still being verified. The corresponding institution must therefore determine and document the appropriate ethics status before submission: **[Not Applicable / Exempt, with institutional confirmation / Approved by IRB, approval ID]**.
 
-*(Tiếng Việt: Nghiên cứu sử dụng các nguồn dữ liệu thứ cấp và tổng hợp, không thực hiện can thiệp hay thu thập trực tiếp thông tin định danh cá nhân từ người tham gia. Yêu cầu phê duyệt đạo đức đối với nghiên cứu này được xác định là **[Không áp dụng / Được miễn trừ / Đã được phê duyệt bởi tên hội đồng, mã phê duyệt: XXX]**.)*
+*(Tiếng Việt: Nghiên cứu phân tích một benchmark tổng hợp thứ cấp do Lab cung cấp và tác giả không tuyển người tham gia, thực hiện can thiệp hoặc trực tiếp thu thập thông tin định danh cá nhân. Tuy nhiên, provenance ban đầu, điều kiện truy cập và chi tiết xử lý quyền riêng tư của benchmark vẫn đang được xác minh. Vì vậy, cơ quan chủ quản cần xác định và ghi nhận trạng thái đạo đức phù hợp trước khi nộp bài: **[Không áp dụng / Được miễn trừ kèm xác nhận của cơ quan / Đã được IRB phê duyệt, mã phê duyệt]**.)*
 
 ---
 
 ## Consent to Participate and Publish
 *(Tiếng Việt: **Đồng thuận tham gia và công bố**)*
 
-This study does not involve recruitment or direct interaction with individual human participants. Consequently, consent to participate and consent for publication are **[Not Applicable]**.
+The authors did not recruit or interact directly with individual human participants. The final consent statement should follow the institutional ethics determination above: **[Not Applicable / institutional wording to be inserted]**.
 
-*(Tiếng Việt: Nghiên cứu không tuyển chọn hoặc tương tác trực tiếp với cá nhân người tham gia. Do đó, yêu cầu đồng thuận tham gia và đồng thuận công bố là **[Không áp dụng]**.)*
+*(Tiếng Việt: Tác giả không tuyển chọn hoặc tương tác trực tiếp với người tham gia. Tuyên bố đồng thuận cuối cùng cần tuân theo kết luận đạo đức của cơ quan chủ quản ở trên: **[Không áp dụng / bổ sung cách diễn đạt được cơ quan xác nhận]**.)*
 
 ---
 

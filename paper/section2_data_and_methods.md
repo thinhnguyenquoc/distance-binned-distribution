@@ -66,7 +66,7 @@ The resulting vector $\mathbf{Y}_{D,c} = [Y_{D,c,1}, \dots, Y_{D,c,K}]^T$ is use
 
 A supplementary experiment examines whether providing aggregate distance observations at a finer sub-metropolitan spatial resolution provides incremental predictive information. In this analysis, the tracts of each city are grouped by county.
 
-County boundaries are obtained from the Database of Global Administrative Areas, version 4.1 (GADM, n.d.). Each tract is mapped to its encompassing county via a spatial point-in-polygon join between the tract centroid and the county polygon. GADM is strictly utilized for this spatial grouping step; GADM is not the source of tract centroid coordinates, urban features, or OD flows.
+County boundaries are obtained from the Database of Global Administrative Areas, version 4.1 [@gadm41]. Each tract is mapped to its encompassing county via a spatial point-in-polygon join between the tract centroid and the county polygon. If a centroid does not receive a valid `within` match—for example, because it lies on a polygon boundary or near a coastline—the implementation falls back to a nearest-polygon join in EPSG:5070 and accepts the assignment only when the centroid-to-polygon distance is at most 5 km; otherwise, execution stops with an error. Duplicate matches are resolved deterministically so that each tract receives exactly one county label. GADM is strictly utilized for this spatial grouping step; GADM is not the source of tract centroid coordinates, urban features, or OD flows.
 
 Letting $g(i)$ denote the county assigned to tract $i$, OD pairs are grouped strictly by the **origin tract's county**:
 
@@ -90,7 +90,7 @@ where $\mathcal{G}_c$ denotes the set of counties present in the dataset for cit
 
 Crucially, increasing observational resolution from city to county does not alter the evaluation scope. The model still reconstructs and is evaluated against the complete set of positive flows $\Omega_c^+$ for the target city; only the aggregate supervisory signal supplied during calibration becomes spatially more granular (`M1_county`).
 
-*(Tiếng Việt: Một thí nghiệm bổ sung kiểm tra liệu quan sát có độ phân giải không gian chi tiết hơn city có mang lại thêm thông tin hay không. Trong thí nghiệm này, các tract của mỗi city được phân nhóm theo county. Ranh giới county được lấy từ GADM phiên bản 4.1. Mỗi tract được gán vào county tương ứng dựa trên vị trí tọa độ tâm trong polygon county. GADM chỉ được sử dụng cho bước phân nhóm này; GADM không phải nguồn của tọa độ tract, đặc trưng đô thị hoặc luồng OD. Gọi $g(i)$ là county được gán cho tract $i$. Theo quy tắc được xác nhận từ mã nguồn, các cặp OD được phân nhóm theo county của origin: $\Omega_{c,\ell}^+ = \{(i,j)\in\Omega_c^+:g(i)=\ell\}$. Destination $j$ có thể thuộc cùng county hoặc một county khác. Phân phối khoảng cách của nhóm county $\ell$ được xác định bởi $F_{c,\ell,b} = \sum_{(i,j)\in\Omega_{c,\ell}^+} t_{ij}^{\mathrm{GT}} \mathbb{I}(a_{b-1}\leq d_{ij}<a_b)$ và $Y_{D,c,\ell,b} = F_{c,\ell,b} / \sum_{r=1}^{K}F_{c,\ell,r}$. Do dữ liệu đầu vào vẫn được giới hạn trong các tract thuộc city do Lab cung cấp, $\mathbf{Y}_{D,c,\ell}$ mô tả phân phối khoảng cách của các chuyến đi xuất phát từ những tract của city được gán vào county $\ell$. Đại lượng này không nhất thiết đại diện cho toàn bộ hoạt động di chuyển của county bên ngoài phạm vi dữ liệu thành phố. Mỗi phân phối $\mathbf{Y}_{D,c,\ell}$ được dùng để hiệu chỉnh các cặp có origin thuộc county $\ell$. Sau đó, dự báo của tất cả nhóm county được ghép lại thành một dự báo OD hoàn chỉnh cho city: $\widehat{\mathbf{T}}_{c}^{\mathrm{county}} = \bigcup_{\ell\in\mathcal{G}_c} \{\widehat{T}_{ij}^{\mathrm{CAL}} : (i,j)\in\Omega_{c,\ell}^+\}$, trong đó $\mathcal{G}_c$ là tập county xuất hiện trong dữ liệu của city $c$. Như vậy, việc tăng độ phân giải quan sát từ city lên county không làm thay đổi phạm vi dự báo. Mô hình vẫn tái tạo và đánh giá toàn bộ OD của thành phố trên $\Omega_c^+$; chỉ thông tin tổng hợp được cung cấp cho bước hiệu chỉnh trở nên chi tiết hơn về mặt không gian (`M1_county`).)*
+*(Tiếng Việt: Một thí nghiệm bổ sung kiểm tra liệu quan sát có độ phân giải không gian chi tiết hơn city có mang lại thêm thông tin hay không. Trong thí nghiệm này, các tract của mỗi city được phân nhóm theo county. Ranh giới county được lấy từ GADM phiên bản 4.1 [@gadm41]. Mỗi tract được gán vào county tương ứng dựa trên vị trí tọa độ tâm trong polygon county. Nếu phép ghép `within` không cho kết quả hợp lệ—chẳng hạn khi tâm tract nằm trên biên polygon hoặc gần đường bờ—mã nguồn chuyển sang polygon gần nhất trong EPSG:5070 và chỉ chấp nhận kết quả khi khoảng cách không quá 5 km; nếu không, chương trình dừng và báo lỗi. Các kết quả trùng được xử lý xác định để mỗi tract chỉ có một nhãn county. GADM chỉ được sử dụng cho bước phân nhóm này; GADM không phải nguồn của tọa độ tract, đặc trưng đô thị hoặc luồng OD. Gọi $g(i)$ là county được gán cho tract $i$. Theo quy tắc được xác nhận từ mã nguồn, các cặp OD được phân nhóm theo county của origin: $\Omega_{c,\ell}^+ = \{(i,j)\in\Omega_c^+:g(i)=\ell\}$. Destination $j$ có thể thuộc cùng county hoặc một county khác. Phân phối khoảng cách của nhóm county $\ell$ được xác định bởi $F_{c,\ell,b} = \sum_{(i,j)\in\Omega_{c,\ell}^+} t_{ij}^{\mathrm{GT}} \mathbb{I}(a_{b-1}\leq d_{ij}<a_b)$ và $Y_{D,c,\ell,b} = F_{c,\ell,b} / \sum_{r=1}^{K}F_{c,\ell,r}$. Do dữ liệu đầu vào vẫn được giới hạn trong các tract thuộc city do Lab cung cấp, $\mathbf{Y}_{D,c,\ell}$ mô tả phân phối khoảng cách của các chuyến đi xuất phát từ những tract của city được gán vào county $\ell$. Đại lượng này không nhất thiết đại diện cho toàn bộ hoạt động di chuyển của county bên ngoài phạm vi dữ liệu thành phố. Mỗi phân phối $\mathbf{Y}_{D,c,\ell}$ được dùng để hiệu chỉnh các cặp có origin thuộc county $\ell$. Sau đó, dự báo của tất cả nhóm county được ghép lại thành một dự báo OD hoàn chỉnh cho city: $\widehat{\mathbf{T}}_{c}^{\mathrm{county}} = \bigcup_{\ell\in\mathcal{G}_c} \{\widehat{T}_{ij}^{\mathrm{CAL}} : (i,j)\in\Omega_{c,\ell}^+\}$, trong đó $\mathcal{G}_c$ là tập county xuất hiện trong dữ liệu của city $c$. Như vậy, việc tăng độ phân giải quan sát từ city lên county không làm thay đổi phạm vi dự báo. Mô hình vẫn tái tạo và đánh giá toàn bộ OD của thành phố trên $\Omega_c^+$; chỉ thông tin tổng hợp được cung cấp cho bước hiệu chỉnh trở nên chi tiết hơn về mặt không gian (`M1_county`).)*
 
 ---
 
@@ -167,7 +167,7 @@ Predictions are scaled by the factor corresponding to the origin tract's county:
 
 $$\widehat{T}_{ij}^{M1_{\mathrm{county}}} = s_{c, g(i), b(i,j)}(q) \cdot \widehat{T}_{ij}^{\mathrm{ZS}}$$
 
-Because normalization is executed separately per origin county, total predicted flow originating from each county is conserved ($\sum_{j:(i,j)\in\Omega_c^+, g(i)=\ell} \widehat{T}_{ij}^{M1_{\mathrm{county}}} = \sum_{j:(i,j)\in\Omega_c^+, g(i)=\ell} \widehat{T}_{ij}^{\mathrm{ZS}}$). When aggregated, total city-wide flow is also preserved.
+Because normalization is executed separately per origin county, total predicted flow originating from each county is conserved ($\sum_{(i,j)\in\Omega_c^+:g(i)=\ell} \widehat{T}_{ij}^{M1_{\mathrm{county}}} = \sum_{(i,j)\in\Omega_c^+:g(i)=\ell} \widehat{T}_{ij}^{\mathrm{ZS}}$). When aggregated, total city-wide flow is also preserved.
 
 ### 3.4.3 Invariant Mathematical Properties
 
@@ -183,7 +183,17 @@ The calibration operator possesses three foundational properties:
 ## 3.5 OD Flow Intensity Modeling via Zero-Truncated Negative Binomial (ZTNB)
 *(Tiếng Việt: **3.5. Mô hình hóa cường độ OD bằng ZTNB**)*
 
-Because the evaluation and training samples consist exclusively of OD pairs with positive flows ($t_{ij} \ge 1$), flow intensities are modeled using the Zero-Truncated Negative Binomial distribution. For $t_{ij} \ge 1$, the conditional likelihood is:
+### 3.5.1 Frozen neural backbone and training configuration
+
+Within each fold, the 26 tract features are standardized using statistics fitted exclusively on the 35 training cities and then applied unchanged to the validation and test cities. The spatial graph connects tract centroids within a 5 km Haversine radius, includes self-loops, and represents neighborhood relations in both directions. Any tract without a neighbor inside the radius is connected to its nearest tract to avoid isolated nodes.
+
+The frozen backbone contains two graph neural-network layers with hidden dimension 64 and dropout 0.1. Its pairwise decoder receives the origin and destination embeddings together with $\log(1+d_{ij})$ and a log gravity-prior term. Models are trained for at most 200 epochs with AdamW (learning rate $2\times10^{-3}$, weight decay $10^{-4}$) [@loshchilov2019adamw], gradient clipping at 5.0, a `ReduceLROnPlateau` scheduler (factor 0.5, patience 4), and early stopping with patience 15 based on validation CPC. After model selection, all backbone and output-head parameters remain fixed during target-city calibration.
+
+*(Tiếng Việt: Trong mỗi fold, 26 đặc trưng tract được chuẩn hóa bằng các thống kê chỉ fit trên 35 thành phố huấn luyện, sau đó áp dụng nguyên trạng cho tập validation và test. Đồ thị không gian nối các tâm tract trong bán kính Haversine 5 km, có self-loop và biểu diễn quan hệ láng giềng theo hai chiều. Tract không có láng giềng trong bán kính được nối với tract gần nhất để tránh nút cô lập. Backbone gồm hai lớp GNN, chiều ẩn 64 và dropout 0.1. Pairwise decoder nhận embedding của origin và destination cùng với $\log(1+d_{ij})$ và log gravity prior. Mô hình được huấn luyện tối đa 200 epoch bằng AdamW (learning rate $2\times10^{-3}$, weight decay $10^{-4}$) [@loshchilov2019adamw], gradient clipping 5.0, scheduler `ReduceLROnPlateau` (factor 0.5, patience 4) và early stopping patience 15 theo validation CPC. Sau bước chọn mô hình, toàn bộ tham số backbone và output head được giữ cố định khi hiệu chỉnh trên thành phố mục tiêu.)*
+
+### 3.5.2 Zero-truncated negative binomial likelihood and inference
+
+Because the evaluation and training samples consist exclusively of OD pairs with positive flows ($t_{ij} \ge 1$), flow intensities are modeled using the Zero-Truncated Negative Binomial distribution [@grogger1991truncated; @hilbe2011negative]. For $t_{ij} \ge 1$, the conditional likelihood is:
 
 $$P(T_{ij} = t_{ij} \mid T_{ij} \ge 1) = \frac{P_{\mathrm{NB}}(T_{ij} = t_{ij}; \mu_{ij}, \phi)}{1 - P_{\mathrm{NB}}(T_{ij} = 0; \mu_{ij}, \phi)}$$
 
@@ -199,16 +209,16 @@ At inference time, zero-shot flow predictions do not use $\mu_{ij}$ directly. In
 
 $$\widehat{T}_{ij}^{\mathrm{ZS}} = \mathbb{E}[T_{ij} \mid T_{ij} \ge 1] = \frac{\mu_{ij}}{1 - p_{0,ij}}$$
 
-As the expectation of a count distribution, $\widehat{T}_{ij}^{\mathrm{ZS}}$ is a strictly positive real value and is not required to be an integer. ZTNB strictly models flow volume conditioned on positive links $\Omega_c^+$; it does not predict link existence or treat unobserved pairs as zero flows (Grogger & Carson, 1991; Hilbe, 2011).
+As the expectation of a count distribution, $\widehat{T}_{ij}^{\mathrm{ZS}}$ is a strictly positive real value and is not required to be an integer. ZTNB strictly models flow volume conditioned on positive links $\Omega_c^+$; it does not predict link existence or treat unobserved pairs as zero flows [@grogger1991truncated; @hilbe2011negative].
 
-*(Tiếng Việt: Do tập dữ liệu chỉ bao gồm những cặp OD có luồng dương, cường độ luồng được mô hình hóa bằng phân phối negative binomial cắt tại 0. Với $t_{ij}\geq1$, likelihood là: $P(T_{ij}=t_{ij}\mid T_{ij}\geq1) = P_{\mathrm{NB}}(T_{ij}=t_{ij};\mu_{ij},\phi) / (1-P_{\mathrm{NB}}(T_{ij}=0;\mu_{ij},\phi))$. Trong đó, mạng nơ-ron dự báo trung bình chưa cắt $\mu_{ij}>0$, còn $\phi>0$ là tham số phân tán. Xác suất bằng 0 của phân phối negative binomial cơ sở là $p_{0,ij} = (\phi/(\mu_{ij}+\phi))^\phi$. Hàm mất mát huấn luyện là negative log-likelihood của phân phối ZTNB: $\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_c^+|} \sum_{(i,j)\in\Omega_c^+} [\log P_{\mathrm{NB}}(t_{ij};\mu_{ij},\phi) - \log(1-p_{0,ij})]$. Tại thời điểm suy luận, dự báo zero-shot không sử dụng trực tiếp $\mu_{ij}$. Thay vào đó, mô hình sử dụng kỳ vọng có điều kiện: $\widehat{T}_{ij}^{\mathrm{ZS}} = \mathbb{E}[T_{ij}\mid T_{ij}\geq1] = \frac{\mu_{ij}}{1-p_{0,ij}}$. Do là kỳ vọng của phân phối, $\widehat{T}_{ij}^{\mathrm{ZS}}$ là một giá trị thực dương và không bắt buộc phải là số nguyên. ZTNB chỉ mô hình hóa cường độ của những cặp thuộc $\Omega_c^+$; mô hình không dự báo sự tồn tại của các cặp OD chưa quan sát và không xem chúng là các luồng bằng 0 (Grogger & Carson, 1991; Hilbe, 2011).)*
+*(Tiếng Việt: Do tập dữ liệu chỉ bao gồm những cặp OD có luồng dương, cường độ luồng được mô hình hóa bằng phân phối negative binomial cắt tại 0 [@grogger1991truncated; @hilbe2011negative]. Với $t_{ij}\geq1$, likelihood là: $P(T_{ij}=t_{ij}\mid T_{ij}\geq1) = P_{\mathrm{NB}}(T_{ij}=t_{ij};\mu_{ij},\phi) / (1-P_{\mathrm{NB}}(T_{ij}=0;\mu_{ij},\phi))$. Trong đó, mạng nơ-ron dự báo trung bình chưa cắt $\mu_{ij}>0$, còn $\phi>0$ là tham số phân tán. Xác suất bằng 0 của phân phối negative binomial cơ sở là $p_{0,ij} = (\phi/(\mu_{ij}+\phi))^\phi$. Hàm mất mát huấn luyện là negative log-likelihood của phân phối ZTNB: $\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_c^+|} \sum_{(i,j)\in\Omega_c^+} [\log P_{\mathrm{NB}}(t_{ij};\mu_{ij},\phi) - \log(1-p_{0,ij})]$. Tại thời điểm suy luận, dự báo zero-shot không sử dụng trực tiếp $\mu_{ij}$. Thay vào đó, mô hình sử dụng kỳ vọng có điều kiện: $\widehat{T}_{ij}^{\mathrm{ZS}} = \mathbb{E}[T_{ij}\mid T_{ij}\geq1] = \frac{\mu_{ij}}{1-p_{0,ij}}$. Do là kỳ vọng của phân phối, $\widehat{T}_{ij}^{\mathrm{ZS}}$ là một giá trị thực dương và không bắt buộc phải là số nguyên. ZTNB chỉ mô hình hóa cường độ của những cặp thuộc $\Omega_c^+$; mô hình không dự báo sự tồn tại của các cặp OD chưa quan sát và không xem chúng là các luồng bằng 0.)*
 
 ---
 
 ## 3.6 Cross-City Evaluation Protocol and Statistical Inference
 *(Tiếng Việt: **3.6. Giao thức đánh giá cross-city và suy luận thống kê**)*
 
-### 5-Fold Cross-City Validation Scheme
+### 3.6.1 5-Fold Cross-City Validation Scheme
 The empirical benchmark is structured around a strict 5-fold cross-validation protocol over $N=50$ U.S. metropolitan areas. In each fold, 35 cities are assigned to the training set, 5 cities to the validation set, and the remaining 10 held-out cities to the test set. Every city appears in the test partition exactly once, ensuring comprehensive 50-city out-of-sample evaluation coverage.
 
 Data partitioning is conducted strictly at the **city level** rather than at the tract or OD pair level. Consequently, all tracts and OD pairs belonging to a given city reside exclusively in one of the three splits (train, validation, or test) within any fold. This design prevents spatial data leakage and ensures that the neural model never observes target-city representations during training.
@@ -228,13 +238,13 @@ Across all configurations, predictions are evaluated on the exact same observed 
 
 ---
 
-### Primary Evaluation Metric: Common Part of Commuters (CPC)
+### 3.6.2 Primary Evaluation Metric: Common Part of Commuters (CPC)
 
 The primary accuracy metric is the Common Part of Commuters (CPC), computed on positive interzonal pairs:
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{ij}^{\mathrm{GT}}, \widehat{T}_{ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{ij}^{\mathrm{GT}} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{ij}}$$
 
-where $\Omega_{c,\mathrm{inter}}^+ = \left\{(i,j) \in \Omega_c^+ : i \ne j\right\}$. CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows. CPC is standard in spatial mobility modeling and OD reconstruction benchmarks (Lenormand et al., 2016).
+where $\Omega_{c,\mathrm{inter}}^+ = \left\{(i,j) \in \Omega_c^+ : i \ne j\right\}$. CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows. CPC is standard in spatial mobility modeling and OD reconstruction benchmarks [@lenormand2016comparison].
 
 The incremental information value of $Y_D$ for city $c$ is measured by the paired gain:
 
@@ -242,11 +252,11 @@ $$\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \opera
 
 A positive value indicates that conditioning on $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
 
-*(Tiếng Việt: Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{ij}, \widehat{T}_{ij}) / (\sum_{(i,j)} t_{ij} + \sum_{(i,j)} \widehat{T}_{ij})$, trong đó $\Omega_{c,\mathrm{inter}}^+ = \{(i,j)\in\Omega_c^+ : i \ne j\}$. CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu (Lenormand et al., 2016). Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.)*
+*(Tiếng Việt: Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{ij}, \widehat{T}_{ij}) / (\sum_{(i,j)} t_{ij} + \sum_{(i,j)} \widehat{T}_{ij})$, trong đó $\Omega_{c,\mathrm{inter}}^+ = \{(i,j)\in\Omega_c^+ : i \ne j\}$. CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison]. Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.)*
 
 ---
 
-### Aggregation Across Model Seeds and Cities
+### 3.6.3 Aggregation Across Model Seeds and Cities
 
 To account for stochasticity in neural initialization and training optimization, each configuration is trained across three independent model seeds:
 
@@ -266,24 +276,24 @@ Macro-averaging assigns equal weight to each metropolitan area regardless of net
 
 ---
 
-### Uncertainty Quantification and Statistical Hypothesis Testing
+### 3.6.4 Uncertainty Quantification and Statistical Hypothesis Testing
 
-The 95% confidence interval for the population mean improvement is estimated via fold-stratified city-level bootstrap ($B=10,000$ resamples). In each resample, cities are sampled with replacement from the set of city deltas $\left\{\overline{\Delta\operatorname{CPC}}_c\right\}_{c=1}^{50}$, and the macro-average is recomputed. Sampling at the city level maintains the city as the fundamental unit of statistical inference and avoids treating non-independent OD pairs within the same city as independent observations.
+The 95% confidence interval for the population mean improvement is estimated via fold-stratified city-level bootstrap ($B=10,000$ resamples) [@efron1993bootstrap]. In each resample, cities are sampled with replacement within their fold strata from the set of city deltas $\left\{\overline{\Delta\operatorname{CPC}}_c\right\}_{c=1}^{50}$, and the macro-average is recomputed. Sampling at the city level maintains the city as the fundamental unit of statistical inference and avoids treating non-independent OD pairs within the same city as independent observations.
 
-A two-sided paired Wilcoxon signed-rank test is conducted across the 50 city-level deltas:
+A two-sided paired Wilcoxon signed-rank test [@wilcoxon1945ranking] is conducted across the 50 city-level deltas:
 
 $$\left\{ \overline{\Delta\operatorname{CPC}}_c \right\}_{c=1}^{50}$$
 
 The null hypothesis tests whether the median paired difference between $M1_{\mathrm{city}}$ and $M_0$ equals zero. This non-parametric test evaluates whether the observed directional improvement represents a systematic shift rather than random fluctuation around zero.
 
-*(Tiếng Việt: Khoảng tin cậy 95% của mức cải thiện trung bình được ước lượng bằng bootstrap ở cấp city ($B=10,000$). Trong mỗi lần bootstrap, 50 thành phố được lấy mẫu có hoàn lại từ tập các giá trị $\overline{\Delta\operatorname{CPC}}_c$, sau đó tính lại macro-average. Việc lấy mẫu ở cấp city giữ city là đơn vị suy luận thống kê và tránh xem hàng triệu cặp OD trong cùng thành phố như các quan sát độc lập. Kiểm định Wilcoxon signed-rank ghép cặp được áp dụng trên 50 giá trị $\{\overline{\Delta\operatorname{CPC}}_c\}_{c=1}^{50}$. Giả thuyết không cho rằng phân phối chênh lệch giữa $M1_{\mathrm{city}}$ và $M_0$ có trung vị bằng 0. Kiểm định này bổ sung cho khoảng tin cậy bootstrap bằng cách đánh giá liệu hướng cải thiện quan sát được có phù hợp với biến động ngẫu nhiên quanh 0 hay không.)*
+*(Tiếng Việt: Khoảng tin cậy 95% của mức cải thiện trung bình được ước lượng bằng bootstrap phân tầng theo fold ở cấp city ($B=10,000$) [@efron1993bootstrap]. Trong mỗi lần bootstrap, các thành phố được lấy mẫu có hoàn lại trong từng fold từ tập các giá trị $\overline{\Delta\operatorname{CPC}}_c$, sau đó tính lại macro-average. Việc lấy mẫu ở cấp city giữ city là đơn vị suy luận thống kê và tránh xem hàng triệu cặp OD trong cùng thành phố như các quan sát độc lập. Kiểm định Wilcoxon signed-rank ghép cặp [@wilcoxon1945ranking] được áp dụng trên 50 giá trị $\{\overline{\Delta\operatorname{CPC}}_c\}_{c=1}^{50}$. Giả thuyết không cho rằng phân phối chênh lệch giữa $M1_{\mathrm{city}}$ và $M_0$ có trung vị bằng 0. Kiểm định này bổ sung cho khoảng tin cậy bootstrap bằng cách đánh giá liệu hướng cải thiện quan sát được có phù hợp với biến động ngẫu nhiên quanh 0 hay không.)*
 
 ---
 
-### Robustness and Diagnostic Stress Tests
+### 3.6.5 Robustness and Diagnostic Stress Tests
 
 Supplementary experiments investigate the operational boundaries and mechanisms governing the primary result:
-1. **Distance Resolution ($K$-Sensitivity)**: Varying distance partitions across $K \in \{2, 4, 8, 12, 16, 20\}$.
+1. **Distance Resolution ($K$-Sensitivity)**: Varying distance partitions across $K \in \{2,4,6,8,10,12,14,16,18,20\}$. The nine secondary configurations are compared with the locked $K=8$ anchor using Holm's step-down family-wise error correction [@holm1979sequential].
 2. **Spatial Observational Granularity**: Comparing city-level ($M1_{\mathrm{city}}$) against origin-county grouped observations ($M1_{\mathrm{county}}$).
 3. **Observational Noise Tolerance**: Adding controlled synthetic Total Variation noise $\epsilon \in [0\%, 5\%]$ to $Y_D$ to identify breakdown thresholds.
 4. **Spatial Semantic Ordering**: Permuting the bin order of $Y_D$ to test whether distance alignment is mandatory.
@@ -292,12 +302,12 @@ Supplementary experiments investigate the operational boundaries and mechanisms 
 7. **Architectural Generality**: Evaluating across distinct neural backbones (Urban GNN, Node MLP, Gravity baseline).
 8. **Partition Strategy**: Comparing pair-weighted quantile bins against equal-width distance binning.
 
-*(Tiếng Việt: Các phân tích bổ sung được thiết kế để kiểm tra phạm vi và cơ chế của kết quả chính: (1) Độ phân giải khoảng cách: thay đổi $K \in \{2,4,8,12,16,20\}$; (2) Độ phân giải không gian: so sánh $M1_{\mathrm{city}}$ với $M1_{\mathrm{county}}$; (3) Chất lượng quan sát: thêm nhiễu Total Variation có kiểm soát vào $Y_D$; (4) Thứ tự khoảng cách: hoán vị các khoảng của $Y_D$; (5) Tính đặc thù theo thành phố: sử dụng phân phối của thành phố khác trong matched-placebo; (6) Độ bền theo khởi tạo: lặp lại với các model seeds 1, 10, 100; (7) Độ bền theo kiến trúc: so sánh backbone GNN với Node MLP và Gravity; (8) Cách chia khoảng: so sánh quantile bins với equal-width bins. Các phân tích này không thay đổi estimand chính; chúng xác định ranh giới vận hành và cơ chế khoa học của phương pháp.)*
+*(Tiếng Việt: Các phân tích bổ sung được thiết kế để kiểm tra phạm vi và cơ chế của kết quả chính: (1) Độ phân giải khoảng cách: thay đổi $K \in \{2,4,6,8,10,12,14,16,18,20\}$ và so sánh chín cấu hình phụ với mốc khóa $K=8$ bằng hiệu chỉnh Holm step-down [@holm1979sequential]; (2) Độ phân giải không gian: so sánh $M1_{\mathrm{city}}$ với $M1_{\mathrm{county}}$; (3) Chất lượng quan sát: thêm nhiễu Total Variation có kiểm soát vào $Y_D$; (4) Thứ tự khoảng cách: hoán vị các khoảng của $Y_D$; (5) Tính đặc thù theo thành phố: sử dụng phân phối của thành phố khác trong matched-placebo; (6) Độ bền theo khởi tạo: lặp lại với các model seeds 1, 10, 100; (7) Độ bền theo kiến trúc: so sánh backbone GNN với Node MLP và Gravity; (8) Cách chia khoảng: so sánh quantile bins với equal-width bins. Các phân tích này không thay đổi estimand chính; chúng xác định ranh giới vận hành và cơ chế khoa học của phương pháp.)*
 
 ---
 
-### 3.6.7 County-Level Spatial Observational Resolution Protocol
-*(Tiếng Việt: **3.6.7. Phân tích độ phân giải không gian theo county**)*
+### 3.6.6 County-Level Spatial Observational Resolution Protocol
+*(Tiếng Việt: **3.6.6. Phân tích độ phân giải không gian theo county**)*
 
 Across the 50 urban benchmark datasets, 39 metropolitan areas contain tracts that map to a single county, whereas 11 metropolitan areas contain tracts distributed across two to seven counties (the multi-county group comprises Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee, and Atlanta).
 
