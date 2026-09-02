@@ -23,7 +23,7 @@ This document serves as the immutable **Single Source of Truth** for all numeric
 | City Win Rate                      | 45 / 50 (90.0%)                    | Rank-biserial r = 0.870  |
 | Specificity vs Dose-Matched Donors | +0.00363, CI [+0.0029, +0.0045]    | p = 2.19 × 10⁻¹¹         |
 | Noise Crossover Threshold (TV)     | 4.45% TV [95% CI: 4.16%, 4.77%]    | B=1000 noisy realizations|
-| Mechanism Explanatory Power (d_pre)| r = +0.7951 (partial r = +0.7963)  | p = 5.35 × 10⁻¹²         |
+| Mechanism Explanatory Power (d_pre)| Pearson r = +0.7995 (partial r = +0.7951) | p = 5.35 × 10⁻¹²         |
 | Flow Conservation Invariant        | Error < 3.72 × 10⁻¹⁶               | Exact to machine epsilon |
 | Intra-bin Rank Invariance          | Kendall τ = 1.00000000             | Exact mathematical proof |
 +------------------------------------+------------------------------------+--------------------------+
@@ -138,11 +138,11 @@ This document serves as the immutable **Single Source of Truth** for all numeric
 ### 6.1 Distance-Distribution Mismatch Diagnostic ($d_{\text{pre}}$)
 - **Definition**: $d_{\text{pre}} = \text{TV}(\hat{Y}_D^{(0)}, Y_D^{\text{GT}}) = \frac{1}{2} \sum_{k=1}^K |\hat{Y}_k^{(0)} - Y_k^{\text{GT}}|$.
 - **Correlation with $\Delta\text{CPC}$**:
-  - Pearson correlation: $\mathbf{r = +0.7951 \ (p = 5.35 \times 10^{-12})}$.
-  - Spearman rank correlation: $\mathbf{\rho = +0.7644 \ (p = 7.73 \times 10^{-11})}$.
-- **Partial Correlation Controlling for Baseline Scale ($M_0$ CPC & Log Total Flow)**:
-  - Partial Pearson $r$: $\mathbf{r_{\text{partial}} = +0.7963 \ (p = 5.21 \times 10^{-12})}$.
-  - $R^2$ increment when adding $d_{\text{pre}}$ to baseline covariates: $\mathbf{\Delta R^2 = +0.6322}$ (from $R^2 = 0.0019 \to 0.6341, F = 79.52, p = 5.21 \times 10^{-12}$).
+  - Pearson correlation: $\mathbf{r = +0.7995 \ (p = 3.36 \times 10^{-12})}$.
+  - Spearman rank correlation: $\mathbf{\rho = +0.7464 \ (p = 4.92 \times 10^{-10})}$.
+- **Partial Correlation Controlling for Baseline Accuracy and Urban Scale**:
+  - Full-control partial Pearson $r$: $\mathbf{r_{\text{partial}} = +0.7951 \ (p = 5.35 \times 10^{-12})}$, controlling for $M_0$ CPC, $\log N_{\text{inter-pairs}}$, $\log N_{\text{tracts}}$, and mean pairwise distance.
+  - Full multivariate OLS: $\mathbf{R^2 = 73.7\%}$; $\beta(d_{\text{pre}}) = +0.1487$, $t = +8.70$, $p = 4.12 \times 10^{-11}$.
 - **Intra-Bin Ranking Quality ($Q_c^{\text{intra}}$)**:
   - Correlation with $\Delta\text{CPC}$: $r = +0.046 \ (p = 0.75)$, showing that overall gain is driven by macro-level distance correction rather than intra-bin baseline fidelity.
 
