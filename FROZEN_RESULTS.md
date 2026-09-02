@@ -22,7 +22,7 @@ This document serves as the immutable **Single Source of Truth** for all numeric
 | Primary 95% Confidence Interval    | [+0.0026, +0.0045]                 | Fold-stratified B=10,000 |
 | City Win Rate                      | 45 / 50 (90.0%)                    | Rank-biserial r = 0.870  |
 | Specificity vs Dose-Matched Donors | +0.00363, CI [+0.0029, +0.0045]    | p = 2.19 × 10⁻¹¹         |
-| Noise Crossover Threshold (TV)     | 4.45% TV [95% CI: 4.16%, 4.77%]    | B=1000 noisy realizations|
+| Noise Crossover Threshold (TV)     | 4.44% TV [95% CI: 4.16%, 4.77%]    | B=1000 noisy realizations|
 | Mechanism Explanatory Power (d_pre)| Pearson r = +0.7995 (partial r = +0.7951) | p = 5.35 × 10⁻¹²         |
 | Flow Conservation Invariant        | Error < 3.72 × 10⁻¹⁶               | Exact to machine epsilon |
 | Intra-bin Rank Invariance          | Kendall τ = 1.00000000             | Exact mathematical proof |
@@ -127,7 +127,7 @@ This document serves as the immutable **Single Source of Truth** for all numeric
 | **$\epsilon = 0.05$ (5% TV)** | 0.71193 | **-0.00087** | [-0.00183, +0.00012] | 17 / 50 (34%) | $4.44 \times 10^{-15}$ |
 
 ### 5.2 Signal Breakdown Threshold ($\epsilon_{\text{cross}}$)
-- **Mean Crossover Threshold across $B=1,000$ Noise Directions**: $\mathbf{\epsilon_{\text{cross}} = 4.45\% \ [95\%\text{ CI}: 4.16\%, 4.77\%]}$.
+- **Mean Crossover Threshold across $B=1,000$ Noise Directions**: $\mathbf{\epsilon_{\text{cross}} = 4.44\% \ [95\%\text{ CI}: 4.16\%, 4.77\%]}$.
 - **Mean Crossover Threshold across $B=10,000$ City Resamples**: $\mathbf{\epsilon_{\text{cross}} = 4.39\% \ [95\%\text{ CI}: 3.66\%, 4.94\%]}$.
 - **Practical Implication**: Under the synthetic TV perturbation protocol, positive utility is preserved up to $\approx 4.4\%$ Total Variation estimation error in the target aggregate distribution.
 

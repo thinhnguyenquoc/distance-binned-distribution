@@ -152,7 +152,7 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 | **5.0% ($\epsilon=0.05$)** | 0.71193 | `-0.00087` | `[-0.00183, +0.00012]` | 17/50 | 66.0% | **-24.7%** | `0.9696` | `4.44e-15` |
 
 * **Điểm phá vỡ tín hiệu (Crossover Threshold $\epsilon_{\text{cross}}$)**:
-  - Qua **1,000 hướng nhiễu độc lập**: $\epsilon_{\text{cross}} = \mathbf{4.45\%} \ [95\%\text{ CI}: 4.16\%, 4.77\%]$.
+  - Qua **1,000 hướng nhiễu độc lập**: $\epsilon_{\text{cross}} = \mathbf{4.44\%} \ [95\%\text{ CI}: 4.16\%, 4.77\%]$.
   - Qua **10,000 lần bootstrap resampling đô thị**: $\epsilon_{\text{cross}} = \mathbf{4.39\%} \ [95\%\text{ CI}: 3.66\%, 4.94\%]$.
   - Chi tiết tại `results/noise_robustness_fine_v1/noise_crossover_uncertainty.md`.
 * **Giải thích về lưới $0\%, 5\%, 10\%, 20\%$**:

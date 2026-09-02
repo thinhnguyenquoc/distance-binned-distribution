@@ -41,7 +41,7 @@ This document establishes the locked scientific framing, research questions, hyp
 * **H2 (Target Specificity)**: $\mathbb{E}[\Delta\text{CPC}_{\text{wrong}}] \approx 0$ and $\mathbb{E}[\Delta\text{CPC}_{\text{target}} - \Delta\text{CPC}_{\text{wrong}}] > 0$. The improvement is not an artifact of random perturbation; it strictly requires target-specific direction.
   - *Evidence*: Dose-matched wrong donors yield $\Delta\text{CPC} = -0.000091$; Specificity Difference $= +0.003630 \ [95\%\text{ CI } +0.00287, +0.00445]$, $p = 2.19 \times 10^{-11}$.
 * **H3 (Observation Quality Decay)**: $\epsilon \uparrow \implies \mathbb{E}[\Delta\text{CPC}] \downarrow$. Information utility decays monotonically with observation noise, vanishing around an empirical crossover threshold $\epsilon_{\text{cross}} \approx 4.4\%$ TV error.
-  - *Evidence*: Monotonic decline from $+0.00354$ ($\epsilon=0$) to $-0.00087$ ($\epsilon=0.05$); $\epsilon_{\text{cross}} = 4.45\%\ [4.16\%, 4.77\%]$ across realizations; $4.39\%\ [3.66\%, 4.94\%]$ across cities.
+  - *Evidence*: Monotonic decline from $+0.00354$ ($\epsilon=0$) to $-0.00087$ ($\epsilon=0.05$); $\epsilon_{\text{cross}} = 4.44\%\ [4.16\%, 4.77\%]$ across realizations; $4.39\%\ [3.66\%, 4.94\%]$ across cities.
 * **H4 (Baseline-Misalignment Mechanism)**: $d_{\text{pre}} \uparrow \implies \Delta\text{CPC} \uparrow$. Gain is largest in cities where the baseline zero-shot representation has the greatest aggregate distance distribution mismatch.
   - *Evidence*: Partial correlation $r_{\text{partial}}(d_{\text{pre}}, \Delta\text{CPC} \mid M_0, \log N_{\text{pairs}}, \log N_{\text{tracts}}, \text{MeanDist}) = +0.7951$ ($p = 5.35 \times 10^{-12}$).
 * **Formally Dropped Hypothesis**:
@@ -119,7 +119,7 @@ This document establishes the locked scientific framing, research questions, hyp
 ### 4.3 The Value of $Y_D$ Depends on Observation Resolution and Quality
 - Pre-specified canonical resolution: $K=8$ dynamic quantile bins.
 - Resolution scaling: Beyond $K=4$, marginal gain per bin steadily decreases from $4.94 \times 10^{-4}$ to $3.19 \times 10^{-4}$ at $K=20$.
-- Noise tolerance: Monotonic degradation as TV noise increases; benefit crosses zero at $\epsilon_{\text{cross}} \approx 4.45\%\ [4.16\%, 4.77\%]$ across realizations ($4.39\%\ [3.66\%, 4.94\%]$ across cities).
+- Noise tolerance: Monotonic degradation as TV noise increases; benefit crosses zero at $\epsilon_{\text{cross}} \approx 4.44\%\ [4.16\%, 4.77\%]$ across realizations ($4.39\%\ [3.66\%, 4.94\%]$ across cities).
 
 ### 4.4 Improvement Depends on Target-Specific Distance Information
 - Primary specificity evidence: Dose-matched wrong donors ($\Delta\text{CPC} = -0.000091$, Specificity gain $+0.003630, p = 2.19 \times 10^{-11}$).

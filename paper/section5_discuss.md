@@ -64,11 +64,11 @@ The utility of $Y_D$ depends on its spatial distance semantics under the evaluat
 
 Under synthetic Total Variation noise ($\epsilon \in [0\%, 5\%]$), calibration gains degrade monotonically, crossing zero at:
 
-$$\epsilon_{\text{cross}} \approx 4.45\% \quad [95\%\text{ CI: } 4.16\%, 4.77\%]$$
+$$\epsilon_{\text{cross}} \approx 4.44\% \quad [95\%\text{ CI: } 4.16\%, 4.77\%]$$
 
-This noise experiment must be interpreted within the broader context of mobility data quality. Sampling bias, coverage limitations, and data processing pipelines can introduce structured distortions that fundamentally alter empirical conclusions [@gallotti2024distorted; @pappalardo2023future]. Consequently, the empirical threshold observed here ($\epsilon_{\text{cross}} \approx 4.45\%$) is specific to our synthetic perturbation design, benchmark dataset, and neural baseline; it does not serve as a universal operational guarantee for all real-world empirical data streams.
+This noise experiment must be interpreted within the broader context of mobility data quality. Sampling bias, coverage limitations, and data processing pipelines can introduce structured distortions that fundamentally alter empirical conclusions [@gallotti2024distorted; @pappalardo2023future]. Consequently, the empirical threshold observed here ($\epsilon_{\text{cross}} \approx 4.44\%$) is specific to our synthetic perturbation design, benchmark dataset, and neural baseline; it does not serve as a universal operational guarantee for all real-world empirical data streams.
 
-*(Tiếng Việt: Trong các điều kiện đã đánh giá, giá trị sử dụng của $Y_D$ gắn với nội dung ngữ nghĩa không gian: hoán vị sai thứ tự các khoảng làm sụt giảm nghiêm trọng CPC ($\Delta\mathrm{CPC}=-0.00696$, $p<10^{-14}$, Bảng 2). Kết quả noise experiment cần được diễn giải trong bối cảnh rộng hơn của chất lượng mobility data. Nguồn dữ liệu, độ phủ mẫu và quy trình xử lý có thể tạo ra các sai lệch làm thay đổi kết luận rút ra từ dữ liệu di chuyển [@gallotti2024distorted; @pappalardo2023future]. Vì vậy, ngưỡng nhiễu quan sát được ($\epsilon_{\text{cross}}\approx4.45\%$, Hình 3) chỉ là một ngưỡng thực nghiệm dưới cơ chế perturbation đã thiết kế, không phải bảo đảm chung cho mọi nguồn dữ liệu thực tế.)*
+*(Tiếng Việt: Trong các điều kiện đã đánh giá, giá trị sử dụng của $Y_D$ gắn với nội dung ngữ nghĩa không gian: hoán vị sai thứ tự các khoảng làm sụt giảm nghiêm trọng CPC ($\Delta\mathrm{CPC}=-0.00696$, $p<10^{-14}$, Bảng 2). Kết quả noise experiment cần được diễn giải trong bối cảnh rộng hơn của chất lượng mobility data. Nguồn dữ liệu, độ phủ mẫu và quy trình xử lý có thể tạo ra các sai lệch làm thay đổi kết luận rút ra từ dữ liệu di chuyển [@gallotti2024distorted; @pappalardo2023future]. Vì vậy, ngưỡng nhiễu quan sát được ($\epsilon_{\text{cross}}\approx4.44\%$, Hình 3) chỉ là một ngưỡng thực nghiệm dưới cơ chế perturbation đã thiết kế, không phải bảo đảm chung cho mọi nguồn dữ liệu thực tế.)*
 
 ---
 
