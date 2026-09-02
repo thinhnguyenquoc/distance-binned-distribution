@@ -170,11 +170,11 @@ Under this perturbation design, mean calibration gain remains positive at lower 
 
 ---
 
-## 4.4 Is the finding robust to modeling choices and representation schemes?
+## 4.4 Is the finding robust to training and modeling choices?
 
-The preceding results establish that $Y_D$ provides supplemental structural information for zero-shot OD reconstruction, with its efficacy governed by observation resolution, fidelity, and target specificity. However, it is essential to verify whether the observed performance gains remain stable across stochastic training variations, alternative model architectures, discretization schemes, and supervision density. We therefore perform robustness evaluations across multiple independent model seeds, distinct backbones, equal-width binning, and direct pairwise OD observations.
+The preceding results establish that $Y_D$ provides supplemental structural information for zero-shot OD reconstruction, with its efficacy governed by observation resolution, fidelity, and target specificity. However, it is essential to verify whether the observed performance gains remain stable across stochastic training variations and alternative model architectures. We therefore evaluate multiple independent model seeds and distinct predictive backbones. A separate protocol-specific comparison examines the performance obtained from direct pairwise OD observations.
 
-*(Tiếng Việt: Các kết quả trước cho thấy $Y_D$ cung cấp thông tin bổ sung hữu ích cho dự báo zero-shot, đồng thời mức độ hữu ích này phụ thuộc vào độ phân giải, chất lượng quan sát và tính đặc thù mục tiêu. Tuy nhiên, cần kiểm tra liệu mức cải thiện quan sát được có ổn định trước các nguồn biến thiên của quá trình huấn luyện, lựa chọn mô hình, phương pháp chia khoảng cách và mật độ quan sát trực tiếp hay không. Vì vậy, chúng tôi thực hiện thêm các kiểm tra robustness trên nhiều model seeds, các cấu hình mô hình thay thế, equal-width binning và direct-OD comparison.)*
+*(Tiếng Việt: Các kết quả trước cho thấy $Y_D$ cung cấp thông tin bổ sung hữu ích cho dự báo zero-shot, đồng thời mức độ hữu ích này phụ thuộc vào độ phân giải, chất lượng quan sát và tính đặc thù mục tiêu. Tuy nhiên, cần kiểm tra liệu mức cải thiện quan sát được có ổn định trước biến thiên của quá trình huấn luyện và lựa chọn mô hình hay không. Vì vậy, chúng tôi đánh giá nhiều model seeds và các backbone dự báo khác nhau. Một phép so sánh riêng theo protocol kiểm tra hiệu năng thu được từ quan sát trực tiếp các cặp OD.)*
 
 ---
 
@@ -231,18 +231,7 @@ The results in Table 6 show that the calibration gain appears across both tested
 
 ---
 
-### 4.4.3 Robustness across alternative distance binning schemes
-
-Another design choice that could influence the efficacy of $Y_D$ is the method used to construct distance interval boundaries. In the primary benchmark, distance intervals are determined via pair-weighted quantiles computed from the training folds, ensuring a balanced distribution of OD pairs across bins. To assess this robustness, we evaluate an alternative equal-width binning scheme that divides the spatial extent into bins of identical physical distance width, while holding the number of bins ($K=8$), zero-shot baseline, 5-fold evaluation setup, and calibration operator strictly unchanged.
-
-*(Tiếng Việt: Một lựa chọn thiết kế khác có thể ảnh hưởng đến hiệu quả của $Y_D$ là cách xây dựng các khoảng khoảng cách. Trong thiết lập chính, các khoảng được xác định theo quantile nhằm phân bổ tương đối cân bằng số cặp OD giữa các bin. Để kiểm tra tính ổn định, chúng tôi thay cách chia quantile bằng các khoảng có độ rộng bằng nhau trên miền khoảng cách, trong khi giữ nguyên số lượng bin, mô hình zero-shot, tập thành phố đánh giá và cơ chế hiệu chỉnh.)*
-
-The results show that $Y_D$ consistently improves reconstruction accuracy under equal-width binning. While the exact numerical gain ($\Delta\mathrm{CPC}$) varies slightly from the quantile baseline due to differences in bin pair densities, the positive direction and statistical significance of the improvement are fully preserved. This demonstrates that the utility of $Y_D$ is not contingent on a single algorithmic binning rule.
-
-*(Tiếng Việt: Kết quả cho thấy $Y_D$ vẫn mang lại cải thiện so với zero-shot baseline khi sử dụng equal-width bins. Mặc dù độ lớn của $\Delta\mathrm{CPC}$ có thể thay đổi so với thiết lập quantile do cấu trúc các bin khác nhau, hướng cải thiện nhìn chung vẫn được duy trì. Điều này cho thấy lợi ích của $Y_D$ không phụ thuộc hoàn toàn vào một phương pháp phân chia khoảng cách cụ thể.)*
-
-
-### 4.4.4 Protocol-specific comparison with direct pairwise OD observations
+### 4.4.3 Protocol-specific comparison with direct pairwise OD observations
 
 To evaluate whether the observed benefit merely reflects generic target supervision rather than the structured value of distance-aggregated constraints, we compare the reconstruction gain from the $K=8$ distance-binned distribution with direct observations of positive interzonal OD pairs across sampling proportions $p\in[0.10\%,5.0\%]$. Direct-OD performance is evaluated strictly on unseen pairs across all 50 held-out test cities under an OD Fixed-Effect residual adapter (OD-FE).
 
@@ -274,11 +263,11 @@ One interpretation is that the two signals act at different structural scales. A
 
 ---
 
-### 4.4.5 Synthesis of calibration robustness and stability
+### 4.4.4 Synthesis of calibration robustness and stability
 
-Our comprehensive robustness evaluations demonstrate that the empirical utility of $Y_D$ is not contingent upon a specific, idiosyncratic experimental configuration. The positive performance gain is reliably reproduced across multiple independent model seeds, transfers across learned neural backbones (Urban GNN and Node MLP), and persists when altering the spatial discretization scheme from quantile binning to equal-width intervals. Taken together, these findings confirm that the primary result is not an artifact of a single parameter initialization, a specific neural architecture, or a particular bin construction rule.
+The positive calibration gain is reproduced across multiple independent model seeds and both evaluated neural backbones (Urban GNN and Node MLP). The classical gravity baseline exhibits only a small, non-significant change, so the architecture evidence should be interpreted as support for robustness across the two learned neural backbones rather than across all model families. Distance-resolution sensitivity is evaluated using pair-weighted quantile bins derived exclusively from the training cities. Together, these results indicate that the main finding is not attributable to a single parameter initialization or to the Urban GNN architecture alone.
 
-*(Tiếng Việt: Các kiểm tra robustness cho thấy lợi ích của $Y_D$ không phụ thuộc vào một thiết lập thực nghiệm duy nhất. Mức cải thiện vẫn được quan sát qua nhiều model seeds, trên các neural backbone (Urban GNN và MLP), và khi thay đổi cách rời rạc hóa khoảng cách từ quantile bins sang equal-width bins. Nhìn chung, các kết quả này cho thấy finding chính không phải là hệ quả riêng của một lần khởi tạo, một kiến trúc backbone hay một cách xây dựng bin cụ thể.)*
+*(Tiếng Việt: Mức tăng do hiệu chỉnh được tái hiện qua nhiều model seeds độc lập và trên cả hai neural backbone đã đánh giá là Urban GNN và Node MLP. Gravity baseline cổ điển chỉ cho mức thay đổi nhỏ, không có ý nghĩa thống kê; vì vậy bằng chứng kiến trúc chỉ hỗ trợ robustness trên hai neural backbone đã kiểm tra, không mở rộng cho mọi họ mô hình. Phân tích độ nhạy theo độ phân giải khoảng cách sử dụng pair-weighted quantile bins được xây dựng hoàn toàn từ các thành phố huấn luyện. Tổng hợp lại, kết quả chính không phải hệ quả riêng của một lần khởi tạo tham số hoặc chỉ của kiến trúc Urban GNN.)*
 
 ---
 
