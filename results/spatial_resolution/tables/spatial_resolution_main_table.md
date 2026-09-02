@@ -8,12 +8,12 @@
 
 ## S1-A: Overall Comparative Performance ($n=50$ Cities)
 
-| Condition / Model | Mean Interzonal CPC | Mean Gain vs $M_0$ (Δ) | 95% Bootstrap CI | City-Level Placebo Gain | City-Level Specificity Win Rate |
+| Condition / Model | Mean Interzonal CPC | Mean Gain vs $M_0$ (Δ) | 95% Bootstrap CI | Specificity Gap vs Wrong-Donor | City-Level Specificity Win Rate |
 |---|:---:|:---:|:---:|:---:|:---:|
 | **Zero-Shot Baseline ($M_0$)** | 0.7128 | — | — | — | — |
 | **+ City-Level Target $Y_D$ ($M_{\text{city}}$)** | 0.7163 | +0.0035 | [+0.0026, +0.0045] | +0.0413 | 50/50 |
-| **+ County-Level Target $Y_D$ ($M_{\text{county}}$)** | **0.7165** | **+0.0037** | **[+0.0027, +0.0047]** | — | — |
-| **City-Level Placebo ($M_{\text{wrong}}$ 9-Donor Avg)** | 0.6751 | -0.0377 | — | — | 0/50 |
+| **+ County-Level Target $Y_D$ ($M_{\text{county}}$)** | **0.7165** | **+0.0037** | **[+0.0027, +0.0047]** | +0.0414 | 50/50 |
+| **City-Level Placebo ($M_{\text{wrong}}$ 9-Donor Avg)** | 0.6751 | -0.0377 | [-0.0436, -0.0327] | — | 0/50 |
 
 ---
 
@@ -35,16 +35,16 @@ In multi-county metropolitan areas, distinct origin counties exhibit heterogeneo
 | **Milwaukee** | 2 counties | 0.7413 | 0.7429 | **0.7429** | **-0.0000** | 0.7042 |
 | **Atlanta** | 2 counties | 0.7108 | 0.7197 | **0.7196** | **-0.0000** | 0.6800 |
 
-**Multi-County Average ($n=5$)**:
+**Multi-County Average ($n=11$)**:
 - Mean Zero-Shot $M_0$: 0.6972
 - Mean City-Level $M_{\text{city}}$: 0.7007 (Δ = +0.0035)
 - Mean County-Level $M_{\text{county}}$: **0.7013** (Δ = **+0.0041**)
-- **Mean Spatial Resolution Gain ($\Delta_{\text{res}}$)**: **+0.0006** (Max: **+0.0027**)
-- **Resolution Improvement Rate**: **9/11**
+- **Mean Spatial Resolution Gain ($\Delta_{\text{res}}$)**: **+0.00063** (Max: **+0.0027**)
+- **Resolution Improvement Rate**: **9/11** ($81.8\%$)
 
 ---
 
-## S1-C: Single-County Sanity Invariance ($n=45$ Single-County Cities)
+## S1-C: Single-County Sanity Invariance ($n=39$ Single-County Cities)
 
 For single-county cities, all tracts belong to the same origin county, meaning $M_{\text{county}} \equiv M_{\text{city}}$ by definition.
 - **Observed Mean $\Delta_{\text{resolution}}$**: 0.000000
