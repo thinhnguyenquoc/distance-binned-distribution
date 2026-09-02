@@ -49,16 +49,16 @@ This document establishes the locked scientific framing, research questions, hyp
 
 ---
 
-## 4. 5-Figure Storyboard
+## 4. 6-Figure Storyboard
 
-### Figure 1: Problem Setup and Calibration Framework (Conceptual / Methods)
+### Figure 1: Support-Conditioned Oracle Calibration Framework (Conceptual / Methods)
 - **Panel A (Cross-City Training & Frozen Baseline)**:
   $5\text{ cross-validation folds} \times 35\text{ training cities} \to \text{Frozen } M_0$.
 - **Panel B (Inference on Target Support $\Omega_c^+$)**:
   Target city features $X_c$ and known positive support $\Omega_c^+$ passed to frozen $M_0 \to \hat{T}^{(0)}$.
 - **Panel C (Aggregate Target Observation & Intensity Calibration)**:
   Oracle target distance distribution $Y_D$ ($K=8$ bins) $\to$ closed-form mass-preserving scaling operator $s_k \to \hat{T}^{(1)} = s_{b(ij)} \hat{T}^{(0)}$.
-- **Key Visual Message**: Zero parameters trained at inference; support is fixed; calibration strictly rescales intensity across distance bins.
+- **Key Visual Message**: Zero parameters trained at inference; support is fixed; calibration strictly rescales intensity across distance bins. The oracle $Y_D$ is derived from target reference flows used for evaluation, not independently collected external telemetry.
 
 ### Figure 2: Primary Headline Finding (The Empirical Main Result)
 - **Main Plot**: Ordered per-city bar/lollipop plot of $\Delta\text{CPC}_c$ across all 50 held-out test cities.
@@ -68,7 +68,16 @@ This document establishes the locked scientific framing, research questions, hyp
   - Annotations: $45/50\text{ cities positive (90.0\%)}$, Wilcoxon $p = 1.93 \times 10^{-9}$.
 - **Key Visual Message**: While the absolute magnitude is modest, the improvement is exceptionally systematic across heterogeneous urban regions.
 
-### Figure 3: Target Specificity via Dose-Matched Placebos
+### Figure 3: Distance and Spatial Observation Resolution
+- **Panel A**: Mean calibration gain across $K \in \{2,4,6,8,10,12,14,16,18,20\}$, with fold-stratified 95% CIs.
+- **Panel B**: City-level vs. county-level calibration across the 11 multi-county metropolitan areas.
+- **Key Visual Message**: Distance resolution increases gain across the tested values; county-level information supplies small localized gains where it adds genuine spatial granularity.
+
+### Figure 4: Synthetic Noise Dose-Response
+- **Main Plot**: Mean $\Delta\mathrm{CPC}$ across 50 cities as a function of Total Variation perturbation magnitude $\epsilon$.
+- **Key Visual Message**: Utility decreases under the synthetic noise design and crosses zero near $4.44\%$ TV error; this is a benchmark-specific crossover.
+
+### Figure 5: Target Specificity via Dose-Matched Placebos
 - **Main Plot**: Direct comparison of mean $\Delta\text{CPC}$ and 95% fold-stratified bootstrap CIs across 3 key conditions:
   1. Oracle Target $Y_D$ ($+0.003539, \text{CI } [+0.00260, +0.00450]$).
   2. Dose-Matched Wrong Donor ($-0.000091, \text{CI } [-0.00089, +0.00071]$).
@@ -78,25 +87,15 @@ This document establishes the locked scientific framing, research questions, hyp
   - Generic train-mean decay vs Target: Target wins in $47/50\text{ cities}$ ($p = 4.03 \times 10^{-11}$).
 - **Key Visual Message**: Gain strictly requires the target-specific direction; generic decay or wrong directions at equal dose fail to replicate the benefit.
 
-### Figure 4: Information Quality and Observational Granularity
-- **Panel A (Noise Dose-Response)**:
-  - x-axis: Total Variation error $\epsilon \in [0.00, 0.05]$.
-  - y-axis: Mean $\Delta\text{CPC}$ across 50 cities.
-  - Shaded band: 95% CI across noise realizations.
-  - Critical marker: Crossover threshold $\epsilon_{\text{cross}} \approx 4.4\%$ TV error.
-- **Panel B (Partition Resolution $K$)**:
-  - x-axis: $K \in \{2, 4, 8, 12, 16, 20\}$.
-  - y-axis: $\Delta\text{CPC}$ and marginal gain per bin.
-  - Secondary annotation: Information granularity ratio ($\frac{K}{|\Omega_c^+|} < 0.1\%$).
-- **Key Visual Message**: Information value scales with partition granularity with diminishing marginal returns, and decays gracefully under noise until breaking down around 4.4% TV error.
-
-### Figure 5: Mechanistic Explanation via Baseline Distance Misalignment
+### Figure 6: Mechanistic Explanation via Baseline Distance Misalignment
 - **Main Plot**: Scatter plot of baseline distance mismatch $d_{\text{pre}} = \text{TV}(\hat{Y}_D^{M0}, Y_D)$ vs $\Delta\text{CPC}_c$ across all 50 cities.
 - **Regression Line & Annotation**:
   - Raw correlation $r = +0.7995$ ($p = 3.36 \times 10^{-12}$).
   - Partial correlation controlling for baseline accuracy, network size, and urban extent: $r_{\text{partial}} = +0.7951$ ($p = 5.35 \times 10^{-12}$).
   - Highlighted exemplar cities: Los Angeles, Phoenix, Houston, El Paso, Oklahoma City.
 - **Key Visual Message**: The calibration gain is highest precisely where the zero-shot baseline's distance allocation is most severely distorted.
+
+Figures 2--6 are empirical or diagnostic results; Figure 1 is the methods schematic.
 
 ---
 

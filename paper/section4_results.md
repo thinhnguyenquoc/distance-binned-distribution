@@ -12,9 +12,9 @@ In the primary experiment, incorporating the oracle target-city distance-binned 
 
 *(Tiếng Việt: Trong thí nghiệm chính, việc bổ sung phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu làm CPC liên vùng trung bình trên 50 thành phố Hoa Kỳ tăng từ 0.71281 ở mô hình zero-shot cơ sở ($M_0$) lên 0.71635 sau hiệu chỉnh ($M_1$). Mức cải thiện trung bình đạt $\Delta\mathrm{CPC}=+0.00354$, với khoảng tin cậy 95% từ fold-stratified hierarchical bootstrap là $[+0.0026,+0.0045]$. Toàn bộ khoảng tin cậy nằm phía trên 0, cho thấy mức cải thiện CPC trung bình được ước lượng là dương dưới giao thức bootstrap đã sử dụng.)*
 
-As shown in Figure 1, the improvement was not concentrated in a small subset of cities but was observed across most of the evaluation set. Specifically, CPC increased after calibration in 45 of 50 cities (90.0%). The median city-level change was also positive ($\Delta\mathrm{CPC}=+0.00195$), although the magnitude of improvement varied considerably across cities. The remaining five cities exhibited lower CPC after calibration, indicating that the benefit of target distance information did not occur in every case. Overall, the city-level distribution shows that the improvement was modest in magnitude but broadly consistent across the evaluated cities.
+As shown in Figure 2, the improvement was not concentrated in a small subset of cities but was observed across most of the evaluation set. Specifically, CPC increased after calibration in 45 of 50 cities (90.0%). The median city-level change was also positive ($\Delta\mathrm{CPC}=+0.00195$), although the magnitude of improvement varied considerably across cities. The remaining five cities exhibited lower CPC after calibration, indicating that the benefit of target distance information did not occur in every case. Overall, the city-level distribution shows that the improvement was modest in magnitude but broadly consistent across the evaluated cities.
 
-*(Tiếng Việt: Theo Hình 1, mức cải thiện không chỉ tập trung ở một số ít thành phố mà xuất hiện trên phần lớn các thành phố được đánh giá. Cụ thể, CPC tăng sau hiệu chỉnh ở 45 trong 50 thành phố (90.0%). Trung vị $\Delta\mathrm{CPC}=+0.00195$ cũng nằm phía dương, mặc dù mức cải thiện khác nhau đáng kể giữa các thành phố. Năm thành phố còn lại có CPC giảm sau hiệu chỉnh, cho thấy lợi ích của thông tin khoảng cách không xuất hiện ở mọi trường hợp. Nhìn chung, phân bố theo thành phố cho thấy mức cải thiện có quy mô nhỏ nhưng khá nhất quán trên tập đánh giá.)*
+*(Tiếng Việt: Theo Hình 2, mức cải thiện không chỉ tập trung ở một số ít thành phố mà xuất hiện trên phần lớn các thành phố được đánh giá. Cụ thể, CPC tăng sau hiệu chỉnh ở 45 trong 50 thành phố (90.0%). Trung vị $\Delta\mathrm{CPC}=+0.00195$ cũng nằm phía dương, mặc dù mức cải thiện khác nhau đáng kể giữa các thành phố. Năm thành phố còn lại có CPC giảm sau hiệu chỉnh, cho thấy lợi ích của thông tin khoảng cách không xuất hiện ở mọi trường hợp. Nhìn chung, phân bố theo thành phố cho thấy mức cải thiện có quy mô nhỏ nhưng khá nhất quán trên tập đánh giá.)*
 
 To further assess whether this pattern represented a systematic paired difference, we applied a two-sided Wilcoxon signed-rank test to the $M_0$ and $M_1$ results across the 50 cities. The test yielded $p=1.93\times10^{-9}$, providing strong evidence against the null hypothesis of no systematic paired difference between the two conditions. Taken together, these results indicate that the oracle target-city distance-binned mobility distribution provides a modest but consistent improvement over the zero-shot baseline across most evaluated cities.
 
@@ -22,8 +22,8 @@ To further assess whether this pattern represented a systematic paired differenc
 
 ---
 
-![Figure 1](figures/fig1_main_per_city.png)
-**Figure 1 | City-level improvement in interzonal CPC from oracle target-distance calibration.** Bars show the per-city performance change $\Delta\text{CPC}_c = \text{CPC}(M_{1,c}) - \text{CPC}(M_{0,c})$ for $N=50$ held-out test cities, ordered from lowest to highest. The dashed green line indicates the mean improvement ($+0.00354$) and the dotted orange line indicates the median improvement ($+0.00195$). Overall, 45 of 50 cities (90.0%) exhibit positive gains, with the primary fold-stratified 95% confidence interval spanning $[+0.0026, +0.0045]$.
+![Figure 2](figures/fig2_main_per_city.png)
+**Figure 2 | City-level improvement in interzonal CPC from oracle target-distance calibration.** Bars show the per-city performance change $\Delta\text{CPC}_c = \text{CPC}(M_{1,c}) - \text{CPC}(M_{0,c})$ for $N=50$ held-out test cities, ordered from lowest to highest. The dashed green line indicates the mean improvement ($+0.00354$) and the dotted orange line indicates the median improvement ($+0.00195$). Overall, 45 of 50 cities (90.0%) exhibit positive gains, with the primary fold-stratified 95% confidence interval spanning $[+0.0026, +0.0045]$.
 
 ---
 
@@ -54,8 +54,8 @@ In addition to tests using alternative distributions from other sources, we cond
 
 ---
 
-![Figure 4](figures/fig4_structural_validity_placebo.png)
-**Figure 4 | Structural validity and target specificity placebo controls.** Comparison of mean reconstruction gain $\Delta\mathrm{CPC}$ across $N=50$ test cities under three experimental conditions: (1) authentic target-city distribution ($Y_D$, $+0.00354$, $p < 10^{-8}$); (2) dose-matched cross-city donor placebo ($-0.00009$, not significant); and (3) permuted distance bins ($-0.00696$, $p < 10^{-14}$). Error bars represent 95% fold-stratified bootstrap confidence intervals.
+![Figure 5](figures/fig5_structural_validity_placebo.png)
+**Figure 5 | Structural validity and target specificity placebo controls.** Comparison of mean reconstruction gain $\Delta\mathrm{CPC}$ across $N=50$ test cities under three experimental conditions: (1) authentic target-city distribution ($Y_D$, $+0.00354$, $p < 10^{-8}$); (2) dose-matched cross-city donor placebo ($-0.00009$, not significant); and (3) permuted distance bins ($-0.00696$, $p < 10^{-14}$). Error bars represent 95% fold-stratified bootstrap confidence intervals.
 
 ---
 
@@ -127,8 +127,8 @@ These findings indicate that refining the spatial resolution of $Y_D$ from city 
 
 ---
 
-![Figure 2](figures/fig2_resolution_sensitivity.png)
-**Figure 2 | Observational resolution sensitivity.** **(a)** Mean calibration gain $\Delta\mathrm{CPC}$ across $N=50$ test cities as a function of the number of distance bins $K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$ with 95% fold-stratified bootstrap confidence intervals. Gain increases across the tested values while average gain per bin declines. **(b)** Comparison of city-level vs. county-level calibration across the $N=11$ multi-county metropolitan areas, highlighting localized gains from increased spatial resolution in spatially heterogeneous urban regions.
+![Figure 3](figures/fig3_resolution_sensitivity.png)
+**Figure 3 | Observational resolution sensitivity.** **(a)** Mean calibration gain $\Delta\mathrm{CPC}$ across $N=50$ test cities as a function of the number of distance bins $K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$ with 95% fold-stratified bootstrap confidence intervals. Gain increases across the tested values while average gain per bin declines. **(b)** Comparison of city-level vs. county-level calibration across the $N=11$ multi-county metropolitan areas, highlighting localized gains from increased spatial resolution in spatially heterogeneous urban regions.
 
 ---
 
@@ -140,14 +140,14 @@ Having assessed the impact of observational resolution, we next investigate how 
 
 ---
 
-![Figure 3](figures/fig3_noise_dose_response.png)
-**Figure 3 | Effect of observation fidelity on calibration benefit across 50 metropolitan areas.** The solid blue curve displays the mean interzonal $\Delta\mathrm{CPC}$ across all 50 held-out test cities as a function of Total Variation (TV) perturbation magnitude $\epsilon$ in the target-city aggregate distance observation $Y_D$. The shaded band denotes the 95% fold-stratified bootstrap confidence interval. The dashed vertical line marks the empirical signal breakdown crossover threshold ($\epsilon_{\mathrm{cross}} = 4.44\%$ TV error).
+![Figure 4](figures/fig4_noise_dose_response.png)
+**Figure 4 | Effect of observation fidelity on calibration benefit across 50 metropolitan areas.** The solid blue curve displays the mean interzonal $\Delta\mathrm{CPC}$ across all 50 held-out test cities as a function of Total Variation (TV) perturbation magnitude $\epsilon$ in the target-city aggregate distance observation $Y_D$. The shaded band denotes the 95% fold-stratified bootstrap confidence interval. The dashed vertical line marks the empirical signal breakdown crossover threshold ($\epsilon_{\mathrm{cross}} = 4.44\%$ TV error).
 
 ---
 
-The empirical results in Figure 3 show monotonic degradation across the tested synthetic noise levels: as perturbation magnitude increases, the CPC gain decreases. The uncorrupted observation yields the largest improvement ($\Delta\mathrm{CPC}=+0.00354$), while the gain falls to $+0.00070$ at $4\%$ TV noise and becomes negative at $5\%$ TV noise ($-0.00087$). Across 1,000 synthetic noise directions, the mean empirical crossover is estimated at $\epsilon_{\mathrm{cross}}=4.44\%$ TV error (95% CI $[4.16\%,4.77\%]$; the across-city summary is $4.39\%$ with 95% CI $[3.66\%,4.94\%]$). This benchmark-specific dose-response pattern shows that utility decreases as the synthetic observation departs from the reference distribution; it does not define a universal tolerance for real-world observations.
+The empirical results in Figure 4 show monotonic degradation across the tested synthetic noise levels: as perturbation magnitude increases, the CPC gain decreases. The uncorrupted observation yields the largest improvement ($\Delta\mathrm{CPC}=+0.00354$), while the gain falls to $+0.00070$ at $4\%$ TV noise and becomes negative at $5\%$ TV noise ($-0.00087$). Across 1,000 synthetic noise directions, the mean empirical crossover is estimated at $\epsilon_{\mathrm{cross}}=4.44\%$ TV error (95% CI $[4.16\%,4.77\%]$; the across-city summary is $4.39\%$ with 95% CI $[3.66\%,4.94\%]$). This benchmark-specific dose-response pattern shows that utility decreases as the synthetic observation departs from the reference distribution; it does not define a universal tolerance for real-world observations.
 
-*(Tiếng Việt: Kết quả trên Hình 3 cho thấy mức tăng suy giảm đơn điệu qua các mức nhiễu tổng hợp đã kiểm tra. Quan sát không nhiễu tạo ra mức tăng lớn nhất ($+0.00354$); mức tăng giảm còn $+0.00070$ tại sai số TV $4\%$ và trở thành âm tại $5\%$ ($-0.00087$). Trên 1.000 hướng nhiễu tổng hợp, điểm giao cắt trung bình được ước lượng tại $\epsilon_{\mathrm{cross}}=4.44\%$ (khoảng tin cậy 95% $[4.16\%,4.77\%]$). Đây là quan hệ dose-response riêng cho benchmark và thiết kế perturbation này, không phải ngưỡng dung sai phổ quát cho quan sát thực tế.)*
+*(Tiếng Việt: Kết quả trên Hình 4 cho thấy mức tăng suy giảm đơn điệu qua các mức nhiễu tổng hợp đã kiểm tra. Quan sát không nhiễu tạo ra mức tăng lớn nhất ($+0.00354$); mức tăng giảm còn $+0.00070$ tại sai số TV $4\%$ và trở thành âm tại $5\%$ ($-0.00087$). Trên 1.000 hướng nhiễu tổng hợp, điểm giao cắt trung bình được ước lượng tại $\epsilon_{\mathrm{cross}}=4.44\%$ (khoảng tin cậy 95% $[4.16\%,4.77\%]$). Đây là quan hệ dose-response riêng cho benchmark và thiết kế perturbation này, không phải ngưỡng dung sai phổ quát cho quan sát thực tế.)*
 
 Under this perturbation design, mean calibration gain remains positive at lower tested noise levels (e.g., $+0.00336$ at $1\%$ TV and $+0.00282$ at $2\%$ TV). The decline at higher perturbations also shows that $Y_D$ cannot be treated as beneficial irrespective of observation quality.
 
@@ -301,8 +301,8 @@ By contrast, baseline distance-distribution mismatch $d_{\mathrm{pre}}=\mathrm{T
 
 ---
 
-![Figure 5](figures/fig5_mechanistic_dpre.png)
-**Figure 5 | Mechanistic diagnostic: Calibration gain increases with baseline distance misalignment.** Scatter plot of baseline distance mismatch $d_{\mathrm{pre}} = \mathrm{TV}(\hat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ versus reconstruction gain $\Delta\mathrm{CPC}$ across all $N=50$ held-out test cities. The green line depicts the linear regression fit ($R^2 = 73.7\%$, Pearson $r = +0.7995$, $p = 3.36 \times 10^{-12}$, partial $r = +0.7951$, $p = 5.35 \times 10^{-12}$ controlling for baseline performance and network scale).
+![Figure 6](figures/fig6_mechanistic_dpre.png)
+**Figure 6 | Mechanistic diagnostic: Calibration gain increases with baseline distance misalignment.** Scatter plot of baseline distance mismatch $d_{\mathrm{pre}} = \mathrm{TV}(\hat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ versus reconstruction gain $\Delta\mathrm{CPC}$ across all $N=50$ held-out test cities. The green line depicts the linear regression fit ($R^2 = 73.7\%$, Pearson $r = +0.7995$, $p = 3.36 \times 10^{-12}$, partial $r = +0.7951$, $p = 5.35 \times 10^{-12}$ controlling for baseline performance and network scale).
 
 ---
 

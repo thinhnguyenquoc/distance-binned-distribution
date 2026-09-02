@@ -1,12 +1,12 @@
 """
-Master script to generate all 5 publication-ready figures for Section 4 (Empirical Results).
+Master script to generate five publication-ready empirical figures for Section 4.
 
 Outputs saved to paper/figures/ in both PNG (300 DPI) and vector PDF formats:
-- fig1_main_per_city.png / .pdf
-- fig2_resolution_sensitivity.png / .pdf
-- fig3_noise_dose_response.png / .pdf
-- fig4_structural_validity_placebo.png / .pdf
-- fig5_mechanistic_dpre.png / .pdf
+- fig2_main_per_city.png / .pdf
+- fig3_resolution_sensitivity.png / .pdf
+- fig4_noise_dose_response.png / .pdf
+- fig5_structural_validity_placebo.png / .pdf
+- fig6_mechanistic_dpre.png / .pdf
 """
 
 from __future__ import annotations
@@ -47,8 +47,8 @@ ORANGE = "#ff7f0e"
 GRAY = "#7f7f7f"
 
 
-def generate_figure1():
-    """Figure 1: Ordered per-city Delta CPC across all 50 test cities."""
+def generate_figure2():
+    """Figure 2: Ordered per-city Delta CPC across all 50 test cities."""
     csv_path = Path("results/k_sensitivity_v1/k_sensitivity_per_city.csv")
     df = pd.read_csv(csv_path)
     df_k8 = df[df["K"] == 8].copy()
@@ -101,14 +101,14 @@ def generate_figure1():
         bbox=dict(boxstyle="round,pad=0.4", facecolor="#f0f0f0", edgecolor="#cccccc", alpha=0.95)
     )
 
-    fig.savefig(FIGURES_DIR / "fig1_main_per_city.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig1_main_per_city.pdf")
+    fig.savefig(FIGURES_DIR / "fig2_main_per_city.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig2_main_per_city.pdf")
     plt.close(fig)
-    print("✓ Generated Figure 1")
+    print("Generated Figure 2")
 
 
-def generate_figure2():
-    """Figure 2: Multi-panel Resolution Sensitivity (K-sweep & Spatial Resolution)."""
+def generate_figure3():
+    """Figure 3: Multi-panel Resolution Sensitivity (K-sweep & Spatial Resolution)."""
     # 1. K-sweep data
     k_json = Path("results/k_sensitivity_v1/k_sensitivity_summary.json")
     with open(k_json, "r") as f:
@@ -171,14 +171,14 @@ def generate_figure2():
     ax2.grid(axis="y", linestyle="--", alpha=0.35)
 
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig2_resolution_sensitivity.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig2_resolution_sensitivity.pdf")
+    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.pdf")
     plt.close(fig)
-    print("✓ Generated Figure 2")
+    print("Generated Figure 3")
 
 
-def generate_figure3():
-    """Figure 3: Noise dose-response."""
+def generate_figure4():
+    """Figure 4: Noise dose-response."""
     json_path = Path("results/noise_robustness_fine_v1/noise_summary.json")
     with open(json_path, "r") as f:
         data = json.load(f)
@@ -209,14 +209,14 @@ def generate_figure3():
     ax.legend(loc="upper right", frameon=True, framealpha=0.9)
 
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig3_noise_dose_response.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig3_noise_dose_response.pdf")
+    fig.savefig(FIGURES_DIR / "fig4_noise_dose_response.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig4_noise_dose_response.pdf")
     plt.close(fig)
-    print("✓ Generated Figure 3")
+    print("Generated Figure 4")
 
 
-def generate_figure4():
-    """Figure 4: Structural Validity and Specificity Controls (Correct vs Permuted vs Donor Placebo)."""
+def generate_figure5():
+    """Figure 5: Structural Validity and Specificity Controls (Correct vs Permuted vs Donor Placebo)."""
     conditions = ["Correct $Y_D$\n(Target MSA)", "Cross-City Placebo\n(Donor $Y_D$)", "Permuted Bins\n(Shuffled Order)"]
     means = [+0.003539, -0.000091, -0.006958]
     ci_low = [+0.002607, -0.000520, -0.008400]
@@ -245,14 +245,14 @@ def generate_figure4():
 
     ax.set_ylim(-0.010, +0.007)
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig4_structural_validity_placebo.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig4_structural_validity_placebo.pdf")
+    fig.savefig(FIGURES_DIR / "fig5_structural_validity_placebo.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig5_structural_validity_placebo.pdf")
     plt.close(fig)
-    print("✓ Generated Figure 4")
+    print("Generated Figure 5")
 
 
-def generate_figure5():
-    """Figure 5: Mechanistic Diagnostic - Baseline Distance Misalignment d_pre vs Delta CPC."""
+def generate_figure6():
+    """Figure 6: Mechanistic Diagnostic - Baseline Distance Misalignment d_pre vs Delta CPC."""
     csv_path = Path("results/audit/dpre_mechanism_data.csv")
     df = pd.read_csv(csv_path)
 
@@ -291,16 +291,16 @@ def generate_figure5():
     ax.legend(loc="lower right", frameon=True)
 
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig5_mechanistic_dpre.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig5_mechanistic_dpre.pdf")
+    fig.savefig(FIGURES_DIR / "fig6_mechanistic_dpre.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig6_mechanistic_dpre.pdf")
     plt.close(fig)
-    print("✓ Generated Figure 5")
+    print("Generated Figure 6")
 
 
 if __name__ == "__main__":
-    generate_figure1()
     generate_figure2()
     generate_figure3()
     generate_figure4()
     generate_figure5()
-    print("🎉 All 5 publication figures successfully generated in paper/figures/")
+    generate_figure6()
+    print("All five empirical figures successfully generated in paper/figures/")
