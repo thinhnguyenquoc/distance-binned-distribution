@@ -30,8 +30,6 @@ Kết quả cho thấy phân phối di chuyển theo các khoảng khoảng các
 
 Nghiên cứu có bốn đóng góp chính: (1) hình thức hóa một thí nghiệm có điều kiện theo tập hỗ trợ liên vùng dương đã biết nhằm cô lập giá trị thông tin bổ sung của phân phối khoảng cách cấp thành phố trong khi giữ cố định mô hình dự báo; (2) đánh giá tín hiệu này bằng kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị, với bất định được lượng hóa ở cấp thành phố thay vì xem các cặp OD trong cùng thành phố là độc lập; (3) xác định các điều kiện làm tín hiệu trở nên hữu ích thông qua phân tích độ phân giải, nhiễu, hoán vị, donor placebo, khởi tạo và kiến trúc; và (4) diễn giải cơ chế hiệu chỉnh như sự tái phân bổ khối lượng liên khoảng có bảo toàn thứ hạng nội khoảng, đồng thời phân biệt rõ liên hệ thực nghiệm với bằng chứng nhân quả và đánh giá oracle với triển khai vận hành.
 
-Phần còn lại của bài báo được tổ chức như sau. Mục 2 tổng quan các nghiên cứu liên quan về mô hình tương tác không gian, dự báo mobility neural giữa các thành phố, hiệu chỉnh bằng thông tin tổng hợp và hạn chế của dữ liệu di chuyển. Mục 3 trình bày dữ liệu benchmark, biểu diễn không gian, mô hình luồng zero-truncated, toán tử hiệu chỉnh và protocol đánh giá. Mục 4 báo cáo kết quả thực nghiệm cùng các phân tích chẩn đoán. Mục 5 thảo luận cách diễn giải, ý nghĩa, hạn chế và hướng nghiên cứu tương lai. Mục 6 kết luận; các Mục 7, 8 và 9 lần lượt trình bày tuyên bố về dữ liệu và mã nguồn, các cam kết khoa học và danh mục tài liệu tham khảo.
-
 ---
 
 # Mục 2: Nghiên cứu liên quan
@@ -68,11 +66,7 @@ Sự phân biệt này là nền tảng của phạm vi nghiên cứu. Bài toá
 
 ## 2.5. Chất lượng dữ liệu di chuyển, mức độ tổng hợp và ranh giới quyền riêng tư
 
-Nghiên cứu di chuyển con người sử dụng nhiều nguồn như khảo sát, hồ sơ hành chính, dữ liệu mạng di động, dịch vụ dựa trên vị trí và các dấu vết số khác [@barbosa2018humanmobility]. Những nguồn này khác nhau về độ phủ dân số, độ phân giải không gian–thời gian, cơ chế lấy mẫu và tiền xử lý. Các khác biệt đó có thể làm sai lệch mẫu hình di chuyển được suy luận và gây khó khăn cho việc so sánh giữa thành phố hoặc nền tảng [@gallotti2024distorted; @pappalardo2023future]. Vì vậy, phân phối khoảng cách tổng hợp được ước lượng từ một nguồn bên ngoài có thể lệch có hệ thống so với phân phối tương ứng trong benchmark OD tham chiếu, thay vì chỉ chứa nhiễu ngẫu nhiên độc lập.
-
-Việc tổng hợp dữ liệu cũng không tự động tạo ra bảo đảm quyền riêng tư chính thức. Bản ghi di chuyển vẫn có thể mang tính nhận dạng ngay cả khi đã giảm độ chi tiết không gian hoặc thời gian [@demontjoye2013unique], trong khi bảo đảm differential privacy ở cấp người dùng cho thống kê vị trí công bố đòi hỏi các đánh đổi thực tiễn không đơn giản [@houssiau2022differential]. Do đó, số chiều thấp của phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu chỉ nên được hiểu là một thuộc tính của giao diện quan sát, không phải bằng chứng rằng quan sát này bảo vệ quyền riêng tư. Việc xác lập quyền riêng tư đòi hỏi phải chỉ rõ cơ chế sinh dữ liệu, threat model, cơ chế công bố và phân tích rủi ro chính thức hoặc thực nghiệm.
-
-Vì những lý do trên, nghiên cứu hiện tại sử dụng phân phối oracle được trích xuất từ luồng tham chiếu của thành phố mục tiêu, sau đó đưa vào các nhiễu có kiểm soát để đánh giá độ nhạy với sai số quan sát. Thiết kế này cô lập hàm lượng thông tin của phân phối nhưng không thay thế cho việc kiểm chứng trong tương lai bằng các quan sát tổng hợp được thu thập độc lập. Nó cũng tránh gán các đặc tính chưa được xác minh về nguồn gốc, khả năng truy cập hoặc quyền riêng tư cho một nguồn vận hành tiềm năng.
+Dữ liệu di chuyển có thể chịu sai lệch về độ phủ, tính đại diện và quy trình xử lý, làm thay đổi phân phối khoảng cách quan sát được [@gallotti2024distorted; @pappalardo2023future]. Mặc dù dữ liệu tổng hợp có độ chi tiết thấp hơn dữ liệu OD theo từng cặp, phép tổng hợp không tự động tạo ra bảo đảm quyền riêng tư chính thức [@demontjoye2013unique]. Vì vậy, nghiên cứu này chỉ xem $Y_D$ như một quan sát tổng hợp oracle để đánh giá giá trị thông tin; nghiên cứu không đánh giá tính đại diện của nguồn dữ liệu, khả năng chống tái nhận dạng, mức bảo vệ quyền riêng tư hoặc khả năng triển khai dữ liệu thực tế.
 
 ## 2.6. Khoảng trống nghiên cứu và vị trí của nghiên cứu hiện tại
 
@@ -368,7 +362,7 @@ Bên cạnh các kiểm tra sử dụng phân phối thay thế từ những ngu
 | **7. Raw Fold Train-Mean $Y_D$** | **$-0.017735$** | $[-0.02365, -0.01243]$ | $4.91 \times 10^{-12}$ | **$+0.021275$** | $[+0.01613, +0.02706]$ | $4.44 \times 10^{-15}$ | **48 / 50 (96.0%)** |
 | **8. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
 
-*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. The primary placebo result reported here is the unified training-donor arm (Row 2, $p=2.19\times 10^{-11}$, $46/50$); the fair weight-matched permutation summary ($+0.00367$, $47/50$, $p=6.74\times 10^{-12}$) is reported as a separate robustness analysis arm and is not pooled with Bảng 3. For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
+*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. The primary placebo result reported here is the unified training-donor arm (Row 2, $p=2.19\times 10^{-11}$, $46/50$). For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
 
 ---
 
@@ -512,7 +506,7 @@ Sự khác biệt giữa hai loại thông tin nằm ở phạm vi tác động.
 | **$1.00\%$** | $0.7128$ | $+0.00354$ | $+0.01549$ | $+0.01195$ | $[+0.00883, +0.01560]$ | 46 / 50 |
 | **$5.00\%$** | $0.7128$ | $+0.00354$ | $+0.04363$ | $+0.04009$ | $[+0.03507, +0.04542]$ | 50 / 50 |
 
-*Ghi chú: Đánh giá trên toàn bộ $N=50$ thành phố kiểm tra trên các cặp OD chưa thấy. The OD-FE experiment used $B=200$ Monte Carlo replicates per city, and its implementation and numerical results passed the associated 20 contract gates and six-part audit. Linear interpolation between the 0.10% and 0.25% evaluated conditions places the operational crossing at $p_{\mathrm{eq}}\approx0.20\%$ (95% bootstrap interval $[0.133\%,0.287\%]$; approximately 35 revealed flows per city). The comparison is specific to the OD-FE adapter, sampling protocol, positive support, and CPC metric. It must not be conflated with a distinct partial-OD-to-$Y_D$ calibration formulation, whose comparison with OD-FE is deferred to future work.*
+*Ghi chú: Đánh giá trên toàn bộ $N=50$ thành phố kiểm tra trên các cặp OD chưa thấy. The OD-FE experiment used $B=200$ Monte Carlo replicates per city. Linear interpolation between the 0.10% and 0.25% evaluated conditions places the operational crossing at $p_{\mathrm{eq}}\approx0.20\%$ (95% bootstrap interval $[0.133\%,0.287\%]$; approximately 35 revealed flows per city). The comparison is specific to the OD-FE adapter, sampling protocol, positive support, and CPC metric. It must not be conflated with a distinct partial-OD-to-$Y_D$ calibration formulation, whose comparison with OD-FE is deferred to future work.*
 
 ---
 
@@ -554,11 +548,6 @@ Ngược lại, sai lệch phân phối khoảng cách ban đầu $d_{\mathrm{pr
 
 *Ghi chú: Đánh giá trên toàn bộ $N=50$ thành phố kiểm tra. $d_{\mathrm{pre}} = \mathrm{TV}(\hat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ measures the Total Variation error between the zero-shot baseline's distance allocation and ground truth. Multivariate OLS serves as an observational diagnostic for linear association with performance gain heterogeneity rather than a causal model. Significance: *** $p < 0.001$.*
 
----
-
-## 4.6 Summary of key empirical findings
-
-Tổng hợp lại, các kết quả cho thấy một lượng nhỏ thông tin tổng hợp về cấu trúc di chuyển theo khoảng cách có thể tạo ra cải thiện có hệ thống cho tái tạo OD zero-shot. Giá trị của thông tin này phụ thuộc vào độ phân giải, chất lượng quan sát, tính đặc thù theo thành phố và mức độ sai lệch phân bổ khoảng cách ban đầu trong baseline. Vì vậy, $Y_D$ nên được xem như một nguồn ràng buộc bổ sung có điều kiện, thay vì một tín hiệu tạo ra cùng một mức lợi ích trong mọi bối cảnh.
 
 ---
 
@@ -631,12 +620,6 @@ Phân tích county-level chỉ mang tính thăm dò. Chỉ 11 vùng đô thị t
 ## 5.9. Các định hướng nghiên cứu tương lai
 
 Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các hướng nghiên cứu gần đây cũng nhấn mạnh giá trị của việc kết hợp mechanistic mobility models với các phương pháp học máy có khả năng mở rộng và diễn giải [@pappalardo2023future]. Future work có thể đánh giá các nguồn quan sát tổng hợp độc lập—bao gồm Meta Movement Distribution nếu provenance, đơn vị địa lý, điều kiện truy cập và mức độ phù hợp được xác lập—nhưng nghiên cứu hiện tại chưa sử dụng telemetry bên ngoài.
-
----
-
-## 5.10. Kết luận phần thảo luận
-
-Tóm lại, phân phối khoảng cách của thành phố mục tiêu cung cấp một nguồn thông tin bổ sung nhỏ nhưng có ý nghĩa và tương đối nhất quán cho việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết khi so với baseline cross-city zero-shot đóng băng. Lợi ích quan sát được phù hợp với cơ chế sửa sai lệch phân bổ khối lượng giữa các khoảng, phụ thuộc vào việc sử dụng đúng phân phối của thành phố mục tiêu và suy giảm khi quan sát bị nhiễu. Kết quả thiết lập một bằng chứng thực nghiệm cho việc kết hợp quan sát tổng hợp tại thời điểm suy luận với một mô hình cross-city đóng băng, đồng thời không đại diện cho khả năng phát hiện liên kết, khôi phục toàn bộ ma trận OD hoặc triển khai vận hành với dữ liệu telemetry độc lập.
 
 ---
 
