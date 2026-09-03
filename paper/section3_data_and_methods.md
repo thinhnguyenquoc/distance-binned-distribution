@@ -547,26 +547,92 @@ Across all configurations, predictions are evaluated on the exact same observed 
 
 *(Tiếng Việt: Nghiên cứu áp dụng giao thức kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị của Hoa Kỳ. Trong mỗi fold, 35 thành phố được dùng để huấn luyện, 5 thành phố dùng để lựa chọn mô hình (validation) và 10 thành phố dùng để đánh giá (testing). Mỗi thành phố xuất hiện trong tập kiểm tra đúng một lần, bao phủ toàn bộ 50 đô thị qua các fold. Đơn vị phân chia fold là toàn bộ thành phố, không phải các cặp OD, tract hoặc mẫu quan sát trong cùng một thành phố. Do đó, các cặp OD hoặc tract của cùng một thành phố không bị phân tán giữa training, validation và test mà nằm trọn vẹn trong một tập duy nhất của mỗi fold. Việc phân chia ở cấp thành phố này là điều kiện cần để hỗ trợ claim zero-shot liên thành phố. Các biên khoảng cách được tính riêng cho từng fold và chỉ sử dụng khoảng cách của các cặp OD thuộc tập thành phố huấn luyện. Sau khi huấn luyện hoàn tất, tham số của mô hình được giữ cố định trước khi dự báo trên các thành phố kiểm tra. Đối với mỗi thành phố mục tiêu, ba cấu hình được phân biệt: $M_0$ (dự báo zero-shot không sử dụng $Y_D$), $M1_{\mathrm{city}}$ (hiệu chỉnh bằng một $Y_D$ oracle ở cấp city), và $M1_{\mathrm{county}}$ (hiệu chỉnh bằng nhiều $Y_D$ oracle được phân nhóm theo county). So sánh giữa $M_0$ và $M1_{\mathrm{city}}$ là thí nghiệm chính nhằm trả lời liệu phân phối khoảng cách của thành phố mục tiêu có bổ sung thông tin cho dự báo zero-shot hay không (RQ1). So sánh giữa $M1_{\mathrm{city}}$ và $M1_{\mathrm{county}}$ cung cấp bằng chứng cho khía cạnh độ phân giải không gian của quan sát trong RQ2. Trong tất cả cấu hình, mô hình dự báo và được đánh giá trên cùng tập hỗ trợ dương $\Omega_{c,\mathrm{inter}}^+$ của toàn thành phố.)*
 
-### 3.6.2 Evaluation Metrics
-*(Tiếng Việt: **3.6.2. Thước đo đánh giá**)*
+### 3.6.2 Evaluation Metrics and Model Comparison
+*(Tiếng Việt: **3.6.2. Thước đo đánh giá và so sánh mô hình**)*
 
-The primary accuracy metric is the Common Part of Commuters (CPC), computed on the positive interzonal evaluation support:
+#### Primary evaluation metric: Common Part of Commuters (CPC)
+The primary quantitative metric for evaluating zero-shot travel flow reconstruction is the Common Part of Commuters (CPC) [@lenormand2016comparison], evaluated on the known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$:
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{c,ij}, \widehat{T}_{c,ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}}$$
 
-where the known positive interzonal evaluation support is formally defined as:
+where the positive interzonal evaluation domain is formally defined as:
 
 $$\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.$$
 
-CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows [@lenormand2016comparison].
+The properties and operational boundaries of CPC within this evaluation protocol are as follows:
+1. **Shared volume proportion**: CPC measures the fraction of travel demand volume jointly shared between the observed ground-truth flow field and the model's predicted intensity surface. It is strictly bounded in $[0, 1]$, where $\operatorname{CPC} = 1$ denotes perfect agreement across all OD pairs and $\operatorname{CPC} = 0$ indicates zero overlap.
+2. **Filtering of intrazonal self-flows and zero-distance pairs**: Intrazonal loops ($i = j$) and pairs with non-positive spatial displacement ($d_{c,ij} \le 0$) are strictly excluded (`pair_o_idx != pair_d_idx` and `dist_km > 0.0`). The benchmark focuses exclusively on displacement flows connecting distinct geographic zones.
+3. **Continuous intensity evaluation**: Model predictions $\widehat{T}_{c,ij} \in (0, \infty)$ represent expected positive intensities under the conditional ZTNB head. Predictions are evaluated as continuous floating-point values without integer discretization or rounding.
+4. **Restriction to positive interzonal support**: CPC is computed over $\Omega_{c,\mathrm{inter}}^+$, evaluating displacement intensity reconstruction conditional on the known positive link support. It does not measure binary classification accuracy or the identification of structural zero-flow pairs.
+5. **Flow normalization and scale preservation**: Zero-shot baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$ are evaluated directly without rescaling to ground-truth total volume $N_c$ (which is unobserved at inference time). The analytical calibration operator strictly preserves the baseline model's total predicted flow volume ($\sum_{(i,j)} \widehat{T}_{c,ij}^{(1)} = \sum_{(i,j)} \widehat{T}_{c,ij}^{(0)}$), ensuring that any change in CPC reflects a genuine spatial reallocation across distance intervals rather than an artificial volume adjustment.
 
-The paired performance change for city $c$ under model seed $s$ is defined as:
+#### Paired improvement estimand
+For target city $c$, predictor architecture $m$, and model initialization seed $s$, the paired performance change induced by distance calibration is defined as:
 
-$$\Delta_{c,s} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0)}\right) = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$$
+$$\Delta_{c,s}^{(m)} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1,m)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0,m)}\right) = \operatorname{CPC}_{c,s}\left(M1_{\mathrm{city}}^{(m)}\right) - \operatorname{CPC}_{c,s}\left(M_0^{(m)}\right)$$
 
-A positive value indicates that conditioning on the target distance distribution $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
+where $m \in \{\text{GNN}, \text{MLP}, \text{Gravity}\}$.
 
-*(Tiếng Việt: Thước đo độ chính xác chính là Common Part of Commuters (CPC), được tính trên tập hỗ trợ đánh giá liên vùng dương $\Omega_{c,\mathrm{inter}}^+ = \{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \}$. CPC nằm trong đoạn $[0, 1]$, trong đó giá trị gần 1 hơn thể hiện sự trùng khớp tốt hơn giữa luồng dự báo và luồng tham chiếu. Mức thay đổi hiệu năng ghép cặp cho thành phố $c$ dưới seed $s$ được định nghĩa là $\Delta_{c,s} = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$. Giá trị dương biểu thị rằng việc sử dụng phân phối khoảng cách mục tiêu $Y_D$ cải thiện độ chính xác so với baseline zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình đã huấn luyện.)*
+This formulation establishes a rigorous paired counterfactual comparison:
+* Baseline ($M_0$) and calibrated ($M_1$) predictions are generated for the exact same target city;
+* Evaluated on the identical positive interzonal support $\Omega_{c,\mathrm{inter}}^+$;
+* Produced by the identical frozen neural weights or fitted parameters under model seed $s$;
+* Conditioned on the identical target urban features and distance bin partitions;
+* The sole experimental intervention is the presence versus absence of target distance-binned conditioning during inference-time post-processing.
+
+The Gravity-Informed Urban GNN ($m = \text{GNN}$) defines the primary confirmatory estimand of this study. The Pairwise Node MLP ($m = \text{MLP}$) and Classical Two-Parameter Gravity ($m = \text{Gravity}$) provide structural robustness comparisons; their results are evaluated independently and are never pooled into a single composite score.
+
+#### Secondary error metrics
+To verify that empirical findings do not depend idiosyncratically on the functional form of CPC, six secondary error metrics are computed on the identical support $\Omega_{c,\mathrm{inter}}^+$:
+1. **Mean Absolute Error (MAE)**:
+   $$\operatorname{MAE}_c = \frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left| t_{c,ij} - \widehat{T}_{c,ij} \right|$$
+   Expressed in commuters per link; lower values indicate higher accuracy. MAE applies a linear penalty across all link magnitudes.
+2. **Root Mean Squared Error (RMSE)**:
+   $$\operatorname{RMSE}_c = \sqrt{\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left( t_{c,ij} - \widehat{T}_{c,ij} \right)^2}$$
+   Expressed in commuters per link; lower values indicate higher accuracy. RMSE penalizes large flow discrepancies quadratically, emphasizing performance on major travel corridors.
+3. **Normalized Root Mean Squared Error (NRMSE)**:
+   $$\operatorname{NRMSE}_c = \frac{\operatorname{RMSE}_c}{\bar{t}_c}, \qquad \bar{t}_c = \frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij}$$
+   Dimensionless; lower values indicate higher accuracy. NRMSE standardizes link errors by the mean observed flow, facilitating cross-city comparability across urban areas with differing population scales.
+4. **Log-Transformed RMSE ($\operatorname{RMSE}_{\log1p}$)**:
+   $$\operatorname{RMSE}_{\log1p,c} = \sqrt{\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log(1 + t_{c,ij}) - \log\left(1 + \widehat{T}_{c,ij}\right) \right]^2}$$
+   Dimensionless; lower values indicate higher accuracy. By compressing the heavy-tailed distribution of commuter flows, $\operatorname{RMSE}_{\log1p}$ evaluates proportional accuracy across small, medium, and high-volume OD links.
+5. **Spearman Rank Correlation Coefficient ($\rho_{\mathrm{Spearman}}$)**:
+   Measures the monotonicity of predicted versus observed flows on $\Omega_{c,\mathrm{inter}}^+$; dimensionless in $[-1, 1]$, where higher values indicate better preservation of relative traffic hierarchy.
+6. **Total Flow Relative Error ($\operatorname{RelError}_c$)**:
+   $$\operatorname{RelError}_c = \frac{\left| \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij} - \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} \right|}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij}}$$
+   Dimensionless; lower values indicate closer macroeconomic alignment with total city-wide commuter volume.
+
+CPC remains the primary evaluation criterion for all hypothesis testing and headline claims. Secondary metrics serve strictly as sensitivity and diagnostic checks.
+
+#### Distance-distribution diagnostic
+In addition to link-level OD accuracy, the pipeline tracks bin-level aggregate flow distributions:
+$$\widehat{Y}_{D,c,b}^{(m)} = \frac{\sum_{(i,j) \in \mathcal{B}_{c,b}} \widehat{T}_{c,ij}^{(m)}}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(m)}}, \qquad b = 1, \dots, K$$
+
+This metric serves exclusively as an internal mechanistic diagnostic:
+* It verifies whether the analytical calibration operator successfully realigns the baseline model's distance-decay profile toward the target profile $\mathbf{Y}_{D,c}$;
+* It does not evaluate microscopic OD pair reconstruction or intra-bin flow allocations (since intra-bin rankings are mathematically invariant under scalar bin multiplication);
+* Because the target distribution $\mathbf{Y}_{D,c}$ is supplied as an input to the calibration operator, agreement between calibrated aggregate flows and $\mathbf{Y}_{D,c}$ is an operational verification of algorithm execution, not independent evidence of OD link prediction quality;
+* No arbitrary goodness-of-fit heuristics (such as absolute percentage error thresholds) or chi-square distribution tests are employed as substitutes for microscopic link-level evaluation.
+
+#### Cross-model comparison framework
+To assess whether the informational benefit of distance-binned calibration generalizes across diverse model families, three distinct predictor backbones are evaluated:
+1. **Gravity-Informed Urban GNN** (Primary): Graph neural network combining edge-conditioned message passing with spatial geographic coordinates and gravity priors;
+2. **Pairwise Spatial Node MLP** (Neural Baseline): Multi-layer perceptron operating strictly on concatenated origin and destination tract attributes and distance, without graph neighborhood convolutions;
+3. **Classical Two-Parameter Gravity** (Parametric Baseline): Non-neural spatial interaction model $T_{ij} = \exp(G) P_i P_j d_{ij}^{-\alpha}$ fitted via log-linear ordinary least squares.
+
+All three model families are subjected to the exact same cross-city evaluation protocol:
+* Evaluated on the identical positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ for each of the 50 test cities;
+* Calibrated using the identical deterministic calibration operator ($q = 1.0$) with identical distance bin edges;
+* Compared in terms of baseline CPC ($M_0$), calibrated CPC ($M_1$), and paired improvement ($\Delta\operatorname{CPC}$);
+* Goodness-of-fit metrics such as AIC or BIC are not used for cross-model comparisons because the non-neural gravity model is estimated via OLS log-linear regression, whereas the neural backbones are optimized under a zero-truncated negative binomial likelihood;
+* The objective of cross-model comparison is strictly to test whether target distance distributions provide marginal predictive gains across predictors with fundamentally different inductive biases, rather than to claim that calibration converts an inferior architecture into a superior one.
+
+*(Tiếng Việt: **3.6.2. Thước đo đánh giá và so sánh mô hình**:
+(1) **Thước đo chính CPC**: Common Part of Commuters (CPC) được tính trên tập hỗ trợ liên vùng dương $\Omega_{c,\mathrm{inter}}^+ = \{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \}$. CPC đo tỷ lệ khối lượng lưu lượng chung giữa quan sát thực tế và cường độ dự báo, nằm trong đoạn $[0, 1]$. Toàn bộ self-flows ($i=j$) và các cặp có khoảng cách bằng 0 ($d \le 0$) bị loại bỏ nghiêm ngặt (`o_np != d_np` và `dist_km > 0.0`). Dự báo là các giá trị cường độ kỳ vọng liên tục (float), không làm tròn thành số nguyên. CPC tập trung đánh giá chất lượng tái tạo luồng di chuyển trên các liên kết đã biết, không đánh giá khả năng phân loại các cặp bằng 0. Dự báo baseline không được co giãn theo tổng lưu lượng ground-truth trước khi đánh giá, nhưng phép hiệu chỉnh bảo toàn tuyệt đối tổng lưu lượng dự báo của baseline.
+(2) **Estimand cải thiện ghép cặp**: Mức thay đổi hiệu năng ghép cặp $\Delta_{c,s}^{(m)} = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}^{(m)}) - \operatorname{CPC}_{c,s}(M_0^{(m)})$ so sánh cùng thành phố, cùng kiến trúc $m$, cùng seed $s$, cùng tập hỗ trợ $\Omega^+$, và cùng dữ liệu mục tiêu. Urban GNN xác định estimand chính; MLP và Gravity cung cấp so sánh độ bền và không bị gộp chung vào một estimand duy nhất.
+(3) **Các thước đo sai số phụ**: Sáu metric phụ được tính trên cùng tập hỗ trợ gồm MAE, RMSE, NRMSE, $\operatorname{RMSE}_{\log1p}$, tương quan hạng Spearman, và sai số tương đối tổng luồng $\operatorname{RelError}$. Chúng đóng vai trò kiểm tra độ nhạy để đảm bảo kết luận không phụ thuộc đơn lẻ vào CPC.
+(4) **Chẩn đoán phân phối khoảng cách**: Đo mức độ khớp giữa phân phối khoảng cách gộp sau hiệu chỉnh và phân phối mục tiêu $\mathbf{Y}_{D,c}$. Đây là chẩn đoán cơ chế nội bộ nhằm kiểm tra thuật toán hiệu chỉnh có tái phân bổ khối lượng theo bin như thiết kế hay không, không phải thước đo độc lập về độ chính xác của các cặp OD.
+(5) **Khung so sánh giữa các mô hình**: So sánh GNN, MLP và Classical Gravity trên cùng tập hỗ trợ, cùng giao thức đánh giá, báo cáo CPC baseline, CPC hiệu chỉnh và mức tăng ghép cặp. Không sử dụng AIC/BIC vì các mô hình có objective tối ưu hóa khác nhau (OLS vs ZTNB likelihood). Mục tiêu là kiểm tra xem phân phối khoảng cách có mang lại giá trị gia tăng biên trên các kiến trúc có inductive bias khác nhau hay không.)*
 
 ---
 

@@ -577,23 +577,84 @@ The comparison between $M_0$ and $M1_{\mathrm{city}}$ represents the primary exp
 
 Across all configurations, predictions are evaluated on the exact same observed positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ for the entire city.
 
-### 3.6.2 Evaluation Metrics
+### 3.6.2 Evaluation Metrics and Model Comparison
 
-The primary accuracy metric is the Common Part of Commuters (CPC), computed on the positive interzonal evaluation support:
+#### Primary evaluation metric: Common Part of Commuters (CPC)
+The primary quantitative metric for evaluating zero-shot travel flow reconstruction is the Common Part of Commuters (CPC) [@lenormand2016comparison], evaluated on the known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$:
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{c,ij}, \widehat{T}_{c,ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}}$$
 
-where the known positive interzonal evaluation support is formally defined as:
+where the positive interzonal evaluation domain is formally defined as:
 
 $$\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.$$
 
-CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows [@lenormand2016comparison].
+The properties and operational boundaries of CPC within this evaluation protocol are as follows:
+1. **Shared volume proportion**: CPC measures the fraction of travel demand volume jointly shared between the observed ground-truth flow field and the model's predicted intensity surface. It is strictly bounded in $[0, 1]$, where $\operatorname{CPC} = 1$ denotes perfect agreement across all OD pairs and $\operatorname{CPC} = 0$ indicates zero overlap.
+2. **Filtering of intrazonal self-flows and zero-distance pairs**: Intrazonal loops ($i = j$) and pairs with non-positive spatial displacement ($d_{c,ij} \le 0$) are strictly excluded (`pair_o_idx != pair_d_idx` and `dist_km > 0.0`). The benchmark focuses exclusively on displacement flows connecting distinct geographic zones.
+3. **Continuous intensity evaluation**: Model predictions $\widehat{T}_{c,ij} \in (0, \infty)$ represent expected positive intensities under the conditional ZTNB head. Predictions are evaluated as continuous floating-point values without integer discretization or rounding.
+4. **Restriction to positive interzonal support**: CPC is computed over $\Omega_{c,\mathrm{inter}}^+$, evaluating displacement intensity reconstruction conditional on the known positive link support. It does not measure binary classification accuracy or the identification of structural zero-flow pairs.
+5. **Flow normalization and scale preservation**: Zero-shot baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$ are evaluated directly without rescaling to ground-truth total volume $N_c$ (which is unobserved at inference time). The analytical calibration operator strictly preserves the baseline model's total predicted flow volume ($\sum_{(i,j)} \widehat{T}_{c,ij}^{(1)} = \sum_{(i,j)} \widehat{T}_{c,ij}^{(0)}$), ensuring that any change in CPC reflects a genuine spatial reallocation across distance intervals rather than an artificial volume adjustment.
 
-The paired performance change for city $c$ under model seed $s$ is defined as:
+#### Paired improvement estimand
+For target city $c$, predictor architecture $m$, and model initialization seed $s$, the paired performance change induced by distance calibration is defined as:
 
-$$\Delta_{c,s} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0)}\right) = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$$
+$$\Delta_{c,s}^{(m)} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1,m)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0,m)}\right) = \operatorname{CPC}_{c,s}\left(M1_{\mathrm{city}}^{(m)}\right) - \operatorname{CPC}_{c,s}\left(M_0^{(m)}\right)$$
 
-A positive value indicates that conditioning on the target distance distribution $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
+where $m \in \{\text{GNN}, \text{MLP}, \text{Gravity}\}$.
+
+This formulation establishes a rigorous paired counterfactual comparison:
+* Baseline ($M_0$) and calibrated ($M_1$) predictions are generated for the exact same target city;
+* Evaluated on the identical positive interzonal support $\Omega_{c,\mathrm{inter}}^+$;
+* Produced by the identical frozen neural weights or fitted parameters under model seed $s$;
+* Conditioned on the identical target urban features and distance bin partitions;
+* The sole experimental intervention is the presence versus absence of target distance-binned conditioning during inference-time post-processing.
+
+The Gravity-Informed Urban GNN ($m = \text{GNN}$) defines the primary confirmatory estimand of this study. The Pairwise Node MLP ($m = \text{MLP}$) and Classical Two-Parameter Gravity ($m = \text{Gravity}$) provide structural robustness comparisons; their results are evaluated independently and are never pooled into a single composite score.
+
+#### Secondary error metrics
+To verify that empirical findings do not depend idiosyncratically on the functional form of CPC, six secondary error metrics are computed on the identical support $\Omega_{c,\mathrm{inter}}^+$:
+1. **Mean Absolute Error (MAE)**:
+   $$\operatorname{MAE}_c = \frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left| t_{c,ij} - \widehat{T}_{c,ij} \right|$$
+   Expressed in commuters per link; lower values indicate higher accuracy. MAE applies a linear penalty across all link magnitudes.
+2. **Root Mean Squared Error (RMSE)**:
+   $$\operatorname{RMSE}_c = \sqrt{\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left( t_{c,ij} - \widehat{T}_{c,ij} \right)^2}$$
+   Expressed in commuters per link; lower values indicate higher accuracy. RMSE penalizes large flow discrepancies quadratically, emphasizing performance on major travel corridors.
+3. **Normalized Root Mean Squared Error (NRMSE)**:
+   $$\operatorname{NRMSE}_c = \frac{\operatorname{RMSE}_c}{\bar{t}_c}, \qquad \bar{t}_c = \frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij}$$
+   Dimensionless; lower values indicate higher accuracy. NRMSE standardizes link errors by the mean observed flow, facilitating cross-city comparability across urban areas with differing population scales.
+4. **Log-Transformed RMSE ($\operatorname{RMSE}_{\log1p}$)**:
+   $$\operatorname{RMSE}_{\log1p,c} = \sqrt{\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log(1 + t_{c,ij}) - \log\left(1 + \widehat{T}_{c,ij}\right) \right]^2}$$
+   Dimensionless; lower values indicate higher accuracy. By compressing the heavy-tailed distribution of commuter flows, $\operatorname{RMSE}_{\log1p}$ evaluates proportional accuracy across small, medium, and high-volume OD links.
+5. **Spearman Rank Correlation Coefficient ($\rho_{\mathrm{Spearman}}$)**:
+   Measures the monotonicity of predicted versus observed flows on $\Omega_{c,\mathrm{inter}}^+$; dimensionless in $[-1, 1]$, where higher values indicate better preservation of relative traffic hierarchy.
+6. **Total Flow Relative Error ($\operatorname{RelError}_c$)**:
+   $$\operatorname{RelError}_c = \frac{\left| \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij} - \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} \right|}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij}}$$
+   Dimensionless; lower values indicate closer macroeconomic alignment with total city-wide commuter volume.
+
+CPC remains the primary evaluation criterion for all hypothesis testing and headline claims. Secondary metrics serve strictly as sensitivity and diagnostic checks.
+
+#### Distance-distribution diagnostic
+In addition to link-level OD accuracy, the pipeline tracks bin-level aggregate flow distributions:
+$$\widehat{Y}_{D,c,b}^{(m)} = \frac{\sum_{(i,j) \in \mathcal{B}_{c,b}} \widehat{T}_{c,ij}^{(m)}}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(m)}}, \qquad b = 1, \dots, K$$
+
+This metric serves exclusively as an internal mechanistic diagnostic:
+* It verifies whether the analytical calibration operator successfully realigns the baseline model's distance-decay profile toward the target profile $\mathbf{Y}_{D,c}$;
+* It does not evaluate microscopic OD pair reconstruction or intra-bin flow allocations (since intra-bin rankings are mathematically invariant under scalar bin multiplication);
+* Because the target distribution $\mathbf{Y}_{D,c}$ is supplied as an input to the calibration operator, agreement between calibrated aggregate flows and $\mathbf{Y}_{D,c}$ is an operational verification of algorithm execution, not independent evidence of OD link prediction quality;
+* No arbitrary goodness-of-fit heuristics (such as absolute percentage error thresholds) or chi-square distribution tests are employed as substitutes for microscopic link-level evaluation.
+
+#### Cross-model comparison framework
+To assess whether the informational benefit of distance-binned calibration generalizes across diverse model families, three distinct predictor backbones are evaluated:
+1. **Gravity-Informed Urban GNN** (Primary): Graph neural network combining edge-conditioned message passing with spatial geographic coordinates and gravity priors;
+2. **Pairwise Spatial Node MLP** (Neural Baseline): Multi-layer perceptron operating strictly on concatenated origin and destination tract attributes and distance, without graph neighborhood convolutions;
+3. **Classical Two-Parameter Gravity** (Parametric Baseline): Non-neural spatial interaction model $T_{ij} = \exp(G) P_i P_j d_{ij}^{-\alpha}$ fitted via log-linear ordinary least squares.
+
+All three model families are subjected to the exact same cross-city evaluation protocol:
+* Evaluated on the identical positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ for each of the 50 test cities;
+* Calibrated using the identical deterministic calibration operator ($q = 1.0$) with identical distance bin edges;
+* Compared in terms of baseline CPC ($M_0$), calibrated CPC ($M_1$), and paired improvement ($\Delta\operatorname{CPC}$);
+* Goodness-of-fit metrics such as AIC or BIC are not used for cross-model comparisons because the non-neural gravity model is estimated via OLS log-linear regression, whereas the neural backbones are optimized under a zero-truncated negative binomial likelihood;
+* The objective of cross-model comparison is strictly to test whether target distance distributions provide marginal predictive gains across predictors with fundamentally different inductive biases, rather than to claim that calibration converts an inferior architecture into a superior one.
 
 ---
 

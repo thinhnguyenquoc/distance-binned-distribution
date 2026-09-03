@@ -517,23 +517,84 @@ Các biên khoảng cách được tính riêng cho từng fold và chỉ sử d
 
 ---
 
-### 3.6.2. Thước đo đánh giá
+### 3.6.2. Thước đo đánh giá và so sánh mô hình
 
-Thước đo độ chính xác chính là Common Part of Commuters (CPC), được tính trên tập hỗ trợ đánh giá liên vùng dương:
+#### Thước đo đánh giá chính: Common Part of Commuters (CPC)
+Thước đo định lượng chính để đánh giá khả năng tái tạo luồng di chuyển zero-shot là chỉ số Common Part of Commuters (CPC) [@lenormand2016comparison], được đánh giá trên tập hỗ trợ liên vùng dương đã biết $\Omega_{c,\mathrm{inter}}^+$:
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{c,ij}, \widehat{T}_{c,ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}}$$
 
-trong đó tập hỗ trợ đánh giá liên vùng dương đã biết được định nghĩa chính thức là:
+trong đó tập hỗ trợ đánh giá liên vùng dương được định nghĩa chính thức là:
 
 $$\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.$$
 
-CPC nằm trong đoạn $[0, 1]$, trong đó các giá trị gần 1 hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison].
+Các đặc tính và ranh giới vận hành của CPC trong giao thức này bao gồm:
+1. **Tỷ lệ khối lượng chung**: CPC đo lường tỷ lệ khối lượng nhu cầu di chuyển được chia sẻ đồng thời giữa trường luồng quan sát thực tế và mặt cường độ dự báo của mô hình. Giá trị bị chặn nghiêm ngặt trong đoạn $[0, 1]$, trong đó $\operatorname{CPC} = 1$ biểu thị sự trùng khớp tuyệt đối trên mọi cặp OD và $\operatorname{CPC} = 0$ thể hiện không có phần giao thoa nào.
+2. **Loại bỏ vòng tự thân và các cặp khoảng cách bằng 0**: Các luồng nội vùng ($i = j$) và các cặp có độ dời không gian không dương ($d_{c,ij} \le 0$) bị loại trừ nghiêm ngặt (`pair_o_idx != pair_d_idx` và `dist_km > 0.0`). Benchmark tập trung duy nhất vào các luồng dịch chuyển kết nối giữa các vùng địa lý khác nhau.
+3. **Đánh giá trên cường độ liên tục**: Dự báo của mô hình $\widehat{T}_{c,ij} \in (0, \infty)$ đại diện cho cường độ dương kỳ vọng dưới đầu ra có điều kiện ZTNB. Các dự báo được đánh giá trực tiếp dưới dạng giá trị số thực dấu phẩy động liên tục mà không làm tròn hoặc rời rạc hóa thành số nguyên.
+4. **Giới hạn trên tập hỗ trợ liên vùng dương**: CPC được tính trên $\Omega_{c,\mathrm{inter}}^+$, đánh giá chất lượng tái tạo cường độ luồng có điều kiện trên tập liên kết dương đã biết. Thước đo này không đánh giá độ chính xác phân loại nhị phân hay việc nhận diện các cặp luồng bằng 0 mang tính cấu trúc.
+5. **Chuẩn hóa luồng và bảo toàn quy mô**: Dự báo baseline zero-shot $\widehat{\mathbf{T}}_c^{(0)}$ được đánh giá trực tiếp mà không co giãn nhân tạo theo tổng khối lượng ground-truth $N_c$ (vốn không quan sát được tại thời điểm suy luận). Toán tử hiệu chỉnh giải tích bảo toàn tuyệt đối tổng thể tích luồng dự báo của chính baseline ($\sum_{(i,j)} \widehat{T}_{c,ij}^{(1)} = \sum_{(i,j)} \widehat{T}_{c,ij}^{(0)}$), bảo đảm rằng mọi biến thiên của CPC đều phản ánh sự tái phân bổ không gian thực sự giữa các khoảng khoảng cách thay vì sự điều chỉnh quy mô nhân tạo.
 
-Mức thay đổi hiệu năng ghép cặp cho thành phố $c$ dưới seed $s$ được định nghĩa là:
+#### Estimand cải thiện ghép cặp
+Đối với thành phố mục tiêu $c$, kiến trúc mô hình $m$, và seed ngẫu nhiên $s$, mức thay đổi hiệu năng ghép cặp do hiệu chỉnh khoảng cách được định nghĩa là:
 
-$$\Delta_{c,s} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0)}\right) = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$$
+$$\Delta_{c,s}^{(m)} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1,m)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0,m)}\right) = \operatorname{CPC}_{c,s}\left(M1_{\mathrm{city}}^{(m)}\right) - \operatorname{CPC}_{c,s}\left(M_0^{(m)}\right)$$
 
-Giá trị dương biểu thị rằng việc sử dụng phân phối khoảng cách mục tiêu $Y_D$ cải thiện độ chính xác tái tạo so với baseline zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình đã huấn luyện.
+trong đó $m \in \{\text{GNN}, \text{MLP}, \text{Gravity}\}$.
+
+Công thức này thiết lập một phép so sánh đối chứng ghép cặp nghiêm ngặt:
+* Dự báo baseline ($M_0$) và hiệu chỉnh ($M_1$) được tạo ra cho cùng một thành phố mục tiêu;
+* Được đánh giá trên cùng một tập hỗ trợ liên vùng dương $\Omega_{c,\mathrm{inter}}^+$;
+* Được tạo ra bởi cùng một bộ trọng số neural đóng băng hoặc tham số ước lượng dưới cùng seed $s$;
+* Có điều kiện trên cùng các đặc trưng đô thị và biên phân vùng khoảng cách của mục tiêu;
+* Can thiệp thực nghiệm duy nhất là sự hiện diện so với vắng mặt của phân phối khoảng cách mục tiêu trong bước hậu xử lý suy luận.
+
+Mô hình Gravity-Informed Urban GNN ($m = \text{GNN}$) xác định estimand khẳng định chính của nghiên cứu này. Các mô hình Pairwise Node MLP ($m = \text{MLP}$) và Classical Two-Parameter Gravity ($m = \text{Gravity}$) cung cấp các phép so sánh độ bền cấu trúc; kết quả của chúng được đánh giá độc lập và không bao giờ bị gộp chung vào một điểm số tổng hợp duy nhất.
+
+#### Các thước đo sai số phụ
+Để xác minh rằng các phát hiện thực nghiệm không phụ thuộc một cách cá biệt vào dạng hàm của CPC, sáu thước đo sai số phụ được tính toán trên cùng tập hỗ trợ $\Omega_{c,\mathrm{inter}}^+$:
+1. **Sai số tuyệt đối trung bình (MAE)**:
+   $$\operatorname{MAE}_c = \frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left| t_{c,ij} - \widehat{T}_{c,ij} \right|$$
+   Đơn vị: chuyến đi/liên kết; giá trị thấp hơn biểu thị độ chính xác cao hơn. MAE áp dụng hình phạt tuyến tính đồng đều trên mọi quy mô liên kết.
+2. **Căn bậc hai sai số bình phương trung bình (RMSE)**:
+   $$\operatorname{RMSE}_c = \sqrt{\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left( t_{c,ij} - \widehat{T}_{c,ij} \right)^2}$$
+   Đơn vị: chuyến đi/liên kết; giá trị thấp hơn biểu thị độ chính xác cao hơn. RMSE phạt bậc hai các sai số lớn, nhấn mạnh hiệu năng trên các hành lang di chuyển mật độ cao.
+3. **RMSE chuẩn hóa (NRMSE)**:
+   $$\operatorname{NRMSE}_c = \frac{\operatorname{RMSE}_c}{\bar{t}_c}, \qquad \bar{t}_c = \frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij}$$
+   Không thứ nguyên; giá trị thấp hơn là tốt hơn. NRMSE chuẩn hóa sai số theo luồng trung bình quan sát được, giúp so sánh công bằng giữa các đô thị có quy mô dân số chênh lệch.
+4. **RMSE trên thang đo Log ($\operatorname{RMSE}_{\log1p}$)**:
+   $$\operatorname{RMSE}_{\log1p,c} = \sqrt{\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log(1 + t_{c,ij}) - \log\left(1 + \widehat{T}_{c,ij}\right) \right]^2}$$
+   Không thứ nguyên; giá trị thấp hơn là tốt hơn. Bằng cách nén phân phối đuôi nặng của các luồng di chuyển, $\operatorname{RMSE}_{\log1p}$ đánh giá độ chính xác tỷ lệ trên cả các liên kết nhỏ, trung bình và lớn.
+5. **Hệ số tương quan hạng Spearman ($\rho_{\mathrm{Spearman}}$)**:
+   Đo lường tính đơn điệu giữa luồng dự báo và luồng quan sát trên $\Omega_{c,\mathrm{inter}}^+$; không thứ nguyên trong $[-1, 1]$, giá trị cao hơn thể hiện việc bảo toàn thứ bậc giao thông tốt hơn.
+6. **Sai số tương đối tổng luồng ($\operatorname{RelError}_c$)**:
+   $$\operatorname{RelError}_c = \frac{\left| \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij} - \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} \right|}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij}}$$
+   Không thứ nguyên; giá trị thấp hơn biểu thị mức độ khớp vĩ mô tốt hơn với tổng thể tích di chuyển của toàn thành phố.
+
+CPC duy trì vị trí là tiêu chí đánh giá chính cho toàn bộ kiểm định giả thuyết và các kết luận cốt lõi. Các thước đo phụ đóng vai trò kiểm tra độ nhạy và chẩn đoán.
+
+#### Chẩn đoán phân phối khoảng cách
+Bên cạnh độ chính xác cấp liên kết OD, pipeline theo dõi phân phối luồng gộp theo từng khoảng khoảng cách:
+$$\widehat{Y}_{D,c,b}^{(m)} = \frac{\sum_{(i,j) \in \mathcal{B}_{c,b}} \widehat{T}_{c,ij}^{(m)}}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(m)}}, \qquad b = 1, \dots, K$$
+
+Thước đo này phục vụ độc quyền như một chẩn đoán cơ chế nội bộ:
+* Xác minh xem toán tử hiệu chỉnh giải tích có tái định hình thành công quy luật suy giảm cự ly của baseline về phía phân phối mục tiêu $\mathbf{Y}_{D,c}$ hay không;
+* Không đánh giá chất lượng tái tạo cặp OD vi mô hay sự phân bổ luồng nội khoảng (do thứ hạng nội khoảng là bất biến giải tích dưới phép nhân vô hướng theo bin);
+* Vì phân phối mục tiêu $\mathbf{Y}_{D,c}$ được cung cấp như đầu vào cho toán tử hiệu chỉnh, sự trùng khớp giữa luồng gộp sau hiệu chỉnh và $\mathbf{Y}_{D,c}$ là một kiểm tra số học về sự vận hành của thuật toán, không phải bằng chứng độc lập về độ chính xác dự báo luồng liên kết OD;
+* Không sử dụng các quy tắc kinh nghiệm tùy ý (như ngưỡng sai số phần trăm tuyệt đối APE < 5%) hay các kiểm định chi bình phương để thay thế cho việc đánh giá vi mô cấp liên kết.
+
+#### Khung so sánh giữa các mô hình
+Để đánh giá liệu lợi ích thông tin của phép hiệu chỉnh khoảng cách có mang tính tổng quát trên các họ mô hình khác nhau hay không, ba kiến trúc dự báo riêng biệt được phân tích:
+1. **Gravity-Informed Urban GNN** (Chính): Mạng neural đồ thị kết hợp truyền tin có điều kiện theo cạnh với tọa độ không gian địa lý và tiên nghiệm gravity;
+2. **Pairwise Spatial Node MLP** (Baseline Neural): Perceptron đa tầng vận hành hoàn toàn trên các thuộc tính kết hợp của origin, destination và khoảng cách, không sử dụng tích chập lân cận đồ thị;
+3. **Classical Two-Parameter Gravity** (Baseline Tham số): Mô hình tương tác không gian phi neural $T_{ij} = \exp(G) P_i P_j d_{ij}^{-\alpha}$ được ước lượng bằng hồi quy bình phương tối thiểu log-linear.
+
+Cả ba họ mô hình đều tuân thủ cùng một giao thức đánh giá liên thành phố:
+* Được đánh giá trên cùng một tập hỗ trợ liên vùng dương $\Omega_{c,\mathrm{inter}}^+$ cho mỗi thành phố trong 50 thành phố kiểm tra;
+* Được hiệu chỉnh bằng cùng một toán tử hiệu chỉnh xác định ($q = 1.0$) với cùng các biên cự ly;
+* Được so sánh theo CPC baseline ($M_0$), CPC sau hiệu chỉnh ($M_1$), và mức tăng ghép cặp ($\Delta\operatorname{CPC}$);
+* Các chỉ số độ phù hợp như AIC hay BIC không được dùng để so sánh giữa các mô hình vì mô hình gravity cổ điển được ước lượng bằng OLS log-linear, trong khi các mô hình neural được tối ưu hóa theo hàm hợp lý ZTNB;
+* Mục tiêu của phân tích so sánh này là kiểm tra xem phân phối khoảng cách mục tiêu có mang lại lợi ích gia tăng biên trên các bộ dự báo có inductive bias khác nhau hay không, chứ không nhằm tuyên bố rằng phép hiệu chỉnh biến một mô hình kém thành vượt trội.
 
 ---
 
