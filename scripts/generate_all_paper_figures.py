@@ -116,7 +116,7 @@ def generate_figure2():
 
 
 def generate_figure3():
-    """Figure 3: Multi-panel Resolution Sensitivity (K-sweep & Spatial Resolution)."""
+    """Figure 3: Standalone K-sweep Resolution Sensitivity."""
     # 1. K-sweep data
     k_json = Path("results/k_sensitivity_v1/k_sensitivity_summary.json")
     with open(k_json, "r") as f:
@@ -128,7 +128,31 @@ def generate_figure3():
     k_ci_low = [k_map[k]["ci_low"] for k in k_vals]
     k_ci_high = [k_map[k]["ci_high"] for k in k_vals]
 
-    # 2. Spatial resolution data on 11 multi-county MSAs
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+
+    # K-sweep
+    yerr_low = np.array(k_means) - np.array(k_ci_low)
+    yerr_high = np.array(k_ci_high) - np.array(k_means)
+
+    ax.plot(k_vals, k_means, marker="o", color=PRIMARY_BLUE, linewidth=1.8, markersize=5, zorder=3)
+    ax.errorbar(k_vals, k_means, yerr=[yerr_low, yerr_high], fmt="none",
+                ecolor=PRIMARY_BLUE, capsize=3.0, elinewidth=1.1, zorder=3)
+    ax.set_xticks(k_vals)
+    ax.set_xticklabels([f"K={k}" for k in k_vals], rotation=45)
+    ax.set_xlabel("Number of Distance Bins ($K$)", fontweight="bold")
+    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$ (with 95% CI)", fontweight="bold")
+    ax.set_title("Distance Bin Granularity Sweep", fontweight="bold", loc="left")
+    ax.grid(True, linestyle="--", alpha=0.35)
+
+    fig.tight_layout()
+    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.pdf")
+    plt.close(fig)
+    print("Generated Figure 3 (K-sensitivity standalone)")
+
+
+def generate_figure_s1():
+    """Figure S1: Spatial resolution comparison on 11 multi-county MSAs."""
     sp_json = Path("results/spatial_resolution/spatial_resolution_summary.json")
     with open(sp_json, "r") as f:
         sp_data = json.load(f)
@@ -149,40 +173,24 @@ def generate_figure3():
         city_gains.append(row["delta_cpc_city"])
         county_gains.append(row["delta_cpc_county"])
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 4.0), gridspec_kw={"width_ratios": [1, 1.2]})
-
-    # Panel A: K-sweep
-    yerr_low = np.array(k_means) - np.array(k_ci_low)
-    yerr_high = np.array(k_ci_high) - np.array(k_means)
-
-    ax1.plot(k_vals, k_means, marker="o", color=PRIMARY_BLUE, linewidth=1.8, markersize=5, zorder=3)
-    ax1.errorbar(k_vals, k_means, yerr=[yerr_low, yerr_high], fmt="none",
-                  ecolor=PRIMARY_BLUE, capsize=3.0, elinewidth=1.1, zorder=3)
-    ax1.set_xticks(k_vals)
-    ax1.set_xticklabels([f"K={k}" for k in k_vals], rotation=45)
-    ax1.set_xlabel("Number of Distance Bins ($K$)", fontweight="bold")
-    ax1.set_ylabel("Mean $\\Delta\\mathrm{CPC}$ (with 95% CI)", fontweight="bold")
-    ax1.set_title("(a) Distance Bin Granularity Sweep", fontweight="bold", loc="left")
-    ax1.grid(True, linestyle="--", alpha=0.35)
-
-    # Panel B: Spatial Resolution (City vs County on 11 MSAs)
+    fig, ax = plt.subplots(figsize=(7.0, 4.0))
     x = np.arange(len(clean_names))
     width = 0.38
-    ax2.bar(x - width/2, city_gains, width, label="City-Level $Y_D$", color="#7faed6", edgecolor="#346896", zorder=3)
-    ax2.bar(x + width/2, county_gains, width, label="County-Level $Y_D$", color="#1f4e79", edgecolor="#0e2942", zorder=3)
+    ax.bar(x - width/2, city_gains, width, label="City-Level $Y_D$", color="#7faed6", edgecolor="#346896", zorder=3)
+    ax.bar(x + width/2, county_gains, width, label="County-Level $Y_D$", color="#1f4e79", edgecolor="#0e2942", zorder=3)
 
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(clean_names, rotation=45, ha="right", fontsize=8)
-    ax2.set_ylabel("$\\Delta\\mathrm{CPC}$ ($M_1 - M_0$)", fontweight="bold")
-    ax2.set_title("(b) Spatial Resolution in Multi-County MSAs ($N=11$)", fontweight="bold", loc="left")
-    ax2.legend(loc="upper left", frameon=True)
-    ax2.grid(axis="y", linestyle="--", alpha=0.35)
+    ax.set_xticks(x)
+    ax.set_xticklabels(clean_names, rotation=45, ha="right", fontsize=8)
+    ax.set_ylabel("$\\Delta\\mathrm{CPC}$ ($M_1 - M_0$)", fontweight="bold")
+    ax.set_title("Spatial Resolution in Multi-County MSAs ($N=11$)", fontweight="bold", loc="left")
+    ax.legend(loc="upper left", frameon=True)
+    ax.grid(axis="y", linestyle="--", alpha=0.35)
 
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.pdf")
+    fig.savefig(FIGURES_DIR / "fig_s1_spatial_resolution.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig_s1_spatial_resolution.pdf")
     plt.close(fig)
-    print("Generated Figure 3")
+    print("Generated Figure S1 (Spatial resolution standalone)")
 
 
 def generate_figure4():
@@ -309,7 +317,8 @@ def generate_figure6():
 if __name__ == "__main__":
     generate_figure2()
     generate_figure3()
+    generate_figure_s1()
     generate_figure4()
     generate_figure5()
     generate_figure6()
-    print("All five empirical figures successfully generated in paper/figures/")
+    print("All empirical figures and Figure S1 successfully generated in paper/figures/")
