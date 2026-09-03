@@ -303,11 +303,11 @@ Toàn bộ chi tiết kỹ thuật của các thí nghiệm này được trình
 
 ---
 
-# Section 4: Empirical Results
+# 4. Kết quả thực nghiệm
 
 ---
 
-## 4.1 Does $Y_D$ improve zero-shot OD reconstruction?
+## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot đóng băng hay không?
 
 Trong thí nghiệm chính, việc bổ sung phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu làm CPC liên vùng trung bình trên 50 thành phố Hoa Kỳ tăng từ 0.71281 ở baseline zero-shot đóng băng ($M_0$) lên 0.71635 ở dự báo sau hiệu chỉnh ($M_1$). Mức cải thiện trung bình đạt $\Delta\mathrm{CPC}=+0.00354$, với khoảng tin cậy 95% từ fold-stratified hierarchical bootstrap là $[+0.0026,+0.0045]$. Toàn bộ khoảng tin cậy nằm phía trên 0, cho thấy mức cải thiện CPC trung bình được ước lượng là dương dưới giao thức bootstrap đã sử dụng.
 
@@ -333,7 +333,7 @@ Theo Hình 2, mức cải thiện không chỉ tập trung ở một số ít th
 
 ---
 
-## 4.2 Is the gain genuinely target-specific and structurally meaningful?
+## 4.2. Mức cải thiện có thực sự đặc thù theo thành phố mục tiêu và có ý nghĩa cấu trúc hay không?
 
 Mặc dù kết quả ở Mục 4.1 cho thấy việc hiệu chỉnh bằng phân phối di chuyển theo nhóm khoảng cách $Y_D$ của thành phố mục tiêu giúp cải thiện CPC, kết quả đó vẫn chưa cho biết liệu mức cải thiện có thực sự đến từ thông tin khoảng cách đặc thù của thành phố mục tiêu hay chỉ đơn giản là hệ quả của quá trình hiệu chỉnh. Để kiểm tra điều này, chúng tôi so sánh trường hợp sử dụng đúng $Y_D$ của thành phố mục tiêu với trường hợp sử dụng phân phối của các thành phố khác. Để bảo đảm so sánh công bằng, các phân phối từ thành phố khác được điều chỉnh sao cho tạo ra cùng mức độ can thiệp $D_T$ như trường hợp sử dụng thông tin của thành phố mục tiêu. Khi sử dụng đúng $Y_D$ của thành phố mục tiêu, mức cải thiện CPC trung bình đạt $\Delta\mathrm{CPC}=+0.003539$. Ngược lại, khi sử dụng các phân phối từ thành phố khác nhưng đã được khớp cùng mức độ can thiệp, mức thay đổi CPC trung bình chỉ là $\Delta\mathrm{CPC}=-0.000091$, tức gần như không mang lại cải thiện. Chênh lệch về mức cải thiện giữa hai điều kiện đạt $+0.003630$, với khoảng tin cậy 95% là $[+0.00287,+0.00445]$. Kiểm định Wilcoxon signed-rank một phía khi so sánh trường hợp sử dụng đúng thông tin của thành phố mục tiêu với trường hợp sử dụng thông tin từ thành phố khác cho $p=2.19\times10^{-11}$. Kết quả này cho thấy rằng khi mức độ hiệu chỉnh được kiểm soát ở cùng một mức, việc sử dụng phân phối khoảng cách của các thành phố khác không tái tạo được mức cải thiện đạt được khi sử dụng phân phối của chính thành phố mục tiêu. Nói cách khác, lợi ích của quá trình hiệu chỉnh không chỉ đến từ việc thay đổi dự báo mà còn phụ thuộc vào việc thông tin khoảng cách được sử dụng có phù hợp với thành phố mục tiêu hay không.
 
@@ -365,13 +365,13 @@ Bên cạnh các kiểm tra sử dụng phân phối thay thế từ những ngu
 
 ---
 
-## 4.3 How does the value of $Y_D$ depend on observation resolution and quality?
+## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
 
 Mức độ đóng góp của phân phối di chuyển theo nhóm khoảng cách tại thành phố mục tiêu có thể phụ thuộc vào lượng thông tin tổng hợp mà quan sát này còn giữ lại được. Vì vậy, chúng tôi xem xét độ phân giải theo khoảng cách $K$ cũng như độ trung thực của quan sát dưới các mức nhiễu tổng hợp. Các thí nghiệm này nhằm kiểm tra xem việc giữ lại nhiều cấu trúc chi tiết và chính xác hơn có cung cấp thêm các ràng buộc hữu ích cho quá trình tái tạo OD hay không.
 
 ---
 
-### 4.3.1 Higher distance resolution provides more informative constraints
+### 4.3.1. Độ phân giải khoảng cách cao hơn cung cấp ràng buộc giàu thông tin hơn
 
 Trên các giá trị $K$ đã kiểm tra, mức cải thiện trong tái tạo OD tăng khi số lượng nhóm khoảng cách tăng. Ngay tại độ phân giải thấp nhất ($K=2$), việc hiệu chỉnh bằng $Y_D$ đã cải thiện CPC trung bình $+0.00098$ so với mô hình zero-shot cố định, với khoảng tin cậy bootstrap 95% là $[+0.00052,+0.00151]$, đồng thời cải thiện kết quả ở 39/50 thành phố. Mức cải thiện đạt $+0.00354$ CPC tại cấu hình tham chiếu ($K=8$) và $+0.00639$ CPC tại $K=20$. Ở độ phân giải cao nhất được kiểm tra, 46/50 thành phố có kết quả tốt hơn zero-shot baseline và khoảng tin cậy bootstrap 95% vẫn nằm hoàn toàn trên 0, $[+0.00508,+0.00769]$.
 
@@ -402,7 +402,7 @@ Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nh
 
 ---
 
-### 4.3.2 Synthetic observation noise reduces the value of $Y_D$
+### 4.3.2. Nhiễu quan sát tổng hợp làm giảm giá trị bổ sung của $Y_D$
 
 Sau khi đánh giá ảnh hưởng của độ phân giải quan sát, chúng tôi tiếp tục kiểm tra mức độ phụ thuộc của hiệu quả hiệu chỉnh vào chất lượng của $Y_D$. Cụ thể, phân phối di chuyển theo khoảng cách của thành phố mục tiêu được gây nhiễu ở nhiều mức khác nhau ($\epsilon \in [0.00, 0.05]$ sai số Total Variation), trong khi giữ nguyên mô hình zero-shot, tập thành phố đánh giá và toàn bộ quy trình hiệu chỉnh. Thiết kế này cho phép cô lập ảnh hưởng của sai lệch trong $Y_D$ khỏi các nguồn biến thiên khác của mô hình.
 
@@ -434,13 +434,13 @@ Trong thiết kế perturbation này, mức tăng trung bình vẫn dương tạ
 
 ---
 
-## 4.4 Is the finding robust to training and modeling choices?
+## 4.4. Kết quả có bền vững trước các lựa chọn huấn luyện và mô hình hóa hay không?
 
 Các kết quả trước cho thấy $Y_D$ cung cấp thông tin bổ sung hữu ích cho dự báo zero-shot, đồng thời mức độ hữu ích này phụ thuộc vào độ phân giải, chất lượng quan sát và tính đặc thù mục tiêu. Tuy nhiên, cần kiểm tra liệu mức cải thiện quan sát được có ổn định trước biến thiên của quá trình huấn luyện và lựa chọn mô hình hay không. Vì vậy, chúng tôi đánh giá nhiều model seeds và các backbone dự báo khác nhau. Một phép so sánh riêng theo protocol kiểm tra hiệu năng thu được từ quan sát trực tiếp các cặp OD.
 
 ---
 
-### 4.4.1 Stability across independent model initializations
+### 4.4.1. Tính ổn định qua các lần khởi tạo mô hình độc lập
 
 Các mô hình học sâu có thể tạo ra kết quả khác nhau giữa các lần huấn luyện do sự ngẫu nhiên trong khởi tạo tham số và quá trình tối ưu. Nếu lợi ích của $Y_D$ chỉ xuất hiện ở một model seed cụ thể, hiệu ứng quan sát được có thể phản ánh biến thiên ngẫu nhiên của quá trình huấn luyện thay vì một đóng góp ổn định từ quan sát mục tiêu.
 
@@ -463,7 +463,7 @@ Kết quả cho thấy hướng cải thiện do $Y_D$ mang lại được duy t
 
 ---
 
-### 4.4.2 Performance across neural backbones and classical gravity
+### 4.4.2. Hiệu quả trên các kiến trúc neural và mô hình Gravity cổ điển
 
 Bên cạnh biến thiên do khởi tạo mô hình, một câu hỏi khác là liệu lợi ích của $Y_D$ có chỉ xuất hiện khi sử dụng một kiến trúc backbone cụ thể hay không. Chúng tôi thay backbone Urban GNN bằng một mô hình MLP đơn giản hơn, cũng như một mô hình trọng lực cổ điển, trong khi giữ nguyên tập đặc trưng đầu vào, protocol huấn luyện, tập thành phố đánh giá và cơ chế hiệu chỉnh bằng $Y_D$.
 
@@ -483,7 +483,7 @@ Kết quả tại Bảng 7 cho thấy mức tăng do hiệu chỉnh xuất hiệ
 
 ---
 
-### 4.4.3 Protocol-specific comparison with direct pairwise OD observations
+### 4.4.3. So sánh theo giao thức cụ thể với quan sát OD trực tiếp theo từng cặp
 
 Để kiểm tra xem liệu lợi ích quan sát được có đơn thuần phản ánh việc mô hình nhận thêm target supervision nói chung hay không, chúng tôi so sánh $Y_D$ với các tỷ lệ quan sát OD trực tiếp $p \in [0.10\%, 5.0\%]$ trên các cặp chưa thấy bằng mô hình OD Fixed-Effect adapter.
 
@@ -515,7 +515,7 @@ Mức tăng do hiệu chỉnh được tái hiện qua nhiều model seeds độ
 
 ---
 
-## 4.5 Baseline distance misalignment is strongly associated with city-level calibration gain
+## 4.5. Mức sai lệch phân phối khoảng cách của baseline có liên hệ mạnh với mức cải thiện hiệu chỉnh theo thành phố
 
 Mặc dù $Y_D$ mang lại mức cải thiện dương trên phần lớn các thành phố, độ lớn của $\Delta\mathrm{CPC}$ không đồng nhất giữa các khu vực mục tiêu. Sự khác biệt này cho thấy giá trị của $Y_D$ mang tính điều kiện và có liên quan đến trạng thái ban đầu của zero-shot baseline tại từng thành phố.
 
@@ -622,7 +622,7 @@ Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng 
 
 ---
 
-# Section 6: Conclusion
+# 6. Kết luận
 
 Nghiên cứu này xem xét liệu một quan sát tổng hợp có số chiều thấp—phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu, ký hiệu là $Y_D$—có thể cải thiện kết quả tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết so với một baseline cross-city zero-shot đã đóng băng hay không. Trong thiết lập này, baseline ($M_0$) được giữ cố định và chỉ sử dụng bối cảnh đô thị cùng khoảng cách địa lý giữa các cặp vùng. Thông tin về cường độ luồng của thành phố mục tiêu chỉ đi vào $M_1$ dưới dạng phân phối di chuyển theo khoảng cách tổng hợp $Y_D$ tại thời điểm suy luận mà không đòi hỏi bất kỳ sự huấn luyện lại hay cập nhật tham số nào.
 
@@ -652,7 +652,7 @@ Tóm lại, phân phối di chuyển theo nhóm khoảng cách của thành ph�
 
 ---
 
-## 7.1. Data Availability
+## 7.1. Khả năng truy cập dữ liệu
 
 Nghiên cứu sử dụng một benchmark do Lab tổng hợp, gồm cường độ luồng OD dương, tọa độ tâm tract và 26 đặc trưng tract được xây dựng từ thông tin Census, điểm quan tâm và mạng lưới đường. Nhà cung cấp ban đầu, thời gian thu thập, phiên bản nguồn, quy trình tiền xử lý và điều kiện phân phối lại của các thành phần này đang được xác minh với Lab và phải được bổ sung trước khi nộp bài. GADM phiên bản 4.1 chỉ được dùng để gán tọa độ tâm tract vào polygon county trong thí nghiệm bổ sung về độ phân giải không gian [@gadm41]; GADM không phải nguồn của tọa độ tract, đặc trưng đô thị hoặc luồng OD. Khi provenance và giấy phép chưa được xác nhận, tuyên bố này không khẳng định benchmark của Lab là dữ liệu công khai hoặc có thể phân phối lại.
 
@@ -665,13 +665,13 @@ báo cáo đặc trưng cho một cận trên về giá trị thông tin.
 
 ---
 
-## 7.2. Code Availability
+## 7.2. Khả năng truy cập mã nguồn
 
 Tại thời điểm soạn thảo, repository công khai chưa có URL chính thức. Bản cuối cần bổ sung kho lưu trữ và định danh phiên bản của mã dùng cho tiền xử lý, huấn luyện mô hình, hiệu chỉnh theo khoảng cách, cross-validation, phân tích thống kê và tạo hình/bảng: **[bổ sung URL cùng release hoặc commit trước khi nộp bài]**. Mọi khẳng định về khả năng tái lập đầy đủ phải được đối chiếu với nội dung repository cuối cùng và các giới hạn truy cập dữ liệu nêu trên.
 
 ---
 
-## 7.3. Intermediate Artifacts and Reproducibility
+## 7.3. Các sản phẩm trung gian và khả năng tái lập
 
 DOI hoặc kho công khai cho các artifact trung gian hiện chưa được xác nhận. Trước khi nộp bài, tác giả cần xác định rõ những artifact đã xử lý, định nghĩa fold, biên khoảng cách, kết quả tổng hợp và đầu ra phân tích nào có thể chia sẻ theo quyền của Lab, sau đó lưu chúng tại **[bổ sung repository hoặc DOI]**. Các thành phần không thể chia sẻ cần được nêu cụ thể, kèm quy trình xin quyền truy cập và phạm vi pipeline vẫn có thể tái lập khi không có các thành phần đó.
 
