@@ -247,24 +247,16 @@ $$\mu_{c,ij} = \operatorname{softplus}(\log \mu_{c,ij}) + 10^{-4}$$
 
 Vì $\operatorname{residual}_{c,ij} \approx 0$ tại thời điểm khởi tạo, tham số cơ sở ban đầu bám sát $\mu_{c,ij} \approx \operatorname{softplus}(\log T_{c,ij}^{\mathrm{grav}})$, neo quá trình tối ưu hóa neural vào tương tác không gian vật lý.
 
-#### Likelihood ZTNB và chuyển đổi kỳ vọng có điều kiện
-Do tập dữ liệu huấn luyện và đánh giá chỉ bao gồm các liên kết OD dương quan sát được ($t_{c,ij} \ge 1$), cường độ luồng được mô hình hóa bằng phân phối Negative Binomial cắt tại 0 (ZTNB) [@grogger1991truncated; @hilbe2011negative]. Phân phối đếm cơ sở được tham số hóa bởi giá trị trung bình $\mu_{c,ij} > 0$ và tham số phân tán toàn cục $\phi = \exp(\log \phi) > 0$, trong đó $\log \phi \in \mathbb{R}$ là một đại lượng vô hướng học được dùng chung. Xác suất tại 0 của phân phối Negative Binomial cơ sở là:
+#### Chuyển đổi kỳ vọng có điều kiện cho cường độ luồng
+Do tập dữ liệu huấn luyện và đánh giá chỉ bao gồm các liên kết OD dương quan sát được ($t_{c,ij} \ge 1$), cường độ luồng được mô hình hóa bằng phân phối Negative Binomial cắt tại 0 (ZTNB) [@grogger1991truncated; @hilbe2011negative]. Phân phối đếm cơ sở được tham số hóa bởi giá trị trung bình $\mu_{c,ij} > 0$ và tham số phân tán toàn cục $\phi = \exp(\log \phi) > 0$. Xác suất tại 0 của phân phối Negative Binomial cơ sở là:
 
 $$p_{0,c,ij} = P_{\mathrm{NB}}(T_{c,ij} = 0; \mu_{c,ij}, \phi) = \left( \frac{\phi}{\mu_{c,ij} + \phi} \right)^\phi$$
-
-Với các số đếm quan sát được $t_{c,ij} \ge 1$, likelihood có điều kiện là:
-
-$$P(T_{c,ij} = t_{c,ij} \mid T_{c,ij} \ge 1) = \frac{P_{\mathrm{NB}}(t_{c,ij}; \mu_{c,ij}, \phi)}{1 - p_{0,c,ij}}$$
-
-Mạng được huấn luyện bằng cách tối thiểu hóa negative log-likelihood trên các thành phố huấn luyện:
-
-$$\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log P_{\mathrm{NB}}(t_{c,ij}; \mu_{c,ij}, \phi) - \log(1 - p_{0,c,ij}) \right]$$
 
 Tại thời điểm suy luận trên các thành phố mục tiêu, mô hình không xuất trực tiếp $\mu_{c,ij}$. Thay vào đó, mô hình tính **kỳ vọng có điều kiện** chính xác:
 
 $$\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1] = \frac{\mu_{c,ij}}{1 - p_{0,c,ij}}$$
 
-Vì $\mu_{c,ij} > 0$ và $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ là một giá trị thực dương nghiêm ngặt ($\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} > \mu_{c,ij} > 0$). Cấu trúc ZTNB chỉ mô hình hóa cường độ trên các liên kết dương $\Omega_{c,\mathrm{inter}}^+$; mô hình không dự báo sự tồn tại của liên kết hay coi các cặp không quan sát là các luồng bằng 0.
+Vì $\mu_{c,ij} > 0$ và $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ là một giá trị thực dương nghiêm ngặt ($\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} > \mu_{c,ij} > 0$). Quy trình huấn luyện likelihood ZTNB và tối ưu hóa chi tiết được trình bày tại Mục 3.5.6.
 
 ---
 
@@ -330,7 +322,69 @@ Bảng 2 so sánh quy cách đầu vào, cơ chế không gian, giả định m�
 
 ---
 
-### 3.5.6. Suy luận zero-shot đóng băng trên thành phố mục tiêu
+### 3.5.6. Huấn luyện mô hình dưới thiết lập quan sát partial OD
+
+#### Thiết lập quan sát luồng dương cục bộ
+Trong các mạng lưới di chuyển đô thị thực tế, ma trận xuất phát–đích đến đầy đủ $\mathcal{V}_c \times \mathcal{V}_c$ không bao giờ được giả định là có thể quan sát toàn phần. Thay vào đó, dữ liệu ghi nhận thực nghiệm chỉ bao gồm một tập con các cặp ô có phát sinh lưu lượng dương và có thể xác minh được. Trong cách tiếp cận của chúng tôi, các cặp không xuất hiện trong dữ liệu được xem là chưa quan sát (missing hoặc unknown), chứ không phải là luồng bằng 0. Sự vắng mặt của một cặp OD trong dữ liệu không được xem là bằng chứng cho thấy cường độ thực của cặp đó bằng 0; do đó, các cặp chưa quan sát không được đưa vào loss như những mẫu zero. Do đó, khung mô hình không huấn luyện bộ phân loại nhị phân để phân biệt liên kết tồn tại hay không tồn tại, và không phạt mô hình trên các cặp không quan sát. Quá trình hình thành liên kết hoặc cơ chế quan sát tập hỗ trợ được xem là ngoại sinh và nằm ngoài phạm vi của mô hình cường độ.
+
+Ba vai trò quan sát được phân định rõ trong mỗi fold:
+1. **Thành phố huấn luyện ($c \in \mathcal{C}_{\mathrm{train}}^{(f)}$)**: Tham số mô hình được học độc quyền từ cường độ luồng của các cặp liên vùng dương quan sát được trên tập hỗ trợ huấn luyện $\Omega_{c,\mathrm{inter}}^+ = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij} \ge 1, i \ne j, d_{c,ij} > 0\}$. Các cặp chưa quan sát và các luồng nội vùng (intrazonal) hoàn toàn không tham gia vào hàm mục tiêu.
+2. **Thành phố validation ($c \in \mathcal{C}_{\mathrm{val}}^{(f)}$)**: Dự báo được đánh giá trên tập hỗ trợ liên vùng dương để điều chỉnh scheduler learning rate, kích hoạt early stopping và chọn checkpoint tốt nhất $\theta^*$. Không có bất kỳ gradient nào được lan truyền ngược từ các thành phố validation.
+3. **Thành phố kiểm tra ($c \in \mathcal{C}_{\mathrm{test}}^{(f)}$)**: Tham số mô hình được đóng băng tuyệt đối. Cường độ luồng thực $t_{c,ij}$ của thành phố mục tiêu không bao giờ được truy cập trong lượt truyền thẳng tạo baseline; chúng chỉ được dùng để xây dựng phân phối khoảng cách oracle $\mathbf{Y}_{D,c}$ cho thí nghiệm hiệu chỉnh và đánh giá sai số tái cấu trúc. Theo estimand hiện tại, tập hỗ trợ dương $\Omega_{c,\mathrm{inter}}^+$ của thành phố mục tiêu được giả định đã biết.
+
+#### Hàm mục tiêu ZTNB cho các mô hình neural
+Do các quan sát huấn luyện được giới hạn chặt chẽ ở các số đếm dương ($t_{c,ij} \ge 1$), cả hai mô hình neural Urban GNN ($m = \text{GNN}$) và Node MLP ($m = \text{MLP}$) đều được tối ưu hóa theo cùng một hàm hợp lý Negative Binomial cắt tại 0 (ZTNB). Gọi $\theta_m$ là tập tham số của mô hình $m$ (bao gồm encoder, pairwise decoder, và tiên nghiệm gravity), và $\phi = \exp(\log \phi) > 0$ là tham số phân tán toàn cục học được ($\log \phi \in \mathbb{R}$ là đại lượng vô hướng dùng chung).
+
+Với mỗi thành phố $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$, mô hình xuất ra giá trị trung bình cơ sở chưa cắt $\mu_{c,ij}^{(m)} > 0$ cho mọi cặp $(i,j) \in \Omega_{c,\mathrm{inter}}^+$. Log-xác suất của phân phối Negative Binomial cơ sở tại giá trị đếm $t$ là:
+
+$$\log p_{\mathrm{NB}}\left(t \mid \mu_{c,ij}^{(m)}, \phi\right) = \log \Gamma(t + \phi) - \log \Gamma(\phi) - \log \Gamma(t + 1) + \phi \log \left( \frac{\phi}{\mu_{c,ij}^{(m)} + \phi} \right) + t \log \left( \frac{\mu_{c,ij}^{(m)}}{\mu_{c,ij}^{(m)} + \phi} \right)$$
+
+Xác suất bằng 0 của phân phối cơ sở là $p_{0,c,ij} = P_{\mathrm{NB}}(0 \mid \mu_{c,ij}^{(m)}, \phi) = \left(\frac{\phi}{\mu_{c,ij}^{(m)} + \phi}\right)^\phi$. Điều kiện hóa trên các quan sát dương ($t \ge 1$), likelihood cắt tại 0 là:
+
+$$p_{\mathrm{ZTNB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right) = \frac{p_{\mathrm{NB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right)}{1 - p_{0,c,ij}}$$
+
+Thành phần mẫu số $1 - p_{0,c,ij}$ là hệ số chuẩn hóa bắt buộc do likelihood được điều kiện hóa trên tập quan sát dương $\{1, 2, \dots\}$. Để ngăn các thành phố có số lượng cặp quan sát quá lớn áp đảo các thành phố nhỏ hơn, loss được tính bằng trung bình negative log-likelihood theo từng thành phố:
+
+$$\mathcal{L}_{\mathrm{neural}}^{(c)}\left(\theta_m, \phi\right) = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log p_{\mathrm{NB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right) - \log\left(1 - p_{0,c,ij}\right) \right]$$
+
+Quá trình tối ưu hóa diễn ra tuần tự từng thành phố qua tất cả $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$ trong mỗi epoch. Cơ chế ổn định số học được áp dụng xuyên suốt:
+1. $\log \phi$ được kẹp (clamped) trong khoảng $[-10.0, 10.0]$;
+2. $\log(1 - p_0)$ được tính bằng công thức ổn định $\log(1 - p_0) = \operatorname{log1p}(-\exp(\log p_0))$ với chặn trên $1.0 - 10^{-7}$;
+3. Đại lượng $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ để tránh lỗi chia cho 0 hoặc log(0);
+4. Gradient được cắt chuẩn Euclidean ở mức tối đa $5.0$ (`torch.nn.utils.clip_grad_norm_`).
+
+Cả hai mô hình đều được huấn luyện bằng AdamW [@loshchilov2019adamw] với learning rate khởi tạo $2 \times 10^{-3}$, weight decay $10^{-4}$, và tối đa 200 epoch.
+
+#### Hàm mục tiêu cho mô hình gravity hai tham số
+Ngược lại với các mô hình neural, mô hình gravity hai tham số cổ điển sở hữu cấu trúc tham số dạng nghiệm đóng được điều khiển bởi đúng hai tham số toàn cục: hệ số log-quy mô $G \in \mathbb{R}$ và số mũ suy giảm khoảng cách $\alpha > 0$.
+
+Dưới thiết lập quan sát partial OD, hai tham số $(G, \alpha)$ được ước lượng bằng cách tối thiểu hóa tổng bình phương phần dư log-cường độ trên toàn bộ các cặp liên vùng dương gộp chung của các thành phố huấn luyện trong fold $f$:
+
+$$\mathcal{L}_{\mathrm{grav}}(G, \alpha) = \sum_{c \in \mathcal{C}_{\mathrm{train}}^{(f)}} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \left(\log t_{c,ij} - \log(P_{c,i} P_{c,j})\right) - \left(G - \alpha \log d_{c,ij}\right) \right]^2$$
+
+Công thức này tương đương với bài toán hồi quy OLS log-tuyến tính:
+
+$$\min_{\boldsymbol{\beta}} \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|_2^2, \qquad \boldsymbol{\beta} = [G, \alpha]^T$$
+
+trong đó vector đáp ứng $\mathbf{y}$ chứa các phần tử $y_{c,ij} = \log t_{c,ij} - (\log P_{c,i} + \log P_{c,j})$, và ma trận thiết kế $\mathbf{X}$ có các hàng $[1, -\log d_{c,ij}]$ cho mọi $(i,j) \in \Omega_{c,\mathrm{inter}}^+$ trên tất cả $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$. Nghiệm giải tích chính xác thu được trực tiếp qua bình phương tối thiểu tuyến tính:
+
+$$\widehat{\boldsymbol{\beta}} = \left(\mathbf{X}^T \mathbf{X}\right)^{-1} \mathbf{X}^T \mathbf{y}$$
+
+Mục tiêu tham số này không sử dụng likelihood Poisson, không sử dụng lặp gradient descent, không sử dụng hệ số cân bằng ($A_i, B_j$), không sử dụng tổng biên luồng ($O_i, D_j$), và không bao gồm các cặp chưa quan sát. Tham số được khớp một lần duy nhất cho mỗi fold trên $\mathcal{C}_{\mathrm{train}}^{(f)}$ và giữ cố định khi đánh giá.
+
+#### Lựa chọn checkpoint và đóng băng tham số
+Quá trình tinh chỉnh siêu tham số và lựa chọn checkpoint được điều khiển độc quyền bởi hiệu năng trên tập validation $\mathcal{C}_{\mathrm{val}}^{(f)}$:
+
+1. **Thước đo lựa chọn**: Tiêu chí lựa chọn checkpoint là **Validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$), lấy trung bình trên tập hỗ trợ liên vùng dương của tất cả các thành phố validation trong fold:
+   $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
+   Validation loss không được dùng để chọn mô hình, đảm bảo rằng checkpoint được chọn bám sát trực tiếp estimand tương tác không gian.
+2. **Điều chỉnh Learning Rate**: Scheduler `ReduceLROnPlateau` theo dõi $\operatorname{CPC}_{\mathrm{val}}$ ở chế độ `max`. Khi $\operatorname{CPC}_{\mathrm{val}}$ không cải thiện tối thiểu $\min\_delta = 10^{-4}$ trong $4$ epoch liên tiếp, learning rate giảm đi một nửa (chặn dưới tại $\min\_lr = 10^{-5}$).
+3. **Early Stopping**: Quá trình huấn luyện dừng sớm nếu validation CPC không đạt đỉnh mới trong $15$ epoch liên tiếp (patience $= 15$). Trọng số mô hình ở epoch có $\operatorname{CPC}_{\mathrm{val}}$ cao nhất được phục hồi làm mô hình huấn luyện cuối cùng $\theta^*$.
+4. **Đóng băng vĩnh viễn**: Sau khi lựa chọn, toàn bộ tham số neural $\theta^* = (\theta_m^*, \phi^*)$ và gravity $(G^*, \alpha^*)$ được đóng băng vĩnh viễn (`requires_grad = False`). Cường độ luồng của thành phố mục tiêu $t_{c,ij}$ không bao giờ xuất hiện trong quá trình học hay validation, bảo đảm tính toàn vẹn của giao thức zero-shot transfer.
+
+---
+
+### 3.5.7. Suy luận zero-shot đóng băng trên thành phố mục tiêu
 
 Sau khi hoàn thành huấn luyện mô hình và lựa chọn siêu tham số trên các thành phố validation, toàn bộ tham số mô hình ($\widehat{\theta}_{\mathrm{GNN}}$, $\widehat{\theta}_{\mathrm{MLP}}$, $\widehat{G}^{(f)}, \widehat{\alpha}^{(f)}$) được đóng băng vĩnh viễn. Khi thực hiện suy luận, thành phố mục tiêu $c$ chỉ cung cấp các dữ liệu không gian tĩnh được phép: tọa độ tâm tract $\mathbf{s}_{c,i}$, đặc trưng bối cảnh đô thị đã chuẩn hóa $\mathbf{x}_{c,i}$, và dân số tract $P_{c,i}$, được đánh giá trên tập hỗ trợ liên vùng dương đã biết $\Omega_{c,\mathrm{inter}}^+$.
 
@@ -338,7 +392,7 @@ Lưu lượng luồng tham chiếu $t_{c,ij}$ của thành phố mục tiêu kh�
 
 ---
 
-### 3.5.7. Quan sát theo khoảng khoảng cách của thành phố mục tiêu
+### 3.5.8. Quan sát theo khoảng khoảng cách của thành phố mục tiêu
 
 Miền khoảng cách liên tục được chia thành $K$ khoảng $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) sử dụng các phân vị cặp luồng ước lượng hoàn toàn từ các thành phố huấn luyện ($a_0 = 0, a_K = \infty$). Đối với thành phố mục tiêu $c$, tập hợp các cặp liên vùng ứng viên rơi vào khoảng khoảng cách $b$ là:
 
@@ -352,7 +406,7 @@ Quan trọng là $\mathbf{Y}_{D,c}$ là một phân phối xác suất chuẩn h
 
 ---
 
-### 3.5.8. Toán tử hiệu chỉnh giải tích dùng chung tại thời điểm suy luận
+### 3.5.9. Toán tử hiệu chỉnh giải tích dùng chung tại thời điểm suy luận
 
 Cho bất kỳ mô hình dự báo baseline đóng băng nào $m \in \{\text{GNN}, \text{MLP}, \text{Grav}\}$ tạo ra dự báo ban đầu $\widehat{T}_{c,ij}^{(0,m)}$ trên $\Omega_{c,\mathrm{inter}}^+$, toán tử hiệu chỉnh thực hiện việc tái phân bổ xác định theo các bước sau:
 
@@ -391,7 +445,7 @@ Cho bất kỳ mô hình dự báo baseline đóng băng nào $m \in \{\text{GNN
 
 ---
 
-### 3.5.9. Các đặc tính toán học bất biến được bảo toàn
+### 3.5.10. Các đặc tính toán học bất biến được bảo toàn
 
 Toán tử hiệu chỉnh giải tích bảo đảm nghiêm ngặt ba đặc tính toán học:
 

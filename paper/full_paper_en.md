@@ -300,24 +300,16 @@ $$\mu_{c,ij} = \operatorname{softplus}(\log \mu_{c,ij}) + 10^{-4}$$
 
 Because $\operatorname{residual}_{c,ij} \approx 0$ at initialization, the base parameter initially tracks $\mu_{c,ij} \approx \operatorname{softplus}(\log T_{c,ij}^{\mathrm{grav}})$, anchoring neural optimization to physical spatial interaction.
 
-#### ZTNB Likelihood and Conditional Mean Conversion
-Because the training and evaluation support consists exclusively of observed positive OD links ($t_{c,ij} \ge 1$), flow volume is modeled using the Zero-Truncated Negative Binomial distribution [@grogger1991truncated; @hilbe2011negative]. The base count distribution is parameterized by mean $\mu_{c,ij} > 0$ and global dispersion $\phi = \exp(\log \phi) > 0$, where $\log \phi \in \mathbb{R}$ is a shared trainable scalar. The zero-probability of the base Negative Binomial is:
+#### Conditional Mean Conversion for Flow Intensity
+Because the training and evaluation support consists exclusively of observed positive OD links ($t_{c,ij} \ge 1$), flow volume is modeled using the Zero-Truncated Negative Binomial distribution [@grogger1991truncated; @hilbe2011negative]. The base count distribution is parameterized by base mean $\mu_{c,ij} > 0$ and global dispersion $\phi = \exp(\log \phi) > 0$. The zero-probability of the base Negative Binomial is:
 
 $$p_{0,c,ij} = P_{\mathrm{NB}}(T_{c,ij} = 0; \mu_{c,ij}, \phi) = \left( \frac{\phi}{\mu_{c,ij} + \phi} \right)^\phi$$
 
-For observed counts $t_{c,ij} \ge 1$, the conditional likelihood is:
-
-$$P(T_{c,ij} = t_{c,ij} \mid T_{c,ij} \ge 1) = \frac{P_{\mathrm{NB}}(t_{c,ij}; \mu_{c,ij}, \phi)}{1 - p_{0,c,ij}}$$
-
-The network is trained by minimizing the negative log-likelihood on training cities:
-
-$$\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log P_{\mathrm{NB}}(t_{c,ij}; \mu_{c,ij}, \phi) - \log(1 - p_{0,c,ij}) \right]$$
-
-At inference time on target cities, predictions do not output $\mu_{c,ij}$ directly. Instead, the model outputs the exact **conditional expectation**:
+At inference time on target cities, the model outputs the exact **conditional expectation**:
 
 $$\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1] = \frac{\mu_{c,ij}}{1 - p_{0,c,ij}}$$
 
-Because $\mu_{c,ij} > 0$ and $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ is a strictly positive real value ($\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} > \mu_{c,ij} > 0$). The ZTNB formulation strictly models intensity over positive links $\Omega_{c,\mathrm{inter}}^+$; it does not predict link existence or treat unobserved pairs as structural zeros.
+Because $\mu_{c,ij} > 0$ and $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ is a strictly positive real value ($\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} > \mu_{c,ij} > 0$). The formal ZTNB training likelihood, gradient normalization, and optimization setup are established in Section 3.5.6.
 
 ---
 
@@ -383,7 +375,69 @@ Table 2 contrasts the input specifications, spatial mechanisms, output modeling 
 
 ---
 
-### 3.5.6 Frozen Target-City Zero-Shot Inference
+### 3.5.6 Model Fitting under Partial OD Observations
+
+#### Partial positive-flow observation setting
+In empirical urban mobility modeling, the complete origin-destination flow matrix $\mathcal{V}_c \times \mathcal{V}_c$ is never assumed to be fully observable. Instead, empirical records capture only a subset of cell pairs exhibiting positive, verifiable travel movements. In our formulation, unobserved pairs are treated strictly as missing or unknown rather than zero-flow observations. The absence of an OD pair from the dataset is not treated as evidence of zero travel flow; unobserved pairs are therefore never incorporated into the loss function as structural zeros. Consequently, our predictive framework does not train binary classifiers to separate links from non-links, nor does it penalize models for unobserved pairs. The spatial link formation or observation process governing network sparsity is considered exogenous and falls outside the scope of our intensity models.
+
+Formally, we distinguish three operational roles across the cross-validation partitions for fold $f$:
+1. **Training cities ($c \in \mathcal{C}_{\mathrm{train}}^{(f)}$)**: Model parameters are learned exclusively by fitting observed positive interzonal travel intensities on the training support $\Omega_{c,\mathrm{inter}}^+ = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij} \ge 1, i \ne j, d_{c,ij} > 0\}$. Unobserved pairs and intrazonal pairs are excluded from parameter estimation.
+2. **Validation cities ($c \in \mathcal{C}_{\mathrm{val}}^{(f)}$)**: Predictions are evaluated on their positive interzonal support strictly to guide learning rate schedules, trigger early stopping, and select the optimal model checkpoint $\theta^*$. No gradients are backpropagated from validation cities.
+3. **Test target cities ($c \in \mathcal{C}_{\mathrm{test}}^{(f)}$)**: Baseline parameters remain completely frozen. Ground-truth flow intensities $t_{c,ij}$ are never accessed during baseline forward passes; they are accessed solely to construct the oracle aggregate distance observation $\mathbf{Y}_{D,c}$ for the controlled calibration experiment and to evaluate downstream accuracy. Under the evaluated estimand, the positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ of the target city is assumed known.
+
+#### ZTNB objective for the neural predictors
+Because training observations are restricted to strictly positive counts ($t_{c,ij} \ge 1$), both neural architectures—the Urban GNN ($m = \text{GNN}$) and the Node MLP ($m = \text{MLP}$)—are optimized under the exact same Zero-Truncated Negative Binomial (ZTNB) likelihood. Let $\theta_m$ denote the trainable parameters of neural backbone $m$ (including encoder, pairwise decoder, and gravity prior parameters), and let $\phi = \exp(\log \phi) > 0$ denote the global dispersion parameter, where $\log \phi \in \mathbb{R}$ is a shared learnable scalar. 
+
+For any city $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$, the network outputs unconstrained base Negative Binomial mean values $\mu_{c,ij}^{(m)} > 0$ for all $(i,j) \in \Omega_{c,\mathrm{inter}}^+$. The base Negative Binomial probability at integer count $t$ is:
+
+$$\log p_{\mathrm{NB}}\left(t \mid \mu_{c,ij}^{(m)}, \phi\right) = \log \Gamma(t + \phi) - \log \Gamma(\phi) - \log \Gamma(t + 1) + \phi \log \left( \frac{\phi}{\mu_{c,ij}^{(m)} + \phi} \right) + t \log \left( \frac{\mu_{c,ij}^{(m)}}{\mu_{c,ij}^{(m)} + \phi} \right)$$
+
+The probability of zero under the base distribution is $p_{0,c,ij} = P_{\mathrm{NB}}(0 \mid \mu_{c,ij}^{(m)}, \phi) = \left(\frac{\phi}{\mu_{c,ij}^{(m)} + \phi}\right)^\phi$. Conditioning strictly on non-zero observations ($t \ge 1$), the zero-truncated likelihood is:
+
+$$p_{\mathrm{ZTNB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right) = \frac{p_{\mathrm{NB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right)}{1 - p_{0,c,ij}}$$
+
+The denominator term $1 - p_{0,c,ij}$ acts as a crucial normalization factor that re-scales probability mass onto the truncated support $\{1, 2, \dots\}$. To prevent cities with disproportionately large numbers of observed pairs from dominating the parameter updates, the neural loss is computed as the mean negative log-likelihood per city:
+
+$$\mathcal{L}_{\mathrm{neural}}^{(c)}\left(\theta_m, \phi\right) = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log p_{\mathrm{NB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right) - \log\left(1 - p_{0,c,ij}\right) \right]$$
+
+Optimization proceeds sequentially city-by-city across all $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$ in each training epoch. Numerical stability is enforced throughout:
+1. $\log \phi$ is clamped to $[-10.0, 10.0]$;
+2. $\log(1 - p_0)$ is computed via the numerically stable identity $\log(1 - p_0) = \operatorname{log1p}(-\exp(\log p_0))$ clamped at $1.0 - 10^{-7}$;
+3. Small epsilons ($\epsilon = 10^{-8}$) are added to $\mu$ and $\phi$ to avoid vanishing arguments;
+4. Gradients are clipped to a maximum Euclidean norm of $5.0$ (`torch.nn.utils.clip_grad_norm_`).
+
+Both models are trained with AdamW [@loshchilov2019adamw] using an initial learning rate of $2 \times 10^{-3}$, weight decay of $10^{-4}$, and a maximum of 200 epochs.
+
+#### Objective for the two-parameter gravity predictor
+In contrast to the neural architectures, the standalone classical gravity baseline possesses a closed-form parametric structure governed by exactly two global parameters: global log-scale factor $G \in \mathbb{R}$ and power-law distance decay exponent $\alpha > 0$. 
+
+Under the partial OD observation setting, parameters $(G, \alpha)$ are estimated by minimizing the sum of squared log-intensity residuals across the pooled positive interzonal training pairs of all source cities in fold $f$:
+
+$$\mathcal{L}_{\mathrm{grav}}(G, \alpha) = \sum_{c \in \mathcal{C}_{\mathrm{train}}^{(f)}} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \left(\log t_{c,ij} - \log(P_{c,i} P_{c,j})\right) - \left(G - \alpha \log d_{c,ij}\right) \right]^2$$
+
+This formulation corresponds to a log-linear Ordinary Least Squares (OLS) objective:
+
+$$\min_{\boldsymbol{\beta}} \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|_2^2, \qquad \boldsymbol{\beta} = [G, \alpha]^T$$
+
+where the response vector $\mathbf{y}$ contains elements $y_{c,ij} = \log t_{c,ij} - (\log P_{c,i} + \log P_{c,j})$, and the design matrix $\mathbf{X}$ has rows $[1, -\log d_{c,ij}]$ for all $(i,j) \in \Omega_{c,\mathrm{inter}}^+$ across all $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$. The exact analytical solution is obtained directly via linear least squares:
+
+$$\widehat{\boldsymbol{\beta}} = \left(\mathbf{X}^T \mathbf{X}\right)^{-1} \mathbf{X}^T \mathbf{y}$$
+
+This parametric objective uses no Poisson likelihood, no iterative gradient descent, no balancing factors ($A_i, B_j$), no origin or destination trip marginals ($O_i, D_j$), and no unobserved pairs. It is fitted once per fold strictly on $\mathcal{C}_{\mathrm{train}}^{(f)}$ and held frozen during evaluation.
+
+#### Model selection and parameter freezing
+Hyperparameter tuning and checkpoint selection are governed entirely by performance on the validation partition $\mathcal{C}_{\mathrm{val}}^{(f)}$:
+
+1. **Selection Metric**: The primary checkpoint selection criterion is **validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$), averaged across the positive interzonal support of all validation cities in the fold:
+   $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
+   Validation loss is not used for model selection, ensuring that checkpoint choice directly aligns with the target spatial interaction estimand.
+2. **Learning Rate Scheduling**: A `ReduceLROnPlateau` scheduler monitors $\operatorname{CPC}_{\mathrm{val}}$ in `max` mode. When $\operatorname{CPC}_{\mathrm{val}}$ fails to improve by at least $\min\_delta = 10^{-4}$ for $4$ consecutive epochs, the learning rate is scaled down by a factor of $0.5$ (bounded below by $\min\_lr = 10^{-5}$).
+3. **Early Stopping**: Optimization terminates early if validation CPC does not achieve a new best value for $15$ consecutive epochs (patience $= 15$). The model state dict corresponding to the epoch with the highest $\operatorname{CPC}_{\mathrm{val}}$ is restored as the final trained model $\theta^*$.
+4. **Permanent Freezing**: Following selection, all neural parameters $\theta^* = (\theta_m^*, \phi^*)$ and gravity parameters $(G^*, \alpha^*)$ are permanently locked (`requires_grad = False`). Target-city flow intensities $t_{c,ij}$ are never exposed to any model during fitting or validation, guaranteeing strict cross-city zero-shot transfer integrity.
+
+---
+
+### 3.5.7 Frozen Target-City Zero-Shot Inference
 
 Following model training and hyperparameter selection on validation cities, all model parameters ($\widehat{\theta}_{\mathrm{GNN}}$, $\widehat{\theta}_{\mathrm{MLP}}$, $\widehat{G}^{(f)}, \widehat{\alpha}^{(f)}$) are permanently frozen. During target-city inference, target city $c$ provides only permissible static spatial data: tract centroid coordinates $\mathbf{s}_{c,i}$, normalized urban context features $\mathbf{x}_{c,i}$, and tract populations $P_{c,i}$, evaluated over the known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$.
 
@@ -391,7 +445,7 @@ Reference flow volumes $t_{c,ij}$ of the target city are never accessed during t
 
 ---
 
-### 3.5.7 Target-City Distance-Binned Observation
+### 3.5.8 Target-City Distance-Binned Observation
 
 The distance continuum is partitioned into $K$ intervals $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) using pair-weighted quantiles estimated strictly from training cities ($a_0 = 0, a_K = \infty$). For target city $c$, the set of candidate interzonal pairs falling into distance interval $b$ is:
 
@@ -405,7 +459,7 @@ Crucially, $\mathbf{Y}_{D,c}$ is a normalized probability distribution over coar
 
 ---
 
-### 3.5.8 Unified Analytical Inference-Time Calibration Operator
+### 3.5.9 Unified Analytical Inference-Time Calibration Operator
 
 Given any frozen baseline predictor $m \in \{\text{GNN}, \text{MLP}, \text{Grav}\}$ generating initial predictions $\widehat{T}_{c,ij}^{(0,m)}$ on $\Omega_{c,\mathrm{inter}}^+$, the calibration operator executes the following deterministic reallocation:
 
@@ -444,7 +498,7 @@ For the sub-metropolitan spatial resolution variant (`M1_county`), the identical
 
 ---
 
-### 3.5.9 Preserved Mathematical Invariants
+### 3.5.10 Preserved Mathematical Invariants
 
 The analytical calibration operator strictly guarantees three mathematical properties:
 
