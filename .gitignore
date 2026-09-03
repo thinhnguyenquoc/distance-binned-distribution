@@ -3,6 +3,10 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Generated paper PDF and HTML exports
+paper/*.pdf
+paper/*.html
+
 # C extensions
 *.so
 
