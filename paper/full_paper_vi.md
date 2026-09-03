@@ -88,7 +88,61 @@ Cách định vị này làm hẹp phạm vi claim nhưng giúp phạm vi đánh
 
 ---
 
-## 3.1. Nguồn dữ liệu và biểu diễn không gian
+## 3.1. Ký hiệu và dữ liệu đầu vào
+
+Gọi $c$ là một vùng đô thị (thành phố) và $\mathcal{V}_c$ là tập rời rạc các đơn vị không gian (census tract) phân chia thành phố đó. Mỗi cặp có thứ tự $(i,j)$ với $i,j \in \mathcal{V}_c$ biểu diễn một cặp nguồn–đích (OD), trong đó cùng một tập đơn vị không gian được sử dụng làm cả origin và destination. Bảng 1 tổng hợp các ký hiệu toán học cốt lõi, nguồn dữ liệu gốc, cũng như vai trò và trạng thái sẵn có của từng đại lượng trong các giai đoạn huấn luyện mô hình, suy luận zero-shot, hiệu chỉnh và đánh giá. Các ký hiệu chuyên biệt chỉ sử dụng trong các phân tích chẩn đoán hoặc stress test phụ (như nhiễu nhân tạo, donor placebo, hoặc kiến trúc backbone thay thế) được định nghĩa cục bộ tại các tiểu mục thực nghiệm tương ứng.
+
+### Bảng 1: Ký hiệu cốt lõi, nguồn dữ liệu và trạng thái sẵn có của thông tin
+
+| Ký hiệu | Mô tả toán học | Nguồn / Vai trò |
+| :--- | :--- | :--- |
+| $c$ | Chỉ số vùng đô thị (thành phố) ($c \in \mathcal{C}$) | Mã định danh thành phố |
+| $\mathcal{C}$ | Tập chuẩn 50 vùng đô thị Hoa Kỳ ($|\mathcal{C}| = 50$) | Thiết lập thực nghiệm |
+| $\mathcal{V}_c$ | Tập rời rạc các đơn vị census tract trong thành phố $c$ | Dữ liệu đầu vào tĩnh của thành phố mục tiêu |
+| $N_c$ | Số lượng đơn vị không gian trong thành phố $c$, $N_c = |\mathcal{V}_c|$ | Dữ liệu đầu vào tĩnh của thành phố mục tiêu |
+| $\mathcal{G}_c$ | Đồ thị bán kính không gian $(\mathcal{V}_c, \mathcal{E}_c)$ với ngưỡng bán kính 5 km | Tính toán từ vị trí địa lý |
+| $i, j$ | Chỉ số tract xuất phát (origin) và tract đích (destination), $i,j \in \mathcal{V}_c$ | Chỉ số đơn vị không gian |
+| $\mathbf{s}_{c,i}$ | Tọa độ tâm địa lý $(\operatorname{lon}_{c,i}, \operatorname{lat}_{c,i})$ của tract $i$ | Dữ liệu đầu vào tĩnh của thành phố mục tiêu |
+| $\mathbf{x}_{c,i}$ | Vector đặc trưng bối cảnh đô thị 26 chiều của tract $i$ (13 census, 8 POI, 5 road) | Dữ liệu đầu vào tĩnh của thành phố mục tiêu |
+| $d_{c,ij}$ | Khoảng cách Haversine mặt cầu giữa tâm của tract $i$ và tract $j$ (km) | Tính toán từ vị trí địa lý |
+| $t_{c,ij}$ | Cường độ luồng di chuyển tham chiếu quan sát được từ tract $i$ đến tract $j$ ($t_{c,ij} \ge 1$) | Chỉ dùng tham chiếu |
+| $\Omega_c^+$ | Tập các cặp OD dương quan sát được, $\{(i,j) : t_{c,ij} \ge 1\}$ | Giả định support đã biết |
+| $\Omega_{c,\mathrm{inter}}^+$ | Tập hỗ trợ liên vùng dương, $\{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij} \ge 1, i \ne j, d_{c,ij} > 0\}$ | Giả định support đã biết |
+| $K$ | Số lượng khoảng khoảng cách ($K = 8$ chuẩn) | Thiết lập thực nghiệm |
+| $I_b$ | Khoảng khoảng cách thứ $b$, $[a_{b-1}, a_b)$ với phân vị cặp luồng $a_b$ từ các thành phố huấn luyện | Thiết lập thực nghiệm |
+| $\mathcal{B}_{c,b}$ | Tập các cặp liên vùng dương trong thành phố $c$ thuộc khoảng khoảng cách $b$ | Tính toán từ vị trí địa lý |
+| $F_{c,b}$ | Tổng lưu lượng tham chiếu mục tiêu trong khoảng khoảng cách $b$, $\sum_{(i,j) \in \mathcal{B}_{c,b}} t_{c,ij}$ | Chỉ dùng tham chiếu |
+| $\mathbf{Y}_{D,c}$ | Phân phối di chuyển theo khoảng cách mục tiêu $[Y_{D,c,1}, \dots, Y_{D,c,K}]^T \in \Delta^{K-1}$ | Dữ liệu đầu vào hiệu chỉnh oracle |
+| $\mathcal{A}_c$ | Tập các khoảng khoảng cách hoạt động có cặp ứng viên dương, $\{b : \widehat{Y}_{D,c,b}^{(0)} > 0\}$ | Đầu ra mô hình |
+| $p_{c,b}^{\mathrm{cond}}$ | Phân phối khoảng cách mục tiêu tái chuẩn hóa trên các khoảng hoạt động $\mathcal{A}_c$ | Dữ liệu đầu vào hiệu chỉnh oracle |
+| $\theta$ | Tham số có thể huấn luyện của GNN backbone và ZTNB head (đóng băng khi đánh giá mục tiêu) | Học từ thành phố nguồn |
+| $\widehat{T}_{c,ij}^{(0)}$ | Dự báo cường độ luồng zero-shot baseline cho cặp $(i,j)$ (cấu hình $M_0$) | Đầu ra mô hình |
+| $\widehat{F}_{c,b}^{(0)}$ | Khối lượng luồng dự báo baseline rơi vào khoảng khoảng cách $b$ | Đầu ra mô hình |
+| $\widehat{Y}_{D,c,b}^{(0)}$ | Tỷ lệ phân phối khoảng cách ngầm định bởi baseline trong khoảng $b$ | Đầu ra mô hình |
+| $q$ | Tham số phản ứng hiệu chỉnh mềm ($q \in [0, 1]$, chuẩn $q = 1.0$) | Thiết lập thực nghiệm |
+| $w_{c,b}(q)$ | Tỷ lệ hiệu chỉnh thô $(p_{c,b}^{\mathrm{cond}} / \widehat{Y}_{D,c,b}^{(0)})^q$ cho khoảng hoạt động $b$ | Đầu ra mô hình |
+| $s_{c,b}(q)$ | Hệ số co giãn bảo toàn khối lượng $w_{c,b}(q) / \sum_{r \in \mathcal{A}_c} \widehat{Y}_{D,c,r}^{(0)} w_{c,r}(q)$ | Đầu ra mô hình |
+| $\widehat{T}_{c,ij}^{(1)}$ | Cường độ luồng dự báo sau hiệu chỉnh, $s_{c,b(i,j)}(q) \cdot \widehat{T}_{c,ij}^{(0)}$ (cấu hình $M_1$) | Đầu ra mô hình |
+| $\widehat{\mathbf{T}}_c^{\mathrm{county}}$ | Luồng dự báo hiệu chỉnh theo nhóm origin-county (cấu hình $M1_{\mathrm{county}}$) | Đầu ra mô hình |
+| $\operatorname{CPC}_c$ | Common Part of Commuters trên $\Omega_{c,\mathrm{inter}}^+$ giữa tham chiếu $t_{c,ij}$ và luồng dự báo | Thước đo đánh giá |
+| $\Delta\operatorname{CPC}_c$ | Mức cải thiện ghép cặp $\operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)})$ trên thành phố $c$ | Thước đo đánh giá |
+| $\overline{\Delta\operatorname{CPC}}$ | Mức cải thiện trung bình vĩ mô trên toàn bộ 50 vùng đô thị | Thước đo đánh giá |
+
+*Ghi chú: Các cột của bảng tóm tắt ký hiệu toán học, mô tả hình thức và nguồn hoặc vai trò chức năng trong quá trình suy luận trên thành phố mục tiêu $c$. Trong các điều kiện thực nghiệm, $M_0$ ký hiệu baseline zero-shot đóng băng, $M_1$ (hoặc $M1_{\mathrm{city}}$) ký hiệu mô hình hiệu chỉnh cấp thành phố chính, và $M1_{\mathrm{county}}$ ký hiệu biến thể độ phân giải không gian.*
+
+Bảng tổng kết trạng thái sẵn có của thông tin qua các giai đoạn:
+
+| Thành phần thông tin | Dữ liệu đầu vào Baseline ($M_0$)? | Dữ liệu đầu vào Hiệu chỉnh ($M_1$)? | Chỉ dùng làm Tham chiếu / Đánh giá? |
+| :--- | :---: | :---: | :---: |
+| Đặc trưng bối cảnh đô thị ($\mathbf{x}_{c,i}$) | Có | Gián tiếp qua dự báo baseline $\widehat{T}_{c,ij}^{(0)}$ | Không |
+| Khoảng cách Haversine tâm tract ($d_{c,ij}$) | Có | Có (gán khoảng cách) | Không |
+| Tập hỗ trợ dương đã biết ($\Omega_{c,\mathrm{inter}}^+$) | Có (phạm vi dự báo) | Có (miền hiệu chỉnh) | Có (mặt nạ đánh giá) |
+| Phân phối tổng hợp oracle ($\mathbf{Y}_{D,c}$) | Không | Có | Không |
+| Luồng tham chiếu từng cặp ($t_{c,ij}$) | Không | Không | Có |
+
+---
+
+## 3.2. Nguồn dữ liệu và biểu diễn không gian
 
 $$I_b = [a_{b-1}, a_b), \qquad b = 1, \dots, K$$
 
@@ -102,125 +156,123 @@ Nghiên cứu được thực hiện trên 50 thành phố của Hoa Kỳ. Mỗi
 
 ---
 
-## 3.2. Đơn vị không gian và độ phân giải của quan sát: Cấu hình chuẩn cấp thành phố (`M1_city`*)*
+## 3.3. Đơn vị không gian và độ phân giải của quan sát: Cấu hình chuẩn cấp thành phố (`M1_city`)
 
-$$\Omega_c^+ = \left\{(i,j) : t_{ij} \ge 1\right\}$$
+$$\Omega_c^+ = \left\{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij} \ge 1\right\}$$
 
-$$F_{c,b} = \sum_{(i,j) \in \Omega_c^+} t_{ij}^{\mathrm{GT}} \mathbb{I}(a_{b-1} \le d_{ij} < a_b)$$
+$$F_{c,b} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} \mathbb{I}(a_{b-1} \le d_{c,ij} < a_b)$$
 
 $$Y_{D,c,b} = \frac{F_{c,b}}{\sum_{r=1}^K F_{c,r}}, \qquad \sum_{b=1}^K Y_{D,c,b} = 1$$
 
-Bộ dữ liệu do Lab cung cấp được tổ chức theo từng thành phố. Mỗi thành phố $c$ bao gồm một tập các tract và các cặp OD dương giữa những tract đó. Tract là đơn vị không gian cơ sở của mô hình, trong khi city là đơn vị chia dữ liệu, thực hiện zero-shot transfer và đánh giá kết quả. Đối với mỗi thành phố mục tiêu, mô hình dự báo cường độ cho toàn bộ tập cặp OD được quan sát $\Omega_c^+ = \{(i,j):t_{ij}\geq1\}$. Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp city. Tổng luồng tham chiếu của city $c$ trong khoảng cách $b$ là $F_{c,b} = \sum_{(i,j)\in\Omega_c^+} t_{ij}^{\mathrm{GT}} \mathbb{I}(a_{b-1}\leq d_{ij}<a_b)$. Phân phối khoảng cách ở cấp city là $Y_{D,c,b} = F_{c,b} / \sum_{r=1}^{K}F_{c,r}$ với $\sum_{b=1}^{K}Y_{D,c,b}=1$. Vector $\mathbf{Y}_{D,c}$ được sử dụng để hiệu chỉnh toàn bộ dự báo OD của thành phố mục tiêu. Đây là cấu hình chính của nghiên cứu (`M1_city`).
+Bộ dữ liệu do Lab cung cấp được tổ chức theo từng thành phố. Mỗi thành phố $c$ bao gồm một tập các tract $\mathcal{V}_c$ và các cặp OD dương giữa những tract đó. Tract là đơn vị không gian cơ sở của mô hình, trong khi city là đơn vị chia dữ liệu, thực hiện zero-shot transfer và đánh giá kết quả. Đối với mỗi thành phố mục tiêu, mô hình dự báo cường độ cho toàn bộ tập cặp OD được quan sát $\Omega_c^+ = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1\}$. Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp city. Tổng luồng tham chiếu của city $c$ trong khoảng cách $b$ là $F_{c,b} = \sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} t_{c,ij} \mathbb{I}(a_{b-1}\leq d_{c,ij}<a_b)$. Phân phối khoảng cách ở cấp city là $Y_{D,c,b} = F_{c,b} / \sum_{r=1}^{K}F_{c,r}$ với $\sum_{b=1}^{K}Y_{D,c,b}=1$. Vector $\mathbf{Y}_{D,c}$ được sử dụng để hiệu chỉnh toàn bộ dự báo OD của thành phố mục tiêu. Đây là cấu hình chính của nghiên cứu (`M1_city`).
 
 ---
 
-## 3.3. Biến thể quan sát chi tiết ở cấp county (`M1_county`*)*
+## 3.4. Biến thể quan sát chi tiết ở cấp county (`M1_county`)
 
-$$\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_c^+ : g(i) = \ell\right\}$$
+$$\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\right\}$$
 
-$$F_{c,\ell,b} = \sum_{(i,j) \in \Omega_{c,\ell}^+} t_{ij}^{\mathrm{GT}} \mathbb{I}(a_{b-1} \le d_{ij} < a_b)$$
+$$F_{c,\ell,b} = \sum_{(i,j) \in \Omega_{c,\ell}^+} t_{c,ij} \mathbb{I}(a_{b-1} \le d_{c,ij} < a_b)$$
 
 $$Y_{D,c,\ell,b} = \frac{F_{c,\ell,b}}{\sum_{r=1}^K F_{c,\ell,r}}, \qquad \sum_{b=1}^K Y_{D,c,\ell,b} = 1$$
 
-$$\widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \widehat{T}_{ij}^{\mathrm{CAL}} : (i,j) \in \Omega_{c,\ell}^+ \right\}$$
+$$\widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \widehat{T}_{c,ij}^{\mathrm{county}} : (i,j) \in \Omega_{c,\ell}^+ \right\}$$
 
-Một thí nghiệm bổ sung kiểm tra liệu quan sát có độ phân giải không gian chi tiết hơn city có mang lại thêm thông tin hay không. Trong thí nghiệm này, các tract của mỗi city được phân nhóm theo county. Ranh giới county được lấy từ GADM phiên bản 4.1 [@gadm41]. Mỗi tract được gán vào county tương ứng dựa trên vị trí tọa độ tâm trong polygon county. Nếu phép ghép `within` không cho kết quả hợp lệ—chẳng hạn khi tâm tract nằm trên biên polygon hoặc gần đường bờ—mã nguồn chuyển sang polygon gần nhất trong EPSG:5070 và chỉ chấp nhận kết quả khi khoảng cách không quá 5 km; nếu không, chương trình dừng và báo lỗi. Các kết quả trùng được xử lý xác định để mỗi tract chỉ có một nhãn county. GADM chỉ được sử dụng cho bước phân nhóm này; GADM không phải nguồn của tọa độ tract, đặc trưng đô thị hoặc luồng OD. Gọi $g(i)$ là county được gán cho tract $i$. Theo quy tắc được xác nhận từ mã nguồn, các cặp OD được phân nhóm theo county của origin: $\Omega_{c,\ell}^+ = \{(i,j)\in\Omega_c^+:g(i)=\ell\}$. Destination $j$ có thể thuộc cùng county hoặc một county khác. Phân phối khoảng cách của nhóm county $\ell$ được xác định bởi $F_{c,\ell,b} = \sum_{(i,j)\in\Omega_{c,\ell}^+} t_{ij}^{\mathrm{GT}} \mathbb{I}(a_{b-1}\leq d_{ij}<a_b)$ và $Y_{D,c,\ell,b} = F_{c,\ell,b} / \sum_{r=1}^{K}F_{c,\ell,r}$. Do dữ liệu đầu vào vẫn được giới hạn trong các tract thuộc city do Lab cung cấp, $\mathbf{Y}_{D,c,\ell}$ mô tả phân phối khoảng cách của các chuyến đi xuất phát từ những tract của city được gán vào county $\ell$. Đại lượng này không nhất thiết đại diện cho toàn bộ hoạt động di chuyển của county bên ngoài phạm vi dữ liệu thành phố. Mỗi phân phối $\mathbf{Y}_{D,c,\ell}$ được dùng để hiệu chỉnh các cặp có origin thuộc county $\ell$. Sau đó, dự báo của tất cả nhóm county được ghép lại thành một dự báo OD hoàn chỉnh cho city: $\widehat{\mathbf{T}}_{c}^{\mathrm{county}} = \bigcup_{\ell\in\mathcal{G}_c} \{\widehat{T}_{ij}^{\mathrm{CAL}} : (i,j)\in\Omega_{c,\ell}^+\}$, trong đó $\mathcal{G}_c$ là tập county xuất hiện trong dữ liệu của city $c$. Như vậy, việc tăng độ phân giải quan sát từ city lên county không làm thay đổi phạm vi dự báo. Mô hình vẫn tái tạo và đánh giá toàn bộ OD của thành phố trên $\Omega_c^+$; chỉ thông tin tổng hợp được cung cấp cho bước hiệu chỉnh trở nên chi tiết hơn về mặt không gian (`M1_county`).
+Một thí nghiệm bổ sung kiểm tra liệu quan sát có độ phân giải không gian chi tiết hơn city có mang lại thêm thông tin hay không. Trong thí nghiệm này, các tract của mỗi city được phân nhóm theo county. Ranh giới county được lấy từ GADM phiên bản 4.1 [@gadm41]. Mỗi tract được gán vào county tương ứng dựa trên vị trí tọa độ tâm trong polygon county. Nếu phép ghép `within` không cho kết quả hợp lệ—chẳng hạn khi tâm tract nằm trên biên polygon hoặc gần đường bờ—mã nguồn chuyển sang polygon gần nhất trong EPSG:5070 và chỉ chấp nhận kết quả khi khoảng cách không quá 5 km; nếu không, chương trình dừng và báo lỗi. Các kết quả trùng được xử lý xác định để mỗi tract chỉ có một nhãn county. GADM chỉ được sử dụng cho bước phân nhóm này; GADM không phải nguồn của tọa độ tract, đặc trưng đô thị hoặc luồng OD. Gọi $g(i)$ là county được gán cho tract $i$. Theo quy tắc được xác nhận từ mã nguồn, các cặp OD được phân nhóm theo county của origin: $\Omega_{c,\ell}^+ = \{(i,j)\in\Omega_{c,\mathrm{inter}}^+:g(i)=\ell\}$. Destination $j$ có thể thuộc cùng county hoặc một county khác. Phân phối khoảng cách của nhóm county $\ell$ được xác định bởi $F_{c,\ell,b} = \sum_{(i,j)\in\Omega_{c,\ell}^+} t_{c,ij} \mathbb{I}(a_{b-1}\leq d_{c,ij}<a_b)$ và $Y_{D,c,\ell,b} = F_{c,\ell,b} / \sum_{r=1}^{K}F_{c,\ell,r}$. Do dữ liệu đầu vào vẫn được giới hạn trong các tract thuộc city do Lab cung cấp, $\mathbf{Y}_{D,c,\ell}$ mô tả phân phối khoảng cách của các chuyến đi xuất phát từ những tract của city được gán vào county $\ell$. Đại lượng này không nhất thiết đại diện cho toàn bộ hoạt động di chuyển của county bên ngoài phạm vi dữ liệu thành phố. Mỗi phân phối $\mathbf{Y}_{D,c,\ell}$ được dùng để hiệu chỉnh các cặp có origin thuộc county $\ell$. Sau đó, dự báo của tất cả nhóm county được ghép lại thành một dự báo OD hoàn chỉnh cho city: $\widehat{\mathbf{T}}_{c}^{\mathrm{county}} = \bigcup_{\ell\in\mathcal{G}_c} \{\widehat{T}_{c,ij}^{\mathrm{county}} : (i,j)\in\Omega_{c,\ell}^+\}$, trong đó $\mathcal{G}_c$ là tập county xuất hiện trong dữ liệu của city $c$. Như vậy, việc tăng độ phân giải quan sát từ city lên county không làm thay đổi phạm vi dự báo. Mô hình vẫn tái tạo và đánh giá toàn bộ OD của thành phố trên $\Omega_{c,\mathrm{inter}}^+$; chỉ thông tin tổng hợp được cung cấp cho bước hiệu chỉnh trở nên chi tiết hơn về mặt không gian (`M1_county`).
 
 ---
 
-## 3.4. Hiệu chỉnh dự báo zero-shot bằng phân phối khoảng cách
+## 3.5. Hiệu chỉnh dự báo zero-shot bằng phân phối khoảng cách
 
-$$\widehat{T}_{ij}^{\mathrm{ZS}} = \mathbb{E}[T_{ij} \mid T_{ij} \ge 1]$$
+$$\widehat{T}_{c,ij}^{(0)} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1]$$
 
-### 3.4.1 Primary Calibration at the City Level (`M1_city`)
+### 3.5.1. Hiệu chỉnh chính ở cấp thành phố (`M1_city`)
 
-$$\widehat{F}_{c,b}^{\mathrm{ZS}} = \sum_{(i,j) \in \Omega_c^+} \widehat{T}_{ij}^{\mathrm{ZS}} \mathbb{I}(a_{b-1} \le d_{ij} < a_b)$$
+$$\widehat{F}_{c,b}^{(0)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)} \mathbb{I}(a_{b-1} \le d_{c,ij} < a_b)$$
 
-$$\widehat{S}_{c}^{\mathrm{ZS}} = \sum_{(i,j) \in \Omega_c^+} \widehat{T}_{ij}^{\mathrm{ZS}}$$
+$$\widehat{S}_{c}^{(0)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)}$$
 
-$$\widehat{Y}_{D,c,b}^{\mathrm{ZS}} = \frac{\widehat{F}_{c,b}^{\mathrm{ZS}}}{\widehat{S}_{c}^{\mathrm{ZS}}}$$
+$$\widehat{Y}_{D,c,b}^{(0)} = \frac{\widehat{F}_{c,b}^{(0)}}{\widehat{S}_{c}^{(0)}}$$
 
-$$\mathcal{A}_c = \left\{ b : \widehat{Y}_{D,c,b}^{\mathrm{ZS}} > 0 \right\}$$
+$$\mathcal{A}_c = \left\{ b \in \{1, \dots, K\} : \widehat{Y}_{D,c,b}^{(0)} > 0 \right\}$$
 
 $$p_{c,b}^{\mathrm{cond}} = \frac{Y_{D,c,b} \mathbb{I}(b \in \mathcal{A}_c)}{\sum_{r \in \mathcal{A}_c} Y_{D,c,r}}$$
 
-$$r_{c,b} = \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,b}^{\mathrm{ZS}}}, \qquad w_{c,b}(q) = r_{c,b}^q, \quad q \in [0, 1]$$
+$$r_{c,b} = \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,b}^{(0)}}, \qquad w_{c,b}(q) = r_{c,b}^q, \quad q \in [0, 1]$$
 
-$$Z_c(q) = \sum_{r \in \mathcal{A}_c} \widehat{Y}_{D,c,r}^{\mathrm{ZS}} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c(q)}$$
+$$Z_c(q) = \sum_{r \in \mathcal{A}_c} \widehat{Y}_{D,c,r}^{(0)} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c(q)}$$
 
-$$\widehat{T}_{ij}^{M1_{\mathrm{city}}} = s_{c, b(i,j)}(q) \cdot \widehat{T}_{ij}^{\mathrm{ZS}}$$
+$$\widehat{T}_{c,ij}^{(1)} = s_{c, b(i,j)}(q) \cdot \widehat{T}_{c,ij}^{(0)}$$
 
-$$\sum_{(i,j) \in \Omega_c^+} \widehat{T}_{ij}^{M1_{\mathrm{city}}} = \sum_{(i,j) \in \Omega_c^+} \widehat{T}_{ij}^{\mathrm{ZS}}$$
+$$\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(1)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)}$$
 
-$$\widehat{Y}_{D,c,b}^{M1_{\mathrm{city}}} = p_{c,b}^{\mathrm{cond}}$$
+$$\widehat{Y}_{D,c,b}^{(1)} = p_{c,b}^{\mathrm{cond}}$$
 
-### 3.4.2 Spatial Resolution Variant at the County Level (`M1_county`)
+### 3.5.2. Biến thể độ phân giải không gian ở cấp county (`M1_county`)
 
-$$\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_c^+ : g(i) = \ell\right\}$$
+$$\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\right\}$$
 
-$$w_{c,\ell,b}(q) = \left(\frac{p_{c,\ell,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,\ell,b}^{\mathrm{ZS}}}\right)^q, \qquad s_{c,\ell,b}(q) = \frac{w_{c,\ell,b}(q)}{\sum_{r \in \mathcal{A}_{c,\ell}} \widehat{Y}_{D,c,\ell,r}^{\mathrm{ZS}} w_{c,\ell,r}(q)}$$
+$$w_{c,\ell,b}(q) = \left(\frac{p_{c,\ell,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,\ell,b}^{(0)}}\right)^q, \qquad s_{c,\ell,b}(q) = \frac{w_{c,\ell,b}(q)}{\sum_{r \in \mathcal{A}_{c,\ell}} \widehat{Y}_{D,c,\ell,r}^{(0)} w_{c,\ell,r}(q)}$$
 
-$$\widehat{T}_{ij}^{M1_{\mathrm{county}}} = s_{c, g(i), b(i,j)}(q) \cdot \widehat{T}_{ij}^{\mathrm{ZS}}$$
+$$\widehat{T}_{c,ij}^{\mathrm{county}} = s_{c, g(i), b(i,j)}(q) \cdot \widehat{T}_{c,ij}^{(0)}$$
 
-### 3.4.3 Invariant Mathematical Properties
+### 3.5.3. Các đặc tính toán học bất biến
 
-Mô hình được huấn luyện trên các thành phố nguồn và được đóng băng trước khi đánh giá trên thành phố mục tiêu. Với mỗi cặp $(i,j)\in\Omega_c^+$, mô hình ZTNB tạo ra dự báo cường độ zero-shot $\widehat{T}_{ij}^{\mathrm{ZS}} = \mathbb{E}[T_{ij}\mid T_{ij}\geq1]$, tạo thành baseline $M_0$. Tổng luồng dự báo trong khoảng $b$ là $\widehat{F}_{c,b}^{\mathrm{ZS}} = \sum_{(i,j)\in\Omega_c^+} \widehat{T}_{ij}^{\mathrm{ZS}} \mathbb{I}(a_{b-1}\leq d_{ij}<a_b)$ và tổng cường độ dự báo của thành phố là $\widehat{S}_{c}^{\mathrm{ZS}} = \sum_{(i,j)\in\Omega_c^+} \widehat{T}_{ij}^{\mathrm{ZS}}$. Phân phối khoảng cách ngầm định bởi baseline là $\widehat{Y}_{D,c,b}^{\mathrm{ZS}} = \widehat{F}_{c,b}^{\mathrm{ZS}} / \widehat{S}_{c}^{\mathrm{ZS}}$. Tập khoảng hoạt động là $\mathcal{A}_c = \{b : \widehat{Y}_{D,c,b}^{\mathrm{ZS}} > 0\}$ và phân phối mục tiêu điều kiện hóa là $p_{c,b}^{\mathrm{cond}} = Y_{D,c,b}\mathbb{I}(b\in\mathcal{A}_c) / \sum_{r\in\mathcal{A}_c}Y_{D,c,r}$. Với $b\in\mathcal{A}_c$, tỷ lệ $r_{c,b} = p_{c,b}^{\mathrm{cond}} / \widehat{Y}_{D,c,b}^{\mathrm{ZS}}$ và trọng số $w_{c,b}(q) = r_{c,b}^q$ ($q\in[0,1]$, $q=1.0$ chuẩn). Hệ số chuẩn hóa $s_{c,b}(q) = w_{c,b}(q) / Z_c(q)$ với $Z_c(q) = \sum_{r\in\mathcal{A}_c}\widehat{Y}_{D,c,r}^{\mathrm{ZS}}w_{c,r}(q)$. Dự báo sau hiệu chỉnh là $\widehat{T}_{ij}^{M1_{\mathrm{city}}} = s_{c,b(i,j)}(q)\widehat{T}_{ij}^{\mathrm{ZS}}$. Chuẩn hóa bảo toàn chính xác tổng cường độ dự báo $\sum_{\Omega_c^+}\widehat{T}_{ij}^{M1_{\mathrm{city}}} = \sum_{\Omega_c^+}\widehat{T}_{ij}^{\mathrm{ZS}}$. Khi $q=1$, phân phối sau hiệu chỉnh khớp với $p_{c,b}^{\mathrm{cond}}$ (khớp raw $\mathbf{Y}_{D,c}$ khi mọi bin đều hoạt động). Đối với biến thể $M1_{\mathrm{county}}$, việc hiệu chỉnh áp dụng độc lập cho từng origin county $\Omega_{c,\ell}^+ = \{(i,j)\in\Omega_c^+:g(i)=\ell\}$, bảo toàn tổng lưu lượng xuất phát của từng county. Cả hai cấu hình đều là phép hậu xử lý giải tích, giữ nguyên tập hỗ trợ $\Omega_c^+$ và bảo toàn thứ hạng nội khoảng ($\tau = 1.0$ đối với nhóm không suy biến).
+Mô hình được huấn luyện trên các thành phố nguồn và được đóng băng trước khi đánh giá trên thành phố mục tiêu. Với mỗi cặp $(i,j)\in\Omega_{c,\mathrm{inter}}^+$, mô hình ZTNB tạo ra dự báo cường độ zero-shot $\widehat{T}_{c,ij}^{(0)} = \mathbb{E}[T_{c,ij}\mid T_{c,ij}\geq1]$, tạo thành baseline $M_0$. Tổng luồng dự báo trong khoảng $b$ là $\widehat{F}_{c,b}^{(0)} = \sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)} \mathbb{I}(a_{b-1}\leq d_{c,ij}<a_b)$ và tổng cường độ dự báo của thành phố là $\widehat{S}_{c}^{(0)} = \sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)}$. Phân phối khoảng cách ngầm định bởi baseline là $\widehat{Y}_{D,c,b}^{(0)} = \widehat{F}_{c,b}^{(0)} / \widehat{S}_{c}^{(0)}$. Tập khoảng hoạt động là $\mathcal{A}_c = \{b : \widehat{Y}_{D,c,b}^{(0)} > 0\}$ và phân phối mục tiêu điều kiện hóa là $p_{c,b}^{\mathrm{cond}} = Y_{D,c,b}\mathbb{I}(b\in\mathcal{A}_c) / \sum_{r\in\mathcal{A}_c}Y_{D,c,r}$. Với $b\in\mathcal{A}_c$, tỷ lệ $r_{c,b} = p_{c,b}^{\mathrm{cond}} / \widehat{Y}_{D,c,b}^{(0)}$ và trọng số $w_{c,b}(q) = r_{c,b}^q$ ($q\in[0,1]$, $q=1.0$ chuẩn). Hệ số chuẩn hóa $s_{c,b}(q) = w_{c,b}(q) / Z_c(q)$ với $Z_c(q) = \sum_{r\in\mathcal{A}_c}\widehat{Y}_{D,c,r}^{(0)}w_{c,r}(q)$. Dự báo sau hiệu chỉnh là $\widehat{T}_{c,ij}^{(1)} = s_{c,b(i,j)}(q)\widehat{T}_{c,ij}^{(0)}$ (cấu hình $M_1$ hay $M1_{\mathrm{city}}$). Chuẩn hóa bảo toàn chính xác tổng cường độ dự báo $\sum_{\Omega_{c,\mathrm{inter}}^+}\widehat{T}_{c,ij}^{(1)} = \sum_{\Omega_{c,\mathrm{inter}}^+}\widehat{T}_{c,ij}^{(0)}$. Khi $q=1$, phân phối sau hiệu chỉnh khớp với $p_{c,b}^{\mathrm{cond}}$ (khớp raw $\mathbf{Y}_{D,c}$ khi mọi bin đều hoạt động). Đối với biến thể $M1_{\mathrm{county}}$, việc hiệu chỉnh áp dụng độc lập cho từng origin county $\Omega_{c,\ell}^+ = \{(i,j)\in\Omega_{c,\mathrm{inter}}^+:g(i)=\ell\}$, bảo toàn tổng lưu lượng xuất phát của từng county. Cả hai cấu hình đều là phép hậu xử lý giải tích, giữ nguyên tập hỗ trợ $\Omega_{c,\mathrm{inter}}^+$ và bảo toàn thứ hạng nội khoảng ($\tau = 1.0$ đối với nhóm không suy biến).
 
 ---
 
-## 3.5. Mô hình hóa cường độ OD bằng ZTNB
+## 3.6. Mô hình hóa cường độ OD bằng ZTNB
 
-### 3.5.1 Frozen neural backbone and training configuration
+### 3.6.1. Cấu hình huấn luyện và neural backbone đóng băng
 
-Trong mỗi fold, 26 đặc trưng tract được chuẩn hóa bằng các thống kê chỉ fit trên 35 thành phố huấn luyện, sau đó áp dụng nguyên trạng cho tập validation và test. Đồ thị không gian nối các tâm tract trong bán kính Haversine 5 km, có self-loop và biểu diễn quan hệ láng giềng theo hai chiều. Tract không có láng giềng trong bán kính được nối với tract gần nhất để tránh nút cô lập. Backbone gồm hai lớp GNN, chiều ẩn 64 và dropout 0.1. Pairwise decoder nhận embedding của origin và destination cùng với $\log(1+d_{ij})$ và log gravity prior. Mô hình được huấn luyện tối đa 200 epoch bằng AdamW (learning rate $2\times10^{-3}$, weight decay $10^{-4}$) [@loshchilov2019adamw], gradient clipping 5.0, scheduler `ReduceLROnPlateau` (factor 0.5, patience 4) và early stopping patience 15 theo validation CPC. Sau bước chọn mô hình, toàn bộ tham số backbone và output head được giữ cố định khi hiệu chỉnh trên thành phố mục tiêu.
+Trong mỗi fold, 26 đặc trưng tract được chuẩn hóa bằng các thống kê chỉ fit trên 35 thành phố huấn luyện, sau đó áp dụng nguyên trạng cho tập validation và test. Đồ thị không gian nối các tâm tract trong bán kính Haversine 5 km, có self-loop và biểu diễn quan hệ láng giềng theo hai chiều. Tract không có láng giềng trong bán kính được nối với tract gần nhất để tránh nút cô lập. Backbone gồm hai lớp GNN, chiều ẩn 64 và dropout 0.1. Pairwise decoder nhận embedding của origin và destination cùng với $\log(1+d_{c,ij})$ và log gravity prior. Mô hình được huấn luyện tối đa 200 epoch bằng AdamW (learning rate $2\times10^{-3}$, weight decay $10^{-4}$) [@loshchilov2019adamw], gradient clipping 5.0, scheduler `ReduceLROnPlateau` (factor 0.5, patience 4) và early stopping patience 15 theo validation CPC. Sau bước chọn mô hình, toàn bộ tham số backbone và output head được giữ cố định khi hiệu chỉnh trên thành phố mục tiêu.
 
-### 3.5.2 Zero-truncated negative binomial likelihood and inference
+### 3.6.2. Likelihood và suy luận phân phối Negative Binomial cắt tại 0 (ZTNB)
 
-$$P(T_{ij} = t_{ij} \mid T_{ij} \ge 1) = \frac{P_{\mathrm{NB}}(T_{ij} = t_{ij}; \mu_{ij}, \phi)}{1 - P_{\mathrm{NB}}(T_{ij} = 0; \mu_{ij}, \phi)}$$
+$$P(T_{c,ij} = t_{c,ij} \mid T_{c,ij} \ge 1) = \frac{P_{\mathrm{NB}}(T_{c,ij} = t_{c,ij}; \mu_{c,ij}, \phi)}{1 - P_{\mathrm{NB}}(T_{c,ij} = 0; \mu_{c,ij}, \phi)}$$
 
-$$p_{0,ij} = \left( \frac{\phi}{\mu_{ij} + \phi} \right)^\phi$$
+$$p_{0,c,ij} = \left( \frac{\phi}{\mu_{c,ij} + \phi} \right)^\phi$$
 
-$$\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_c^+|} \sum_{(i,j) \in \Omega_c^+} \left[ \log P_{\mathrm{NB}}(t_{ij}; \mu_{ij}, \phi) - \log(1 - p_{0,ij}) \right]$$
+$$\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log P_{\mathrm{NB}}(t_{c,ij}; \mu_{c,ij}, \phi) - \log(1 - p_{0,c,ij}) \right]$$
 
-$$\widehat{T}_{ij}^{\mathrm{ZS}} = \mathbb{E}[T_{ij} \mid T_{ij} \ge 1] = \frac{\mu_{ij}}{1 - p_{0,ij}}$$
+$$\widehat{T}_{c,ij}^{(0)} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1] = \frac{\mu_{c,ij}}{1 - p_{0,c,ij}}$$
 
-Do tập dữ liệu chỉ bao gồm những cặp OD có luồng dương, cường độ luồng được mô hình hóa bằng phân phối negative binomial cắt tại 0 [@grogger1991truncated; @hilbe2011negative]. Với $t_{ij}\geq1$, likelihood là: $P(T_{ij}=t_{ij}\mid T_{ij}\geq1) = P_{\mathrm{NB}}(T_{ij}=t_{ij};\mu_{ij},\phi) / (1-P_{\mathrm{NB}}(T_{ij}=0;\mu_{ij},\phi))$. Trong đó, mạng nơ-ron dự báo trung bình chưa cắt $\mu_{ij}>0$, còn $\phi>0$ là tham số phân tán. Xác suất bằng 0 của phân phối negative binomial cơ sở là $p_{0,ij} = (\phi/(\mu_{ij}+\phi))^\phi$. Hàm mất mát huấn luyện là negative log-likelihood của phân phối ZTNB: $\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_c^+|} \sum_{(i,j)\in\Omega_c^+} [\log P_{\mathrm{NB}}(t_{ij};\mu_{ij},\phi) - \log(1-p_{0,ij})]$. Tại thời điểm suy luận, dự báo zero-shot không sử dụng trực tiếp $\mu_{ij}$. Thay vào đó, mô hình sử dụng kỳ vọng có điều kiện: $\widehat{T}_{ij}^{\mathrm{ZS}} = \mathbb{E}[T_{ij}\mid T_{ij}\geq1] = \frac{\mu_{ij}}{1-p_{0,ij}}$. Do là kỳ vọng của phân phối, $\widehat{T}_{ij}^{\mathrm{ZS}}$ là một giá trị thực dương và không bắt buộc phải là số nguyên. ZTNB chỉ mô hình hóa cường độ của những cặp thuộc $\Omega_c^+$; mô hình không dự báo sự tồn tại của các cặp OD chưa quan sát và không xem chúng là các luồng bằng 0.
+Do tập dữ liệu chỉ bao gồm những cặp OD có luồng dương, cường độ luồng được mô hình hóa bằng phân phối negative binomial cắt tại 0 [@grogger1991truncated; @hilbe2011negative]. Với $t_{c,ij}\geq1$, likelihood là: $P(T_{c,ij}=t_{c,ij}\mid T_{c,ij}\geq1) = P_{\mathrm{NB}}(T_{c,ij}=t_{c,ij};\mu_{c,ij},\phi) / (1-P_{\mathrm{NB}}(T_{c,ij}=0;\mu_{c,ij},\phi))$. Trong đó, mạng nơ-ron dự báo trung bình chưa cắt $\mu_{c,ij}>0$, còn $\phi>0$ là tham số phân tán. Xác suất bằng 0 của phân phối negative binomial cơ sở là $p_{0,c,ij} = (\phi/(\mu_{c,ij}+\phi))^\phi$. Hàm mất mát huấn luyện là negative log-likelihood của phân phối ZTNB: $\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} [\log P_{\mathrm{NB}}(t_{c,ij};\mu_{c,ij},\phi) - \log(1-p_{0,c,ij})]$. Tại thời điểm suy luận, dự báo zero-shot không sử dụng trực tiếp $\mu_{c,ij}$. Thay vào đó, mô hình sử dụng kỳ vọng có điều kiện: $\widehat{T}_{c,ij}^{(0)} = \mathbb{E}[T_{c,ij}\mid T_{c,ij}\geq1] = \frac{\mu_{c,ij}}{1-p_{0,c,ij}}$. Do là kỳ vọng của phân phối, $\widehat{T}_{c,ij}^{(0)}$ là một giá trị thực dương và không bắt buộc phải là số nguyên. ZTNB chỉ mô hình hóa cường độ của những cặp thuộc $\Omega_{c,\mathrm{inter}}^+$; mô hình không dự báo sự tồn tại của các cặp OD chưa quan sát và không xem chúng là các luồng bằng 0.
 
 Hình 1 tóm tắt framework hiệu chỉnh oracle có điều kiện theo support, đồng thời phân tách rõ quá trình huấn luyện cross-city, suy luận trên thành phố mục tiêu bằng mô hình đóng băng và can thiệp thông tin tổng hợp oracle.
 
 ![Hình 1](figures/fig1_oracle_calibration_framework.svg)
-**Hình 1 | Framework hiệu chỉnh oracle có điều kiện theo support.** Mô hình cross-city (GNN/ZTNB) được huấn luyện trên các thành phố nguồn và hoàn toàn đóng băng tại thời điểm suy luận. Đối với thành phố mục tiêu $c$, mô hình chỉ dự báo cường độ luồng trên tập hỗ trợ liên vùng dương $\Omega_c^+$. Phân phối khoảng cách mục tiêu $Y_D$ được dùng để tái phân bổ giải tích khối lượng luồng dự báo giữa các khoảng cự ly, bảo toàn tổng lưu lượng dự báo và bảo toàn thứ tự xếp hạng các cặp OD trong từng khoảng.
-
-**Hình 1. Framework hiệu chỉnh oracle có điều kiện theo support.** Mô hình cross-city $M_0$ được huấn luyện trên các thành phố nguồn và đóng băng trước khi suy luận trên thành phố mục tiêu. Đối với một thành phố mục tiêu, $M_0$ trước hết tạo ra dự báo cường độ baseline $\widehat{\mathbf{T}}^{(0)}$ trên tập hỗ trợ dương đã biết $\Omega_c^+$. Phân phối theo nhóm khoảng cách oracle $\mathbf{Y}_{D,c}$ được xác định trực tiếp từ chính các luồng OD ground-truth dương của thành phố mục tiêu đang được sử dụng để đánh giá và chỉ được đưa vào tại thời điểm suy luận. Các hệ số theo bin tái phân bổ khối lượng dự báo giữa các khoảng cự ly để tạo $\widehat{\mathbf{T}}^{(1)}$ mà không cập nhật tham số mô hình hoặc tạo liên kết OD mới. Sơ đồ biểu diễn một can thiệp thông tin oracle, không phải pipeline telemetry bên ngoài được thu thập độc lập.
+**Hình 1. Framework hiệu chỉnh oracle có điều kiện theo support.** Mô hình cross-city $M_0$ được huấn luyện trên các thành phố nguồn và đóng băng trước khi suy luận trên thành phố mục tiêu. Đối với một thành phố mục tiêu, $M_0$ trước hết tạo ra dự báo cường độ baseline $\widehat{\mathbf{T}}_c^{(0)}$ trên tập hỗ trợ dương đã biết $\Omega_{c,\mathrm{inter}}^+$. Phân phối theo nhóm khoảng cách oracle $\mathbf{Y}_{D,c}$ được xác định trực tiếp từ chính các luồng OD ground-truth dương của thành phố mục tiêu đang được sử dụng để đánh giá và chỉ được đưa vào tại thời điểm suy luận. Các hệ số theo bin tái phân bổ khối lượng dự báo giữa các khoảng cự ly để tạo $\widehat{\mathbf{T}}_c^{(1)}$ mà không cập nhật tham số mô hình hoặc tạo liên kết OD mới. Sơ đồ biểu diễn một can thiệp thông tin oracle, không phải pipeline telemetry bên ngoài được thu thập độc lập.
 
 ---
 
-## 3.6. Giao thức đánh giá cross-city và suy luận thống kê
+## 3.7. Giao thức đánh giá cross-city và suy luận thống kê
 
-### 3.6.1 Giao thức kiểm định chéo liên thành phố 5-fold
+### 3.7.1. Giao thức kiểm định chéo liên thành phố 5-fold
 Nghiên cứu áp dụng giao thức kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị của Hoa Kỳ. Trong mỗi fold, 35 thành phố được dùng để huấn luyện, 5 thành phố dùng để lựa chọn mô hình (validation) và 10 thành phố dùng để đánh giá (testing). Mỗi thành phố xuất hiện trong tập kiểm tra đúng một lần, bao phủ toàn bộ 50 đô thị qua các fold.
 
 Đơn vị phân chia fold là toàn bộ thành phố, không phải các cặp OD, tract hoặc mẫu quan sát trong cùng một thành phố. Do đó, các cặp OD hoặc tract của cùng một thành phố không bị phân tán giữa training, validation và test mà nằm trọn vẹn trong một tập duy nhất của mỗi fold. Việc phân chia ở cấp thành phố này là điều kiện cần để hỗ trợ claim zero-shot liên thành phố.
 
-Các biên khoảng cách được tính riêng cho từng fold và chỉ sử dụng khoảng cách của các cặp OD thuộc tập thành phố huấn luyện. Sau khi huấn luyện hoàn tất, tham số của mô hình được giữ cố định trước khi dự báo trên các thành phố kiểm tra. Đối với mỗi thành phố mục tiêu, ba cấu hình được phân biệt: $M_0$ (dự báo zero-shot không sử dụng $Y_D$), $M1_{\mathrm{city}}$ (hiệu chỉnh bằng một $Y_D$ oracle ở cấp city), và $M1_{\mathrm{county}}$ (hiệu chỉnh bằng nhiều $Y_D$ oracle được phân nhóm theo county). So sánh giữa $M_0$ và $M1_{\mathrm{city}}$ là thí nghiệm chính nhằm trả lời liệu phân phối khoảng cách của thành phố mục tiêu có bổ sung thông tin cho dự báo zero-shot hay không (RQ1). So sánh giữa $M1_{\mathrm{city}}$ và $M1_{\mathrm{county}}$ cung cấp bằng chứng cho khía cạnh độ phân giải không gian của quan sát trong RQ2. Trong tất cả cấu hình, mô hình dự báo và được đánh giá trên cùng tập hỗ trợ dương $\Omega_c^+$ của toàn thành phố.
+Các biên khoảng cách được tính riêng cho từng fold và chỉ sử dụng khoảng cách của các cặp OD thuộc tập thành phố huấn luyện. Sau khi huấn luyện hoàn tất, tham số của mô hình được giữ cố định trước khi dự báo trên các thành phố kiểm tra. Đối với mỗi thành phố mục tiêu, ba cấu hình được phân biệt: $M_0$ (dự báo zero-shot không sử dụng $Y_D$), $M1_{\mathrm{city}}$ (hiệu chỉnh bằng một $Y_D$ oracle ở cấp city), và $M1_{\mathrm{county}}$ (hiệu chỉnh bằng nhiều $Y_D$ oracle được phân nhóm theo county). So sánh giữa $M_0$ và $M1_{\mathrm{city}}$ là thí nghiệm chính nhằm trả lời liệu phân phối khoảng cách của thành phố mục tiêu có bổ sung thông tin cho dự báo zero-shot hay không (RQ1). So sánh giữa $M1_{\mathrm{city}}$ và $M1_{\mathrm{county}}$ cung cấp bằng chứng cho khía cạnh độ phân giải không gian của quan sát trong RQ2. Trong tất cả cấu hình, mô hình dự báo và được đánh giá trên cùng tập hỗ trợ dương $\Omega_{c,\mathrm{inter}}^+$ của toàn thành phố.
 
 ---
 
-### 3.6.2 Primary Evaluation Metric: Common Part of Commuters (CPC)
+### 3.7.2. Thước đo đánh giá chính: Common Part of Commuters (CPC)
 
-$$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{ij}^{\mathrm{GT}}, \widehat{T}_{ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{ij}^{\mathrm{GT}} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{ij}}$$
+$$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{c,ij}, \widehat{T}_{c,ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}}$$
 
-$$\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$$
+$$\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)}) = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$$
 
-Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{ij}, \widehat{T}_{ij}) / (\sum_{(i,j)} t_{ij} + \sum_{(i,j)} \widehat{T}_{ij})$, trong đó tập hỗ trợ đánh giá liên vùng dương đã biết được định nghĩa chính thức là:
+Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{c,ij}, \widehat{T}_{c,ij}) / (\sum_{(i,j)} t_{c,ij} + \sum_{(i,j)} \widehat{T}_{c,ij})$, trong đó tập hỗ trợ đánh giá liên vùng dương đã biết được định nghĩa chính thức là:
 $$
-\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j): t_{ij}\geq1,\ i\neq j,\ d_{ij}>0 \right\}.
+\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.
 $$
-CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison]. Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.
+CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison]. Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)}) = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.
 
 ---
 
-### 3.6.3 Aggregation Across Model Seeds and Cities
+### 3.7.3. Tổng hợp qua các model seed và thành phố
 
 $$\mathcal{S} = \{1, 10, 100\}$$
 
@@ -232,7 +284,7 @@ Mỗi cấu hình được chạy với ba model seeds: $\mathcal{S}=\{1,10,100\
 
 ---
 
-### 3.6.4 Uncertainty Quantification and Statistical Hypothesis Testing
+### 3.7.4. Lượng hóa độ bất định và kiểm định giả thuyết thống kê
 
 $$\left\{ \overline{\Delta\operatorname{CPC}}_c \right\}_{c=1}^{50}$$
 
@@ -240,13 +292,13 @@ Khoảng tin cậy 95% của mức cải thiện trung bình được ước lư
 
 ---
 
-### 3.6.5 Robustness and Diagnostic Stress Tests
+### 3.7.5. Các kiểm tra độ bền và stress test chẩn đoán
 
 Các phân tích bổ sung được thiết kế để kiểm tra phạm vi và cơ chế của kết quả chính: (1) Độ phân giải khoảng cách: thay đổi $K \in \{2,4,6,8,10,12,14,16,18,20\}$ và so sánh chín cấu hình phụ với mốc khóa $K=8$ bằng hiệu chỉnh Holm step-down [@holm1979sequential]; (2) Độ phân giải không gian: so sánh $M1_{\mathrm{city}}$ với $M1_{\mathrm{county}}$; (3) Chất lượng quan sát: thêm nhiễu Total Variation có kiểm soát vào $Y_D$; (4) Thứ tự khoảng cách: hoán vị các khoảng của $Y_D$; (5) Tính đặc thù theo thành phố: sử dụng phân phối của thành phố khác trong matched-placebo; (6) Độ bền theo khởi tạo: lặp lại với các model seeds 1, 10, 100; và (7) Độ bền theo kiến trúc: đánh giá Urban GNN và Node MLP cùng với gravity baseline cổ điển. Các phân tích này không thay đổi estimand chính; chúng xác định ranh giới vận hành và cơ chế khoa học của phương pháp.
 
 ---
 
-### 3.6.6. Phân tích độ phân giải không gian theo county
+### 3.7.6. Phân tích độ phân giải không gian theo county
 
 $$\mathbf{Y}_{D,c,\ell} = \mathbf{Y}_{D,c},$$
 
@@ -540,7 +592,7 @@ Cần lưu ý rằng $\mathbf{Y}_{D,c}$ trong thí nghiệm được tổng hợ
 
 Khoảng cách hoặc chi phí di chuyển từ lâu đã được xem là thành phần impedance trung tâm trong spatial-interaction models [@wilson1971family]. Các phương pháp calibration cổ điển cũng nhấn mạnh rằng hình dạng distance-decay cần được xác định từ thông tin di chuyển quan sát được thay vì được giả định là cố định giữa các bối cảnh [@hyman1969calibration]. Các nghiên cứu gần đây tiếp tục cho thấy distance-decay có thể thay đổi theo phương thức, mục đích chuyến đi, mức độ đô thị hóa và đặc điểm kinh tế–xã hội [@verma2025distance]. Trong nghiên cứu này, $Y_D$ không được dùng để ước lượng một hàm gravity tham số. Thay vào đó, nó cung cấp trực tiếp tỷ lệ khối lượng cần được phân bổ vào từng khoảng cách. Mối liên hệ dương mạnh giữa sai lệch ban đầu $d_{\mathrm{pre}}$ và $\Delta\mathrm{CPC}$ phù hợp với cơ chế tái phân bổ khối lượng liên khoảng ($r_{\text{partial}} = +0.7951, R^2 = 73.7\%$, Hình 6, Bảng 8), nhưng không thiết lập quan hệ nhân quả.
 
-Do tất cả cặp trong cùng một khoảng được nhân với cùng một hệ số dương (Mục 3.4), phép hiệu chỉnh bảo toàn thứ tự nội khoảng về mặt toán học. Phân tích thực nghiệm không phát hiện mối tương quan có ý nghĩa giữa chỉ số chất lượng nội khoảng $Q_c^{\mathrm{intra}}$ và mức cải thiện ($r=0.046, p=0.75$). Kết quả không có ý nghĩa thống kê này không chứng minh rằng chất lượng nội khoảng hoàn toàn không quan trọng; nó chỉ cho thấy dữ liệu hiện tại chưa cung cấp bằng chứng về một quan hệ đơn điệu giữa hai đại lượng. Chất lượng cuối cùng vẫn bị giới hạn bởi cấu trúc nội khoảng mà baseline đã dự báo, vì bước hiệu chỉnh không thể sửa thứ tự sai giữa các cặp thuộc cùng một nhóm.
+Do tất cả cặp trong cùng một khoảng được nhân với cùng một hệ số dương (Mục 3.5), phép hiệu chỉnh bảo toàn thứ tự nội khoảng về mặt toán học. Phân tích thực nghiệm không phát hiện mối tương quan có ý nghĩa giữa chỉ số chất lượng nội khoảng $Q_c^{\mathrm{intra}}$ và mức cải thiện ($r=0.046, p=0.75$). Kết quả không có ý nghĩa thống kê này không chứng minh rằng chất lượng nội khoảng hoàn toàn không quan trọng; nó chỉ cho thấy dữ liệu hiện tại chưa cung cấp bằng chứng về một quan hệ đơn điệu giữa hai đại lượng. Chất lượng cuối cùng vẫn bị giới hạn bởi cấu trúc nội khoảng mà baseline đã dự báo, vì bước hiệu chỉnh không thể sửa thứ tự sai giữa các cặp thuộc cùng một nhóm.
 
 ---
 
