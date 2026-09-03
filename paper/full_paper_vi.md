@@ -187,10 +187,16 @@ Chi tiết phương trình từng layer và tensor được trình bày trong Ph
 Để cung cấp một đường cơ sở tham số phi neural, mô hình tương tác không gian Gravity hai tham số cổ điển được xác định bởi:
 
 $$
-\hat{t}_{c,ij}^{\mathrm{grav}} = \exp(\beta_0) P_{c,i} P_{c,j} d_{c,ij}^{-\alpha}.
+\hat{t}_{c,ij}^{\mathrm{grav}} = \exp(G) P_{c,i} P_{c,j} d_{c,ij}^{-\alpha}.
 $$
 
-Hai tham số gồm hệ số quy mô toàn cục $\beta_0$ và số mũ phân rã khoảng cách $\alpha$ được ước lượng bằng hồi quy bình phương tối thiểu (OLS) log-linear gộp trên toàn bộ các cặp OD dương thuộc các thành phố huấn luyện của fold tương ứng. Dân số các tract $P_{c,i}, P_{c,j}$ được chặn dưới tại 1.0 và khoảng cách $d_{c,ij}$ được chặn dưới tại 0.1 km. Mô hình này không sử dụng đặc trưng đô thị hay mạng neural, đóng vai trò như một baseline tham số độc lập.
+Mô hình dự báo cường độ luồng OD liên vùng $\hat{t}_{c,ij}^{\mathrm{grav}}$ trên tập hỗ trợ liên vùng dương đã biết $\Omega_c$. Hai tham số gồm hệ số quy mô toàn cục $G$ và số mũ phân rã khoảng cách $\alpha$ được ước lượng bằng mô hình Gravity dạng log-linear, được ước lượng bằng pooled ordinary least squares trên dữ liệu của các thành phố huấn luyện:
+
+$$
+\log t_{c,ij} - \log(P_{c,i} P_{c,j}) = G - \alpha \log d_{c,ij}.
+$$
+
+Phép hồi quy được ước lượng độc lập cho từng fold bằng nghiệm giải tích bình phương tối thiểu (`np.linalg.lstsq`) gộp trên toàn bộ các cặp liên vùng có luồng dương ($t_{c,ij} \ge 1, d_{c,ij} > 0$) của các thành phố thuộc tập huấn luyện $\mathcal{C}_{\mathrm{train}}^{(f)}$. Thành phố kiểm tra (test cities) tuyệt đối không tham gia vào quá trình ước lượng hệ số. Khi áp dụng lên thành phố kiểm tra $c \in \mathcal{C}_{\mathrm{test}}^{(f)}$, các hệ số $(G, \alpha)$ được giữ cố định để tạo ra dự báo baseline phi neural $\hat{t}_{c,ij}^{(0,\mathrm{grav})}$, sau đó được đưa qua cùng toán tử hiệu chỉnh $Y_D$ nhằm so sánh độ nhạy trước can thiệp giữa các kiến trúc. Dân số các tract $P_{c,i}, P_{c,j}$ được chặn dưới tại 1.0 và khoảng cách $d_{c,ij}$ được chặn dưới tại 0.1 km để bảo đảm ổn định số học.
 
 ### 3.5.4. Mô hình bóc tách: Pairwise Node MLP
 
@@ -495,7 +501,7 @@ Kết quả tại Bảng 6 cho thấy mức tăng do hiệu chỉnh xuất hiệ
 | **Node MLP (Không truyền thông điệp đồ thị)** | $0.70913 \pm 0.04754$ | $0.71242 \pm 0.04737$ | **$+0.00329$** | $[+0.0025, +0.0042]$ | **47 / 50 (94.0%)** | $\mathbf{4.38 \times 10^{-11}}$ | $-2.57$ |
 | **Mô hình Gravity 2 tham số cổ điển** | $0.38868 \pm 0.15312$ | $0.38952 \pm 0.15435$ | $+0.00084$ | $[+0.0002, +0.0016]$ | 22 / 50 (44.0%) | $0.3545$ (n.s.) | $-0.93$ |
 
-*Ghi chú: Tất cả mô hình được đánh giá theo cùng kiểm định chéo 5-fold ($N=50$ thành phố kiểm tra $\times$ 3 seeds). Mô hình gravity được hiệu chỉnh bằng maximum likelihood trên các fold huấn luyện.*
+*Ghi chú: Tất cả mô hình được đánh giá theo cùng kiểm định chéo 5-fold ($N=50$ thành phố kiểm tra; hai mô hình neural được tính trung bình qua 3 seeds). Mô hình Gravity dạng log-linear được ước lượng bằng pooled ordinary least squares (OLS) trên dữ liệu các thành phố huấn luyện của từng fold, tuyệt đối không sử dụng dữ liệu luồng của thành phố kiểm tra.*
 
 ---
 
