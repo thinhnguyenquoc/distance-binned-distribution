@@ -177,11 +177,3 @@ Several key scope boundaries and methodological limitations must be acknowledged
 
 *(Tiếng Việt: Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các hướng nghiên cứu gần đây cũng nhấn mạnh giá trị của việc kết hợp mechanistic mobility models với các phương pháp học máy có khả năng mở rộng và diễn giải [@pappalardo2023future]. Future work có thể đánh giá các nguồn quan sát tổng hợp độc lập—bao gồm Meta Movement Distribution nếu provenance, đơn vị địa lý, điều kiện truy cập và mức độ phù hợp được xác lập—nhưng nghiên cứu hiện tại chưa sử dụng telemetry bên ngoài.)*
 
----
-
-## 5.11 Conclusion of discussion
-*(Tiếng Việt: **5.11. Kết luận phần thảo luận**)*
-
-In summary, the target city's distance-binned mobility distribution provides a small, statistically significant, and consistent source of complementary information for zero-shot OD intensity reconstruction on known positive support. The observed benefit is consistent with an inter-bin mass reallocation mechanism, strictly requires target-specific spatial distance ordering, and degrades gracefully under synthetic observation noise. These results establish empirical evidence for combining aggregate observations with a frozen cross-city neural model, while not extending to link discovery, full-matrix OD reconstruction, or deployment with noisy real-world telemetry streams.
-
-*(Tiếng Việt: Tóm lại, phân phối khoảng cách của thành phố mục tiêu cung cấp một nguồn thông tin bổ sung nhỏ nhưng có ý nghĩa và tương đối nhất quán cho tái tạo cường độ OD zero-shot trên positive support đã biết. Lợi ích quan sát được phù hợp với cơ chế sửa sai lệch phân bổ khối lượng giữa các khoảng, phụ thuộc vào việc sử dụng đúng phân phối của thành phố mục tiêu và suy giảm khi quan sát bị nhiễu. Kết quả thiết lập một bằng chứng thực nghiệm cho việc kết hợp quan sát tổng hợp với một mô hình cross-city đóng băng, đồng thời chưa mở rộng sang phát hiện liên kết, tái tạo ma trận OD đầy đủ hoặc triển khai với nguồn dữ liệu tổng hợp thực tế.)*

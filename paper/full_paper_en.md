@@ -38,8 +38,6 @@ The study makes four principal contributions:
 3. It characterizes when the signal is informative through resolution, noise, permutation, donor-placebo, initialization, and architecture diagnostics.
 4. It provides a mechanistic interpretation of the calibration as inter-bin mass reallocation that preserves intra-bin rankings, while explicitly separating empirical association from causal evidence and oracle evaluation from operational deployment.
 
-The remainder of the paper is organized as follows. Section 2 reviews related work on spatial-interaction modeling, neural cross-city mobility prediction, aggregate calibration, and mobility-data limitations. Section 3 describes the benchmark data, spatial representation, zero-truncated flow model, calibration operator, and evaluation protocol. Section 4 reports the empirical results and diagnostic experiments. Section 5 discusses their interpretation, implications, limitations, and future directions. Section 6 concludes the study, followed by the data and code availability statement, declarations, and references.
-
 ---
 
 # Section 2: Related Work
@@ -76,11 +74,7 @@ This distinction is central to the scope of the current study. The task is **sup
 
 ## 2.5 Mobility-data quality, aggregation, and privacy boundaries
 
-Human mobility research draws on surveys, administrative records, mobile-network data, location-based services, and other digital traces [@barbosa2018humanmobility]. These sources differ in population coverage, spatial and temporal resolution, sampling mechanisms, and preprocessing. Such differences can distort inferred mobility patterns and complicate comparisons across cities or platforms [@gallotti2024distorted; @pappalardo2023future]. An aggregate distance distribution estimated from an external source may therefore deviate systematically from the corresponding distribution in the reference OD benchmark rather than exhibit only independent random error.
-
-Aggregation also does not by itself provide a formal privacy guarantee. Mobility records can remain identifying even when represented with reduced spatial or temporal detail [@demontjoye2013unique], while achieving user-level differential privacy for released location statistics involves nontrivial practical trade-offs [@houssiau2022differential]. Consequently, the low dimensionality of the target city's distance-binned mobility distribution should be interpreted as a property of the observation interface, not as proof that the observation is privacy-preserving. Establishing privacy requires a specified data-generating process, threat model, release mechanism, and formal or empirical risk analysis.
-
-For these reasons, the present work uses an oracle distribution derived from the target reference flows and then introduces controlled perturbations to study sensitivity to observation error. This design isolates the information content of the distribution but does not substitute for future validation with independently collected aggregate observations. It also avoids attributing unverified provenance, availability, or privacy characteristics to a prospective operational source.
+Mobility datasets may be subject to biases in coverage, representativeness, and data-processing pipelines, which can distort observed distance distributions [@gallotti2024distorted; @pappalardo2023future]. Although aggregated data carries lower detail than pairwise OD records, aggregation does not automatically provide formal privacy guarantees: individual mobility traces can retain high re-identifiability even after coarse spatial aggregation [@demontjoye2013unique], and achieving user-level differential privacy for released location statistics involves nontrivial practical trade-offs [@houssiau2022differential]. Accordingly, the present study treats $Y_D$ solely as an oracle aggregate observation for evaluating information value; it does not assess the representativeness of the data source, resistance to re-identification, or the level of privacy protection in any real-world deployment.
 
 ## 2.6 Research gap and positioning of this study
 
@@ -836,7 +830,7 @@ In addition to tests using alternative distributions from other sources, we cond
 | **7. Raw Fold Train-Mean $Y_D$** | **$-0.017735$** | $[-0.02365, -0.01243]$ | $4.91 \times 10^{-12}$ | **$+0.021275$** | $[+0.01613, +0.02706]$ | $4.44 \times 10^{-15}$ | **48 / 50 (96.0%)** |
 | **8. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
 
-*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. The primary placebo result reported here is the unified training-donor arm (Row 2, $p=2.19\times 10^{-11}$, $46/50$); the fair weight-matched permutation summary ($+0.00367$, $47/50$, $p=6.74\times 10^{-12}$) is reported as a separate robustness analysis arm and is not pooled with Table 2. For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
+*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. The primary placebo result reported here is the unified training-donor arm (Row 2, $p=2.19\times 10^{-11}$, $46/50$. For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
 
 ---
 
@@ -986,7 +980,7 @@ One interpretation is that the two signals act at different structural scales. A
 | **$1.00\%$** | $0.7128$ | $+0.00354$ | $+0.01549$ | $+0.01195$ | $[+0.00883, +0.01560]$ | 46 / 50 |
 | **$5.00\%$** | $0.7128$ | $+0.00354$ | $+0.04363$ | $+0.04009$ | $[+0.03507, +0.04542]$ | 50 / 50 |
 
-*Note: Evaluated across all $N=50$ test cities on unseen OD pairs. The OD-FE experiment used $B=200$ Monte Carlo replicates per city, and its implementation and numerical results passed the associated 20 contract gates and six-part audit. Linear interpolation between the 0.10% and 0.25% evaluated conditions places the operational crossing at $p_{\mathrm{eq}}\approx0.20\%$ (95% bootstrap interval $[0.133\%,0.287\%]$; approximately 35 revealed flows per city). The comparison is specific to the OD-FE adapter, sampling protocol, positive support, and CPC metric. It must not be conflated with a distinct partial-OD-to-$Y_D$ calibration formulation, whose comparison with OD-FE is deferred to future work.*
+*Note: Evaluated across all $N=50$ test cities on unseen OD pairs. The OD-FE experiment used $B=200$ Monte Carlo replicates per city. Linear interpolation between the 0.10% and 0.25% evaluated conditions places the operational crossing at $p_{\mathrm{eq}}\approx0.20\%$ (95% bootstrap interval $[0.133\%,0.287\%]$; approximately 35 revealed flows per city). The comparison is specific to the OD-FE adapter, sampling protocol, positive support, and CPC metric. It must not be conflated with a distinct partial-OD-to-$Y_D$ calibration formulation, whose comparison with OD-FE is deferred to future work.*
 
 ---
 
@@ -1036,17 +1030,6 @@ By contrast, baseline distance-distribution mismatch $d_{\mathrm{pre}}=\mathrm{T
 
 *Note: Evaluated across all $N=50$ test cities. $d_{\mathrm{pre}} = \mathrm{TV}(\hat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ measures the Total Variation error between the zero-shot baseline's distance allocation and ground truth. Multivariate OLS serves as an observational diagnostic for linear association with performance gain heterogeneity rather than a causal model. Significance: *** $p < 0.001$.*
 
----
-
-## 4.6 Summary of key empirical findings
-
-Our empirical results establish that target-city distance-binned mobility distributions ($Y_D$) provide informative supplemental structural constraints for zero-shot origin-destination (OD) flow reconstruction:
-
-1. **Reconstruction Gain**: Across all 50 evaluated U.S. metropolitan areas, conditioning predictions on $Y_D$ yields systematic, positive CPC improvements in 90.0% of cases (mean $\Delta\mathrm{CPC} = +0.00354, p = 1.93 \times 10^{-9}$), consistent with the interpretation that aggregate observations capture structural information not fully resolved by zero-shot cross-city models.
-2. **Target Specificity and Physical Ordering**: Placebo donor experiments collapse gains to near zero ($\Delta\mathrm{CPC} = -0.00009, p = 0.4097$), and distance bin shuffling severely degrades predictions ($\Delta\mathrm{CPC} = -0.00696, p = 1.78 \times 10^{-15}$), indicating that the benefit requires authentic, correctly ordered target-city distance distributions under the evaluated conditions.
-3. **Resolution and Fidelity Scaling**: Across the tested values, increasing $K$ improves accuracy while average gain per bin declines. County-level observations add only modest benefit concentrated in multi-county metropolises. Under the synthetic perturbation design, mean gain crosses zero near $\epsilon_{\mathrm{cross}}=4.44\%$ TV error; this value is benchmark-specific.
-4. **Model Generality and Structural Breadth**: Performance gains replicate across model initializations and neural backbones (Urban GNN and Node MLP) while attenuating on classical gravity models. In the OD-FE experiment, linear interpolation places an operational crossing with direct-pair supervision near $0.20\%$ of positive pairs; this is a protocol-specific comparison rather than a general information equivalence.
-5. **Mechanistic Determinants**: City-level gain heterogeneity is strongly associated with baseline distance misalignment ($d_{\mathrm{pre}}$, $r = +0.7995$, partial $r = +0.7951$, multivariate $R^2 = 73.7\%$), providing evidence that $Y_D$ delivers the greatest value where zero-shot baselines exhibit substantial inter-bin distance allocation mismatch.
 
 ---
 
@@ -1177,13 +1160,6 @@ Several key scope boundaries and methodological limitations must be acknowledged
 5. **Cross-National Generalization**: Validating the calibration framework on international mobility datasets with diverse transit infrastructures and spatial administrative definitions.
 6. **Real-World Aggregate Telemetry Exploration**: While the present study does not use external telemetry datasets, future research may evaluate independently sourced aggregate mobility products—including Meta Movement Distribution if its provenance, geographic units, access conditions, and fitness for this task are established—to assess transfer beyond synthetic noise models.
 
----
-
-## 5.11 Conclusion of discussion
-
-In summary, the target city's distance-binned mobility distribution provides a small, statistically significant, and consistent source of complementary information for zero-shot OD intensity reconstruction on known positive support. The observed benefit is consistent with an inter-bin mass reallocation mechanism, strictly requires target-specific spatial distance ordering, and degrades gracefully under synthetic observation noise. These results establish empirical evidence for combining aggregate observations with a frozen cross-city neural model, while not extending to link discovery, full-matrix OD reconstruction, or deployment with noisy real-world telemetry streams.
-
----
 
 # Section 6: Conclusion
 
@@ -1375,4 +1351,4 @@ City-level comparison of the zero-shot baseline ($M_0$), city-level oracle calib
 | **Multi-county mean** | — | — | — | — | — | — | **+0.000626** |
 | **Positive resolution gains** | — | — | — | — | — | — | **9 / 11** |
 
-*Note: Rows are sorted by $\Delta\mathrm{CPC}_{\mathrm{res}}$ in descending order. County labels are assigned from tract centroids using GADM 4.1 and group OD pairs by the county of the origin tract. Destination tracts may belong to the same or another county represented within the city dataset. Prediction and evaluation remain city-wide on the same known positive support. The 39 single-county cities are omitted from this table because $M1_{\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction. Source: `results/spatial_resolution/spatial_resolution_per_city.json` (SHA-256 `8894642c8f160010a8c109015c8757308c2c246a61553ce5b8330fb360e26ad4`), canonical seed-averaged results across model seeds $\{1, 10, 100\}$, generated by `src/experiment/run_spatial_resolution_experiment.py`.*
+*Note: Rows are sorted by $\Delta\mathrm{CPC}_{\mathrm{res}}$ in descending order. County labels are assigned from tract centroids using GADM 4.1 and group OD pairs by the county of the origin tract. Destination tracts may belong to the same or another county represented within the city dataset. Prediction and evaluation remain city-wide on the same known positive support. The 39 single-county cities are omitted from this table because $M1_{\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction. Results are seed-averaged across model seeds $\\{1, 10, 100\\}$.*

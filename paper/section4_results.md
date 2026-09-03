@@ -72,7 +72,7 @@ In addition to tests using alternative distributions from other sources, we cond
 | **7. Raw Fold Train-Mean $Y_D$** | **$-0.017735$** | $[-0.02365, -0.01243]$ | $4.91 \times 10^{-12}$ | **$+0.021275$** | $[+0.01613, +0.02706]$ | $4.44 \times 10^{-15}$ | **48 / 50 (96.0%)** |
 | **8. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
 
-*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. The primary placebo result reported here is the unified training-donor arm (Row 2, $p=2.19\times 10^{-11}$, $46/50$); the fair weight-matched permutation summary ($+0.00367$, $47/50$, $p=6.74\times 10^{-12}$) is reported as a separate robustness analysis arm and is not pooled with Table 2. For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
+*Note: Evaluated across $N=50$ test cities $\times$ 3 model seeds. $B_{\text{draw}}=1000$ indicates the number of stochastic donor / permutation draws per city; $B_{\text{boot}}=10,000$ denotes fold-stratified bootstrap resamples for 95% CIs. Dose matching scales the L2 log-ratio perturbation norm of donor vectors to match the target city's intervention dose $D_T$. The primary placebo result reported here is the unified training-donor arm (Row 2, $p=2.19\times 10^{-11}$, $46/50$. For dose-matched train-mean (Row 3), the non-parametric Wilcoxon test reflects symmetric positive/negative city ranks ($p=0.4319$, n.s.) despite a slightly positive bootstrap mean CI.*
 
 ---
 
@@ -255,7 +255,7 @@ One interpretation is that the two signals act at different structural scales. A
 | **$1.00\%$** | $0.7128$ | $+0.00354$ | $+0.01549$ | $+0.01195$ | $[+0.00883, +0.01560]$ | 46 / 50 |
 | **$5.00\%$** | $0.7128$ | $+0.00354$ | $+0.04363$ | $+0.04009$ | $[+0.03507, +0.04542]$ | 50 / 50 |
 
-*Note: Evaluated across all $N=50$ test cities on unseen OD pairs. The OD-FE experiment used $B=200$ Monte Carlo replicates per city, and its implementation and numerical results passed the associated 20 contract gates and six-part audit. Linear interpolation between the 0.10% and 0.25% evaluated conditions places the operational crossing at $p_{\mathrm{eq}}\approx0.20\%$ (95% bootstrap interval $[0.133\%,0.287\%]$; approximately 35 revealed flows per city). The comparison is specific to the OD-FE adapter, sampling protocol, positive support, and CPC metric. It must not be conflated with a distinct partial-OD-to-$Y_D$ calibration formulation, whose comparison with OD-FE is deferred to future work.*
+*Note: Evaluated across all $N=50$ test cities on unseen OD pairs. The OD-FE experiment used $B=200$ Monte Carlo replicates per city. Linear interpolation between the 0.10% and 0.25% evaluated conditions places the operational crossing at $p_{\mathrm{eq}}\approx0.20\%$ (95% bootstrap interval $[0.133\%,0.287\%]$; approximately 35 revealed flows per city). The comparison is specific to the OD-FE adapter, sampling protocol, positive support, and CPC metric. It must not be conflated with a distinct partial-OD-to-$Y_D$ calibration formulation, whose comparison with OD-FE is deferred to future work.*
 
 ---
 
@@ -315,16 +315,3 @@ By contrast, baseline distance-distribution mismatch $d_{\mathrm{pre}}=\mathrm{T
 
 *Note: Evaluated across all $N=50$ test cities. $d_{\mathrm{pre}} = \mathrm{TV}(\hat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ measures the Total Variation error between the zero-shot baseline's distance allocation and ground truth. Multivariate OLS serves as an observational diagnostic for linear association with performance gain heterogeneity rather than a causal model. Significance: *** $p < 0.001$.*
 
----
-
-## 4.6 Summary of key empirical findings
-
-Our empirical results establish that target-city distance-binned mobility distributions ($Y_D$) provide informative supplemental structural constraints for zero-shot origin-destination (OD) flow reconstruction:
-
-1. **Reconstruction Gain**: Across all 50 evaluated U.S. metropolitan areas, conditioning predictions on $Y_D$ yields systematic, positive CPC improvements in 90.0% of cases (mean $\Delta\mathrm{CPC} = +0.00354, p = 1.93 \times 10^{-9}$), consistent with the interpretation that aggregate observations capture structural information not fully resolved by zero-shot cross-city models.
-2. **Target Specificity and Physical Ordering**: Placebo donor experiments collapse gains to near zero ($\Delta\mathrm{CPC} = -0.00009, p = 0.4097$), and distance bin shuffling severely degrades predictions ($\Delta\mathrm{CPC} = -0.00696, p = 1.78 \times 10^{-15}$), indicating that the benefit requires authentic, correctly ordered target-city distance distributions under the evaluated conditions.
-3. **Resolution and Fidelity Scaling**: Across the tested values, increasing $K$ improves accuracy while average gain per bin declines. County-level observations add only modest benefit concentrated in multi-county metropolises. Under the synthetic perturbation design, mean gain crosses zero near $\epsilon_{\mathrm{cross}}=4.44\%$ TV error; this value is benchmark-specific.
-4. **Model Generality and Structural Breadth**: Performance gains replicate across model initializations and neural backbones (Urban GNN and Node MLP) while attenuating on classical gravity models. In the OD-FE experiment, linear interpolation places an operational crossing with direct-pair supervision near $0.20\%$ of positive pairs; this is a protocol-specific comparison rather than a general information equivalence.
-5. **Mechanistic Determinants**: City-level gain heterogeneity is strongly associated with baseline distance misalignment ($d_{\mathrm{pre}}$, $r = +0.7995$, partial $r = +0.7951$, multivariate $R^2 = 73.7\%$), providing evidence that $Y_D$ delivers the greatest value where zero-shot baselines exhibit substantial inter-bin distance allocation mismatch.
-
-*(Tiếng Việt: Tổng hợp lại, các kết quả cho thấy một lượng nhỏ thông tin tổng hợp về cấu trúc di chuyển theo khoảng cách có thể tạo ra cải thiện có hệ thống cho tái tạo OD zero-shot. Giá trị của thông tin này phụ thuộc vào độ phân giải, chất lượng quan sát, tính đặc thù theo thành phố và mức độ sai lệch phân bổ khoảng cách ban đầu trong baseline. Vì vậy, $Y_D$ nên được xem như một nguồn ràng buộc bổ sung có điều kiện, thay vì một tín hiệu tạo ra cùng một mức lợi ích trong mọi bối cảnh.)*
