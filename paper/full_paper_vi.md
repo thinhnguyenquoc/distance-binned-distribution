@@ -94,8 +94,7 @@ Gọi $c$ là một vùng đô thị (thành phố) và $\mathcal{V}_c$ là tậ
 | $i, j$ | Chỉ số census tract xuất phát (origin) và tract đích (destination) | Đơn vị không gian cơ sở |
 | $t_{c,ij}$ | Cường độ luồng di chuyển tham chiếu quan sát được ($t_{c,ij} \ge 1$) | Dữ liệu tham chiếu (ground truth) |
 | $d_{c,ij}$ | Khoảng cách mặt cầu giữa tâm của tract $i$ và tract $j$ (km) | Tính từ tọa độ tâm (Haversine) |
-| $\Omega_c$ | Tập hỗ trợ liên vùng dương đã biết, $\{(i,j) : t_{c,ij} \ge 1, i 
-e j, d_{c,ij} > 0\}$ | Giả định support đã biết |
+| $\Omega_c$ | Tập hỗ trợ liên vùng dương đã biết; xem định nghĩa đầy đủ tại Mục 3.2. | Giả định support đã biết |
 | $I_b$ | Khoảng khoảng cách thứ $b$ ($b = 1, \dots, K$) | Phân vị khoảng cách |
 | $K$ | Số lượng khoảng khoảng cách ($K = 8$ ở thiết lập chính) | Cấu hình thực nghiệm cố định |
 | $Y_{c,b}$ | Tỷ trọng luồng di chuyển mục tiêu trong khoảng $b$ ($\sum_{b=1}^K Y_{c,b} = 1$) | Dữ liệu đầu vào hiệu chỉnh oracle |
@@ -143,7 +142,7 @@ $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,b} = 1.
 $$
 
-Trong phần chữ, tiếp tục gọi đại lượng này là phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu $Y_D$ (hoặc vector $\mathbf{Y}_{D,c} = [Y_{c,1}, \dots, Y_{c,K}]^T$). Không cần giữ chỉ số $D$ trong mọi công thức nếu ngữ cảnh đã rõ. Vector $Y_D$ được trích xuất trực tiếp từ các luồng ground-truth của thành phố mục tiêu dưới dạng tín hiệu tổng hợp oracle, chỉ được cung cấp tại thời điểm suy luận để hiệu chỉnh toàn bộ dự báo OD của thành phố mục tiêu. Đây là cấu hình chính của nghiên cứu (`M1_city`). Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county; thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
+Vector $Y_D$ được trích xuất trực tiếp từ các luồng ground-truth của thành phố mục tiêu dưới dạng tín hiệu tổng hợp oracle, chỉ được cung cấp tại thời điểm suy luận để hiệu chỉnh toàn bộ dự báo OD của thành phố mục tiêu. Đây là cấu hình chính của nghiên cứu (`M1_city`). Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county; thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
 
 ---
 
