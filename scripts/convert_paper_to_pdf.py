@@ -55,7 +55,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }}
     }};
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/{math_script}"></script>
 
     <style>
         @page {{
@@ -443,6 +443,7 @@ def convert_paper_to_pdf(
     input_path: Path,
     output_path: Path | None = None,
     keep_html: bool = False,
+    math_renderer: str = "chtml",
 ) -> Path:
     """Converts a Markdown academic paper to PDF."""
     if not input_path.exists():
@@ -461,9 +462,10 @@ def convert_paper_to_pdf(
     title = title_match.group(1).strip() if title_match else input_path.stem
     lang = "vi" if "vi" in input_path.name.lower() else "en"
 
-    print("Parsing Markdown and typesetting LaTeX math...")
+    math_script = "tex-chtml.js" if math_renderer == "chtml" else "tex-svg.js"
+    print(f"Parsing Markdown and typesetting LaTeX math via MathJax ({math_renderer.upper()})...")
     body_html = protect_and_convert_markdown(md_text, base_dir=input_path.parent)
-    full_html = HTML_TEMPLATE.format(title=title, lang=lang, body=body_html)
+    full_html = HTML_TEMPLATE.format(title=title, lang=lang, body=body_html, math_script=math_script)
 
     temp_html_path.write_text(full_html, encoding="utf-8")
     print(f"Generated HTML preview: {temp_html_path}")
@@ -503,6 +505,12 @@ def main():
         help="Path to output PDF file (default: same name with .pdf extension)",
     )
     parser.add_argument(
+        "--math",
+        choices=["chtml", "svg"],
+        default="chtml",
+        help="MathJax render engine: 'chtml' (compact ~1.5MB using web fonts, default) or 'svg' (pure vector ~4.5MB)",
+    )
+    parser.add_argument(
         "--keep-html",
         action="store_true",
         help="Retain intermediate HTML file for web viewing or debugging",
@@ -519,9 +527,9 @@ def main():
         for md_file in [Path("paper/full_paper_en.md"), Path("paper/full_paper_vi.md")]:
             if md_file.exists():
                 out_pdf = md_file.with_suffix(".pdf")
-                convert_paper_to_pdf(md_file, out_pdf, keep_html=args.keep_html)
+                convert_paper_to_pdf(md_file, out_pdf, keep_html=args.keep_html, math_renderer=args.math)
     else:
-        convert_paper_to_pdf(args.input, args.output, keep_html=args.keep_html)
+        convert_paper_to_pdf(args.input, args.output, keep_html=args.keep_html, math_renderer=args.math)
 
 
 if __name__ == "__main__":
