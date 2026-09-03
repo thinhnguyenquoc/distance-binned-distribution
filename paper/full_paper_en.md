@@ -385,8 +385,8 @@ Formally, we distinguish three operational roles across the cross-validation par
 2. **Validation cities ($c \in \mathcal{C}_{\mathrm{val}}^{(f)}$)**: Predictions are evaluated on their positive interzonal support strictly to guide learning rate schedules, trigger early stopping, and select the optimal model checkpoint $\theta^*$. No gradients are backpropagated from validation cities.
 3. **Test target cities ($c \in \mathcal{C}_{\mathrm{test}}^{(f)}$)**: Baseline parameters remain completely frozen. Ground-truth flow intensities $t_{c,ij}$ are never accessed during baseline forward passes; they are accessed solely to construct the oracle aggregate distance observation $\mathbf{Y}_{D,c}$ for the controlled calibration experiment and to evaluate downstream accuracy. Under the evaluated estimand, the positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ of the target city is assumed known.
 
-#### ZTNB objective for the neural predictors
-Because training observations are restricted to strictly positive counts ($t_{c,ij} \ge 1$), both neural architectures—the Urban GNN ($m = \text{GNN}$) and the Node MLP ($m = \text{MLP}$)—are optimized under the exact same Zero-Truncated Negative Binomial (ZTNB) likelihood. Let $\theta_m$ denote the trainable parameters of neural backbone $m$ (including encoder, pairwise decoder, and gravity prior parameters), and let $\phi = \exp(\log \phi) > 0$ denote the global dispersion parameter, where $\log \phi \in \mathbb{R}$ is a shared learnable scalar. 
+#### Neural ZTNB objective
+Because training observations are restricted to strictly positive counts ($t_{c,ij} \ge 1$), both neural architectures—the Urban GNN ($m = \text{GNN}$) and the Pairwise Node MLP ($m = \text{MLP}$)—are optimized under the exact same Zero-Truncated Negative Binomial (ZTNB) likelihood. Let $\theta_m$ denote the trainable parameters of neural backbone $m$ (including node encoder, pairwise decoder, and gravity prior parameters), and let $\phi = \exp(\log \phi) > 0$ denote the global dispersion parameter, where $\log \phi \in \mathbb{R}$ is a shared learnable scalar. 
 
 For any city $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$, the network outputs unconstrained base Negative Binomial mean values $\mu_{c,ij}^{(m)} > 0$ for all $(i,j) \in \Omega_{c,\mathrm{inter}}^+$. The base Negative Binomial probability at integer count $t$ is:
 
@@ -396,20 +396,20 @@ The probability of zero under the base distribution is $p_{0,c,ij} = P_{\mathrm{
 
 $$p_{\mathrm{ZTNB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right) = \frac{p_{\mathrm{NB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right)}{1 - p_{0,c,ij}}$$
 
-The denominator term $1 - p_{0,c,ij}$ acts as a crucial normalization factor that re-scales probability mass onto the truncated support $\{1, 2, \dots\}$. To prevent cities with disproportionately large numbers of observed pairs from dominating the parameter updates, the neural loss is computed as the mean negative log-likelihood per city:
+The denominator term $1 - p_{0,c,ij}$ acts as an exact normalization factor that re-scales probability mass onto the truncated support $\{1, 2, \dots\}$. To prevent cities with disproportionately large numbers of observed pairs from dominating parameter updates solely through pair count, the neural loss is computed as the mean negative log-likelihood per city:
 
 $$\mathcal{L}_{\mathrm{neural}}^{(c)}\left(\theta_m, \phi\right) = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log p_{\mathrm{NB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right) - \log\left(1 - p_{0,c,ij}\right) \right]$$
 
-Optimization proceeds sequentially city-by-city across all $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$ in each training epoch. Numerical stability is enforced throughout:
+Gradients with respect to network weights $\theta_m$ and dispersion $\log \phi$ are computed via PyTorch automatic differentiation (`torch.autograd`). Optimization proceeds sequentially city-by-city across all $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$ in each training epoch. Numerical stability is enforced throughout:
 1. $\log \phi$ is clamped to $[-10.0, 10.0]$;
 2. $\log(1 - p_0)$ is computed via the numerically stable identity $\log(1 - p_0) = \operatorname{log1p}(-\exp(\log p_0))$ clamped at $1.0 - 10^{-7}$;
 3. Small epsilons ($\epsilon = 10^{-8}$) are added to $\mu$ and $\phi$ to avoid vanishing arguments;
 4. Gradients are clipped to a maximum Euclidean norm of $5.0$ (`torch.nn.utils.clip_grad_norm_`).
 
-Both models are trained with AdamW [@loshchilov2019adamw] using an initial learning rate of $2 \times 10^{-3}$, weight decay of $10^{-4}$, and a maximum of 200 epochs.
+#### Two-parameter gravity objective
+In contrast to the neural architectures, the standalone classical gravity baseline possesses a closed-form parametric structure governed by exactly two global parameters: global log-scale factor $G \in \mathbb{R}$ and power-law distance decay exponent $\alpha > 0$:
 
-#### Objective for the two-parameter gravity predictor
-In contrast to the neural architectures, the standalone classical gravity baseline possesses a closed-form parametric structure governed by exactly two global parameters: global log-scale factor $G \in \mathbb{R}$ and power-law distance decay exponent $\alpha > 0$. 
+$$T_{c,ij}^{\mathrm{grav}} = \exp(G) \cdot \frac{P_{c,i} \cdot P_{c,j}}{d_{c,ij}^\alpha}$$
 
 Under the partial OD observation setting, parameters $(G, \alpha)$ are estimated by minimizing the sum of squared log-intensity residuals across the pooled positive interzonal training pairs of all source cities in fold $f$:
 
@@ -425,23 +425,52 @@ $$\widehat{\boldsymbol{\beta}} = \left(\mathbf{X}^T \mathbf{X}\right)^{-1} \math
 
 This parametric objective uses no Poisson likelihood, no iterative gradient descent, no balancing factors ($A_i, B_j$), no origin or destination trip marginals ($O_i, D_j$), and no unobserved pairs. It is fitted once per fold strictly on $\mathcal{C}_{\mathrm{train}}^{(f)}$ and held frozen during evaluation.
 
-#### Model selection and parameter freezing
-Hyperparameter tuning and checkpoint selection are governed entirely by performance on the validation partition $\mathcal{C}_{\mathrm{val}}^{(f)}$:
-
-1. **Selection Metric**: The primary checkpoint selection criterion is **validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$), averaged across the positive interzonal support of all validation cities in the fold:
-   $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
-   Validation loss is not used for model selection, ensuring that checkpoint choice directly aligns with the target spatial interaction estimand.
-2. **Learning Rate Scheduling**: A `ReduceLROnPlateau` scheduler monitors $\operatorname{CPC}_{\mathrm{val}}$ in `max` mode. When $\operatorname{CPC}_{\mathrm{val}}$ fails to improve by at least $\min\_delta = 10^{-4}$ for $4$ consecutive epochs, the learning rate is scaled down by a factor of $0.5$ (bounded below by $\min\_lr = 10^{-5}$).
-3. **Early Stopping**: Optimization terminates early if validation CPC does not achieve a new best value for $15$ consecutive epochs (patience $= 15$). The model state dict corresponding to the epoch with the highest $\operatorname{CPC}_{\mathrm{val}}$ is restored as the final trained model $\theta^*$.
-4. **Permanent Freezing**: Following selection, all neural parameters $\theta^* = (\theta_m^*, \phi^*)$ and gravity parameters $(G^*, \alpha^*)$ are permanently locked (`requires_grad = False`). Target-city flow intensities $t_{c,ij}$ are never exposed to any model during fitting or validation, guaranteeing strict cross-city zero-shot transfer integrity.
-
 ---
 
-### 3.5.7 Frozen Target-City Zero-Shot Inference
+### 3.5.7 Training, Model Selection, and Freezing
 
-Following model training and hyperparameter selection on validation cities, all model parameters ($\widehat{\theta}_{\mathrm{GNN}}$, $\widehat{\theta}_{\mathrm{MLP}}$, $\widehat{G}^{(f)}, \widehat{\alpha}^{(f)}$) are permanently frozen. During target-city inference, target city $c$ provides only permissible static spatial data: tract centroid coordinates $\mathbf{s}_{c,i}$, normalized urban context features $\mathbf{x}_{c,i}$, and tract populations $P_{c,i}$, evaluated over the known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$.
+#### Neural optimizer and regularized optimization
+Both neural predictors (`UrbanGNN` and `NodeMLP`) share an identical optimization procedure. Parameter updates are performed using the AdamW optimizer [@loshchilov2019adamw] (`torch.optim.AdamW`) with an initial learning rate $\eta = 2 \times 10^{-3}$ and decoupled weight decay coefficient $\lambda_{\mathrm{wd}} = 10^{-4}$. Regularization is enforced strictly through the optimizer's decoupled weight decay mechanism; no explicit $\ell_2$ penalty term $\lambda \|\theta\|_2^2$ is added to the loss function. Dropout ($p = 0.1$) and LayerNorm modules embedded within each network layer provide additional internal architectural regularization. Optimization operates with full-city batching (passing all $|\Omega_{c,\mathrm{inter}}^+|$ positive interzonal pairs of a city simultaneously per forward/backward step), executing sequential gradient updates across the 35 training cities in each epoch for a maximum budget of 200 epochs. Gradients are clipped to a maximum Euclidean norm of $5.0$ before each parameter update. Weights are initialized across three independent random seeds $\mathcal{S} = \{1, 10, 100\}$.
 
-Reference flow volumes $t_{c,ij}$ of the target city are never accessed during this forward pass. The output of this stage constitutes the uncalibrated zero-shot baseline $\widehat{T}_{c,ij}^{(0,m)}$ ($M_0$ condition).
+#### Gravity parameter fitting
+The standalone two-parameter gravity model requires no iterative gradient-based optimizer, no initial values, no convergence threshold, and no restarts. The two global parameters $\boldsymbol{\beta} = [G, \alpha]^T$ are fitted by solving the unconstrained log-linear OLS normal equations via `np.linalg.lstsq(rcond=None)` over the pooled positive interzonal pairs of $\mathcal{C}_{\mathrm{train}}^{(f)}$. Because the matrix $\mathbf{X}^T \mathbf{X}$ is well-conditioned across all folds, this closed-form linear algebra step yields an exact, unique solution with zero optimization restarts. The distance decay exponent $\alpha$ is parameter-free in fitting and empirically yields $\alpha \approx 1.09 - 1.22 > 0$ across cross-validation folds. Fitting is performed independently once per fold strictly on source training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ and is never re-estimated using target-city flows.
+
+#### Checkpoint selection and validation protocol
+Model selection is governed exclusively by performance on the validation partition $\mathcal{C}_{\mathrm{val}}^{(f)}$:
+
+1. **Training objective vs. Validation criterion**: The training objective minimized by AdamW on $\mathcal{C}_{\mathrm{train}}^{(f)}$ is the ZTNB negative log-likelihood $\mathcal{L}_{\mathrm{neural}}$. In contrast, checkpoint tracking and hyperparameter decisions on $\mathcal{C}_{\mathrm{val}}^{(f)}$ are governed strictly by macro-averaged interzonal **Validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$):
+   $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
+   Validation loss is not used for model selection, preventing over-reliance on probability densities when the downstream objective is interaction mass overlap.
+2. **Learning Rate Scheduling**: A `ReduceLROnPlateau` scheduler monitors $\operatorname{CPC}_{\mathrm{val}}$ in `max` mode. When $\operatorname{CPC}_{\mathrm{val}}$ fails to improve by at least $\min\_delta = 10^{-4}$ for $4$ consecutive epochs, the learning rate is scaled down by a factor of $0.5$ (bounded below by $\min\_lr = 10^{-5}$).
+3. **Early Stopping**: Training terminates early if validation CPC does not achieve a new best value for $15$ consecutive epochs (patience $= 15$). The model state dict corresponding to the epoch with the highest $\operatorname{CPC}_{\mathrm{val}}$ is restored as the final trained model $\theta^*$.
+4. **Target City Exclusion**: Test cities $\mathcal{C}_{\mathrm{test}}^{(f)}$ play zero role in hyperparameter tuning, checkpoint selection, or early stopping decisions.
+
+#### Permanent parameter freezing
+Following checkpoint selection on validation cities, all model parameters—including neural weights $\theta_{\mathrm{GNN}}^*$, $\theta_{\mathrm{MLP}}^*$, dispersion $\phi^*$, and gravity parameters $(G^*, \alpha^*)$—are permanently frozen (`requires_grad = False`). 
+
+During zero-shot target-city inference, target city $c$ provides only permissible static spatial data: tract centroid coordinates $\mathbf{s}_{c,i}$, normalized urban context features $\mathbf{x}_{c,i}$, and tract populations $P_{c,i}$, evaluated over the known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$. Target-city flow intensities $t_{c,ij}$ are never accessed during this forward pass. The output of this stage constitutes the uncalibrated zero-shot baseline prediction $\widehat{T}_{c,ij}^{(0,m)}$ ($M_0$ condition). Baseline predictions are generated strictly prior to the introduction of the target city's distance-binned observation in the calibration stage.
+
+#### Table 3: Optimization settings, training hyperparameters, and model selection protocol
+
+| Component | Setting | Value | Selection source |
+| :--- | :--- | :---: | :--- |
+| **GNN / MLP optimizer** | Algorithm | AdamW (`torch.optim.AdamW`) | Fixed standard configuration |
+| **Learning rate** | Initial step size ($\eta$) | $2 \times 10^{-3}$ | Fixed standard configuration |
+| **Weight decay** | Decoupled $\ell_2$ parameter shrinkage | $10^{-4}$ | Fixed standard configuration |
+| **Batch size** | Optimization grouping | 1 city per step ($|\Omega_{c,\mathrm{inter}}^+|$ pairs) | Fixed (city-level batching) |
+| **Maximum epochs** | Training budget | 200 epochs | Fixed budget |
+| **Learning rate schedule** | Plateau decay mechanism | `ReduceLROnPlateau` (factor $0.5$, patience 4) | Validation-monitored ($\operatorname{CPC}_{\mathrm{val}}$) |
+| **Early-stopping patience** | Convergence stopping criterion | 15 epochs without improvement $\ge 10^{-4}$ | Fixed (validation-monitored) |
+| **Gradient clipping** | Maximum Euclidean norm | $5.0$ | Fixed stability safeguard |
+| **Hidden dimension** | Representation width | $64$ | Fixed (parity across GNN & MLP) |
+| **Neural layers** | Depth & internal regularization | 2 layers (dropout $p = 0.1$) | Fixed architecture |
+| **Gravity solver** | Fitting algorithm | Ordinary Least Squares (`np.linalg.lstsq`) | Fixed closed-form analytical OLS |
+| **Gravity parameters** | Parameter bounds | $G \in \mathbb{R}$, $\alpha > 0$ | Fixed (unconstrained log-linear OLS) |
+| **Checkpoint selection** | Model selection metric | Macro-averaged interzonal $\operatorname{CPC}_{\mathrm{val}}$ | Validation partition ($\mathcal{C}_{\mathrm{val}}^{(f)}$) |
+| **Model seeds** | Random initializations | $\mathcal{S} = \{1, 10, 100\}$ | Fixed (3 seeds per fold $\times$ 5 folds) |
+| **Calibration strength** | Response exponent $q$ | $q = 1.0$ (canonical full calibration) | Fixed analytical default ($M_1$) |
+
+*Note: All neural and gravity parameters are fitted strictly on the 35 training cities of each cross-validation fold and permanently frozen before evaluation. Target-city flow observations are never used for model selection, parameter fitting, or early stopping.*
 
 ---
 
@@ -495,6 +524,8 @@ This mapping transforms baseline predictions into calibrated predictions:
 - Gravity baseline $\widehat{T}_{c,ij}^{(0,\mathrm{Grav})}$ $\longrightarrow$ Gravity calibrated $\widehat{T}_{c,ij}^{(1,\mathrm{Grav})}$.
 
 For the sub-metropolitan spatial resolution variant (`M1_county`), the identical operator is applied independently within each origin-county group $\Omega_{c,\ell}^+ = \{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\}$ using county-level distribution $\mathbf{Y}_{D,c,\ell}$, yielding $\widehat{\mathbf{T}}_c^{\mathrm{county},m}$.
+
+**Non-Iterative Post-Processing Principle**: Calibration is strictly an analytical, closed-form post-processing operator, not an iterative training, fine-tuning, or retraining step. The bin scaling weights $s_{c,b}(q)$ are evaluated directly in closed form from baseline predictions and the oracle observation $\mathbf{Y}_{D,c}$. The calibration operator executes zero gradient descent passes, does not update neural weights, does not re-fit gravity parameters, and introduces no test-city parameter optimization. The calibration response exponent $q \in [0, 1]$ is pre-specified and locked a priori at $q = 1.0$ for the primary benchmark ($M_1$) without tuning on test cities.
 
 ---
 

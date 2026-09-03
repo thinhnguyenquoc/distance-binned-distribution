@@ -322,7 +322,7 @@ Bảng 2 so sánh quy cách đầu vào, cơ chế không gian, giả định m�
 
 ---
 
-### 3.5.6. Huấn luyện mô hình dưới thiết lập quan sát partial OD
+### 3.5.6. Hàm mục tiêu dưới thiết lập quan sát partial OD
 
 #### Thiết lập quan sát luồng dương cục bộ
 Trong các mạng lưới di chuyển đô thị thực tế, ma trận xuất phát–đích đến đầy đủ $\mathcal{V}_c \times \mathcal{V}_c$ không bao giờ được giả định là có thể quan sát toàn phần. Thay vào đó, dữ liệu ghi nhận thực nghiệm chỉ bao gồm một tập con các cặp ô có phát sinh lưu lượng dương và có thể xác minh được. Trong cách tiếp cận của chúng tôi, các cặp không xuất hiện trong dữ liệu được xem là chưa quan sát (missing hoặc unknown), chứ không phải là luồng bằng 0. Sự vắng mặt của một cặp OD trong dữ liệu không được xem là bằng chứng cho thấy cường độ thực của cặp đó bằng 0; do đó, các cặp chưa quan sát không được đưa vào loss như những mẫu zero. Do đó, khung mô hình không huấn luyện bộ phân loại nhị phân để phân biệt liên kết tồn tại hay không tồn tại, và không phạt mô hình trên các cặp không quan sát. Quá trình hình thành liên kết hoặc cơ chế quan sát tập hỗ trợ được xem là ngoại sinh và nằm ngoài phạm vi của mô hình cường độ.
@@ -347,16 +347,16 @@ Thành phần mẫu số $1 - p_{0,c,ij}$ là hệ số chuẩn hóa bắt buộ
 
 $$\mathcal{L}_{\mathrm{neural}}^{(c)}\left(\theta_m, \phi\right) = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log p_{\mathrm{NB}}\left(t_{c,ij} \mid \mu_{c,ij}^{(m)}, \phi\right) - \log\left(1 - p_{0,c,ij}\right) \right]$$
 
-Quá trình tối ưu hóa diễn ra tuần tự từng thành phố qua tất cả $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$ trong mỗi epoch. Cơ chế ổn định số học được áp dụng xuyên suốt:
+Gradient đối với các trọng số mạng $\theta_m$ và độ phân tán $\log \phi$ được tính tự động thông qua PyTorch automatic differentiation (`torch.autograd`). Quá trình tối ưu hóa diễn ra tuần tự từng thành phố qua tất cả $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$ trong mỗi epoch. Cơ chế ổn định số học được áp dụng xuyên suốt:
 1. $\log \phi$ được kẹp (clamped) trong khoảng $[-10.0, 10.0]$;
 2. $\log(1 - p_0)$ được tính bằng công thức ổn định $\log(1 - p_0) = \operatorname{log1p}(-\exp(\log p_0))$ với chặn trên $1.0 - 10^{-7}$;
 3. Đại lượng $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ để tránh lỗi chia cho 0 hoặc log(0);
 4. Gradient được cắt chuẩn Euclidean ở mức tối đa $5.0$ (`torch.nn.utils.clip_grad_norm_`).
 
-Cả hai mô hình đều được huấn luyện bằng AdamW [@loshchilov2019adamw] với learning rate khởi tạo $2 \times 10^{-3}$, weight decay $10^{-4}$, và tối đa 200 epoch.
-
 #### Hàm mục tiêu cho mô hình gravity hai tham số
-Ngược lại với các mô hình neural, mô hình gravity hai tham số cổ điển sở hữu cấu trúc tham số dạng nghiệm đóng được điều khiển bởi đúng hai tham số toàn cục: hệ số log-quy mô $G \in \mathbb{R}$ và số mũ suy giảm khoảng cách $\alpha > 0$.
+Ngược lại với các mô hình neural, mô hình gravity hai tham số cổ điển sở hữu cấu trúc tham số dạng nghiệm đóng được điều khiển bởi đúng hai tham số toàn cục: hệ số log-quy mô $G \in \mathbb{R}$ và số mũ suy giảm khoảng cách $\alpha > 0$:
+
+$$T_{c,ij}^{\mathrm{grav}} = \exp(G) \cdot \frac{P_{c,i} \cdot P_{c,j}}{d_{c,ij}^\alpha}$$
 
 Dưới thiết lập quan sát partial OD, hai tham số $(G, \alpha)$ được ước lượng bằng cách tối thiểu hóa tổng bình phương phần dư log-cường độ trên toàn bộ các cặp liên vùng dương gộp chung của các thành phố huấn luyện trong fold $f$:
 
@@ -372,23 +372,52 @@ $$\widehat{\boldsymbol{\beta}} = \left(\mathbf{X}^T \mathbf{X}\right)^{-1} \math
 
 Mục tiêu tham số này không sử dụng likelihood Poisson, không sử dụng lặp gradient descent, không sử dụng hệ số cân bằng ($A_i, B_j$), không sử dụng tổng biên luồng ($O_i, D_j$), và không bao gồm các cặp chưa quan sát. Tham số được khớp một lần duy nhất cho mỗi fold trên $\mathcal{C}_{\mathrm{train}}^{(f)}$ và giữ cố định khi đánh giá.
 
-#### Lựa chọn checkpoint và đóng băng tham số
-Quá trình tinh chỉnh siêu tham số và lựa chọn checkpoint được điều khiển độc quyền bởi hiệu năng trên tập validation $\mathcal{C}_{\mathrm{val}}^{(f)}$:
-
-1. **Thước đo lựa chọn**: Tiêu chí lựa chọn checkpoint là **Validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$), lấy trung bình trên tập hỗ trợ liên vùng dương của tất cả các thành phố validation trong fold:
-   $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
-   Validation loss không được dùng để chọn mô hình, đảm bảo rằng checkpoint được chọn bám sát trực tiếp estimand tương tác không gian.
-2. **Điều chỉnh Learning Rate**: Scheduler `ReduceLROnPlateau` theo dõi $\operatorname{CPC}_{\mathrm{val}}$ ở chế độ `max`. Khi $\operatorname{CPC}_{\mathrm{val}}$ không cải thiện tối thiểu $\min\_delta = 10^{-4}$ trong $4$ epoch liên tiếp, learning rate giảm đi một nửa (chặn dưới tại $\min\_lr = 10^{-5}$).
-3. **Early Stopping**: Quá trình huấn luyện dừng sớm nếu validation CPC không đạt đỉnh mới trong $15$ epoch liên tiếp (patience $= 15$). Trọng số mô hình ở epoch có $\operatorname{CPC}_{\mathrm{val}}$ cao nhất được phục hồi làm mô hình huấn luyện cuối cùng $\theta^*$.
-4. **Đóng băng vĩnh viễn**: Sau khi lựa chọn, toàn bộ tham số neural $\theta^* = (\theta_m^*, \phi^*)$ và gravity $(G^*, \alpha^*)$ được đóng băng vĩnh viễn (`requires_grad = False`). Cường độ luồng của thành phố mục tiêu $t_{c,ij}$ không bao giờ xuất hiện trong quá trình học hay validation, bảo đảm tính toàn vẹn của giao thức zero-shot transfer.
-
 ---
 
-### 3.5.7. Suy luận zero-shot đóng băng trên thành phố mục tiêu
+### 3.5.7. Huấn luyện, lựa chọn mô hình và đóng băng tham số
 
-Sau khi hoàn thành huấn luyện mô hình và lựa chọn siêu tham số trên các thành phố validation, toàn bộ tham số mô hình ($\widehat{\theta}_{\mathrm{GNN}}$, $\widehat{\theta}_{\mathrm{MLP}}$, $\widehat{G}^{(f)}, \widehat{\alpha}^{(f)}$) được đóng băng vĩnh viễn. Khi thực hiện suy luận, thành phố mục tiêu $c$ chỉ cung cấp các dữ liệu không gian tĩnh được phép: tọa độ tâm tract $\mathbf{s}_{c,i}$, đặc trưng bối cảnh đô thị đã chuẩn hóa $\mathbf{x}_{c,i}$, và dân số tract $P_{c,i}$, được đánh giá trên tập hỗ trợ liên vùng dương đã biết $\Omega_{c,\mathrm{inter}}^+$.
+#### Bộ tối ưu neural và cơ chế điều hòa
+Cả hai mô hình neural (`UrbanGNN` và `NodeMLP`) đều dùng chung một quy trình tối ưu hóa. Các cập nhật tham số được thực hiện bằng bộ tối ưu AdamW [@loshchilov2019adamw] (`torch.optim.AdamW`) với tốc độ học ban đầu $\eta = 2 \times 10^{-3}$ và hệ số weight decay tách rời $\lambda_{\mathrm{wd}} = 10^{-4}$. Quá trình điều hòa (regularization) được thực thi hoàn toàn thông qua cơ chế decoupled weight decay của bộ tối ưu; không có số hạng phạt $\ell_2$ tường minh $\lambda \|\theta\|_2^2$ nào được cộng thêm vào hàm mất mát. Các mô-đun Dropout ($p = 0.1$) và LayerNorm tích hợp trong từng tầng mạng đóng vai trò điều hòa kiến trúc nội tại. Quá trình tối ưu sử dụng batching theo từng thành phố (chuyển toàn bộ $|\Omega_{c,\mathrm{inter}}^+|$ cặp liên vùng dương của một thành phố trong mỗi bước tính forward/backward), cập nhật gradient tuần tự qua 35 thành phố huấn luyện trong mỗi epoch với ngân sách tối đa 200 epoch. Gradient được cắt chuẩn Euclidean ở mức tối đa 5.0 trước mỗi bước cập nhật. Trọng số mô hình được khởi tạo trên ba seed ngẫu nhiên độc lập $\mathcal{S} = \{1, 10, 100\}$.
 
-Lưu lượng luồng tham chiếu $t_{c,ij}$ của thành phố mục tiêu không bao giờ được truy cập trong lượt truyền thẳng (forward pass) này. Đầu ra của giai đoạn này tạo thành baseline zero-shot trước hiệu chỉnh $\widehat{T}_{c,ij}^{(0,m)}$ (điều kiện $M_0$).
+#### Khớp tham số mô hình gravity
+Mô hình gravity hai tham số độc lập không yêu cầu bộ tối ưu lặp dựa trên gradient, không cần giá trị khởi tạo, không cần ngưỡng hội tụ và không có số lần khởi tạo lại (zero restarts). Hai tham số toàn cục $\boldsymbol{\beta} = [G, \alpha]^T$ được ước lượng bằng cách giải hệ phương trình chuẩn OLS log-tuyến tính không ràng buộc qua hàm `np.linalg.lstsq(rcond=None)` trên tập gộp các cặp liên vùng dương của $\mathcal{C}_{\mathrm{train}}^{(f)}$. Do ma trận $\mathbf{X}^T \mathbf{X}$ luôn có điều kiện tốt qua tất cả các fold, bước đại số tuyến tính dạng nghiệm đóng này mang lại nghiệm chính xác, duy nhất. Số mũ suy giảm khoảng cách $\alpha$ không bị ràng buộc tham số khi khớp và về mặt thực nghiệm luôn đạt $\alpha \approx 1.09 - 1.22 > 0$ trên các fold kiểm định chéo. Việc ước lượng được thực hiện độc lập một lần duy nhất cho mỗi fold trên các thành phố nguồn $\mathcal{C}_{\mathrm{train}}^{(f)}$ và tuyệt đối không bao giờ được ước lượng lại bằng dữ liệu luồng của thành phố mục tiêu.
+
+#### Giao thức lựa chọn checkpoint trên tập validation
+Quá trình lựa chọn mô hình được điều khiển độc quyền bởi hiệu năng trên tập validation $\mathcal{C}_{\mathrm{val}}^{(f)}$:
+
+1. **Mục tiêu huấn luyện đối lập Tiêu chí validation**: Đại lượng được AdamW tối thiểu hóa trên $\mathcal{C}_{\mathrm{train}}^{(f)}$ là negative log-likelihood ZTNB $\mathcal{L}_{\mathrm{neural}}$. Ngược lại, việc theo dõi checkpoint và điều chỉnh siêu tham số trên $\mathcal{C}_{\mathrm{val}}^{(f)}$ được điều khiển độc quyền bởi chỉ số **Validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$) trung bình vĩ mô trên tập hỗ trợ liên vùng dương của các thành phố validation:
+   $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
+   Validation loss không được dùng để lựa chọn mô hình, nhằm tránh việc phụ thuộc quá mức vào mật độ xác suất khi estimand cuối cùng là mức độ trùng khớp khối lượng tương tác.
+2. **Điều chỉnh Learning Rate**: Scheduler `ReduceLROnPlateau` giám sát $\operatorname{CPC}_{\mathrm{val}}$ ở chế độ `max`. Khi $\operatorname{CPC}_{\mathrm{val}}$ không cải thiện tối thiểu $\min\_delta = 10^{-4}$ trong $4$ epoch liên tiếp, learning rate giảm đi một nửa (chặn dưới tại $\min\_lr = 10^{-5}$).
+3. **Early Stopping**: Quá trình huấn luyện dừng sớm nếu validation CPC không đạt đỉnh mới trong $15$ epoch liên tiếp (patience $= 15$). Trọng số mô hình ở epoch có $\operatorname{CPC}_{\mathrm{val}}$ cao nhất được phục hồi làm mô hình huấn luyện cuối cùng $\theta^*$.
+4. **Loại trừ thành phố kiểm tra**: Các thành phố kiểm tra $\mathcal{C}_{\mathrm{test}}^{(f)}$ hoàn toàn không tham gia vào quá trình tinh chỉnh siêu tham số, lựa chọn checkpoint hay quyết định dừng sớm.
+
+#### Đóng băng tham số vĩnh viễn
+Sau khi hoàn thành bước lựa chọn checkpoint trên các thành phố validation, toàn bộ tham số mô hình—bao gồm trọng số neural $\theta_{\mathrm{GNN}}^*$, $\theta_{\mathrm{MLP}}^*$, độ phân tán $\phi^*$, và tham số gravity $(G^*, \alpha^*)$—đều được đóng băng vĩnh viễn (`requires_grad = False`).
+
+Khi thực hiện suy luận zero-shot, thành phố mục tiêu $c$ chỉ cung cấp các dữ liệu không gian tĩnh được phép: tọa độ tâm tract $\mathbf{s}_{c,i}$, đặc trưng bối cảnh đô thị đã chuẩn hóa $\mathbf{x}_{c,i}$, và dân số tract $P_{c,i}$, được đánh giá trên tập hỗ trợ liên vùng dương đã biết $\Omega_{c,\mathrm{inter}}^+$. Cường độ luồng thực $t_{c,ij}$ của thành phố mục tiêu không bao giờ được truy cập trong lượt truyền thẳng này. Đầu ra của giai đoạn này tạo thành dự báo baseline zero-shot trước hiệu chỉnh $\widehat{T}_{c,ij}^{(0,m)}$ (điều kiện $M_0$). Dự báo baseline được tạo ra hoàn toàn độc lập trước khi quan sát theo khoảng khoảng cách của thành phố mục tiêu được đưa vào toán tử hiệu chỉnh.
+
+#### Bảng 3: Cấu hình tối ưu hóa, siêu tham số huấn luyện và giao thức lựa chọn mô hình
+
+| Thành phần | Thuộc tính / Thiết lập | Giá trị thực nghiệm | Nguồn gốc lựa chọn |
+| :--- | :--- | :---: | :--- |
+| **Bộ tối ưu GNN / MLP** | Thuật toán | AdamW (`torch.optim.AdamW`) | Cấu hình chuẩn cố định |
+| **Learning rate** | Tốc độ học ban đầu ($\eta$) | $2 \times 10^{-3}$ | Cấu hình chuẩn cố định |
+| **Weight decay** | Hệ số suy giảm tham số $\ell_2$ tách rời | $10^{-4}$ | Cấu hình chuẩn cố định |
+| **Batch size** | Nhóm tối ưu hóa | 1 thành phố / bước ($|\Omega_{c,\mathrm{inter}}^+|$ cặp) | Cố định (batching cấp đô thị) |
+| **Số epoch tối đa** | Ngân sách huấn luyện | 200 epochs | Ngân sách cố định |
+| **Lịch trình learning rate** | Cơ chế giảm tốc độ học | `ReduceLROnPlateau` (factor $0.5$, patience 4) | Giám sát validation ($\operatorname{CPC}_{\mathrm{val}}$) |
+| **Early-stopping patience** | Điều kiện dừng hội tụ | 15 epoch không cải thiện $\ge 10^{-4}$ | Cố định (giám sát validation) |
+| **Gradient clipping** | Chuẩn Euclidean tối đa | $5.0$ | Bảo đảm ổn định số học cố định |
+| **Kích thước ẩn** | Chiều vector biểu diễn | $64$ | Cố định (tương đương giữa GNN & MLP) |
+| **Số tầng neural** | Độ sâu mạng & điều hòa nội tại | 2 tầng (dropout $p = 0.1$) | Cấu trúc kiến trúc cố định |
+| **Solver của gravity** | Thuật toán khớp | Ordinary Least Squares (`np.linalg.lstsq`) | Nghiệm đóng đại số tuyến tính cố định |
+| **Miền tham số gravity** | Ràng buộc tham số | $G \in \mathbb{R}$, $\alpha > 0$ | Cố định (OLS log-tuyến tính tự do) |
+| **Lựa chọn checkpoint** | Thước đo chọn mô hình | Macro-averaged interzonal $\operatorname{CPC}_{\mathrm{val}}$ | Tập validation ($\mathcal{C}_{\mathrm{val}}^{(f)}$) |
+| **Model seeds** | Khởi tạo ngẫu nhiên | $\mathcal{S} = \{1, 10, 100\}$ | Cố định (3 seed/fold $\times$ 5 folds) |
+| **Cường độ hiệu chỉnh** | Số mũ phản hồi $q$ | $q = 1.0$ (hiệu chỉnh toàn phần) | Mặc định giải tích cố định ($M_1$) |
+
+*Ghi chú: Toàn bộ tham số neural và gravity được khớp hoàn toàn trên 35 thành phố huấn luyện của từng fold và được đóng băng vĩnh viễn trước khi đánh giá. Quan sát luồng của thành phố mục tiêu không bao giờ được dùng để lựa chọn mô hình, khớp tham số hay dừng sớm.*
 
 ---
 
@@ -442,6 +471,8 @@ Cho bất kỳ mô hình dự báo baseline đóng băng nào $m \in \{\text{GNN
 - Gravity baseline $\widehat{T}_{c,ij}^{(0,\mathrm{Grav})}$ $\longrightarrow$ Gravity calibrated $\widehat{T}_{c,ij}^{(1,\mathrm{Grav})}$.
 
 Đối với biến thể độ phân giải không gian dưới cấp vùng đô thị (`M1_county`), chính toán tử này được áp dụng độc lập cho từng nhóm origin-county $\Omega_{c,\ell}^+ = \{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\}$ bằng phân phối cấp county $\mathbf{Y}_{D,c,\ell}$, tạo ra $\widehat{\mathbf{T}}_c^{\mathrm{county},m}$.
+
+**Nguyên lý hậu xử lý phi lặp (Non-Iterative Post-Processing Principle)**: Hiệu chỉnh là một toán tử hậu xử lý giải tích nghiệm đóng thuần túy, không phải là một bước tái huấn luyện (retraining), fine-tuning hay tối ưu hóa tham số. Trọng số theo khoảng $s_{c,b}(q)$ được tính toán xác định từ dự báo baseline $\widehat{\mathbf{T}}_c^{(0,m)}$ và quan sát tổng hợp mục tiêu $\mathbf{Y}_{D,c}$. Toán tử hiệu chỉnh không thực hiện bất kỳ bước lan truyền ngược hay gradient descent nào, không cập nhật trọng số neural, không fit lại số mũ gravity, và không đưa vào bất kỳ bài toán tối ưu hóa tham số nào trên thành phố mục tiêu. Hệ số phản hồi hiệu chỉnh $q \in [0, 1]$ được khóa tiên nghiệm tại $q = 1.0$ cho mốc chuẩn chính ($M_1$) mà không tinh chỉnh trên các thành phố kiểm tra.
 
 ---
 
