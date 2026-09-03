@@ -257,6 +257,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             color: #b91c1c;
         }}
 
+        /* Citation Links */
+        a.citation-link {{
+            color: #1a365d;
+            text-decoration: none;
+            font-weight: 500;
+        }}
+        a.citation-link:hover {{
+            text-decoration: underline;
+            color: #2b6cb0;
+        }}
+
         pre {{
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -290,11 +301,56 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
+def load_bibliography(bib_path: Path) -> dict[str, int]:
+    """Loads BibTeX entries from file and returns mapping from key to 1-based index."""
+    if not bib_path.exists():
+        return {}
+    bib_text = bib_path.read_text(encoding="utf-8")
+    keys = re.findall(r"@\w+\s*\{\s*([^,]+),", bib_text)
+    return {k.strip(): idx for idx, k in enumerate(keys, 1)}
+
+
 def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
     """
-    Protects math blocks from markdown parser transformations,
+    Protects math blocks and citations from markdown parser transformations,
     converts to HTML, and fixes relative image links.
     """
+    # 0. Load bibliography and protect citations
+    bib_candidates = [
+        base_dir / "references.bib",
+        base_dir / "paper" / "references.bib",
+        base_dir.parent / "references.bib",
+        base_dir.parent / "paper" / "references.bib",
+        Path("paper/references.bib"),
+    ]
+    bib_path = next((p for p in bib_candidates if p.exists()), None)
+    key_to_idx = load_bibliography(bib_path) if bib_path else {}
+
+    citation_store: list[str] = []
+
+    def citation_replacer(match: re.Match) -> str:
+        raw_content = match.group(1)
+        raw_keys = [k.strip().lstrip("@").strip() for k in raw_content.split(";")]
+        nums = []
+        for k in raw_keys:
+            if not k:
+                continue
+            if k not in key_to_idx:
+                raise ValueError(f"Undefined citation key: '{k}' in '[@{raw_content}]'")
+            nums.append(key_to_idx[k])
+        
+        sorted_nums = sorted(list(set(nums)))
+        links = [f'<a href="#ref-{n}" class="citation-link">{n}</a>' for n in sorted_nums]
+        formatted = f"[{', '.join(links)}]"
+        idx = len(citation_store)
+        citation_store.append(formatted)
+        return f"@@CITATION_{idx}@@"
+
+    if key_to_idx:
+        protected = re.sub(r"\[@([^\]]+)\]", citation_replacer, md_text)
+    else:
+        protected = md_text
+
     # 1. Protect block math $$ ... $$
     block_math_store: list[str] = []
 
@@ -303,7 +359,7 @@ def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
         block_math_store.append(match.group(0))
         return f"\n\n<div class='math-block'>@@DISPLAY_MATH_{idx}@@</div>\n\n"
 
-    protected = re.sub(r"\$\$(.*?)\$\$", block_math_replacer, md_text, flags=re.DOTALL)
+    protected = re.sub(r"\$\$(.*?)\$\$", block_math_replacer, protected, flags=re.DOTALL)
 
     # 2. Protect inline math $ ... $
     inline_math_store: list[str] = []
@@ -329,14 +385,42 @@ def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
         ],
     )
 
-    # 4. Restore math
+    # 4. Restore citations and math
+    for idx, cite_content in enumerate(citation_store):
+        html = html.replace(f"@@CITATION_{idx}@@", cite_content)
+
     for idx, math_content in enumerate(block_math_store):
         html = html.replace(f"@@DISPLAY_MATH_{idx}@@", math_content)
 
     for idx, math_content in enumerate(inline_math_store):
         html = html.replace(f"@@INLINE_MATH_{idx}@@", math_content)
 
-    # 5. Fix relative image paths to absolute file:/// URLs
+    # 5. Add id="ref-{n}" to each <li> in References / Tài liệu tham khảo
+    def add_reference_ids(html_str: str) -> str:
+        m = re.search(
+            r"(<h[1-3][^>]*>.*?(?:Tài liệu tham khảo|References).*?</h[1-3]>\s*<ol>)(.*?)(</ol>)",
+            html_str,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+        if not m:
+            return html_str
+        header_ol = m.group(1)
+        items_block = m.group(2)
+        end_ol = m.group(3)
+        idx = 1
+
+        def li_replacer(lim: re.Match) -> str:
+            nonlocal idx
+            res = f'<li id="ref-{idx}">'
+            idx += 1
+            return res
+
+        new_items = re.sub(r"<li>", li_replacer, items_block)
+        return html_str[:m.start()] + header_ol + new_items + end_ol + html_str[m.end():]
+
+    html = add_reference_ids(html)
+
+    # 6. Fix relative image paths to absolute file:/// URLs
     def img_url_replacer(match: re.Match) -> str:
         src = match.group(1)
         if not src.startswith("http://") and not src.startswith("https://") and not src.startswith("data:"):

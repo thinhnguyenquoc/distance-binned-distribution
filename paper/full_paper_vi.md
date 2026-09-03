@@ -219,21 +219,24 @@ Hàm mất mát ZTNB điều kiện hóa hàm hợp lý trên các liên kết c
 
 ### 3.5.6. Cấu hình huấn luyện và lựa chọn checkpoint
 
-Toàn bộ quá trình huấn luyện tuân thủ cấu hình cố định tiên nghiệm:
+Toàn bộ quá trình huấn luyện tuân thủ cấu hình cố định tiên nghiệm và được áp dụng đồng nhất cho cả hai backbone neural (Urban GNN và Pairwise Node MLP):
 
 | Siêu tham số / Cấu hình | Giá trị | Vai trò / Cơ chế |
 | :--- | :--- | :--- |
 | **Thuật toán tối ưu** | AdamW | Tối ưu hóa trọng số neural |
-| **Tốc độ học (Learning Rate)** | $10^{-3}$ | Cố định tiên nghiệm |
-| **Weight Decay** | $10^{-4}$ | Regularization trọng số |
+| **Tốc độ học (Learning Rate)** | $3.2 \times 10^{-3}$ | Cố định tiên nghiệm trong toàn bộ các run |
+| **Bộ điều chỉnh tốc độ học** | ReduceLROnPlateau | Giảm LR với hệ số $0.5$, patience $4$ epochs, threshold $10^{-4}$, $\mathrm{LR}_{\min} = 10^{-5}$ |
+| **Weight Decay** | $10^{-4}$ | Regularization trọng số ($\lambda_{\mathrm{wd}} = 10^{-4}$) |
 | **Dropout** | $0.1$ | Regularization trong encoder và decoder |
-| **Số epoch tối đa** | 100 | Giới hạn huấn luyện |
-| **Patience dừng sớm** | 15 epochs | Dựa trên validation CPC |
-| **Tiêu chí chọn checkpoint** | Validation CPC cao nhất | Chọn mô hình tốt nhất trên $\mathcal{C}_{\mathrm{val}}^{(f)}$ |
+| **Đơn vị batch** | 1 thành phố / batch | Tối ưu tuần tự từng thành phố nguồn, tính loss trung bình trên $|\Omega_c|$ cặp |
+| **Số epoch tối đa** | 200 epochs | Giới hạn huấn luyện tối đa |
+| **Patience dừng sớm** | 16 epochs | Dừng khi validation CPC liên vùng không tăng $\ge 10^{-4}$ |
+| **Tiêu chí chọn checkpoint** | Validation CPC cao nhất | Chọn mô hình tốt nhất theo macro-average trên $\mathcal{C}_{\mathrm{val}}^{(f)}$ |
+| **Chặn gradient (Clipping)** | $\|\mathbf{g}\|_2 \le 5.0$ | Cắt chuẩn Euclid tối đa bằng `clip_grad_norm_` |
 | **Model Seeds** | $\mathcal{S} = \{1, 10, 100\}$ | Đánh giá độ ổn định ngẫu nhiên |
 | **Đóng băng tham số** | Đóng băng tuyệt đối | Không cập nhật trọng số trên test cities |
 
-Không sử dụng hàm phạt điều chuẩn phụ (regularization penalty) cộng thêm vào loss vì mã nguồn tối ưu trực tiếp trên hàm mất mát ZTNB.
+Không sử dụng hàm phạt điều chuẩn phụ (regularization penalty) cộng thêm vào loss vì mã nguồn tối ưu trực tiếp trên hàm mất mát ZTNB. Cả Urban GNN và Pairwise Node MLP đều dùng chung cấu hình tối ưu này; khác biệt duy nhất là Urban GNN sử dụng 2 lớp GNN truyền thông điệp trên đồ thị bán kính 5 km, còn Pairwise Node MLP sử dụng 2 lớp MLP truyền thẳng không có truyền thông điệp qua cạnh.
 
 ### 3.5.7. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
@@ -860,86 +863,217 @@ Trong quá trình chuẩn bị bản thảo, tác giả đã sử dụng công c
 
 ### S1.1. Các lớp tensor của Urban GNN Encoder
 Mạng Urban GNN ánh xạ vector đặc trưng đô thị 26 chiều $\mathbf{x}_{c,i} \in \mathbb{R}^{26}$ và cấu trúc đồ thị bán kính không gian $\mathcal{G}_c = (\mathcal{V}_c, \mathcal{E}_c)$ thành biểu diễn ẩn 64 chiều $\mathbf{h}_{c,i} \in \mathbb{R}^{64}$:
+
 1. **Chiếu nút ban đầu**:
-   $$\mathbf{h}_{c,i}^{(0)} = \operatorname{Dropout}\left(\operatorname{ReLU}\left(\operatorname{LayerNorm}\left(\mathbf{W}_{\mathrm{in}} \mathbf{x}_{c,i} + \mathbf{b}_{\mathrm{in}}ight)ight)ight), \quad \mathbf{W}_{\mathrm{in}} \in \mathbb{R}^{64 	imes 26}$$
-2. **Truyền thông điệp điều kiện hóa theo khoảng cách**: Với mỗi lớp $l \in \{1, 2\}$, thông điệp từ nút láng giềng $j \in \mathcal{N}(i)$ được xây dựng bằng cách ghép nối embedding và khoảng cách log:
-   $$\mathbf{m}_{ji} = \mathbf{W}_{\mathrm{msg}} \left[ \mathbf{h}_{c,j}^{(l-1)} \,\Vert\, \log(1 + d_{c,ji}) ight] + \mathbf{b}_{\mathrm{msg}}, \quad \mathbf{W}_{\mathrm{msg}} \in \mathbb{R}^{64 	imes 65}$$
-3. **Tổng hợp chuẩn hóa theo bậc và cập nhật residual**:
-   $$\mathbf{a}_{c,i}^{(l)} = rac{1}{\max(\operatorname{deg}(i), 1)} \sum_{j \in \mathcal{N}(i)} \mathbf{m}_{ji}$$
-   $$\widetilde{\mathbf{h}}_{c,i}^{(l)} = \operatorname{LayerNorm}\left(\operatorname{ReLU}\left(\mathbf{a}_{c,i}^{(l)} + \mathbf{W}_{\mathrm{self}} \mathbf{h}_{c,i}^{(l-1)} + \mathbf{b}_{\mathrm{self}}ight)ight)$$
-   $$\mathbf{h}_{c,i}^{(l)} = \mathbf{h}_{c,i}^{(l-1)} + \operatorname{Dropout}\left(\widetilde{\mathbf{h}}_{c,i}^{(l)}ight)$$
-4. **Chiếu đầu ra**: $\mathbf{h}_{c,i} = \mathbf{W}_{\mathrm{out}} \mathbf{h}_{c,i}^{(2)} + \mathbf{b}_{\mathrm{out}} \in \mathbb{R}^{64}$.
+$$
+h_{c,i}^{(0)} = \mathrm{Dropout}\bigl(\mathrm{ReLU}\bigl(\mathrm{LayerNorm}(W_{\mathrm{in}}x_{c,i}+b_{\mathrm{in}})\bigr)\bigr).
+$$
+
+2. **Thông điệp điều kiện hóa theo khoảng cách**:
+$$
+m_{ji}^{(\ell)} = W_{\mathrm{msg}}^{(\ell)} [h_{c,j}^{(\ell-1)} \mathbin{\Vert} \log(1+d_{c,ji})] + b_{\mathrm{msg}}^{(\ell)}.
+$$
+
+3. **Tổng hợp thông điệp**:
+$$
+a_{c,i}^{(\ell)} = \frac{1}{\max(\deg(i),1)} \sum_{j\in\mathcal{N}(i)} m_{ji}^{(\ell)}.
+$$
+
+4. **Biến đổi trạng thái nút**:
+$$
+\widetilde{h}_{c,i}^{(\ell)} = \mathrm{LayerNorm}\bigl(\mathrm{ReLU}\bigl(a_{c,i}^{(\ell)} + W_{\mathrm{self}}^{(\ell)} h_{c,i}^{(\ell-1)} + b_{\mathrm{self}}^{(\ell)}\bigr)\bigr).
+$$
+
+5. **Cập nhật residual**:
+$$
+h_{c,i}^{(\ell)} = h_{c,i}^{(\ell-1)} + \mathrm{Dropout}\bigl(\widetilde{h}_{c,i}^{(\ell)}\bigr).
+$$
+
+6. **Chiếu đầu ra**:
+$$
+h_{c,i} = W_{\mathrm{out}}h_{c,i}^{(2)} + b_{\mathrm{out}} \in \mathbb{R}^{64}.
+$$
 
 ### S1.2. Ổn định số học và gradient clipping
-Trong quá trình huấn luyện, log-likelihood của ZTNB được tính toán thông qua hàm `torch.special.gammaln`. Để ngăn hiện tượng tràn số hoặc biến mất gradient:
-* Tham số trung bình được chặn dưới: $\mu_{c,ij} = \operatorname{softplus}(\log \mu_{c,ij}) + 10^{-4}$.
-* Tham số phân tán được chặn: $\phi = \operatorname{clamp}(\exp(\log \phi), \min=10^{-4}, \max=10^4)$.
-* Gradient được cắt theo chuẩn Euclid tối đa: $\|\mathbf{g}\|_2 \le 1.0$ thông qua `torch.nn.utils.clip_grad_norm_`.
+
+Trong quá trình huấn luyện, log-likelihood của ZTNB được tính toán thông qua hàm `torch.lgamma`. Để ngăn hiện tượng tràn số hoặc biến mất gradient:
+
+* Tham số trung bình cơ sở được chặn dưới: $\mu_{c,ij} = \operatorname{softplus}(\log T_{c,ij}^{\mathrm{grav}} + \text{residual}_{c,ij}) + 10^{-4}$.
+* Tham số phân tán được chặn trong không gian log: $\log \phi_{\mathrm{safe}} = \operatorname{clamp}(\log \phi, \min=-10.0, \max=10.0)$, sau đó $\phi = \exp(\log \phi_{\mathrm{safe}})$.
+* Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit; xác suất tại 0 được chuẩn hóa số học qua $\log(1 - P_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log P_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - P_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
+* Gradient của toàn bộ tham số mô hình được cắt theo chuẩn Euclid tối đa: $\|\mathbf{g}\|_2 \le 5.0$ thông qua `torch.nn.utils.clip_grad_norm_`.
 
 ---
 
 ## S2. Dạng tổng quát của toán tử hiệu chỉnh giải tích ($q \in [0, 1]$)
 
-Khi tham số cường độ hiệu chỉnh $q \in [0, 1]$ được điều chỉnh liên tục:
-1. **Xác định các khoảng hoạt động**: $\mathcal{A}_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}$.
-2. **Phân phối mục tiêu điều kiện hóa**: $p_{c,b}^{\mathrm{cond}} = rac{Y_{c,b} \mathbf{1}(b \in \mathcal{A}_c)}{\sum_{r \in \mathcal{A}_c} Y_{c,r}}$.
-3. **Tỷ lệ hiệu chỉnh mềm**: $w_{c,b}(q) = \left( rac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{c,b}^{(0)}} ight)^q$.
-4. **Hệ số chuẩn hóa bảo toàn khối lượng**:
-   $$Z_c(q) = \sum_{r \in \mathcal{A}_c} \widehat{Y}_{c,r}^{(0)} w_{c,r}(q), \qquad s_{c,b}(q) = rac{w_{c,b}(q)}{Z_c(q)}$$
-5. **Dự báo sau hiệu chỉnh**: $\hat{t}_{c,ij}^{(1)} = s_{c,b(i,j)}(q) \cdot \hat{t}_{c,ij}^{(0)}$.
+Tham số cường độ hiệu chỉnh $q \in [0, 1]$ điều khiển mức độ can thiệp của thông tin khoảng cách mục tiêu:
+* $q = 0$: giữ nguyên dự báo ban đầu của baseline ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$);
+* $q = 1$: khớp đầy đủ tỷ trọng luồng theo từng khoảng khoảng cách;
+* Nghiên cứu chính cố định $q = 1$.
 
-Tại $q = 1.0$, nếu toàn bộ các khoảng đều hoạt động ($\mathcal{A}_c = \{1, \dots, K\}$), ta có $p_{c,b}^{\mathrm{cond}} = Y_{c,b}$, $Z_c(1) = \sum_r Y_{c,r} = 1$, và $s_{c,b}(1) = rac{Y_{c,b}}{\widehat{Y}_{c,b}^{(0)}}$, đưa chính xác về công thức rút gọn trong thân bài.
+Quy trình hiệu chỉnh tổng quát được thực hiện qua các bước:
+
+### S2.1. Tập các khoảng hoạt động
+Tập các khoảng cự ly có dự báo baseline dương được xác định bởi:
+$$
+A_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}.
+$$
+
+### S2.2. Phân phối mục tiêu điều kiện trên các khoảng hoạt động
+Tỷ trọng mục tiêu được điều kiện hóa trên các khoảng hoạt động theo:
+$$
+p_{c,b}^{\mathrm{cond}} = \frac{Y_{c,b} \mathbf{1}(b \in A_c)}{\sum_{r \in A_c} Y_{c,r}}.
+$$
+Việc điều kiện hóa bảo đảm tổng tỷ trọng trên các khoảng hoạt động bằng 1.
+
+### S2.3. Trọng số hiệu chỉnh mềm
+Với mỗi khoảng hoạt động $b \in A_c$, tỷ lệ co giãn mềm được tính theo:
+$$
+w_{c,b}(q) = \biggl( \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{c,b}^{(0)}} \biggr)^q, \qquad b \in A_c.
+$$
+
+### S2.4. Hệ số chuẩn hóa và hệ số co giãn
+Hệ số chuẩn hóa bảo toàn tổng khối lượng và hệ số co giãn tương ứng là:
+$$
+Z_c(q) = \sum_{r \in A_c} \widehat{Y}_{c,r}^{(0)} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c(q)}.
+$$
+
+### S2.5. Dự báo sau hiệu chỉnh
+Cường độ luồng dự báo sau hiệu chỉnh cho cặp $(i,j)$ được xác định bởi:
+$$
+\widehat{t}_{c,ij}^{(1)} = s_{c,b(i,j)}(q) \widehat{t}_{c,ij}^{(0)}
+$$
+trong đó $b(i,j)$ là khoảng cự ly chứa cặp $(i,j)$.
+
+### S2.6. Trường hợp chính $q = 1$
+Khi tất cả các khoảng khoảng cách đều hoạt động:
+$$
+A_c = \{1, \dots, K\}
+$$
+ta có:
+$$
+p_{c,b}^{\mathrm{cond}} = Y_{c,b}, \qquad Z_c(1) = 1, \qquad s_{c,b}(1) = \frac{Y_{c,b}}{\widehat{Y}_{c,b}^{(0)}}.
+$$
+Khi đó, dạng tổng quát thu về đúng toán tử hiệu chỉnh rút gọn được sử dụng trong thân bài.
 
 ---
 
 ## S3. Chứng minh giải tích các đặc tính bất biến
 
-1. **Bảo toàn tập hỗ trợ**: Vì $s_{c,b} > 0$ với mọi $b \in \mathcal{A}_c$, ta có $\hat{t}_{c,ij}^{(1)} > 0 \iff \hat{t}_{c,ij}^{(0)} > 0$. Do đó, tập các liên kết dự báo dương trên $\Omega_c$ được bảo toàn tuyệt đối, không tạo thêm liên kết mới và không triệt tiêu các liên kết hiện có:
-   $$\Omega_c(M_1) \equiv \Omega_c(M_0) \equiv \Omega_c.$$
-2. **Bảo toàn thứ hạng tương đối nội khoảng**: Với bất kỳ hai cặp OD $(i,j)$ và $(u,v)$ cùng thuộc khoảng khoảng cách $b$, tỷ số dự báo sau hiệu chỉnh là:
-   $$rac{\hat{t}_{c,ij}^{(1)}}{\hat{t}_{c,uv}^{(1)}} = rac{s_{c,b} \cdot \hat{t}_{c,ij}^{(0)}}{s_{c,b} \cdot \hat{t}_{c,uv}^{(0)}} = rac{\hat{t}_{c,ij}^{(0)}}{\hat{t}_{c,uv}^{(0)}}.$$
-   Do đó, thứ tự tương đối giữa các cặp trong cùng một khoảng không đổi (hệ số tương quan hạng Kendall nội khoảng $	au = 1.0$).
-3. **Bảo toàn tổng thể tích luồng dự báo**:
-   $$\sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}^{(1)} = \sum_{b \in \mathcal{A}_c} s_{c,b}(q) \sum_{(i,j) \in \mathcal{B}_{c,b}} \hat{t}_{c,ij}^{(0)} = \sum_{b \in \mathcal{A}_c} rac{w_{c,b}(q)}{Z_c(q)} \widehat{F}_{c,b}^{(0)} = rac{\widehat{S}_c^{(0)}}{Z_c(q)} \sum_{b \in \mathcal{A}_c} \widehat{Y}_{c,b}^{(0)} w_{c,b}(q) = \widehat{S}_c^{(0)}.$$
+### S3.1. Bảo toàn tập hỗ trợ
+Vì $s_{c,b}(q) > 0$ trên mọi khoảng hoạt động, một dự báo dương trước hiệu chỉnh vẫn dương sau hiệu chỉnh. Toán tử chỉ hoạt động trên $\Omega_c$, nên không tạo thêm liên kết bên ngoài tập hỗ trợ đã biết:
+$$
+\widehat{t}_{c,ij}^{(1)} > 0 \quad \Longleftrightarrow \quad \widehat{t}_{c,ij}^{(0)} > 0, \qquad (i,j) \in \Omega_c.
+$$
+
+### S3.2. Bảo toàn thứ hạng nội khoảng
+Với hai cặp $(i,j)$ và $(u,v)$ cùng thuộc khoảng $b$, ta có:
+$$
+\frac{\widehat{t}_{c,ij}^{(1)}}{\widehat{t}_{c,uv}^{(1)}} = \frac{s_{c,b}(q) \widehat{t}_{c,ij}^{(0)}}{s_{c,b}(q) \widehat{t}_{c,uv}^{(0)}} = \frac{\widehat{t}_{c,ij}^{(0)}}{\widehat{t}_{c,uv}^{(0)}}.
+$$
+Do đó, thứ tự tương đối của các cặp trong cùng một khoảng không thay đổi ($\tau = 1$).
+
+### S3.3. Bảo toàn tổng khối lượng dự báo
+Gọi $S_c^{(0)}$ là tổng khối lượng dự báo của baseline:
+$$
+S_c^{(0)} = \sum_{(i,j) \in \Omega_c} \widehat{t}_{c,ij}^{(0)}.
+$$
+Tổng khối lượng luồng sau hiệu chỉnh thỏa mãn:
+$$
+\begin{aligned}
+\sum_{(i,j) \in \Omega_c} \widehat{t}_{c,ij}^{(1)} &= S_c^{(0)} \sum_{b \in A_c} \widehat{Y}_{c,b}^{(0)} s_{c,b}(q) \\
+&= \frac{S_c^{(0)}}{Z_c(q)} \sum_{b \in A_c} \widehat{Y}_{c,b}^{(0)} w_{c,b}(q) \\
+&= S_c^{(0)}.
+\end{aligned}
+$$
+Vì $S_c^{(0)}$ chính là tổng khối lượng dự báo trước hiệu chỉnh, toán tử bảo toàn tổng khối lượng dự báo của baseline.
 
 ---
 
 ## S4. Định nghĩa toán học các thước đo sai số phụ
 
-Tất cả các thước đo sai số phụ đều được tính toán trên cùng tập hỗ trợ liên vùng dương $\Omega_c$:
+Tất cả các thước đo sai số phụ được tính trên cùng tập hỗ trợ liên vùng dương đã biết $\Omega_c$. CPC vẫn là thước đo chính; các metric dưới đây chỉ phục vụ kiểm tra độ bền của kết quả.
+
 1. **Sai số tuyệt đối trung bình (MAE)**:
-   $$\operatorname{MAE}_c = rac{1}{|\Omega_c|} \sum_{(i,j) \in \Omega_c} |t_{c,ij} - \hat{t}_{c,ij}|$$
+$$
+\mathrm{MAE}_c = \frac{1}{|\Omega_c|} \sum_{(i,j)\in\Omega_c} \lvert t_{c,ij} - \widehat{t}_{c,ij} \rvert.
+$$
+
 2. **Căn bậc hai sai số bình phương trung bình (RMSE)**:
-   $$\operatorname{RMSE}_c = \sqrt{rac{1}{|\Omega_c|} \sum_{(i,j) \in \Omega_c} (t_{c,ij} - \hat{t}_{c,ij})^2}$$
+$$
+\mathrm{RMSE}_c = \sqrt{ \frac{1}{|\Omega_c|} \sum_{(i,j)\in\Omega_c} \bigl( t_{c,ij} - \widehat{t}_{c,ij} \bigr)^2 }.
+$$
+
 3. **RMSE chuẩn hóa (NRMSE)**:
-   $$\operatorname{NRMSE}_c = rac{\operatorname{RMSE}_c}{ar{t}_c}, \qquad ar{t}_c = rac{1}{|\Omega_c|} \sum_{(i,j) \in \Omega_c} t_{c,ij}$$
-4. **RMSE trên thang log ($\operatorname{RMSE}_{\log1p}$)**:
-   $$\operatorname{RMSE}_{\log1p,c} = \sqrt{rac{1}{|\Omega_c|} \sum_{(i,j) \in \Omega_c} \left[ \log(1 + t_{c,ij}) - \log(1 + \hat{t}_{c,ij}) ight]^2}$$
-5. **Hệ số tương quan hạng Spearman ($ho_{\mathrm{Spearman}}$)**: Đo lường tính đơn điệu thứ bậc giữa luồng dự báo và thực tế trên $\Omega_c$.
-6. **Sai số tương đối tổng luồng ($\operatorname{RelError}$)**:
-   $$\operatorname{RelError}_c = rac{\left| \sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij} - \sum_{(i,j) \in \Omega_c} t_{c,ij} ight|}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}$$
+$$
+\overline{t}_c = \frac{1}{|\Omega_c|} \sum_{(i,j)\in\Omega_c} t_{c,ij}, \qquad \mathrm{NRMSE}_c = \frac{\mathrm{RMSE}_c}{\overline{t}_c}.
+$$
+
+4. **RMSE trên thang log ($\mathrm{RMSE}_{\log 1p}$)**:
+$$
+\mathrm{RMSE}_{\log 1p,c} = \sqrt{ \frac{1}{|\Omega_c|} \sum_{(i,j)\in\Omega_c} \bigl[ \log(1+t_{c,ij}) - \log(1+\widehat{t}_{c,ij}) \bigr]^2 }.
+$$
+
+5. Hệ số tương quan hạng Spearman $\rho_{\mathrm{Spearman},c}$: đo mức độ tương quan đơn điệu giữa các cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị thứ hạng phù hợp hơn.
+
+6. **Sai số tương đối tổng luồng ($\mathrm{RelError}$)**:
+$$
+\mathrm{RelError}_c = \frac{ \lvert \sum_{(i,j)\in\Omega_c} \widehat{t}_{c,ij} - \sum_{(i,j)\in\Omega_c} t_{c,ij} \rvert }{ \sum_{(i,j)\in\Omega_c} t_{c,ij} }.
+$$
 
 ---
 
 ## S5. Giao thức Bootstrap phân tầng theo fold và kiểm định thống kê
 
 1. **Paired Nonparametric Bootstrap phân tầng theo fold**:
-   * Với mỗi lần lấy mẫu lại $r \in \{1, \dots, B\}$ ($B = 10{,}000$): trong mỗi fold $f \in \{1, \dots, 5\}$, lấy mẫu lại có hoàn lại 10 thành phố kiểm tra từ tập 10 thành phố kiểm tra ban đầu của fold đó.
-   * Tính mức cải thiện trung bình vĩ mô của mẫu bootstrap: $\overline{\Delta}^{*(r)} = rac{1}{C} \sum_{c \in \mathcal{C}^{*(r)}} \Delta_c$.
-   * Khoảng tin cậy 95% Percentile được xác định bởi: $\mathrm{CI}_{95\%} = [Q_{0.025}(\overline{\Delta}^*), Q_{0.975}(\overline{\Delta}^*)]$.
-2. **Kiểm định Wilcoxon signed-rank hai phía**:
-   * Kiểm định giả thuyết không $H_0: \operatorname{median}(\Delta_c) = 0$ so với đối thuyết $H_1: \operatorname{median}(\Delta_c) 
-e 0$ trên 50 hiệu số cấp thành phố $\Delta_c$.
-3. **Hiệu chỉnh Holm–Bonferroni**:
-   * Đối với họ gồm $M$ giả thuyết, các $p$-value được sắp xếp tăng dần $p_{(1)} \le \dots \le p_{(M)}$ và so sánh với ngưỡng $lpha / (M - k + 1)$ cho bước $k$.
+   * Đơn vị lấy mẫu lại là thành phố.
+   * Lấy mẫu có hoàn lại riêng trong từng fold.
+   * Mỗi fold lấy lại 10 thành phố từ 10 thành phố kiểm tra ban đầu.
+   * $M_0$ và $M_1$ luôn được giữ ghép cặp.
+   * Không lấy mẫu độc lập các cặp OD.
+   * Gọi $\mathcal{C}^{*(r)}$ là multiset gồm 50 thành phố được lấy lại ở bootstrap replicate $r$ ($r = 1, \dots, B$ với $B = 10{,}000$ và $C = 50$):
+$$
+\overline{\Delta}^{*(r)} = \frac{1}{C} \sum_{c\in\mathcal{C}^{*(r)}} \Delta_c, \qquad r = 1, \dots, B.
+$$
+
+2. **Khoảng tin cậy percentile 95%**:
+$$
+\mathrm{CI}_{95\%} = \bigl[ Q_{0.025}\bigl(\overline{\Delta}^*\bigr), Q_{0.975}\bigl(\overline{\Delta}^*\bigr) \bigr].
+$$
+
+3. **Kiểm định Wilcoxon signed-rank hai phía**:
+   Kiểm định giả thuyết ghép cặp hai phía trên 50 hiệu số cấp thành phố:
+$$
+H_0: \operatorname{median}(\Delta_c) = 0, \qquad H_1: \operatorname{median}(\Delta_c) \neq 0.
+$$
+
+4. **Hiệu chỉnh Holm–Bonferroni**:
+   Đối với họ gồm $M$ giả thuyết:
+$$
+p_{(k)} \leq \frac{\alpha}{M - k + 1}, \qquad k = 1, \dots, M.
+$$
+   Các $p$-value được sắp xếp tăng dần. Quy trình step-down dừng tại giả thuyết đầu tiên không thỏa điều kiện bác bỏ.
 
 ---
 
 ## S6. Chi tiết kỹ thuật các stress-test độ bền
 
 1. **Tổng hợp nhiễu Total Variation (TV Noise Bisection)**:
-   * Cho vector xác suất thực $\mathbf{p} = [Y_{c,1}, \dots, Y_{c,K}]^T$, một vector nhiễu chuẩn hóa được tạo qua $\log p_b(\sigma) = \log p_b + \sigma z_b$ với $z_b \sim \mathcal{N}(0, 1)$.
-   * Hệ số co giãn $\sigma$ được giải chính xác bằng phương pháp chia đôi (bisection solver) để khoảng cách Total Variation thỏa mãn nghiêm ngặt: $\mathrm{TV}(\mathbf{p}(\sigma), \mathbf{p}) = rac{1}{2} \sum_{b=1}^K |p_b(\sigma) - p_b| = \epsilon$.
+   * Áp dụng trên các bin hoạt động có $p_b > 0$ ($b = 1, \dots, K_{\mathrm{act}}$). Vector nhiễu chuẩn hóa được trừ kỳ vọng (centered) theo đúng triển khai trong mã nguồn:
+$$
+z_b^{\mathrm{ctr}} = z_b - \frac{1}{K_{\mathrm{act}}} \sum_{r=1}^{K_{\mathrm{act}}} z_r, \qquad z_b \sim \mathcal{N}(0, 1).
+$$
+   * Tỷ trọng nhiễu thu được qua exponential tilting:
+$$
+p_b(\sigma) = \frac{\exp\bigl(\log p_b + \sigma z_b^{\mathrm{ctr}}\bigr)}{\sum_{r=1}^{K_{\mathrm{act}}} \exp\bigl(\log p_r + \sigma z_r^{\mathrm{ctr}}\bigr)}.
+$$
+   * Hệ số co giãn $\sigma$ được giải bằng phương pháp chia đôi (bisection solver) để khoảng cách Total Variation đạt đúng mức quy định $\epsilon$:
+$$
+\operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
+$$
+   Sau công thức, hệ số co giãn $\sigma$ được tìm bằng phương pháp chia đôi (bisection solver) để đạt mức TV yêu cầu $\epsilon$.
+
 2. **Đối chứng Donor Placebo**:
    * *Matched Donor*: Chọn thành phố hiến tặng trong cùng fold có khoảng cách can thiệp $D_T = \mathrm{TV}(\widehat{\mathbf{Y}}_c^{(0)}, \mathbf{Y}_{\mathrm{donor}})$ gần nhất với mức can thiệp thực tế của mục tiêu.
    * *Unadjusted Donor*: Lấy trung bình hiệu năng trên toàn bộ các thành phố khác trong cùng fold huấn luyện mà không điều chỉnh mức can thiệp.
