@@ -231,127 +231,244 @@ Crucially, increasing observational resolution from city to county does not alte
 
 ---
 
-## 3.5 Zero-Shot Flow Intensity Calibration via Distance Distribution
+## 3.5 Model Structure and Inference-Time Calibration
 
-The neural backbone is trained on source cities and kept strictly frozen prior to evaluation on the target city. For each positive interzonal pair $(i,j) \in \Omega_{c,\mathrm{inter}}^+$, the ZTNB model generates an initial zero-shot flow intensity prediction:
+### 3.5.1 Common Baseline Prediction Interface
 
-$$\widehat{T}_{c,ij}^{(0)} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1]$$
+All three candidate predictor families—the primary Gravity-Informed Urban GNN ($m = \text{GNN}$), the ablated Pairwise Node MLP ($m = \text{MLP}$), and the classical Two-Parameter Gravity model ($m = \text{Grav}$)—generate an initial zero-shot flow intensity prediction across the identical known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$. This shared operational interface is formalized as:
 
-These predictions constitute baseline $M_0$. Baseline $M_0$ utilizes target-city urban context features and inter-tract distances, but has no access to $Y_D$ or target reference OD intensities.
+$$\widehat{T}_{c,ij}^{(0,m)} = f_{\widehat{\theta}_m}^{(m)}(\text{target-city inputs}), \qquad (i,j) \in \Omega_{c,\mathrm{inter}}^+$$
 
-### 3.5.1 Primary Calibration at the City Level (`M1_city`)
+where superscript $(0)$ designates uncalibrated baseline predictions and $m \in \{\text{GNN}, \text{MLP}, \text{Grav}\}$ indexes the model family. 
 
-The total flow mass predicted by the baseline in distance bin $b$ is:
-
-$$\widehat{F}_{c,b}^{(0)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)} \mathbb{I}(a_{b-1} \le d_{c,ij} < a_b)$$
-
-Letting:
-
-$$\widehat{S}_{c}^{(0)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)}$$
-
-denote total predicted flow intensity across target city $c$, the implied distance distribution predicted by the baseline is:
-
-$$\widehat{Y}_{D,c,b}^{(0)} = \frac{\widehat{F}_{c,b}^{(0)}}{\widehat{S}_{c}^{(0)}}$$
-
-Because compact cities may contain zero candidate OD pairs in outer distance bins within $\Omega_{c,\mathrm{inter}}^+$, the set of active distance bins is defined as:
-
-$$\mathcal{A}_c = \left\{ b \in \{1, \dots, K\} : \widehat{Y}_{D,c,b}^{(0)} > 0 \right\}$$
-
-The target distance observation is conditioned on active distance bins:
-
-$$p_{c,b}^{\mathrm{cond}} = \frac{Y_{D,c,b} \mathbb{I}(b \in \mathcal{A}_c)}{\sum_{r \in \mathcal{A}_c} Y_{D,c,r}}$$
-
-This conditioning ensures that calibration reallocates mass strictly among distance bins containing at least one positive OD pair in the target city's support.
-
-For $b \in \mathcal{A}_c$, the raw calibration ratio and soft weight are:
-
-$$r_{c,b} = \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,b}^{(0)}}, \qquad w_{c,b}(q) = r_{c,b}^q, \quad q \in [0, 1]$$
-
-To strictly conserve total predicted flow mass, the weight is normalized by:
-
-$$Z_c(q) = \sum_{r \in \mathcal{A}_c} \widehat{Y}_{D,c,r}^{(0)} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c(q)}$$
-
-The calibrated prediction for pair $(i,j)$ under `M1_city` is:
-
-$$\widehat{T}_{c,ij}^{(1)} = s_{c, b(i,j)}(q) \cdot \widehat{T}_{c,ij}^{(0)}$$
-
-where $b(i,j)$ indexes the distance bin containing $d_{c,ij}$.
-
-In the primary benchmark, $q=1$ is pre-specified and locked prior to evaluation. $q=0$ reverts identically to baseline $M_0$ because all scaling factors equal 1.
-
-The normalization mechanism strictly preserves total predicted flow intensity:
-
-$$\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(1)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0)}$$
-
-At $q=1$, the calibrated model's implied distance distribution matches the conditioned target distribution:
-
-$$\widehat{Y}_{D,c,b}^{(1)} = p_{c,b}^{\mathrm{cond}}$$
-
-When all distance bins in $\mathbf{Y}_{D,c}$ are active ($\mathcal{A}_c = \{1, \dots, K\}$), $p_{c,b}^{\mathrm{cond}} = Y_{D,c,b}$, and the calibrated distribution matches raw $\mathbf{Y}_{D,c}$ directly.
-
-### 3.5.2 Spatial Resolution Variant at the County Level (`M1_county`)
-
-In the spatial resolution experiment, the above procedure is applied independently to each origin-county group:
-
-$$\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\right\}$$
-
-For each county $\ell$, the algorithm identifies the active bin set $\mathcal{A}_{c,\ell}$, conditions the target observation to $p_{c,\ell,b}^{\mathrm{cond}}$, and computes:
-
-$$w_{c,\ell,b}(q) = \left(\frac{p_{c,\ell,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,\ell,b}^{(0)}}\right)^q, \qquad s_{c,\ell,b}(q) = \frac{w_{c,\ell,b}(q)}{\sum_{r \in \mathcal{A}_{c,\ell}} \widehat{Y}_{D,c,\ell,r}^{(0)} w_{c,\ell,r}(q)}$$
-
-Predictions are scaled by the factor corresponding to the origin tract's county:
-
-$$\widehat{T}_{c,ij}^{\mathrm{county}} = s_{c, g(i), b(i,j)}(q) \cdot \widehat{T}_{c,ij}^{(0)}$$
-
-Because normalization is executed separately per origin county, total predicted flow originating from each county is conserved ($\sum_{(i,j)\in\Omega_{c,\ell}^+} \widehat{T}_{c,ij}^{\mathrm{county}} = \sum_{(i,j)\in\Omega_{c,\ell}^+} \widehat{T}_{c,ij}^{(0)}$). When aggregated, total city-wide flow is also preserved.
-
-### 3.5.3 Invariant Mathematical Properties
-
-The calibration operator possesses three foundational properties:
-1. **Analytic Post-Processing**: No neural parameters of the GNN or ZTNB heads are updated on the target city.
-2. **Support Invariance**: $\Omega_{c,\mathrm{inter}}^+(M_0) = \Omega_{c,\mathrm{inter}}^+(M1_{\mathrm{city}}) = \Omega_{c,\mathrm{inter}}^+(M1_{\mathrm{county}})$. The method neither discovers unobserved links nor assigns zero flows to missing pairs.
-3. **Intra-Bin Rank Invariance**: All predictions within the same distance bin are multiplied by an identical positive scalar $s_{c,b}(q) > 0$. Consequently, the relative ranking among pairs within any distance bin is strictly invariant (for non-degenerate groups with sufficient pairs, Kendall's rank correlation before and after calibration is identically $\tau = 1.00000000$).
+Each model is trained or fitted strictly on the source training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ of the active cross-validation fold, and all parameters $\widehat{\theta}_m$ are held strictly frozen prior to target-city inference. The target city's distance-binned mobility distribution $\mathbf{Y}_{D,c}$ is never supplied during baseline prediction generation. Downstream, the identical analytical calibration operator $\operatorname{Calibrate}(\cdot, \mathbf{Y}_{D,c})$ is applied to the output of all three models. Here, the Urban GNN serves as the primary predictive architecture, while the MLP and classical gravity models provide structured counterfactual baselines to verify whether calibration benefits depend on graph message passing or neural representations.
 
 ---
 
-## 3.6 OD Flow Intensity Modeling via Zero-Truncated Negative Binomial (ZTNB)
+### 3.5.2 Primary Neural Predictor: Gravity-Informed Urban GNN
 
-### 3.6.1 Frozen neural backbone and training configuration
+The primary predictive model is a support-conditioned zero-shot architecture combining spatial graph convolutions with a physics-inspired gravity prior and a Zero-Truncated Negative Binomial (ZTNB) intensity head.
 
-Within each fold, the 26 tract features are standardized using statistics fitted exclusively on the 35 training cities and then applied unchanged to the validation and test cities. The spatial graph connects tract centroids within a 5 km Haversine radius, includes self-loops, and represents neighborhood relations in both directions. Any tract without a neighbor inside the radius is connected to its nearest tract to avoid isolated nodes.
+#### Spatial Graph Construction and Node Features
+For each target city $c$, the discrete set of spatial units $\mathcal{V}_c$ comprises $N_c = |\mathcal{V}_c|$ census tracts. Each tract $i \in \mathcal{V}_c$ is georeferenced by its centroid coordinates $\mathbf{s}_{c,i} = (\operatorname{lon}_{c,i}, \operatorname{lat}_{c,i})$. Pairwise geographic distances $d_{c,ij}$ are computed via the spherical Haversine formula with Earth radius $R = 6371\text{ km}$. 
 
-The frozen backbone contains two graph neural-network layers with hidden dimension 64 and dropout 0.1. Its pairwise decoder receives the origin and destination embeddings together with $\log(1+d_{c,ij})$ and a log gravity-prior term. Models are trained for at most 200 epochs with AdamW (learning rate $2\times10^{-3}$, weight decay $10^{-4}$) [@loshchilov2019adamw], gradient clipping at 5.0, a `ReduceLROnPlateau` scheduler (factor 0.5, patience 4), and early stopping with patience 15 based on validation CPC. After model selection, all backbone and output-head parameters remain fixed during target-city calibration.
+An undirected spatial radius graph $\mathcal{G}_c = (\mathcal{V}_c, \mathcal{E}_c)$ is constructed exclusively from geographic centroids by connecting any pair of tracts whose centroid distance satisfies $d_{c,ij} \le r$ with a fixed radius threshold of $r = 5.0\text{ km}$. The graph includes self-loops $(i,i) \in \mathcal{E}_c$ with $d_{c,ii} = 0$. To prevent disconnected nodes, any tract possessing zero neighbors within the 5 km radius is connected to its single geographically nearest tract. Crucially, $\mathcal{G}_c$ is constructed purely from observable spatial geography; no trip or OD flow data are ever utilized in graph generation.
 
-### 3.6.2 Zero-truncated negative binomial likelihood and inference
+Each tract is described by a 26-dimensional urban context vector $\mathbf{x}_{c,i} \in \mathbb{R}^{26}$ (13 Census demographic attributes, 8 POI amenity counts, and 5 road network density metrics). Within each fold $f$, all node features are standardized using `StandardScaler` statistics fitted exclusively on the 35 training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ and applied frozen to target cities.
 
-Because the evaluation and training samples consist exclusively of OD pairs with positive flows ($t_{c,ij} \ge 1$), flow intensities are modeled using the Zero-Truncated Negative Binomial distribution [@grogger1991truncated; @hilbe2011negative]. For $t_{c,ij} \ge 1$, the conditional likelihood is:
+#### GNN Encoder Architecture
+The node encoder (`UrbanGNN`) maps normalized features $\mathbf{x}_{c,i}$ and graph topology $\mathcal{G}_c$ into $d$-dimensional node embeddings $\mathbf{h}_{c,i} \in \mathbb{R}^{64}$. First, raw node features are projected through a linear layer with LayerNorm, ReLU activation, and dropout ($p = 0.1$):
 
-$$P(T_{c,ij} = t_{c,ij} \mid T_{c,ij} \ge 1) = \frac{P_{\mathrm{NB}}(T_{c,ij} = t_{c,ij}; \mu_{c,ij}, \phi)}{1 - P_{\mathrm{NB}}(T_{c,ij} = 0; \mu_{c,ij}, \phi)}$$
+$$\mathbf{h}_{c,i}^{(0)} = \operatorname{Dropout}\left(\operatorname{ReLU}\left(\operatorname{LayerNorm}\left(\mathbf{W}_{\mathrm{in}} \mathbf{x}_{c,i} + \mathbf{b}_{\mathrm{in}}\right)\right)\right), \quad \mathbf{W}_{\mathrm{in}} \in \mathbb{R}^{64 \times 26}$$
 
-where the neural network predicts the unconstrained base Negative Binomial mean $\mu_{c,ij} > 0$, and $\phi > 0$ is the dispersion parameter. The zero-probability of the base Negative Binomial is:
+The encoder then stacks $L = 2$ distance-modulated message-passing layers (`GraphConvLayer`). For layer $l \in \{1, \dots, L\}$, incoming messages from neighboring nodes $j \in \mathcal{N}(i)$ are conditioned on edge Haversine distance via logarithmic transformation $\log(1 + d_{c,ji})$:
 
-$$p_{0,c,ij} = \left( \frac{\phi}{\mu_{c,ij} + \phi} \right)^\phi$$
+$$\mathbf{m}_{ji} = \mathbf{W}_{\mathrm{msg}} \left[ \mathbf{h}_{c,j}^{(l-1)} \,\Vert\, \log(1 + d_{c,ji}) \right] + \mathbf{b}_{\mathrm{msg}}, \quad \mathbf{W}_{\mathrm{msg}} \in \mathbb{R}^{64 \times (64 + 1)}$$
 
-The training loss is the negative log-likelihood of the ZTNB distribution:
+Messages are aggregated using degree-normalized mean aggregation:
+
+$$\mathbf{a}_{c,i}^{(l)} = \frac{1}{\max(\operatorname{deg}(i), 1)} \sum_{j \in \mathcal{N}(i)} \mathbf{m}_{ji}$$
+
+The aggregated context is combined with a linear self-transformation, activated through ReLU, normalized via LayerNorm, and passed through a residual skip connection with dropout:
+
+$$\widetilde{\mathbf{h}}_{c,i}^{(l)} = \operatorname{LayerNorm}\left(\operatorname{ReLU}\left(\mathbf{a}_{c,i}^{(l)} + \mathbf{W}_{\mathrm{self}} \mathbf{h}_{c,i}^{(l-1)} + \mathbf{b}_{\mathrm{self}}\right)\right)$$
+
+$$\mathbf{h}_{c,i}^{(l)} = \mathbf{h}_{c,i}^{(l-1)} + \operatorname{Dropout}\left(\widetilde{\mathbf{h}}_{c,i}^{(l)}\right)$$
+
+A final linear projection produces the tract representations: $\mathbf{h}_{c,i} = \mathbf{W}_{\mathrm{out}} \mathbf{h}_{c,i}^{(L)} + \mathbf{b}_{\mathrm{out}} \in \mathbb{R}^{64}$.
+
+#### Pairwise OD Representation and Residual Gravity Decoding
+To predict flow intensity between origin tract $i$ and destination tract $j$, candidate pairs are indexed via integer arrays `pair_o_idx` and `pair_d_idx`. These arrays serve strictly as index retrieval pointers to gather embeddings $\mathbf{h}_{c,i}$ and $\mathbf{h}_{c,j}$; they contain no learned node identity embeddings.
+
+A classical two-parameter physics gravity prior is computed for each pair using tract populations $P_{c,i} = \max(\operatorname{pop}_{c,i}, 1.0)$ and $P_{c,j} = \max(\operatorname{pop}_{c,j}, 1.0)$, and inter-tract Haversine distance clamped at a floor of 0.1 km:
+
+$$\log T_{c,ij}^{\mathrm{grav}} = G + \log P_{c,i} + \log P_{c,j} - \alpha \log(\max(d_{c,ij}, 0.1))$$
+
+where global scale $G \in \mathbb{R}$ and distance decay $\alpha = \exp(\log \alpha) > 0$ are trainable parameters initialized at $G = 0.0$ and $\alpha = 1.0$.
+
+The pairwise OD edge representation $\mathbf{e}_{c,ij} \in \mathbb{R}^{130}$ concatenates origin and destination embeddings, the log-transformed inter-tract distance, and the log gravity prior:
+
+$$\mathbf{e}_{c,ij} = \left[ \mathbf{h}_{c,i} \,\Vert\, \mathbf{h}_{c,j} \,\Vert\, \log(1 + d_{c,ij}) \,\Vert\, \log T_{c,ij}^{\mathrm{grav}} \right]$$
+
+The pairwise decoder (`PairwiseODDecoder`) consists of a multi-layer perceptron with layers $\operatorname{Linear}(130, 64) \to \operatorname{LayerNorm} \to \operatorname{ReLU} \to \operatorname{Dropout}(0.1) \to \operatorname{Linear}(64, 32) \to \operatorname{ReLU} \to \operatorname{Dropout}(0.1) \to \operatorname{Linear}(32, 1)$. The weights and bias of the final linear projection are explicitly initialized to zero. Consequently, the network predicts a residual adjustment to the log gravity prior:
+
+$$\operatorname{residual}_{c,ij} = \operatorname{MLP}_{\mathrm{dec}}(\mathbf{e}_{c,ij})$$
+
+$$\log \mu_{c,ij} = \log T_{c,ij}^{\mathrm{grav}} + \operatorname{residual}_{c,ij}$$
+
+$$\mu_{c,ij} = \operatorname{softplus}(\log \mu_{c,ij}) + 10^{-4}$$
+
+Because $\operatorname{residual}_{c,ij} \approx 0$ at initialization, the base parameter initially tracks $\mu_{c,ij} \approx \operatorname{softplus}(\log T_{c,ij}^{\mathrm{grav}})$, anchoring neural optimization to physical spatial interaction.
+
+#### ZTNB Likelihood and Conditional Mean Conversion
+Because the training and evaluation support consists exclusively of observed positive OD links ($t_{c,ij} \ge 1$), flow volume is modeled using the Zero-Truncated Negative Binomial distribution [@grogger1991truncated; @hilbe2011negative]. The base count distribution is parameterized by mean $\mu_{c,ij} > 0$ and global dispersion $\phi = \exp(\log \phi) > 0$, where $\log \phi \in \mathbb{R}$ is a shared trainable scalar. The zero-probability of the base Negative Binomial is:
+
+$$p_{0,c,ij} = P_{\mathrm{NB}}(T_{c,ij} = 0; \mu_{c,ij}, \phi) = \left( \frac{\phi}{\mu_{c,ij} + \phi} \right)^\phi$$
+
+For observed counts $t_{c,ij} \ge 1$, the conditional likelihood is:
+
+$$P(T_{c,ij} = t_{c,ij} \mid T_{c,ij} \ge 1) = \frac{P_{\mathrm{NB}}(t_{c,ij}; \mu_{c,ij}, \phi)}{1 - p_{0,c,ij}}$$
+
+The network is trained by minimizing the negative log-likelihood on training cities:
 
 $$\mathcal{L}_{\mathrm{ZTNB}} = -\frac{1}{|\Omega_{c,\mathrm{inter}}^+|} \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \left[ \log P_{\mathrm{NB}}(t_{c,ij}; \mu_{c,ij}, \phi) - \log(1 - p_{0,c,ij}) \right]$$
 
-At inference time, zero-shot flow predictions do not use $\mu_{c,ij} directly. Instead, the model outputs the **conditional expected mean**:
+At inference time on target cities, predictions do not output $\mu_{c,ij}$ directly. Instead, the model outputs the exact **conditional expectation**:
 
-$$\widehat{T}_{c,ij}^{(0)} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1] = \frac{\mu_{c,ij}}{1 - p_{0,c,ij}}$$
+$$\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1] = \frac{\mu_{c,ij}}{1 - p_{0,c,ij}}$$
 
-As the expectation of a count distribution, $\widehat{T}_{c,ij}^{(0)}$ is a strictly positive real value and is not required to be an integer. ZTNB strictly models flow volume conditioned on positive links $\Omega_{c,\mathrm{inter}}^+$; it does not predict link existence or treat unobserved pairs as zero flows [@grogger1991truncated; @hilbe2011negative].
+Because $\mu_{c,ij} > 0$ and $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ is a strictly positive real value ($\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} > \mu_{c,ij} > 0$). The ZTNB formulation strictly models intensity over positive links $\Omega_{c,\mathrm{inter}}^+$; it does not predict link existence or treat unobserved pairs as structural zeros.
 
-Figure 1 summarizes the support-conditioned oracle calibration framework, separating cross-city model training, frozen target-city inference, and the oracle aggregate intervention.
+---
+
+### 3.5.3 Alternative Neural Predictor: Pairwise Node MLP
+
+To test whether the incremental information gain from distance distribution calibration is contingent on spatial graph convolutions, we evaluate an ablated neural architecture: the Pairwise Node MLP (`NodeMLP`). 
+
+The Pairwise Node MLP operates on the exact same 26 normalized urban features $\mathbf{x}_{c,i}$ as the Urban GNN, but completely eliminates spatial graph convolutions and message passing. To maintain architectural and parameter-count parity with `UrbanGNN`, each layer of `NodeMLP` replicates the linear transformations of `GraphConvLayer` using a dense linear mapping with dummy zero-padded distance features, LayerNorm, ReLU, and residual dropout connections:
+
+$$\mathbf{h}_{c,i}^{\mathrm{MLP}} = \operatorname{NodeMLP}_{\theta_M}(\mathbf{x}_{c,i}) \in \mathbb{R}^{64}$$
+
+Tract embeddings are computed strictly from local tract features without aggregating information from geographic neighbors. 
+
+The pairwise edge representation $\mathbf{e}_{c,ij}^{\mathrm{MLP}}$ is formed identically by vector concatenation:
+
+$$\mathbf{e}_{c,ij}^{\mathrm{MLP}} = \left[ \mathbf{h}_{c,i}^{\mathrm{MLP}} \,\Vert\, \mathbf{h}_{c,j}^{\mathrm{MLP}} \,\Vert\, \log(1 + d_{c,ij}) \,\Vert\, \log T_{c,ij}^{\mathrm{grav}} \right]$$
+
+The MLP uses the exact same `PairwiseODDecoder`, trainable `GravityPrior`, and ZTNB loss function $\mathcal{L}_{\mathrm{ZTNB}}$ with global dispersion $\phi$. Zero-shot baseline predictions are computed via the conditional expectation:
+
+$$\widehat{T}_{c,ij}^{(0,\mathrm{MLP})} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1] = \frac{\mu_{c,ij}^{\mathrm{MLP}}}{1 - p_{0,c,ij}^{\mathrm{MLP}}}$$
+
+This model isolates the contribution of local node features and pairwise gravity priors in the absence of spatial relational message passing.
+
+---
+
+### 3.5.4 Explicit Low-Complexity Baseline: Two-Parameter Power-Law Gravity
+
+To establish whether the calibration operator delivers benefits outside of deep neural architectures, we incorporate a classical two-parameter power-law gravity model as an explicit, low-complexity parametric benchmark:
+
+$$T_{c,ij}^{\mathrm{grav}} = \exp(G) \cdot \frac{P_{c,i} \cdot P_{c,j}}{d_{c,ij}^\alpha}$$
+
+where $P_{c,i} = \max(\operatorname{pop}_{c,i}, 1.0)$ and $P_{c,j} = \max(\operatorname{pop}_{c,j}, 1.0)$ are tract population totals, and $d_{c,ij}$ is Haversine centroid distance clamped at a 0.1 km minimum. 
+
+The model contains exactly two global parameters:
+1. $G \in \mathbb{R}$: the global log-scale intercept factor;
+2. $\alpha > 0$: the power-law distance decay exponent.
+
+The parameters are estimated via log-linear Ordinary Least Squares (OLS) regression over the pooled positive interzonal pairs of the training cities in fold $f$:
+
+$$\log(t_{c,ij}) - \log(P_{c,i} P_{c,j}) = G - \alpha \log(d_{c,ij})$$
+
+Crucially, $G$ and $\alpha$ are fitted once per fold strictly on $\mathcal{C}_{\mathrm{train}}^{(f)}$ and held fixed when evaluating target cities. The model receives no target-city OD flows, no origin production balancing factors ($A_i$), no destination attraction balancing factors ($B_j$), and no observed marginal totals ($O_i, D_j$). The zero-shot baseline prediction on target city $c$ is:
+
+$$\widehat{T}_{c,ij}^{(0,\mathrm{Grav})} = \exp(\widehat{G}^{(f)}) \cdot \frac{P_{c,i} \cdot P_{c,j}}{d_{c,ij}^{\widehat{\alpha}^{(f)}}}, \qquad (i,j) \in \Omega_{c,\mathrm{inter}}^+$$
+
+This baseline provides a highly constrained, non-neural control whose distance-decay behavior is governed entirely by a single power-law exponent.
+
+---
+
+### 3.5.5 Comparative Summary of Baseline Predictors
+
+Table 2 contrasts the input specifications, spatial mechanisms, output modeling assumptions, and scientific roles of the three baseline predictors.
+
+#### Table 2: Architectural and operational comparison across baseline zero-shot predictors
+
+| Predictor | Urban Context Features | Pairwise Distance | Graph Message Passing | Output Model / Objective | Role in Study |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Gravity-Informed Urban GNN** | 26 features ($\mathbf{x}_{c,i}$) | In message passing & pairwise decoder | Yes (5 km Haversine radius graph) | ZTNB conditional mean $\mathbb{E}[T \mid T \ge 1]$ | Primary proposed transfer architecture |
+| **Pairwise Node MLP** | 26 features ($\mathbf{x}_{c,i}$) | In pairwise decoder | No (isolated local node features) | ZTNB conditional mean $\mathbb{E}[T \mid T \ge 1]$ | Neural ablation baseline (tests graph convolutions) |
+| **Classical Two-Parameter Gravity** | None (Tract population only) | Power-law impedance $d_{c,ij}^{-\alpha}$ | No | Closed-form log-linear OLS | Explicit low-complexity parametric control |
+
+*Note: All three models generate baseline zero-shot predictions on the identical positive interzonal support $\Omega_{c,\mathrm{inter}}^+$, are trained or fitted strictly on source cities, and remain completely frozen during target-city calibration. Performance metrics are reported in Section 4.*
+
+---
+
+### 3.5.6 Frozen Target-City Zero-Shot Inference
+
+Following model training and hyperparameter selection on validation cities, all model parameters ($\widehat{\theta}_{\mathrm{GNN}}$, $\widehat{\theta}_{\mathrm{MLP}}$, $\widehat{G}^{(f)}, \widehat{\alpha}^{(f)}$) are permanently frozen. During target-city inference, target city $c$ provides only permissible static spatial data: tract centroid coordinates $\mathbf{s}_{c,i}$, normalized urban context features $\mathbf{x}_{c,i}$, and tract populations $P_{c,i}$, evaluated over the known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$.
+
+Reference flow volumes $t_{c,ij}$ of the target city are never accessed during this forward pass. The output of this stage constitutes the uncalibrated zero-shot baseline $\widehat{T}_{c,ij}^{(0,m)}$ ($M_0$ condition).
+
+---
+
+### 3.5.7 Target-City Distance-Binned Observation
+
+The distance continuum is partitioned into $K$ intervals $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) using pair-weighted quantiles estimated strictly from training cities ($a_0 = 0, a_K = \infty$). For target city $c$, the set of candidate interzonal pairs falling into distance interval $b$ is:
+
+$$\mathcal{B}_{c,b} = \left\{ (i,j) \in \Omega_{c,\mathrm{inter}}^+ : a_{b-1} \le d_{c,ij} < a_b \right\}$$
+
+The total observed reference trip volume falling into interval $b$ is $F_{c,b} = \sum_{(i,j) \in \mathcal{B}_{c,b}} t_{c,ij}$. The normalized target distance distribution is:
+
+$$\mathbf{Y}_{D,c} = [Y_{D,c,1}, \dots, Y_{D,c,K}]^T \in \Delta^{K-1}, \qquad Y_{D,c,b} = \frac{F_{c,b}}{\sum_{r=1}^K F_{c,r}}, \quad \sum_{b=1}^K Y_{D,c,b} = 1$$
+
+Crucially, $\mathbf{Y}_{D,c}$ is a normalized probability distribution over coarse distance intervals, not a vector of absolute trip volumes. It supplies no individual OD-pair flow quantities. In this benchmark, $\mathbf{Y}_{D,c}$ is extracted directly from target ground-truth flows as an oracle aggregate signal, serving as a controlled probe into the incremental value of macro travel patterns. It is supplied strictly at inference time to the calibration operator.
+
+---
+
+### 3.5.8 Unified Analytical Inference-Time Calibration Operator
+
+Given any frozen baseline predictor $m \in \{\text{GNN}, \text{MLP}, \text{Grav}\}$ generating initial predictions $\widehat{T}_{c,ij}^{(0,m)}$ on $\Omega_{c,\mathrm{inter}}^+$, the calibration operator executes the following deterministic reallocation:
+
+1. **Baseline predicted bin mass**: The flow volume assigned by baseline $m$ to distance interval $b$ is:
+   $$\widehat{F}_{c,b}^{(0,m)} = \sum_{(i,j) \in \mathcal{B}_{c,b}} \widehat{T}_{c,ij}^{(0,m)}$$
+
+2. **Total baseline interzonal volume**:
+   $$\widehat{S}_c^{(0,m)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0,m)}$$
+
+3. **Implied baseline distance distribution**:
+   $$\widehat{Y}_{D,c,b}^{(0,m)} = \frac{\widehat{F}_{c,b}^{(0,m)}}{\widehat{S}_c^{(0,m)}}$$
+
+4. **Active interval identification**: Distance intervals containing at least one candidate pair with non-zero baseline prediction are identified as:
+   $$\mathcal{A}_c^{(m)} = \left\{ b \in \{1, \dots, K\} : \widehat{Y}_{D,c,b}^{(0,m)} > 0 \right\}$$
+
+5. **Target conditioning on active support**:
+   $$p_{c,b}^{\mathrm{cond}} = \frac{Y_{D,c,b} \mathbb{I}(b \in \mathcal{A}_c^{(m)})}{\sum_{r \in \mathcal{A}_c^{(m)}} Y_{D,c,r}}$$
+
+6. **Soft response ratio and weighting**: For $b \in \mathcal{A}_c^{(m)}$, the unnormalized adjustment ratio is modulated by parameter $q \in [0, 1]$:
+   $$w_{c,b}(q) = \left( \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,b}^{(0,m)}} \right)^q$$
+   At $q = 0$, $w_{c,b} = 1$, which leaves predictions unaltered ($M_0$ baseline). At $q = 1$, the operator enforces complete proportional matching. Intermediate values of $q \in (0, 1)$ provide continuous shrinkage toward the target distribution. The canonical benchmark locks $q = 1.0$ without tuning on test cities.
+
+7. **Mass-preserving normalizing scalar**:
+   $$Z_c^{(m)}(q) = \sum_{r \in \mathcal{A}_c^{(m)}} \widehat{Y}_{D,c,r}^{(0,m)} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c^{(m)}(q)}$$
+
+8. **Calibrated flow prediction**:
+   $$\widehat{T}_{c,ij}^{(1,m)} = \operatorname{Calibrate}\left(\widehat{T}_{c,ij}^{(0,m)}, \mathbf{Y}_{D,c}\right) = s_{c,b(i,j)}(q) \cdot \widehat{T}_{c,ij}^{(0,m)}$$
+   where $b(i,j)$ denotes the distance interval enclosing $d_{c,ij}$.
+
+This mapping transforms baseline predictions into calibrated predictions:
+- GNN baseline $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ ($M_0$) $\longrightarrow$ GNN calibrated $\widehat{T}_{c,ij}^{(1,\mathrm{GNN})}$ ($M_1$ or $M1_{\mathrm{city}}$);
+- MLP baseline $\widehat{T}_{c,ij}^{(0,\mathrm{MLP})}$ $\longrightarrow$ MLP calibrated $\widehat{T}_{c,ij}^{(1,\mathrm{MLP})}$;
+- Gravity baseline $\widehat{T}_{c,ij}^{(0,\mathrm{Grav})}$ $\longrightarrow$ Gravity calibrated $\widehat{T}_{c,ij}^{(1,\mathrm{Grav})}$.
+
+For the sub-metropolitan spatial resolution variant (`M1_county`), the identical operator is applied independently within each origin-county group $\Omega_{c,\ell}^+ = \{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\}$ using county-level distribution $\mathbf{Y}_{D,c,\ell}$, yielding $\widehat{\mathbf{T}}_c^{\mathrm{county},m}$.
+
+---
+
+### 3.5.9 Preserved Mathematical Invariants
+
+The analytical calibration operator strictly guarantees three mathematical properties:
+
+1. **Support Invariance**: Calibration is strictly restricted to candidate pairs within $\Omega_{c,\mathrm{inter}}^+$. The operator neither creates new OD links where none existed nor sets existing candidate links to zero. The evaluation domain remains identical across all stages:
+   $$\Omega_{c,\mathrm{inter}}^+(M_0) \equiv \Omega_{c,\mathrm{inter}}^+(M_1) \equiv \Omega_{c,\mathrm{inter}}^+(M1_{\mathrm{county}})$$
+
+2. **Within-Bin Rank Preservation**: Because all OD pairs $(i,j)$ belonging to distance interval $b$ are scaled by the exact same positive scalar factor $s_{c,b}(q) > 0$, the ratio between any two predictions in the same interval is strictly invariant:
+   $$\frac{\widehat{T}_{c,ij}^{(1,m)}}{\widehat{T}_{c,uv}^{(1,m)}} = \frac{s_{c,b}(q) \cdot \widehat{T}_{c,ij}^{(0,m)}}{s_{c,b}(q) \cdot \widehat{T}_{c,uv}^{(0,m)}} = \frac{\widehat{T}_{c,ij}^{(0,m)}}{\widehat{T}_{c,uv}^{(0,m)}}, \qquad \forall (i,j), (u,v) \in \mathcal{B}_{c,b}$$
+   Consequently, intra-bin ranking is mathematically preserved (Kendall's rank correlation within every non-degenerate distance interval is identically $\tau = 1.00000000$). Calibration acts exclusively as a macro-scale mass reallocation across distance bins; it cannot reorder misranked pairs within a bin.
+
+3. **Total-Mass Preservation**: Normalization by $Z_c^{(m)}(q)$ mathematically guarantees that total predicted interzonal flow volume is strictly conserved:
+   $$\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(1,m)} = \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}^{(0,m)}$$
+   This conservation holds analytically across all $q \in [0, 1]$ and is enforced in the software pipeline by numerical sanity checks verifying relative error $|S_{\mathrm{cal}} - S_0| / S_0 < 10^{-5}$.
+
+Figure 1 illustrates the complete support-conditioned zero-shot modeling and inference-time calibration pipeline.
 
 ![Figure 1](figures/fig1_oracle_calibration_framework.svg)
 **Figure 1. Support-conditioned oracle calibration framework.** The cross-city model $M_0$ is trained on source cities and frozen before target-city inference. For a target city, $M_0$ first produces baseline intensities $\widehat{\mathbf{T}}_c^{(0)}$ on the known positive support $\Omega_{c,\mathrm{inter}}^+$. The oracle distance-binned distribution $\mathbf{Y}_{D,c}$ is deterministically derived from the same target-city positive ground-truth OD flows used for evaluation and is introduced only at inference time. Bin-specific scaling factors reallocate predicted mass across distance intervals to obtain $\widehat{\mathbf{T}}_c^{(1)}$ without updating model parameters or creating new OD links. The schematic represents an oracle information intervention, not an independently collected external telemetry pipeline.
 
 ---
 
-## 3.7 Cross-City Evaluation Protocol and Statistical Inference
+## 3.6 Cross-City Evaluation Protocol and Statistical Inference
 
-### 3.7.1 5-Fold Cross-City Validation Scheme
+### 3.6.1 5-Fold Cross-City Validation Scheme
 The empirical benchmark is structured around a 5-fold cross-validation protocol over $N=50$ U.S. metropolitan areas. In each fold, 35 cities are used for model training, 5 cities for model selection (validation), and 10 cities for evaluation (testing). Every city appears in the test partition exactly once, covering all 50 metropolitan areas across folds.
 
 The partitioning unit is the entire city rather than OD pairs, tracts, or observation samples within the same city. Consequently, all tracts and OD pairs belonging to a given city reside exclusively within a single partition (training, validation, or testing) in each fold, and are not dispersed across splits. This city-level division provides the necessary condition to support the cross-city zero-shot evaluation claim.
@@ -369,7 +486,7 @@ Across all configurations, predictions are evaluated on the exact same observed 
 
 ---
 
-### 3.7.2 Primary Evaluation Metric: Common Part of Commuters (CPC)
+### 3.6.2 Primary Evaluation Metric: Common Part of Commuters (CPC)
 
 The primary accuracy metric is the Common Part of Commuters (CPC), computed on positive interzonal pairs:
 
@@ -389,7 +506,7 @@ A positive value indicates that conditioning on $Y_D$ improves reconstruction ac
 
 ---
 
-### 3.7.3 Aggregation Across Model Seeds and Cities
+### 3.6.3 Aggregation Across Model Seeds and Cities
 
 To account for stochasticity in neural initialization and training optimization, each configuration is trained across three independent model seeds:
 
@@ -407,7 +524,7 @@ Macro-averaging assigns equal weight to each metropolitan area regardless of net
 
 ---
 
-### 3.7.4 Uncertainty Quantification and Statistical Hypothesis Testing
+### 3.6.4 Uncertainty Quantification and Statistical Hypothesis Testing
 
 The 95% confidence interval for the population mean improvement is estimated via fold-stratified city-level bootstrap ($B=10,000$ resamples) [@efron1993bootstrap]. In each resample, cities are sampled with replacement within their fold strata from the set of city deltas $\left\{\overline{\Delta\operatorname{CPC}}_c\right\}_{c=1}^{50}$, and the macro-average is recomputed. Sampling at the city level maintains the city as the fundamental unit of statistical inference and avoids treating non-independent OD pairs within the same city as independent observations.
 
@@ -419,7 +536,7 @@ The null hypothesis tests whether the median paired difference between $M1_{\mat
 
 ---
 
-### 3.7.5 Robustness and Diagnostic Stress Tests
+### 3.6.5 Robustness and Diagnostic Stress Tests
 
 Supplementary experiments investigate the operational boundaries and mechanisms governing the primary result:
 1. **Distance Resolution ($K$-Sensitivity)**: Varying distance partitions across $K \in \{2,4,6,8,10,12,14,16,18,20\}$. The nine secondary configurations are compared with the locked $K=8$ anchor using Holm's step-down family-wise error correction [@holm1979sequential].
@@ -432,7 +549,7 @@ Supplementary experiments investigate the operational boundaries and mechanisms 
 
 ---
 
-### 3.7.6 County-Level Spatial Observational Resolution Protocol
+### 3.6.6 County-Level Spatial Observational Resolution Protocol
 
 Across the 50 urban benchmark datasets, 39 metropolitan areas contain tracts that map to a single county, whereas 11 metropolitan areas contain tracts distributed across two to seven counties (the multi-county group comprises Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee, and Atlanta).
 
