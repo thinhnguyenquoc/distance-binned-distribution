@@ -8,6 +8,7 @@ Canonical values from frozen K=8 benchmark:
 - Negative cities: 5 / 50 (10.0%)
 """
 
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -15,18 +16,28 @@ from pathlib import Path
 import shutil
 
 def generate_figure2():
-    # 1. Load canonical K=8 per-city data
-    csv_path = Path("results/k_sensitivity_v1/k_sensitivity_per_city.csv")
-    df = pd.read_csv(csv_path)
-    df_k8 = df[df["K"] == 8].copy()
+    # 1. Load canonical K=8 per-city data from locked primary benchmark (5fold_results.json)
+    json_path = Path("results/5fold_results.json")
+    with open(json_path, "r", encoding="utf-8") as f:
+        d5 = json.load(f)
 
-    assert len(df_k8) == 50, f"Expected 50 cities, found {len(df_k8)}"
+    df_canonical = pd.DataFrame([
+        {
+            "city": item["city"],
+            "delta_cpc": item["delta_city"],
+            "m0_cpc": item["M0"]["cpc_inter"],
+            "m1_cpc": item["M1_city_oracle_obs"]["cpc_inter"],
+        }
+        for item in d5["city_level_results"]
+    ])
+
+    assert len(df_canonical) == 50, f"Expected 50 cities, found {len(df_canonical)}"
 
     # Format city names: replace underscore with space
-    df_k8["city_display"] = df_k8["city"].str.replace("_", " ")
+    df_canonical["city_display"] = df_canonical["city"].str.replace("_", " ")
 
     # Sort ascending by delta_cpc
-    df_sorted = df_k8.sort_values(by="delta_cpc").reset_index(drop=True)
+    df_sorted = df_canonical.sort_values(by="delta_cpc").reset_index(drop=True)
 
     cities = df_sorted["city_display"].values
     deltas = df_sorted["delta_cpc"].values

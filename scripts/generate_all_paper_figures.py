@@ -49,11 +49,19 @@ GRAY = "#7f7f7f"
 
 def generate_figure2():
     """Figure 2: Ordered per-city Delta CPC across all 50 test cities."""
-    csv_path = Path("results/k_sensitivity_v1/k_sensitivity_per_city.csv")
-    df = pd.read_csv(csv_path)
-    df_k8 = df[df["K"] == 8].copy()
-    df_k8["city_display"] = df_k8["city"].str.replace("_", " ")
-    df_sorted = df_k8.sort_values(by="delta_cpc").reset_index(drop=True)
+    json_path = Path("results/5fold_results.json")
+    with open(json_path, "r", encoding="utf-8") as f:
+        d5 = json.load(f)
+
+    df_canonical = pd.DataFrame([
+        {
+            "city": item["city"],
+            "delta_cpc": item["delta_city"],
+        }
+        for item in d5["city_level_results"]
+    ])
+    df_canonical["city_display"] = df_canonical["city"].str.replace("_", " ")
+    df_sorted = df_canonical.sort_values(by="delta_cpc").reset_index(drop=True)
 
     cities = df_sorted["city_display"].values
     deltas = df_sorted["delta_cpc"].values
