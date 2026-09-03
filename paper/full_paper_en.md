@@ -577,96 +577,139 @@ The comparison between $M_0$ and $M1_{\mathrm{city}}$ represents the primary exp
 
 Across all configurations, predictions are evaluated on the exact same observed positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ for the entire city.
 
----
+### 3.6.2 Evaluation Metrics
 
-### 3.6.2 Primary Evaluation Metric: Common Part of Commuters (CPC)
-
-The primary accuracy metric is the Common Part of Commuters (CPC), computed on positive interzonal pairs:
+The primary accuracy metric is the Common Part of Commuters (CPC), computed on the positive interzonal evaluation support:
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{c,ij}, \widehat{T}_{c,ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}}$$
 
-where the positive interzonal evaluation support is formally defined as:
+where the known positive interzonal evaluation support is formally defined as:
 
 $$\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.$$
 
-CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows. CPC is standard in spatial mobility modeling and OD reconstruction benchmarks [@lenormand2016comparison].
+CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows [@lenormand2016comparison].
 
-The incremental information value of $Y_D$ for city $c$ is measured by the paired gain:
+The paired performance change for city $c$ under model seed $s$ is defined as:
 
-$$\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)}) = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$$
+$$\Delta_{c,s} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0)}\right) = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$$
 
-A positive value indicates that conditioning on $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
-
----
-
-### 3.6.3 Aggregation Across Model Seeds and Cities
-
-To account for stochasticity in neural initialization and training optimization, each configuration is trained across three independent model seeds:
-
-$$\mathcal{S} = \{1, 10, 100\}$$
-
-For each city, paired performance differences are computed per seed and then averaged:
-
-$$\overline{\Delta\operatorname{CPC}}_c = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \left[ \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0) \right]$$
-
-The population-level headline estimand is defined as the macro-average across all 50 cities:
-
-$$\overline{\Delta\operatorname{CPC}} = \frac{1}{50} \sum_{c=1}^{50} \overline{\Delta\operatorname{CPC}}_c$$
-
-Macro-averaging assigns equal weight to each metropolitan area regardless of network size, number of tracts, or total travel demand. The primary estimand represents the average expected gain across diverse cities, rather than an unweighted average pooled across millions of OD pairs.
+A positive value indicates that conditioning on the target distance distribution $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
 
 ---
 
-### 3.6.4 Uncertainty Quantification and Statistical Hypothesis Testing
+### 3.6.3 Statistical Analysis and Uncertainty Quantification
 
-The 95% confidence interval for the population mean improvement is estimated via fold-stratified city-level bootstrap ($B=10,000$ resamples) [@efron1993bootstrap]. In each resample, cities are sampled with replacement within their fold strata from the set of city deltas $\left\{\overline{\Delta\operatorname{CPC}}_c\right\}_{c=1}^{50}$, and the macro-average is recomputed. Sampling at the city level maintains the city as the fundamental unit of statistical inference and avoids treating non-independent OD pairs within the same city as independent observations.
+#### City-level estimand and model-seed aggregation
+To account for stochasticity in neural initialization and training optimization, each neural architecture is trained across three independent model seeds $\mathcal{S} = \{1, 10, 100\}$.
 
-A two-sided paired Wilcoxon signed-rank test [@wilcoxon1945ranking] is conducted across the 50 city-level deltas:
+For each city $c$, baseline and calibrated predictions are evaluated paired within each model seed, and the paired performance differences are averaged across seeds:
 
-$$\left\{ \overline{\Delta\operatorname{CPC}}_c \right\}_{c=1}^{50}$$
+$$\Delta_c = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \Delta_{c,s} = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \left[ \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0) \right]$$
 
-The null hypothesis tests whether the median paired difference between $M1_{\mathrm{city}}$ and $M_0$ equals zero. This non-parametric test evaluates whether the observed directional improvement represents a systematic shift rather than random fluctuation around zero.
+The primary population-level headline estimand is defined as the macro-average across all $C = 50$ benchmark metropolitan areas:
+
+$$\overline{\Delta} = \frac{1}{C} \sum_{c=1}^{C} \Delta_c$$
+
+This macro-averaging protocol guarantees that:
+1. Each metropolitan area contributes exactly one unit of weight to the headline estimand, preventing megacities with hundreds of thousands of candidate OD pairs from dominating smaller urban regions;
+2. Baseline and calibrated predictions are compared paired within the same city and identical model seed before aggregation;
+3. The estimand measures the expected gain across heterogeneous cities, rather than an unweighted average pooled indiscriminately over millions of individual OD pairs.
+
+#### Fold-stratified city-level nonparametric bootstrap
+Uncertainty in the macro-average improvement $\overline{\Delta}$ is quantified using a fold-stratified city-level nonparametric bootstrap ($B = 10,000$ resamples, random seed fixed at 42 via `np.random.default_rng(42)`) [@efron1993bootstrap].
+
+In each bootstrap replicate $b \in \{1, \dots, B\}$, resampling is performed with replacement within each of the 5 cross-validation fold strata (sampling 10 cities with replacement from the 10 evaluation cities of that fold):
+
+$$\overline{\Delta}^{*(b)} = \frac{1}{C} \sum_{c \in \mathcal{C}^{*(b)}} \Delta_c, \qquad b = 1, \dots, B$$
+
+The 95% confidence interval is constructed via the empirical percentile method:
+
+$$\mathrm{CI}_{95\%} = \left[ Q_{0.025}\left(\overline{\Delta}^*\right), Q_{0.975}\left(\overline{\Delta}^*\right) \right]$$
+
+Crucially:
+* The resampling unit is strictly the metropolitan area ($C = 50$);
+* Individual OD pairs within a city are never resampled, avoiding invalid independence assumptions among spatially clustered links;
+* Baseline ($M_0$) and calibrated ($M_1$) results remain strictly paired within each resampled city;
+* Neural networks are not re-fitted during bootstrap resampling; the procedure resamples the pre-computed city-level paired deltas;
+* The bootstrap is fully nonparametric, requiring no distributional assumptions on flow volumes.
+
+#### Paired Wilcoxon signed-rank test
+To determine whether the directional gains represent a statistically significant shift rather than symmetric variation around zero, a two-sided paired Wilcoxon signed-rank test [@wilcoxon1945ranking] is conducted across the $N = 50$ city-level paired deltas $\{\Delta_c\}_{c=1}^{50}$.
+
+The null hypothesis posited is:
+
+$$H_0: \operatorname{median}(\Delta_c) = 0$$
+
+against the two-sided alternative:
+
+$$H_1: \operatorname{median}(\Delta_c) \neq 0$$
+
+The test statistic is evaluated using `scipy.stats.wilcoxon` with default zero-handling (discarding zero differences). The test operates strictly on the 50 paired city observations. The proportion of improved cities (win rate, e.g., 45/50) is reported as a descriptive statistic and does not substitute for formal rank-based hypothesis testing.
+
+#### Multiple-testing correction protocol
+The primary benchmark evaluation tests a single pre-specified confirmatory hypothesis ($M_1$ versus $M_0$ at $K = 8$), requiring no multiple-testing penalty.
+
+For secondary sensitivity investigations involving families of related hypotheses, the Holm-Bonferroni step-down procedure [@holm1979sequential] is applied to control the family-wise error rate (FWER) at level $\alpha = 0.05$:
+1. **Distance resolution family**: Corrected across the set of 9 secondary bin resolutions ($K \in \{2, 4, 6, 10, 12, 14, 16, 18, 20\}$) compared against the locked $K = 8$ anchor;
+2. **Noise robustness family**: Corrected across the set of synthetic perturbation levels $\epsilon \in \{0.00, \dots, 0.05\}$;
+3. **Direct-OD sampling family**: Corrected across the tested revealed sampling fractions $p \in \{0.05\%, \dots, 1.0\%\}$.
+
+Both unadjusted raw $p$-values and Holm-adjusted $p$-values are reported where multiple testing applies.
 
 ---
 
-### 3.6.5 Robustness and Diagnostic Stress Tests
+### 3.6.4 Robustness and Diagnostic Experiments
 
-Supplementary experiments investigate the operational boundaries and mechanisms governing the primary result:
-1. **Distance Resolution ($K$-Sensitivity)**: Varying distance partitions across $K \in \{2,4,6,8,10,12,14,16,18,20\}$. The nine secondary configurations are compared with the locked $K=8$ anchor using Holm's step-down family-wise error correction [@holm1979sequential].
-2. **Spatial Observational Granularity**: Comparing city-level ($M1_{\mathrm{city}}$) against origin-county grouped observations ($M1_{\mathrm{county}}$).
-3. **Observational Noise Tolerance**: Adding controlled synthetic Total Variation noise $\epsilon \in [0\%, 5\%]$ to $Y_D$ to identify breakdown thresholds.
-4. **Spatial Semantic Ordering**: Permuting the bin order of $Y_D$ to test whether distance alignment is mandatory.
-5. **Target Specificity Placebos**: Applying dose-matched donor distributions from incorrect cities and fold training-mean profiles.
-6. **Initialization Stability**: Replicating across independent model initializations (Seeds 1, 10, 100).
-7. **Architectural Generality**: Evaluating the Urban GNN and Node MLP neural backbones together with a classical gravity baseline.
+Supplementary diagnostic experiments evaluate the operational boundaries, failure modes, and mechanistic drivers of distance-binned calibration (addressing RQ2). These stress tests isolate specific information channels without modifying the primary benchmark estimand.
 
----
+#### Distance-bin resolution ($K$-Sensitivity)
+The distance continuum partition is varied across ten granularities:
 
-### 3.6.6 County-Level Spatial Observational Resolution Protocol
+$$K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$$
 
-Across the 50 urban benchmark datasets, 39 metropolitan areas contain tracts that map to a single county, whereas 11 metropolitan areas contain tracts distributed across two to seven counties (the multi-county group comprises Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee, and Atlanta).
+For each configuration $K$, bin edges are estimated strictly from training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ using empirical distance quantiles, and the target distribution $\mathbf{Y}_{D,c}^{(K)} \in \Delta^{K-1}$ is extracted. All other components—including frozen baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$, evaluation support $\Omega_{c,\mathrm{inter}}^+$, and ground-truth flows $t_{c,ij}$—remain strictly identical. Distance intervals with zero predicted mass are handled via active support conditioning $\mathcal{A}_c^{(m)}$. Multiple comparisons against the primary anchor ($K = 8$) are adjusted via Holm-Bonferroni correction.
 
-For the 39 single-county cities, all origin tracts belong to the exact same county group. Consequently, the county-level distance observation and the city-wide observation are mathematically equivalent:
+#### Observation-noise robustness
+To determine tolerance to observation inaccuracy, synthetic perturbation is injected into the active target distribution $\mathbf{p}_{\mathrm{active}}$. Perturbations are generated continuously along a random Gaussian vector $\mathbf{z} \in \mathbb{R}^{K_{\mathrm{act}}}$ on the probability simplex using softmax reweighting:
 
-$$\mathbf{Y}_{D,c,\ell} = \mathbf{Y}_{D,c},$$
+$$\log p_b(\sigma) = \log p_{c,b} + \sigma z_b, \qquad p_b(\sigma) = \frac{\exp(\log p_b(\sigma))}{\sum_{r} \exp(\log p_r(\sigma))}$$
 
-yielding an exact mathematical identity:
+A root-finding bisection solver determines the exact scaling parameter $\sigma(\epsilon) > 0$ such that the Total Variation (TV) error satisfies:
 
-$$M1_{\mathrm{county}} \equiv M1_{\mathrm{city}}, \qquad \Delta\operatorname{CPC}_{\mathrm{res},c} = 0$$
+$$\mathrm{TV}\left(\mathbf{p}(\sigma), \mathbf{p}_{\mathrm{active}}\right) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \left| p_b(\sigma) - p_{c,b} \right| = \epsilon$$
 
-where the incremental gain from spatial resolution refinement is defined as:
+Evaluations are conducted over a controlled grid of noise magnitudes:
 
-$$\Delta\operatorname{CPC}_{\mathrm{res},c} = \operatorname{CPC}_c(M1_{\mathrm{county}}) - \operatorname{CPC}_c(M1_{\mathrm{city}})$$
+$$\epsilon \in \{0.00, 0.01, 0.02, 0.03, 0.04, 0.05\}$$
 
-Thus, the 39 single-county cities serve as an invariant algorithmic sanity check: partitioning a city into a single trivial group cannot alter prediction outputs.
+This formulation guarantees that perturbed distributions remain valid probability vectors ($p_b \ge 0$, $\sum p_b = 1$) with exact TV displacement. Baseline predictions, evaluation supports, and model parameters are held strictly frozen. The observed empirical crossover threshold is interpreted as a characteristic of the benchmark rather than a universal physical constant.
 
-Empirical evidence regarding the informational benefit of county-level resolution arises from the 11 multi-county cities. For these metropolitan areas, each observation $\mathbf{Y}_{D,c,\ell}$ is constructed from trips originating in county $\ell$, while the final prediction is assembled and evaluated over the full positive support of the target city.
+#### Bin-order permutation
+To verify that calibration exploits genuine spatial decay semantics rather than superficial variance stretching, the elements of the active target distribution $\mathbf{p}_{\mathrm{active}}$ are subjected to random permutations across distance bins while keeping distance cutoffs $[a_{b-1}, a_b)$ and baseline predictions unchanged:
 
-Results are reported across two evaluation tiers:
-1. **Pooled Benchmark Tier ($N=50$ cities)**: Reflecting the expected average effect of providing county-level observations across the entire heterogeneous benchmark;
-2. **Multi-County Focus Tier ($n=11$ cities)**: Reflecting the empirical effect specifically where county-level grouping supplies genuine spatial granularity.
+$$\mathbf{Y}_{D,c}^{\mathrm{perm}} = \operatorname{Permute}\left(\mathbf{Y}_{D,c}\right)$$
 
-Because 39 cities produce structural zeros by construction, scientific interpretation of the incremental value of county-resolved observations is grounded primarily in the 11 multi-county cities.
+This intervention preserves the exact multiset of bin probabilities and total probability mass ($\sum Y_D = 1$), but scrambles their spatial distance associations. This test is conceptually distinct from varying random seeds.
+
+#### Donor-city placebos (Target specificity)
+To test whether calibration benefits require target-specific travel patterns or merely generic smooth deterrence priors, target distributions are replaced with three placebo donor variants:
+1. **Dose-Matched Donors**: For each target city $c$ and training donor $c' \in \mathcal{C}_{\mathrm{train}}^{(f)}$, log-odds adjustment ratios are rescaled so that the perturbation magnitude $D_D = \|\tilde{\mathbf{r}}_D\|_2$ matches the target's natural intervention dose $D_T = \|\tilde{\mathbf{r}}_T\|_2$;
+2. **In-Fold Unadjusted Donors**: Randomly selected donor distributions from within the same training fold without dose adjustment;
+3. **Fold Training-Mean Donor**: The empirical mean distribution $\bar{\mathbf{Y}}_{D,\mathrm{train}} = \frac{1}{|\mathcal{C}_{\mathrm{train}}^{(f)}|} \sum_{c' \in \mathcal{C}_{\mathrm{train}}^{(f)}} \mathbf{Y}_{D,c'}$ averaged across all 35 training cities of the fold.
+
+In all donor arms, baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$ and target support $\Omega_{c,\mathrm{inter}}^+$ remain frozen. Specificity gain is measured by $\Delta\operatorname{CPC}_c(Y_{D,c}) - \Delta\operatorname{CPC}_c(Y_{D,\mathrm{donor}})$.
+
+#### Spatial-resolution analysis (County-level conditioning)
+To investigate the effect of sub-metropolitan spatial resolution, city-wide calibration ($M1_{\mathrm{city}}$) is compared against origin-county conditioned calibration ($M1_{\mathrm{county}}$).
+
+Across the 50 benchmark cities, 39 metropolitan areas map to a single county, where origin-county conditioning is mathematically identical to city-wide calibration ($\mathbf{Y}_{D,c,\ell} \equiv \mathbf{Y}_{D,c}$), yielding $\Delta\operatorname{CPC}_{\mathrm{res},c} = 0$ as an invariant algorithmic sanity check. The remaining 11 multi-county metropolitan areas (Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee, and Atlanta) contain tracts spanning 2 to 7 counties and provide the genuine test of spatial resolution refinement. In all cases, calibrated predictions are evaluated over the identical city-wide positive support $\Omega_{c,\mathrm{inter}}^+$.
+
+#### Initialization and predictor robustness
+To establish that calibration performance is not idiosyncratic to a single neural initialization or model family, experiments are replicated across:
+1. **Three independent model initializations**: $\mathcal{S} = \{1, 10, 100\}$;
+2. **Three distinct predictor families**: Gravity-Informed Urban GNN (primary), Pairwise Node MLP (non-graph neural baseline), and Two-Parameter Power-Law Gravity (non-neural parametric baseline).
+
+The identical deterministic calibration operator is applied to the frozen baseline predictions of each predictor family without re-tuning.
 
 ---
 

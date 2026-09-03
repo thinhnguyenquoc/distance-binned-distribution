@@ -547,108 +547,145 @@ Across all configurations, predictions are evaluated on the exact same observed 
 
 *(Tiếng Việt: Nghiên cứu áp dụng giao thức kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị của Hoa Kỳ. Trong mỗi fold, 35 thành phố được dùng để huấn luyện, 5 thành phố dùng để lựa chọn mô hình (validation) và 10 thành phố dùng để đánh giá (testing). Mỗi thành phố xuất hiện trong tập kiểm tra đúng một lần, bao phủ toàn bộ 50 đô thị qua các fold. Đơn vị phân chia fold là toàn bộ thành phố, không phải các cặp OD, tract hoặc mẫu quan sát trong cùng một thành phố. Do đó, các cặp OD hoặc tract của cùng một thành phố không bị phân tán giữa training, validation và test mà nằm trọn vẹn trong một tập duy nhất của mỗi fold. Việc phân chia ở cấp thành phố này là điều kiện cần để hỗ trợ claim zero-shot liên thành phố. Các biên khoảng cách được tính riêng cho từng fold và chỉ sử dụng khoảng cách của các cặp OD thuộc tập thành phố huấn luyện. Sau khi huấn luyện hoàn tất, tham số của mô hình được giữ cố định trước khi dự báo trên các thành phố kiểm tra. Đối với mỗi thành phố mục tiêu, ba cấu hình được phân biệt: $M_0$ (dự báo zero-shot không sử dụng $Y_D$), $M1_{\mathrm{city}}$ (hiệu chỉnh bằng một $Y_D$ oracle ở cấp city), và $M1_{\mathrm{county}}$ (hiệu chỉnh bằng nhiều $Y_D$ oracle được phân nhóm theo county). So sánh giữa $M_0$ và $M1_{\mathrm{city}}$ là thí nghiệm chính nhằm trả lời liệu phân phối khoảng cách của thành phố mục tiêu có bổ sung thông tin cho dự báo zero-shot hay không (RQ1). So sánh giữa $M1_{\mathrm{city}}$ và $M1_{\mathrm{county}}$ cung cấp bằng chứng cho khía cạnh độ phân giải không gian của quan sát trong RQ2. Trong tất cả cấu hình, mô hình dự báo và được đánh giá trên cùng tập hỗ trợ dương $\Omega_{c,\mathrm{inter}}^+$ của toàn thành phố.)*
 
----
+### 3.6.2 Evaluation Metrics
+*(Tiếng Việt: **3.6.2. Thước đo đánh giá**)*
 
-### 3.6.2 Primary Evaluation Metric: Common Part of Commuters (CPC)
-
-The primary accuracy metric is the Common Part of Commuters (CPC), computed on positive interzonal pairs:
+The primary accuracy metric is the Common Part of Commuters (CPC), computed on the positive interzonal evaluation support:
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{c,ij}, \widehat{T}_{c,ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}}$$
 
-where the positive interzonal evaluation support is formally defined as:
+where the known positive interzonal evaluation support is formally defined as:
 
 $$\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.$$
 
-CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows. CPC is standard in spatial mobility modeling and OD reconstruction benchmarks [@lenormand2016comparison].
+CPC is bounded in $[0, 1]$, where values closer to 1 denote greater agreement between predicted and ground-truth flows [@lenormand2016comparison].
 
-The incremental information value of $Y_D$ for city $c$ is measured by the paired gain:
+The paired performance change for city $c$ under model seed $s$ is defined as:
 
-$$\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)}) = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$$
+$$\Delta_{c,s} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0)}\right) = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$$
 
-A positive value indicates that conditioning on $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
+A positive value indicates that conditioning on the target distance distribution $Y_D$ improves reconstruction accuracy over the zero-shot baseline on the same city, same support, and identical pre-trained network.
 
-*(Tiếng Việt: Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{c,ij}, \widehat{T}_{c,ij}) / (\sum_{(i,j)} t_{c,ij} + \sum_{(i,j)} \widehat{T}_{c,ij})$, trong đó tập hỗ trợ đánh giá liên vùng dương đã biết được định nghĩa chính thức là:
-$$
-\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.
-$$
-CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison]. Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)}) = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.)*
+*(Tiếng Việt: Thước đo độ chính xác chính là Common Part of Commuters (CPC), được tính trên tập hỗ trợ đánh giá liên vùng dương $\Omega_{c,\mathrm{inter}}^+ = \{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \}$. CPC nằm trong đoạn $[0, 1]$, trong đó giá trị gần 1 hơn thể hiện sự trùng khớp tốt hơn giữa luồng dự báo và luồng tham chiếu. Mức thay đổi hiệu năng ghép cặp cho thành phố $c$ dưới seed $s$ được định nghĩa là $\Delta_{c,s} = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$. Giá trị dương biểu thị rằng việc sử dụng phân phối khoảng cách mục tiêu $Y_D$ cải thiện độ chính xác so với baseline zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình đã huấn luyện.)*
 
 ---
 
-### 3.6.3 Aggregation Across Model Seeds and Cities
+### 3.6.3 Statistical Analysis and Uncertainty Quantification
+*(Tiếng Việt: **3.6.3. Phân tích thống kê và lượng hóa độ bất định**)*
 
-To account for stochasticity in neural initialization and training optimization, each configuration is trained across three independent model seeds:
+#### City-level estimand and model-seed aggregation
+To account for stochasticity in neural initialization and training optimization, each neural architecture is trained across three independent model seeds $\mathcal{S} = \{1, 10, 100\}$.
 
-$$\mathcal{S} = \{1, 10, 100\}$$
+For each city $c$, baseline and calibrated predictions are evaluated paired within each model seed, and the paired performance differences are averaged across seeds:
 
-For each city, paired performance differences are computed per seed and then averaged:
+$$\Delta_c = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \Delta_{c,s} = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \left[ \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0) \right]$$
 
-$$\overline{\Delta\operatorname{CPC}}_c = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \left[ \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0) \right]$$
+The primary population-level headline estimand is defined as the macro-average across all $C = 50$ benchmark metropolitan areas:
 
-The population-level headline estimand is defined as the macro-average across all 50 cities:
+$$\overline{\Delta} = \frac{1}{C} \sum_{c=1}^{C} \Delta_c$$
 
-$$\overline{\Delta\operatorname{CPC}} = \frac{1}{50} \sum_{c=1}^{50} \overline{\Delta\operatorname{CPC}}_c$$
+This macro-averaging protocol guarantees that:
+1. Each metropolitan area contributes exactly one unit of weight to the headline estimand, preventing megacities with hundreds of thousands of candidate OD pairs from dominating smaller urban regions;
+2. Baseline and calibrated predictions are compared paired within the same city and identical model seed before aggregation;
+3. The estimand measures the expected gain across heterogeneous cities, rather than an unweighted average pooled indiscriminately over millions of individual OD pairs.
 
-Macro-averaging assigns equal weight to each metropolitan area regardless of network size, number of tracts, or total travel demand. The primary estimand represents the average expected gain across diverse cities, rather than an unweighted average pooled across millions of OD pairs.
+#### Fold-stratified city-level nonparametric bootstrap
+Uncertainty in the macro-average improvement $\overline{\Delta}$ is quantified using a fold-stratified city-level nonparametric bootstrap ($B = 10,000$ resamples, random seed fixed at 42 via `np.random.default_rng(42)`) [@efron1993bootstrap].
 
-*(Tiếng Việt: Mỗi cấu hình được chạy với ba model seeds: $\mathcal{S}=\{1,10,100\}$. Đối với mỗi thành phố, chênh lệch CPC trước hết được tính riêng cho từng seed và sau đó lấy trung bình: $\overline{\Delta\operatorname{CPC}}_c = \frac{1}{|\mathcal{S}|}\sum_{s\in\mathcal{S}} [\operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)]$. Hiệu quả tổng thể được tính bằng macro-average trên 50 thành phố: $\overline{\Delta\operatorname{CPC}} = \frac{1}{50}\sum_{c=1}^{50}\overline{\Delta\operatorname{CPC}}_c$. Cách tổng hợp này trao trọng số như nhau cho mỗi thành phố, bất kể số tract, số cặp OD hoặc tổng số chuyến đi của thành phố đó. Vì vậy, estimand chính là mức cải thiện trung bình giữa các thành phố, không phải mức cải thiện trung bình giữa tất cả cặp OD gộp chung.)*
+In each bootstrap replicate $b \in \{1, \dots, B\}$, resampling is performed with replacement within each of the 5 cross-validation fold strata (sampling 10 cities with replacement from the 10 evaluation cities of that fold):
+
+$$\overline{\Delta}^{*(b)} = \frac{1}{C} \sum_{c \in \mathcal{C}^{*(b)}} \Delta_c, \qquad b = 1, \dots, B$$
+
+The 95% confidence interval is constructed via the empirical percentile method:
+
+$$\mathrm{CI}_{95\%} = \left[ Q_{0.025}\left(\overline{\Delta}^*\right), Q_{0.975}\left(\overline{\Delta}^*\right) \right]$$
+
+Crucially:
+* The resampling unit is strictly the metropolitan area ($C = 50$);
+* Individual OD pairs within a city are never resampled, avoiding invalid independence assumptions among spatially clustered links;
+* Baseline ($M_0$) and calibrated ($M_1$) results remain strictly paired within each resampled city;
+* Neural networks are not re-fitted during bootstrap resampling; the procedure resamples the pre-computed city-level paired deltas;
+* The bootstrap is fully nonparametric, requiring no distributional assumptions on flow volumes.
+
+#### Paired Wilcoxon signed-rank test
+To determine whether the directional gains represent a statistically significant shift rather than symmetric variation around zero, a two-sided paired Wilcoxon signed-rank test [@wilcoxon1945ranking] is conducted across the $N = 50$ city-level paired deltas $\{\Delta_c\}_{c=1}^{50}$.
+
+The null hypothesis posited is:
+
+$$H_0: \operatorname{median}(\Delta_c) = 0$$
+
+against the two-sided alternative:
+
+$$H_1: \operatorname{median}(\Delta_c) \neq 0$$
+
+The test statistic is evaluated using `scipy.stats.wilcoxon` with default zero-handling (discarding zero differences). The test operates strictly on the 50 paired city observations. The proportion of improved cities (win rate, e.g., 45/50) is reported as a descriptive statistic and does not substitute for formal rank-based hypothesis testing.
+
+#### Multiple-testing correction protocol
+The primary benchmark evaluation tests a single pre-specified confirmatory hypothesis ($M_1$ versus $M_0$ at $K = 8$), requiring no multiple-testing penalty.
+
+For secondary sensitivity investigations involving families of related hypotheses, the Holm-Bonferroni step-down procedure [@holm1979sequential] is applied to control the family-wise error rate (FWER) at level $\alpha = 0.05$:
+1. **Distance resolution family**: Corrected across the set of 9 secondary bin resolutions ($K \in \{2, 4, 6, 10, 12, 14, 16, 18, 20\}$) compared against the locked $K = 8$ anchor;
+2. **Noise robustness family**: Corrected across the set of synthetic perturbation levels $\epsilon \in \{0.00, \dots, 0.05\}$;
+3. **Direct-OD sampling family**: Corrected across the tested revealed sampling fractions $p \in \{0.05\%, \dots, 1.0\%\}$.
+
+Both unadjusted raw $p$-values and Holm-adjusted $p$-values are reported where multiple testing applies.
+
+*(Tiếng Việt: **Phân tích thống kê và lượng hóa độ bất định**: (1) **Estimand cấp thành phố**: Với mỗi thành phố $c$, chênh lệch CPC ghép cặp được tính riêng cho từng seed rồi lấy trung bình qua 3 model seeds $\mathcal{S}=\{1,10,100\}$: $\Delta_c = \frac{1}{|\mathcal{S}|}\sum_{s\in\mathcal{S}} [\operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)]$. Estimand chính là macro-average trên 50 thành phố: $\overline{\Delta} = \frac{1}{C}\sum_{c=1}^C \Delta_c$, đảm bảo mỗi thành phố đóng góp trọng số như nhau và các cặp luồng được so sánh ghép cặp; (2) **Nonparametric bootstrap cấp thành phố**: Độ bất định được lượng hóa bằng bootstrap phân tầng theo fold với $B = 10,000$ lần lấy mẫu có hoàn lại (seed ngẫu nhiên 42). Đơn vị lấy mẫu là toàn bộ thành phố, không lấy mẫu từng cặp OD, không coi các cặp OD là độc lập, không huấn luyện lại mô hình trong từng replicate, và khoảng tin cậy 95% được xác định bằng phương pháp percentile $[Q_{0.025}, Q_{0.975}]$; (3) **Kiểm định Wilcoxon signed-rank ghép cặp**: Thực hiện kiểm định hai phía trên 50 quan sát $\Delta_c$ với giả thuyết không $H_0: \operatorname{median}(\Delta_c) = 0$. Số thành phố cải thiện (win rate) là thống kê mô tả, không thay thế kiểm định thứ bậc; (4) **Hiệu chỉnh multiple testing**: Estimand chính không cần hiệu chỉnh; các họ giả thuyết phân tích độ nhạy (quét $K$, quét nhiễu $\epsilon$, quét mẫu trực tiếp $p$) được kiểm soát FWER ở mức $\alpha = 0.05$ bằng quy trình Holm-Bonferroni step-down.)*
 
 ---
 
-### 3.6.4 Uncertainty Quantification and Statistical Hypothesis Testing
+### 3.6.4 Robustness and Diagnostic Experiments
+*(Tiếng Việt: **3.6.4. Các thí nghiệm độ bền và chẩn đoán cơ chế**)*
 
-The 95% confidence interval for the population mean improvement is estimated via fold-stratified city-level bootstrap ($B=10,000$ resamples) [@efron1993bootstrap]. In each resample, cities are sampled with replacement within their fold strata from the set of city deltas $\left\{\overline{\Delta\operatorname{CPC}}_c\right\}_{c=1}^{50}$, and the macro-average is recomputed. Sampling at the city level maintains the city as the fundamental unit of statistical inference and avoids treating non-independent OD pairs within the same city as independent observations.
+Supplementary diagnostic experiments evaluate the operational boundaries, failure modes, and mechanistic drivers of distance-binned calibration (addressing RQ2). These stress tests isolate specific information channels without modifying the primary benchmark estimand.
 
-A two-sided paired Wilcoxon signed-rank test [@wilcoxon1945ranking] is conducted across the 50 city-level deltas:
+#### Distance-bin resolution ($K$-Sensitivity)
+The distance continuum partition is varied across ten granularities:
 
-$$\left\{ \overline{\Delta\operatorname{CPC}}_c \right\}_{c=1}^{50}$$
+$$K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$$
 
-The null hypothesis tests whether the median paired difference between $M1_{\mathrm{city}}$ and $M_0$ equals zero. This non-parametric test evaluates whether the observed directional improvement represents a systematic shift rather than random fluctuation around zero.
+For each configuration $K$, bin edges are estimated strictly from training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ using empirical distance quantiles, and the target distribution $\mathbf{Y}_{D,c}^{(K)} \in \Delta^{K-1}$ is extracted. All other components—including frozen baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$, evaluation support $\Omega_{c,\mathrm{inter}}^+$, and ground-truth flows $t_{c,ij}$—remain strictly identical. Distance intervals with zero predicted mass are handled via active support conditioning $\mathcal{A}_c^{(m)}$. Multiple comparisons against the primary anchor ($K = 8$) are adjusted via Holm-Bonferroni correction.
 
-*(Tiếng Việt: Khoảng tin cậy 95% của mức cải thiện trung bình được ước lượng bằng bootstrap phân tầng theo fold ở cấp city ($B=10,000$) [@efron1993bootstrap]. Trong mỗi lần bootstrap, các thành phố được lấy mẫu có hoàn lại trong từng fold từ tập các giá trị $\overline{\Delta\operatorname{CPC}}_c$, sau đó tính lại macro-average. Việc lấy mẫu ở cấp city giữ city là đơn vị suy luận thống kê và tránh xem hàng triệu cặp OD trong cùng thành phố như các quan sát độc lập. Kiểm định Wilcoxon signed-rank ghép cặp [@wilcoxon1945ranking] được áp dụng trên 50 giá trị $\{\overline{\Delta\operatorname{CPC}}_c\}_{c=1}^{50}$. Giả thuyết không cho rằng phân phối chênh lệch giữa $M1_{\mathrm{city}}$ và $M_0$ có trung vị bằng 0. Kiểm định này bổ sung cho khoảng tin cậy bootstrap bằng cách đánh giá liệu hướng cải thiện quan sát được có phù hợp với biến động ngẫu nhiên quanh 0 hay không.)*
+#### Observation-noise robustness
+To determine tolerance to observation inaccuracy, synthetic perturbation is injected into the active target distribution $\mathbf{p}_{\mathrm{active}}$. Perturbations are generated continuously along a random Gaussian vector $\mathbf{z} \in \mathbb{R}^{K_{\mathrm{act}}}$ on the probability simplex using softmax reweighting:
 
----
+$$\log p_b(\sigma) = \log p_{c,b} + \sigma z_b, \qquad p_b(\sigma) = \frac{\exp(\log p_b(\sigma))}{\sum_{r} \exp(\log p_r(\sigma))}$$
 
-### 3.6.5 Robustness and Diagnostic Stress Tests
+A root-finding bisection solver determines the exact scaling parameter $\sigma(\epsilon) > 0$ such that the Total Variation (TV) error satisfies:
 
-Supplementary experiments investigate the operational boundaries and mechanisms governing the primary result:
-1. **Distance Resolution ($K$-Sensitivity)**: Varying distance partitions across $K \in \{2,4,6,8,10,12,14,16,18,20\}$. The nine secondary configurations are compared with the locked $K=8$ anchor using Holm's step-down family-wise error correction [@holm1979sequential].
-2. **Spatial Observational Granularity**: Comparing city-level ($M1_{\mathrm{city}}$) against origin-county grouped observations ($M1_{\mathrm{county}}$).
-3. **Observational Noise Tolerance**: Adding controlled synthetic Total Variation noise $\epsilon \in [0\%, 5\%]$ to $Y_D$ to identify breakdown thresholds.
-4. **Spatial Semantic Ordering**: Permuting the bin order of $Y_D$ to test whether distance alignment is mandatory.
-5. **Target Specificity Placebos**: Applying dose-matched donor distributions from incorrect cities and fold training-mean profiles.
-6. **Initialization Stability**: Replicating across independent model initializations (Seeds 1, 10, 100).
-7. **Architectural Generality**: Evaluating the Urban GNN and Node MLP neural backbones together with a classical gravity baseline.
+$$\mathrm{TV}\left(\mathbf{p}(\sigma), \mathbf{p}_{\mathrm{active}}\right) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \left| p_b(\sigma) - p_{c,b} \right| = \epsilon$$
 
-*(Tiếng Việt: Các phân tích bổ sung được thiết kế để kiểm tra phạm vi và cơ chế của kết quả chính: (1) Độ phân giải khoảng cách: thay đổi $K \in \{2,4,6,8,10,12,14,16,18,20\}$ và so sánh chín cấu hình phụ với mốc khóa $K=8$ bằng hiệu chỉnh Holm step-down [@holm1979sequential]; (2) Độ phân giải không gian: so sánh $M1_{\mathrm{city}}$ với $M1_{\mathrm{county}}$; (3) Chất lượng quan sát: thêm nhiễu Total Variation có kiểm soát vào $Y_D$; (4) Thứ tự khoảng cách: hoán vị các khoảng của $Y_D$; (5) Tính đặc thù theo thành phố: sử dụng phân phối của thành phố khác trong matched-placebo; (6) Độ bền theo khởi tạo: lặp lại với các model seeds 1, 10, 100; và (7) Độ bền theo kiến trúc: đánh giá Urban GNN và Node MLP cùng với gravity baseline cổ điển. Các phân tích này không thay đổi estimand chính; chúng xác định ranh giới vận hành và cơ chế khoa học của phương pháp.)*
+Evaluations are conducted over a controlled grid of noise magnitudes:
 
----
+$$\epsilon \in \{0.00, 0.01, 0.02, 0.03, 0.04, 0.05\}$$
 
-### 3.6.6 County-Level Spatial Observational Resolution Protocol
-*(Tiếng Việt: **3.6.6. Phân tích độ phân giải không gian theo county**)*
+This formulation guarantees that perturbed distributions remain valid probability vectors ($p_b \ge 0$, $\sum p_b = 1$) with exact TV displacement. Baseline predictions, evaluation supports, and model parameters are held strictly frozen. The observed empirical crossover threshold is interpreted as a characteristic of the benchmark rather than a universal physical constant.
 
-Across the 50 urban benchmark datasets, 39 metropolitan areas contain tracts that map to a single county, whereas 11 metropolitan areas contain tracts distributed across two to seven counties (the multi-county group comprises Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee, and Atlanta).
+#### Bin-order permutation
+To verify that calibration exploits genuine spatial decay semantics rather than superficial variance stretching, the elements of the active target distribution $\mathbf{p}_{\mathrm{active}}$ are subjected to random permutations across distance bins while keeping distance cutoffs $[a_{b-1}, a_b)$ and baseline predictions unchanged:
 
-For the 39 single-county cities, all origin tracts belong to the exact same county group. Consequently, the county-level distance observation and the city-wide observation are mathematically equivalent:
+$$\mathbf{Y}_{D,c}^{\mathrm{perm}} = \operatorname{Permute}\left(\mathbf{Y}_{D,c}\right)$$
 
-$$\mathbf{Y}_{D,c,\ell} = \mathbf{Y}_{D,c},$$
+This intervention preserves the exact multiset of bin probabilities and total probability mass ($\sum Y_D = 1$), but scrambles their spatial distance associations. This test is conceptually distinct from varying random seeds.
 
-yielding an exact mathematical identity:
+#### Donor-city placebos (Target specificity)
+To test whether calibration benefits require target-specific travel patterns or merely generic smooth deterrence priors, target distributions are replaced with three placebo donor variants:
+1. **Dose-Matched Donors**: For each target city $c$ and training donor $c' \in \mathcal{C}_{\mathrm{train}}^{(f)}$, log-odds adjustment ratios are rescaled so that the perturbation magnitude $D_D = \|\tilde{\mathbf{r}}_D\|_2$ matches the target's natural intervention dose $D_T = \|\tilde{\mathbf{r}}_T\|_2$;
+2. **In-Fold Unadjusted Donors**: Randomly selected donor distributions from within the same training fold without dose adjustment;
+3. **Fold Training-Mean Donor**: The empirical mean distribution $\bar{\mathbf{Y}}_{D,\mathrm{train}} = \frac{1}{|\mathcal{C}_{\mathrm{train}}^{(f)}|} \sum_{c' \in \mathcal{C}_{\mathrm{train}}^{(f)}} \mathbf{Y}_{D,c'}$ averaged across all 35 training cities of the fold.
 
-$$M1_{\mathrm{county}} \equiv M1_{\mathrm{city}}, \qquad \Delta\operatorname{CPC}_{\mathrm{res},c} = 0$$
+In all donor arms, baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$ and target support $\Omega_{c,\mathrm{inter}}^+$ remain frozen. Specificity gain is measured by $\Delta\operatorname{CPC}_c(Y_{D,c}) - \Delta\operatorname{CPC}_c(Y_{D,\mathrm{donor}})$.
 
-where the incremental gain from spatial resolution refinement is defined as:
+#### Spatial-resolution analysis (County-level conditioning)
+To investigate the effect of sub-metropolitan spatial resolution, city-wide calibration ($M1_{\mathrm{city}}$) is compared against origin-county conditioned calibration ($M1_{\mathrm{county}}$).
 
-$$\Delta\operatorname{CPC}_{\mathrm{res},c} = \operatorname{CPC}_c(M1_{\mathrm{county}}) - \operatorname{CPC}_c(M1_{\mathrm{city}})$$
+Across the 50 benchmark cities, 39 metropolitan areas map to a single county, where origin-county conditioning is mathematically identical to city-wide calibration ($\mathbf{Y}_{D,c,\ell} \equiv \mathbf{Y}_{D,c}$), yielding $\Delta\operatorname{CPC}_{\mathrm{res},c} = 0$ as an invariant algorithmic sanity check. The remaining 11 multi-county metropolitan areas (Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee, and Atlanta) contain tracts spanning 2 to 7 counties and provide the genuine test of spatial resolution refinement. In all cases, calibrated predictions are evaluated over the identical city-wide positive support $\Omega_{c,\mathrm{inter}}^+$.
 
-Thus, the 39 single-county cities serve as an invariant algorithmic sanity check: partitioning a city into a single trivial group cannot alter prediction outputs.
+#### Initialization and predictor robustness
+To establish that calibration performance is not idiosyncratic to a single neural initialization or model family, experiments are replicated across:
+1. **Three independent model initializations**: $\mathcal{S} = \{1, 10, 100\}$;
+2. **Three distinct predictor families**: Gravity-Informed Urban GNN (primary), Pairwise Node MLP (non-graph neural baseline), and Two-Parameter Power-Law Gravity (non-neural parametric baseline).
 
-Empirical evidence regarding the informational benefit of county-level resolution arises from the 11 multi-county cities. For these metropolitan areas, each observation $\mathbf{Y}_{D,c,\ell}$ is constructed from trips originating in county $\ell$, while the final prediction is assembled and evaluated over the full positive support of the target city.
+The identical deterministic calibration operator is applied to the frozen baseline predictions of each predictor family without re-tuning.
 
-Results are reported across two evaluation tiers:
-1. **Pooled Benchmark Tier ($N=50$ cities)**: Reflecting the expected average effect of providing county-level observations across the entire heterogeneous benchmark;
-2. **Multi-County Focus Tier ($n=11$ cities)**: Reflecting the empirical effect specifically where county-level grouping supplies genuine spatial granularity.
-
-Because 39 cities produce structural zeros by construction, scientific interpretation of the incremental value of county-resolved observations is grounded primarily in the 11 multi-county cities.
-
-*(Tiếng Việt: Trong 50 bộ dữ liệu đô thị, 39 thành phố chỉ chứa các tract được gán vào một county, trong khi 11 thành phố chứa tract thuộc từ hai đến bảy counties. Nhóm multi-county gồm Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee và Atlanta. Đối với 39 single-county cities, tất cả origin tract thuộc cùng một nhóm county. Vì vậy, phân phối quan sát theo county và phân phối quan sát theo city là tương đương: $\mathbf{Y}_{D,c,\ell} = \mathbf{Y}_{D,c}$, dẫn đến $M1_{\mathrm{county}} \equiv M1_{\mathrm{city}}$ và $\Delta\operatorname{CPC}_{\mathrm{res},c}=0$. Trong đó, hiệu quả của việc tăng độ phân giải được định nghĩa là $\Delta\operatorname{CPC}_{\mathrm{res},c} = \operatorname{CPC}_c(M1_{\mathrm{county}}) - \operatorname{CPC}_c(M1_{\mathrm{city}})$. Do đó, 39 single-county cities đóng vai trò như một kiểm tra bất biến của thuật toán: việc chia một city thành đúng một nhóm không được làm thay đổi kết quả. Thông tin thực nghiệm về lợi ích của độ phân giải county đến từ 11 multi-county cities. Đối với các thành phố này, mỗi phân phối $\mathbf{Y}_{D,c,\ell}$ được xây dựng từ những chuyến đi có origin thuộc county $\ell$, còn dự báo cuối cùng vẫn được ghép và đánh giá trên toàn bộ positive support của city. Kết quả được báo cáo theo hai phạm vi: (1) kết quả pooled trên toàn bộ 50 thành phố, phản ánh hiệu quả trung bình của việc cung cấp quan sát county-level trên toàn benchmark; và (2) kết quả riêng trên 11 multi-county cities, phản ánh hiệu quả tại những thành phố mà county-level thực sự cung cấp độ phân giải bổ sung. Do 39 thành phố tạo ra chênh lệch bằng 0 theo cấu trúc, diễn giải về giá trị của county-level observation chủ yếu dựa trên nhóm 11 multi-county cities.)*
+*(Tiếng Việt: **Các thí nghiệm độ bền và chẩn đoán cơ chế**: (1) **Độ phân giải khoảng cách ($K$-Sensitivity)**: Khảo sát $K \in \{2, 4, \dots, 20\}$ với các biên khoảng cách ước lượng từ training cities, giữ nguyên baseline và hiệu chỉnh Holm cho 9 so sánh phụ với mốc $K=8$; (2) **Độ bền trước nhiễu quan sát**: Thêm nhiễu Total Variation $\epsilon \in [0\%, 5\%]$ vào $\mathbf{p}_{\mathrm{active}}$ dọc theo hướng Gaussian trên simplex, sử dụng nghiệm bisection để đạt chính xác khoảng cách TV; (3) **Hoán vị thứ tự bin**: Hoán vị ngẫu nhiên xác suất các khoảng của $Y_D$ trong khi giữ nguyên biên cự ly để kiểm tra ngữ nghĩa suy giảm khoảng cách; (4) **Donor-city placebos**: Thay thế phân phối mục tiêu bằng donor đã khớp liều lượng ($D_T$), donor ngẫu nhiên trong fold, và phân phối trung bình của tập huấn luyện; (5) **Phân tích độ phân giải không gian**: So sánh $M1_{\mathrm{city}}$ với $M1_{\mathrm{county}}$, trong đó 39 single-county cities đóng vai trò kiểm tra bất biến thuật toán ($\Delta\operatorname{CPC}_{\mathrm{res}}=0$) và 11 multi-county cities cung cấp kiểm định thực nghiệm thực sự; (6) **Độ bền theo seed và kiến trúc**: Đánh giá trên 3 seeds $\{1, 10, 100\}$ và 3 họ mô hình (GNN, MLP, Gravity) nhằm khẳng định tính ổn định tổng quát.)*

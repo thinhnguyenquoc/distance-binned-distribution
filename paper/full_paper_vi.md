@@ -376,18 +376,18 @@ Mục tiêu tham số này không sử dụng likelihood Poisson, không sử d�
 
 ### 3.5.7. Huấn luyện, lựa chọn mô hình và đóng băng tham số
 
-#### Bộ tối ưu neural và cơ chế điều hòa
-Cả hai mô hình neural (`UrbanGNN` và `NodeMLP`) đều dùng chung một quy trình tối ưu hóa. Các cập nhật tham số được thực hiện bằng bộ tối ưu AdamW [@loshchilov2019adamw] (`torch.optim.AdamW`) với tốc độ học ban đầu $\eta = 2 \times 10^{-3}$ và hệ số weight decay tách rời $\lambda_{\mathrm{wd}} = 10^{-4}$. Quá trình điều hòa (regularization) được thực thi hoàn toàn thông qua cơ chế decoupled weight decay của bộ tối ưu; không có số hạng phạt $\ell_2$ tường minh $\lambda \|\theta\|_2^2$ nào được cộng thêm vào hàm mất mát. Các mô-đun Dropout ($p = 0.1$) và LayerNorm tích hợp trong từng tầng mạng đóng vai trò điều hòa kiến trúc nội tại. Quá trình tối ưu sử dụng batching theo từng thành phố (chuyển toàn bộ $|\Omega_{c,\mathrm{inter}}^+|$ cặp liên vùng dương của một thành phố trong mỗi bước tính forward/backward), cập nhật gradient tuần tự qua 35 thành phố huấn luyện trong mỗi epoch với ngân sách tối đa 200 epoch. Gradient được cắt chuẩn Euclidean ở mức tối đa 5.0 trước mỗi bước cập nhật. Trọng số mô hình được khởi tạo trên ba seed ngẫu nhiên độc lập $\mathcal{S} = \{1, 10, 100\}$.
+#### Bộ tối ưu neural và cấu hình siêu tham số
+Cả hai mô hình neural (`UrbanGNN` và `NodeMLP`) đều dùng chung một quy trình huấn luyện. Các cập nhật tham số được thực hiện bằng bộ tối ưu AdamW [@loshchilov2019adamw] (`torch.optim.AdamW`) với tốc độ học ban đầu $\eta = 2 \times 10^{-3}$ và hệ số weight decay tách rời $\lambda_{\mathrm{wd}} = 10^{-4}$. Quá trình điều hòa (regularization) được thực thi hoàn toàn thông qua cơ chế decoupled weight decay của bộ tối ưu; không có số hạng phạt $\ell_2$ tường minh $\lambda \|\theta\|_2^2$ nào được cộng thêm vào hàm mất mát. Giá trị weight decay được cố định tiên nghiệm không qua tìm kiếm lưới (grid search). Các mô-đun Dropout ($p = 0.1$) và LayerNorm tích hợp trong từng tầng mạng đóng vai trò điều hòa kiến trúc nội tại trong các lượt lan truyền thuận. Quá trình tối ưu sử dụng batching theo từng thành phố (chuyển toàn bộ $|\Omega_{c,\mathrm{inter}}^+|$ cặp liên vùng dương của một thành phố trong mỗi bước tính forward/backward), cập nhật gradient tuần tự qua 35 thành phố huấn luyện trong mỗi epoch với ngân sách tối đa 200 epoch. Gradient được cắt chuẩn Euclidean ở mức tối đa 5.0 trước mỗi bước cập nhật. Trọng số mô hình được khởi tạo trên ba seed ngẫu nhiên độc lập $\mathcal{S} = \{1, 10, 100\}$.
 
-#### Khớp tham số mô hình gravity
-Mô hình gravity hai tham số độc lập không yêu cầu bộ tối ưu lặp dựa trên gradient, không cần giá trị khởi tạo, không cần ngưỡng hội tụ và không có số lần khởi tạo lại (zero restarts). Hai tham số toàn cục $\boldsymbol{\beta} = [G, \alpha]^T$ được ước lượng bằng cách giải hệ phương trình chuẩn OLS log-tuyến tính không ràng buộc qua hàm `np.linalg.lstsq(rcond=None)` trên tập gộp các cặp liên vùng dương của $\mathcal{C}_{\mathrm{train}}^{(f)}$. Do ma trận $\mathbf{X}^T \mathbf{X}$ luôn có điều kiện tốt qua tất cả các fold, bước đại số tuyến tính dạng nghiệm đóng này mang lại nghiệm chính xác, duy nhất. Số mũ suy giảm khoảng cách $\alpha$ không bị ràng buộc tham số khi khớp và về mặt thực nghiệm luôn đạt $\alpha \approx 1.09 - 1.22 > 0$ trên các fold kiểm định chéo. Việc ước lượng được thực hiện độc lập một lần duy nhất cho mỗi fold trên các thành phố nguồn $\mathcal{C}_{\mathrm{train}}^{(f)}$ và tuyệt đối không bao giờ được ước lượng lại bằng dữ liệu luồng của thành phố mục tiêu.
+#### Ước lượng tham số mô hình gravity
+Hai tham số của mô hình gravity cổ điển ($G \in \mathbb{R}$ và $\alpha > 0$) là các tham số mô hình học được (learned model parameters) được ước lượng bằng hồi quy bình phương tối thiểu thông thường (OLS). Chúng không phải là siêu tham số điều hòa. Việc ước lượng giảm thiểu tổng bình phương phần dư log-cường độ trên tập gộp các cặp liên vùng dương của các thành phố huấn luyện $\mathcal{C}_{\mathrm{train}}^{(f)}$ thông qua hàm `np.linalg.lstsq(rcond=None)`. Do hệ phương trình chuẩn này sở hữu nghiệm đại số tuyến tính dạng giải tích đóng, quy trình không cần bộ tối ưu lặp dựa trên gradient, không cần giá trị khởi tạo, không cần ngưỡng hội tụ và không có số lần khởi tạo lại (zero restarts). Số mũ suy giảm khoảng cách $\alpha$ không bị ràng buộc khi khớp và về mặt thực nghiệm luôn đạt $\alpha \approx 1.09 - 1.22 > 0$ trên các fold kiểm định chéo. Hai tham số này được khớp độc lập một lần duy nhất cho mỗi fold trên các thành phố nguồn $\mathcal{C}_{\mathrm{train}}^{(f)}$ và được giữ đóng băng trong suốt quá trình đánh giá kiểm tra.
 
 #### Giao thức lựa chọn checkpoint trên tập validation
-Quá trình lựa chọn mô hình được điều khiển độc quyền bởi hiệu năng trên tập validation $\mathcal{C}_{\mathrm{val}}^{(f)}$:
+Quá trình lựa chọn mô hình tuân thủ nghiêm ngặt giao thức kiểm định chéo cấp đô thị (35 thành phố huấn luyện, 5 thành phố validation, và 10 thành phố kiểm tra trong mỗi fold; xem Mục 3.6.1 để biết định nghĩa chi tiết). Hoàn toàn không có các fold phụ theo tract, sub-city hay vùng xuất phát trong cùng một thành phố, bảo đảm trọn vẹn bản chất zero-shot liên thành phố:
 
-1. **Mục tiêu huấn luyện đối lập Tiêu chí validation**: Đại lượng được AdamW tối thiểu hóa trên $\mathcal{C}_{\mathrm{train}}^{(f)}$ là negative log-likelihood ZTNB $\mathcal{L}_{\mathrm{neural}}$. Ngược lại, việc theo dõi checkpoint và điều chỉnh siêu tham số trên $\mathcal{C}_{\mathrm{val}}^{(f)}$ được điều khiển độc quyền bởi chỉ số **Validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$) trung bình vĩ mô trên tập hỗ trợ liên vùng dương của các thành phố validation:
+1. **Mục tiêu huấn luyện đối lập Tiêu chí validation**: Đại lượng được AdamW tối thiểu hóa trên $\mathcal{C}_{\mathrm{train}}^{(f)}$ là negative log-likelihood ZTNB $\mathcal{L}_{\mathrm{neural}}$. Ngược lại, việc theo dõi checkpoint và kích hoạt dừng sớm trên $\mathcal{C}_{\mathrm{val}}^{(f)}$ được điều khiển độc quyền bởi chỉ số **Validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$) trung bình vĩ mô trên tập hỗ trợ liên vùng dương của 5 thành phố validation:
    $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
-   Validation loss không được dùng để lựa chọn mô hình, nhằm tránh việc phụ thuộc quá mức vào mật độ xác suất khi estimand cuối cùng là mức độ trùng khớp khối lượng tương tác.
+   Validation loss không được dùng để lựa chọn checkpoint, nhằm tránh việc phụ thuộc quá mức vào mật độ xác suất khi estimand mục tiêu là mức độ trùng khớp khối lượng tương tác không gian.
 2. **Điều chỉnh Learning Rate**: Scheduler `ReduceLROnPlateau` giám sát $\operatorname{CPC}_{\mathrm{val}}$ ở chế độ `max`. Khi $\operatorname{CPC}_{\mathrm{val}}$ không cải thiện tối thiểu $\min\_delta = 10^{-4}$ trong $4$ epoch liên tiếp, learning rate giảm đi một nửa (chặn dưới tại $\min\_lr = 10^{-5}$).
 3. **Early Stopping**: Quá trình huấn luyện dừng sớm nếu validation CPC không đạt đỉnh mới trong $15$ epoch liên tiếp (patience $= 15$). Trọng số mô hình ở epoch có $\operatorname{CPC}_{\mathrm{val}}$ cao nhất được phục hồi làm mô hình huấn luyện cuối cùng $\theta^*$.
 4. **Loại trừ thành phố kiểm tra**: Các thành phố kiểm tra $\mathcal{C}_{\mathrm{test}}^{(f)}$ hoàn toàn không tham gia vào quá trình tinh chỉnh siêu tham số, lựa chọn checkpoint hay quyết định dừng sớm.
@@ -397,33 +397,37 @@ Sau khi hoàn thành bước lựa chọn checkpoint trên các thành phố val
 
 Khi thực hiện suy luận zero-shot, thành phố mục tiêu $c$ chỉ cung cấp các dữ liệu không gian tĩnh được phép: tọa độ tâm tract $\mathbf{s}_{c,i}$, đặc trưng bối cảnh đô thị đã chuẩn hóa $\mathbf{x}_{c,i}$, và dân số tract $P_{c,i}$, được đánh giá trên tập hỗ trợ liên vùng dương đã biết $\Omega_{c,\mathrm{inter}}^+$. Cường độ luồng thực $t_{c,ij}$ của thành phố mục tiêu không bao giờ được truy cập trong lượt truyền thẳng này. Đầu ra của giai đoạn này tạo thành dự báo baseline zero-shot trước hiệu chỉnh $\widehat{T}_{c,ij}^{(0,m)}$ (điều kiện $M_0$). Dự báo baseline được tạo ra hoàn toàn độc lập trước khi quan sát theo khoảng khoảng cách của thành phố mục tiêu được đưa vào toán tử hiệu chỉnh.
 
-#### Bảng 3: Cấu hình tối ưu hóa, siêu tham số huấn luyện và giao thức lựa chọn mô hình
+#### Bảng 3: Phân loại trạng thái siêu tham số và cấu hình tối ưu hóa
 
-| Thành phần | Thuộc tính / Thiết lập | Giá trị thực nghiệm | Nguồn gốc lựa chọn |
-| :--- | :--- | :---: | :--- |
-| **Bộ tối ưu GNN / MLP** | Thuật toán | AdamW (`torch.optim.AdamW`) | Cấu hình chuẩn cố định |
-| **Learning rate** | Tốc độ học ban đầu ($\eta$) | $2 \times 10^{-3}$ | Cấu hình chuẩn cố định |
-| **Weight decay** | Hệ số suy giảm tham số $\ell_2$ tách rời | $10^{-4}$ | Cấu hình chuẩn cố định |
-| **Batch size** | Nhóm tối ưu hóa | 1 thành phố / bước ($|\Omega_{c,\mathrm{inter}}^+|$ cặp) | Cố định (batching cấp đô thị) |
-| **Số epoch tối đa** | Ngân sách huấn luyện | 200 epochs | Ngân sách cố định |
-| **Lịch trình learning rate** | Cơ chế giảm tốc độ học | `ReduceLROnPlateau` (factor $0.5$, patience 4) | Giám sát validation ($\operatorname{CPC}_{\mathrm{val}}$) |
-| **Early-stopping patience** | Điều kiện dừng hội tụ | 15 epoch không cải thiện $\ge 10^{-4}$ | Cố định (giám sát validation) |
-| **Gradient clipping** | Chuẩn Euclidean tối đa | $5.0$ | Bảo đảm ổn định số học cố định |
-| **Kích thước ẩn** | Chiều vector biểu diễn | $64$ | Cố định (tương đương giữa GNN & MLP) |
-| **Số tầng neural** | Độ sâu mạng & điều hòa nội tại | 2 tầng (dropout $p = 0.1$) | Cấu trúc kiến trúc cố định |
-| **Solver của gravity** | Thuật toán khớp | Ordinary Least Squares (`np.linalg.lstsq`) | Nghiệm đóng đại số tuyến tính cố định |
-| **Miền tham số gravity** | Ràng buộc tham số | $G \in \mathbb{R}$, $\alpha > 0$ | Cố định (OLS log-tuyến tính tự do) |
-| **Lựa chọn checkpoint** | Thước đo chọn mô hình | Macro-averaged interzonal $\operatorname{CPC}_{\mathrm{val}}$ | Tập validation ($\mathcal{C}_{\mathrm{val}}^{(f)}$) |
-| **Model seeds** | Khởi tạo ngẫu nhiên | $\mathcal{S} = \{1, 10, 100\}$ | Cố định (3 seed/fold $\times$ 5 folds) |
-| **Cường độ hiệu chỉnh** | Số mũ phản hồi $q$ | $q = 1.0$ (hiệu chỉnh toàn phần) | Mặc định giải tích cố định ($M_1$) |
+| Thành phần | Thuộc tính / Thiết lập | Giá trị hoặc tập ứng viên | Trạng thái (Status) | Dữ liệu lựa chọn |
+| :--- | :--- | :---: | :---: | :--- |
+| **Bộ tối ưu neural** | Thuật toán | AdamW (`torch.optim.AdamW`) | Fixed | Cấu hình học sâu chuẩn |
+| **Learning rate** | Tốc độ học ban đầu ($\eta$) | $2 \times 10^{-3}$ | Fixed | Cấu hình học sâu chuẩn |
+| **Weight decay** | Co cụm tham số tách rời ($\lambda_{\mathrm{wd}}$) | $10^{-4}$ | Fixed | Cấu hình học sâu chuẩn |
+| **Dropout** | Tỷ lệ dropout các tầng ($p$) | $0.1$ | Fixed | Cấu hình học sâu chuẩn |
+| **Batch size** | Nhóm tối ưu hóa | 1 thành phố / bước ($|\Omega_{c,\mathrm{inter}}^+|$ cặp) | Fixed | Batching cấp đô thị |
+| **Số epoch tối đa** | Ngân sách huấn luyện | 200 epochs | Fixed | Ngân sách tính toán cố định |
+| **Early-stopping patience** | Tiêu chuẩn dừng hội tụ | 15 epoch không cải thiện $\ge 10^{-4}$ | Fixed | Giám sát validation ($\mathcal{C}_{\mathrm{val}}^{(f)}$) |
+| **Lựa chọn checkpoint** | Thước đo chọn mô hình | Macro-averaged interzonal $\operatorname{CPC}_{\mathrm{val}}$ | Selected on validation cities | Tập validation ($\mathcal{C}_{\mathrm{val}}^{(f)}$) |
+| **Model seeds** | Khởi tạo ngẫu nhiên | $\mathcal{S} = \{1, 10, 100\}$ | Fixed | Seed khởi tạo ngẫu nhiên |
+| **Solver của gravity** | Thuật toán khớp | Ordinary Least Squares (`np.linalg.lstsq`) | Fixed | Nghiệm giải tích nghiệm đóng |
+| **Miền tham số gravity** | Hệ số chặn $G$, độ suy giảm $\alpha$ | $G \in \mathbb{R}$, $\alpha > 0$ (OLS tự do) | Learned on training cities | Tập huấn luyện ($\mathcal{C}_{\mathrm{train}}^{(f)}$) |
+| **Số khoảng cự ly chính** | Số bin khoảng cách di chuyển ($K$) | $K = 8$ | Fixed | Phân vị xác định trước |
+| **Cường độ hiệu chỉnh** | Miền điều biến & giá trị chuẩn | $\mathcal{Q} = [0, 1]$ (chuẩn $q = 1.0$) | Fixed | Mặc định giải tích ($M_1$) |
+| **Quy tắc chọn $q$** | Tiêu chí xác định $q$ | Khớp giải tích ($q = 1.0$; không grid search) | Fixed | Cố định không chỉnh trên test |
+| **Độ phân giải khoảng cách**| Quét độ mịn khoảng cách | $K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$ | Sensitivity setting | Phân tích độ nhạy (Mục 4.3) |
+| **Nhiễu tổng hợp TV** | Biên độ nhiễu $(\epsilon)$ | $\epsilon \in \{0.00, 0.01, 0.02, 0.03, 0.04, 0.05\}$ | Sensitivity setting | Phân tích độ nhạy (Mục 4.4) |
+| **Tham số mô hình neural** | Trọng số $\theta_m$, độ phân tán $\log \phi$| Tensor tham số liên tục | Learned on training cities | Tập huấn luyện ($\mathcal{C}_{\mathrm{train}}^{(f)}$) |
 
-*Ghi chú: Toàn bộ tham số neural và gravity được khớp hoàn toàn trên 35 thành phố huấn luyện của từng fold và được đóng băng vĩnh viễn trước khi đánh giá. Quan sát luồng của thành phố mục tiêu không bao giờ được dùng để lựa chọn mô hình, khớp tham số hay dừng sớm.*
+*Ghi chú: Theo phân loại của giao thức: "Fixed" là các cấu hình được chỉ định tiên nghiệm trước thí nghiệm; "Learned on training cities" là các đại lượng được tối ưu hóa hoàn toàn trên $\mathcal{C}_{\mathrm{train}}^{(f)}$; "Selected on validation cities" là các quyết định checkpoint được điều khiển bởi $\mathcal{C}_{\mathrm{val}}^{(f)}$; và "Sensitivity setting" là các biến thể chỉ được đánh giá trong các phân tích độ bền vững phụ. Quan sát luồng của thành phố kiểm tra tuyệt đối không bao giờ được dùng để học tham số, lựa chọn validation hay tinh chỉnh siêu tham số.*
 
 ---
 
 ### 3.5.8. Quan sát theo khoảng khoảng cách của thành phố mục tiêu
 
-Miền khoảng cách liên tục được chia thành $K$ khoảng $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) sử dụng các phân vị cặp luồng ước lượng hoàn toàn từ các thành phố huấn luyện ($a_0 = 0, a_K = \infty$). Đối với thành phố mục tiêu $c$, tập hợp các cặp liên vùng ứng viên rơi vào khoảng khoảng cách $b$ là:
+Miền khoảng cách liên tục được chia thành $K$ khoảng $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) sử dụng các phân vị cặp luồng ước lượng hoàn toàn từ các thành phố huấn luyện ($a_0 = 0, a_K = \infty$). Cấu hình chính của benchmark khóa số khoảng cự ly di chuyển ở mức $K = 8$ tiên nghiệm (`K_MOVE = 8`). Các độ phân giải thay thế $K \in \{2, 4, 6, 10, 12, 14, 16, 18, 20\}$ được đánh giá độc quyền dưới dạng các thiết lập phân tích độ nhạy (sensitivity settings) trong Mục 4.3, chứ không phải được chọn thông qua tìm kiếm lưới trên tập validation.
+
+Đối với thành phố mục tiêu $c$, tập hợp các cặp liên vùng ứng viên rơi vào khoảng khoảng cách $b$ là:
 
 $$\mathcal{B}_{c,b} = \left\{ (i,j) \in \Omega_{c,\mathrm{inter}}^+ : a_{b-1} \le d_{c,ij} < a_b \right\}$$
 
@@ -454,9 +458,8 @@ Cho bất kỳ mô hình dự báo baseline đóng băng nào $m \in \{\text{GNN
 5. **Điều kiện hóa phân phối mục tiêu trên tập hỗ trợ hoạt động**:
    $$p_{c,b}^{\mathrm{cond}} = \frac{Y_{D,c,b} \mathbb{I}(b \in \mathcal{A}_c^{(m)})}{\sum_{r \in \mathcal{A}_c^{(m)}} Y_{D,c,r}}$$
 
-6. **Tỷ lệ phản hồi mềm và trọng số**: Với $b \in \mathcal{A}_c^{(m)}$, tỷ lệ hiệu chỉnh thô được điều biến bởi tham số $q \in [0, 1]$:
+6. **Tỷ lệ phản hồi mềm và trọng số**: Với $b \in \mathcal{A}_c^{(m)}$, tỷ lệ hiệu chỉnh thô được điều biến bởi tham số cường độ hiệu chỉnh $q \in [0, 1]$:
    $$w_{c,b}(q) = \left( \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{D,c,b}^{(0,m)}} \right)^q$$
-   Tại $q = 0$, $w_{c,b} = 1$, giữ nguyên các dự báo ($M_0$ baseline). Tại $q = 1$, toán tử thực hiện khớp tỷ lệ hoàn toàn. Các giá trị trung gian $q \in (0, 1)$ mang lại sự co kéo liên tục về phía phân phối mục tiêu. Mốc chuẩn chính khóa $q = 1.0$ mà không tinh chỉnh trên các thành phố kiểm tra.
 
 7. **Hệ số chuẩn hóa bảo toàn tổng khối lượng**:
    $$Z_c^{(m)}(q) = \sum_{r \in \mathcal{A}_c^{(m)}} \widehat{Y}_{D,c,r}^{(0,m)} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c^{(m)}(q)}$$
@@ -472,7 +475,12 @@ Cho bất kỳ mô hình dự báo baseline đóng băng nào $m \in \{\text{GNN
 
 Đối với biến thể độ phân giải không gian dưới cấp vùng đô thị (`M1_county`), chính toán tử này được áp dụng độc lập cho từng nhóm origin-county $\Omega_{c,\ell}^+ = \{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\}$ bằng phân phối cấp county $\mathbf{Y}_{D,c,\ell}$, tạo ra $\widehat{\mathbf{T}}_c^{\mathrm{county},m}$.
 
-**Nguyên lý hậu xử lý phi lặp (Non-Iterative Post-Processing Principle)**: Hiệu chỉnh là một toán tử hậu xử lý giải tích nghiệm đóng thuần túy, không phải là một bước tái huấn luyện (retraining), fine-tuning hay tối ưu hóa tham số. Trọng số theo khoảng $s_{c,b}(q)$ được tính toán xác định từ dự báo baseline $\widehat{\mathbf{T}}_c^{(0,m)}$ và quan sát tổng hợp mục tiêu $\mathbf{Y}_{D,c}$. Toán tử hiệu chỉnh không thực hiện bất kỳ bước lan truyền ngược hay gradient descent nào, không cập nhật trọng số neural, không fit lại số mũ gravity, và không đưa vào bất kỳ bài toán tối ưu hóa tham số nào trên thành phố mục tiêu. Hệ số phản hồi hiệu chỉnh $q \in [0, 1]$ được khóa tiên nghiệm tại $q = 1.0$ cho mốc chuẩn chính ($M_1$) mà không tinh chỉnh trên các thành phố kiểm tra.
+#### Lựa chọn cường độ hiệu chỉnh (Calibration-Strength Selection)
+Tham số $q \in [0, 1]$ kiểm soát cường độ phản hồi của phép hiệu chỉnh: tại $q = 0$, $w_{c,b} = 1$, giữ nguyên dự báo không đổi ($\widehat{T}^{(1)} \equiv \widehat{T}^{(0)}$, baseline $M_0$); tại $q = 1$, toán tử thực thi khớp tỷ lệ hoàn toàn với phân phối mục tiêu. Các giá trị trung gian $q \in (0, 1)$ mang lại sự co kéo liên tục.
+
+Trong toàn bộ pipeline thực nghiệm, cường độ hiệu chỉnh được **ấn định tiên nghiệm cố định tại $q = 1.0$** (`Q_CALIB = 1.0` trên tất cả thí nghiệm). Tham số $q$ không được lựa chọn thông qua tìm kiếm lưới thực nghiệm trên tập validation, cũng không được tinh chỉnh theo từng fold, từng backbone hay từng thành phố. Đặc biệt, lưu lượng thực ground truth $t_{c,ij}$ của thành phố kiểm tra, giá trị CPC của thành phố kiểm tra và các chỉ số hiệu năng tổng hợp trên tập kiểm tra bị nghiêm cấm tuyệt đối tham gia vào việc lựa chọn hoặc tinh chỉnh $q$. Tuân thủ thiết kế xác định trước này, $q = 1.0$ được giữ nguyên vẹn và bất biến qua mọi fold kiểm định chéo, mọi thành phố kiểm tra và mọi kiến trúc mô hình.
+
+**Nguyên lý hậu xử lý phi lặp (Non-Iterative Post-Processing Principle)**: Hiệu chỉnh là một toán tử hậu xử lý giải tích nghiệm đóng thuần túy, không phải là một bước tái huấn luyện (retraining), fine-tuning hay tối ưu hóa tham số. Trọng số theo khoảng $s_{c,b}(q)$ được tính toán xác định từ dự báo baseline $\widehat{\mathbf{T}}_c^{(0,m)}$ và quan sát tổng hợp mục tiêu $\mathbf{Y}_{D,c}$. Toán tử hiệu chỉnh không thực hiện bất kỳ bước lan truyền ngược hay gradient descent nào, không cập nhật trọng số neural, không fit lại số mũ gravity, và không đưa vào bất kỳ bài toán tối ưu hóa tham số nào trên thành phố mục tiêu.
 
 ---
 
@@ -509,55 +517,139 @@ Các biên khoảng cách được tính riêng cho từng fold và chỉ sử d
 
 ---
 
-### 3.6.2. Thước đo đánh giá chính: Common Part of Commuters (CPC)
+### 3.6.2. Thước đo đánh giá
+
+Thước đo độ chính xác chính là Common Part of Commuters (CPC), được tính trên tập hỗ trợ đánh giá liên vùng dương:
 
 $$\operatorname{CPC}_c = \frac{2 \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \min\left(t_{c,ij}, \widehat{T}_{c,ij}\right)}{\sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} t_{c,ij} + \sum_{(i,j) \in \Omega_{c,\mathrm{inter}}^+} \widehat{T}_{c,ij}}$$
 
-$$\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)}) = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$$
+trong đó tập hỗ trợ đánh giá liên vùng dương đã biết được định nghĩa chính thức là:
 
-Chỉ số chính là Common Part of Commuters (CPC), được tính trên các cặp OD liên vùng thuộc tập hỗ trợ dương: $\operatorname{CPC}_c = 2\sum_{(i,j)\in\Omega_{c,\mathrm{inter}}^+} \min(t_{c,ij}, \widehat{T}_{c,ij}) / (\sum_{(i,j)} t_{c,ij} + \sum_{(i,j)} \widehat{T}_{c,ij})$, trong đó tập hỗ trợ đánh giá liên vùng dương đã biết được định nghĩa chính thức là:
-$$
-\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.
-$$
-CPC nằm trong khoảng từ 0 đến 1; giá trị lớn hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison]. Hiệu quả bổ sung của $Y_D$ tại thành phố $c$ được xác định bằng chênh lệch ghép cặp: $\Delta\operatorname{CPC}_c = \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(1)}) - \operatorname{CPC}_c(\widehat{\mathbf{T}}_c^{(0)}) = \operatorname{CPC}_c(M1_{\mathrm{city}}) - \operatorname{CPC}_c(M_0)$. Giá trị dương cho thấy việc sử dụng $Y_D$ cải thiện kết quả so với dự báo zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình nền.
+$$\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.$$
 
----
+CPC nằm trong đoạn $[0, 1]$, trong đó các giá trị gần 1 hơn biểu thị mức độ trùng khớp cao hơn giữa luồng dự báo và luồng tham chiếu [@lenormand2016comparison].
 
-### 3.6.3. Tổng hợp qua các model seed và thành phố
+Mức thay đổi hiệu năng ghép cặp cho thành phố $c$ dưới seed $s$ được định nghĩa là:
 
-$$\mathcal{S} = \{1, 10, 100\}$$
+$$\Delta_{c,s} = \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(1)}\right) - \operatorname{CPC}_{c,s}\left(\widehat{\mathbf{T}}_c^{(0)}\right) = \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)$$
 
-$$\overline{\Delta\operatorname{CPC}}_c = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \left[ \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0) \right]$$
-
-$$\overline{\Delta\operatorname{CPC}} = \frac{1}{50} \sum_{c=1}^{50} \overline{\Delta\operatorname{CPC}}_c$$
-
-Mỗi cấu hình được chạy với ba model seeds: $\mathcal{S}=\{1,10,100\}$. Đối với mỗi thành phố, chênh lệch CPC trước hết được tính riêng cho từng seed và sau đó lấy trung bình: $\overline{\Delta\operatorname{CPC}}_c = \frac{1}{|\mathcal{S}|}\sum_{s\in\mathcal{S}} [\operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0)]$. Hiệu quả tổng thể được tính bằng macro-average trên 50 thành phố: $\overline{\Delta\operatorname{CPC}} = \frac{1}{50}\sum_{c=1}^{50}\overline{\Delta\operatorname{CPC}}_c$. Cách tổng hợp này trao trọng số như nhau cho mỗi thành phố, bất kể số tract, số cặp OD hoặc tổng số chuyến đi của thành phố đó. Vì vậy, estimand chính là mức cải thiện trung bình giữa các thành phố, không phải mức cải thiện trung bình giữa tất cả cặp OD gộp chung.
+Giá trị dương biểu thị rằng việc sử dụng phân phối khoảng cách mục tiêu $Y_D$ cải thiện độ chính xác tái tạo so với baseline zero-shot trên cùng thành phố, cùng tập hỗ trợ và cùng mô hình đã huấn luyện.
 
 ---
 
-### 3.6.4. Lượng hóa độ bất định và kiểm định giả thuyết thống kê
+### 3.6.3. Phân tích thống kê và lượng hóa độ bất định
 
-$$\left\{ \overline{\Delta\operatorname{CPC}}_c \right\}_{c=1}^{50}$$
+#### Estimand cấp thành phố và tổng hợp qua các model seed
+Nhằm tính đến tính ngẫu nhiên trong khởi tạo tham số neural và quá trình tối ưu hóa huấn luyện, mỗi kiến trúc mạng neural được huấn luyện trên ba seed ngẫu nhiên độc lập $\mathcal{S} = \{1, 10, 100\}$.
 
-Khoảng tin cậy 95% của mức cải thiện trung bình được ước lượng bằng bootstrap phân tầng theo fold ở cấp city ($B=10,000$) [@efron1993bootstrap]. Trong mỗi lần bootstrap, các thành phố được lấy mẫu có hoàn lại trong từng fold từ tập các giá trị $\overline{\Delta\operatorname{CPC}}_c$, sau đó tính lại macro-average. Việc lấy mẫu ở cấp city giữ city là đơn vị suy luận thống kê và tránh xem hàng triệu cặp OD trong cùng thành phố như các quan sát độc lập. Kiểm định Wilcoxon signed-rank ghép cặp [@wilcoxon1945ranking] được áp dụng trên 50 giá trị $\{\overline{\Delta\operatorname{CPC}}_c\}_{c=1}^{50}$. Giả thuyết không cho rằng phân phối chênh lệch giữa $M1_{\mathrm{city}}$ và $M_0$ có trung vị bằng 0. Kiểm định này bổ sung cho khoảng tin cậy bootstrap bằng cách đánh giá liệu hướng cải thiện quan sát được có phù hợp với biến động ngẫu nhiên quanh 0 hay không.
+Đối với mỗi thành phố $c$, dự báo baseline và dự báo sau hiệu chỉnh được đánh giá ghép cặp trong từng model seed, và mức chênh lệch hiệu năng ghép cặp được lấy trung bình qua các seed:
+
+$$\Delta_c = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \Delta_{c,s} = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} \left[ \operatorname{CPC}_{c,s}(M1_{\mathrm{city}}) - \operatorname{CPC}_{c,s}(M_0) \right]$$
+
+Estimand chính ở cấp quần thể được định nghĩa là giá trị trung bình vĩ mô (macro-average) trên toàn bộ $C = 50$ vùng đô thị trong benchmark:
+
+$$\overline{\Delta} = \frac{1}{C} \sum_{c=1}^{C} \Delta_c$$
+
+Giao thức macro-average này bảo đảm rằng:
+1. Mỗi vùng đô thị đóng góp chính xác một đơn vị trọng số vào estimand chính, ngăn các đại đô thị có hàng trăm nghìn cặp OD ứng viên áp đảo các vùng đô thị nhỏ hơn;
+2. Dự báo baseline và hiệu chỉnh được so sánh ghép cặp trong cùng thành phố và cùng model seed trước khi tổng hợp;
+3. Estimand đo lường mức cải thiện kỳ vọng giữa các thành phố không đồng nhất, thay vì là một giá trị trung bình không trọng số gộp chung trên hàng triệu cặp OD riêng lẻ.
+
+#### Nonparametric bootstrap phân tầng theo fold ở cấp thành phố
+Độ bất định của mức cải thiện trung bình vĩ mô $\overline{\Delta}$ được lượng hóa bằng phương pháp nonparametric bootstrap phân tầng theo fold ở cấp thành phố ($B = 10,000$ lần lấy mẫu, seed ngẫu nhiên cố định tại 42 thông qua `np.random.default_rng(42)`) [@efron1993bootstrap].
+
+Trong mỗi lần lặp bootstrap $b \in \{1, \dots, B\}$, việc tái lấy mẫu có hoàn lại được thực hiện độc lập bên trong từng phân tầng của 5 fold kiểm định chéo (lấy mẫu 10 thành phố có hoàn lại từ 10 thành phố kiểm tra của fold đó):
+
+$$\overline{\Delta}^{*(b)} = \frac{1}{C} \sum_{c \in \mathcal{C}^{*(b)}} \Delta_c, \qquad b = 1, \dots, B$$
+
+Khoảng tin cậy 95% được xây dựng bằng phương pháp phân vị thực nghiệm (percentile method):
+
+$$\mathrm{CI}_{95\%} = \left[ Q_{0.025}\left(\overline{\Delta}^*\right), Q_{0.975}\left(\overline{\Delta}^*\right) \right]$$
+
+Các nguyên tắc thực thi cốt lõi:
+* Đơn vị tái lấy mẫu nghiêm ngặt là toàn bộ vùng đô thị ($C = 50$);
+* Từng cặp OD riêng lẻ trong một thành phố tuyệt đối không bao giờ bị lấy mẫu độc lập, tránh các giả định sai lầm về tính độc lập giữa các liên kết có tương quan không gian;
+* Kết quả baseline ($M_0$) và hiệu chỉnh ($M_1$) luôn được giữ ghép cặp chặt chẽ trong mỗi thành phố được lấy mẫu;
+* Các mạng neural không bị huấn luyện lại trong các lần lặp bootstrap; quy trình tái lấy mẫu trực tiếp trên các giá trị deltas ghép cặp cấp thành phố đã tính sẵn;
+* Phương pháp bootstrap hoàn toàn phi tham số, không đặt bất kỳ giả định phân phối nào về thể tích lưu lượng chuyến đi.
+
+#### Kiểm định Wilcoxon signed-rank ghép cặp
+Để kiểm tra xem mức cải thiện có chiều hướng quan sát được có đại diện cho một sự chuyển dịch có ý nghĩa thống kê hay chỉ là dao động đối xứng quanh 0, một kiểm định Wilcoxon signed-rank ghép cặp hai phía [@wilcoxon1945ranking] được thực hiện trên $N = 50$ chênh lệch ghép cặp cấp thành phố $\{\Delta_c\}_{c=1}^{50}$.
+
+Giả thuyết không được đặt ra là:
+
+$$H_0: \operatorname{median}(\Delta_c) = 0$$
+
+đối lập với giả thuyết hai phía:
+
+$$H_1: \operatorname{median}(\Delta_c) \neq 0$$
+
+Giá trị thống kê kiểm định được tính bằng `scipy.stats.wilcoxon` với cơ chế xử lý mặc định cho hiệu số bằng 0 (loại bỏ các hiệu số bằng 0). Kiểm định vận hành độc quyền trên 50 quan sát cấp thành phố ghép cặp. Tỷ lệ thành phố cải thiện (win rate, ví dụ 45/50) được báo cáo như một đại lượng thống kê mô tả và không thay thế cho kiểm định giả thuyết thứ bậc chính quy.
+
+#### Giao thức hiệu chỉnh kiểm định bội (Multiple-testing correction)
+Đánh giá benchmark chính kiểm định một giả thuyết khẳng định duy nhất được chỉ định trước ($M_1$ so với $M_0$ tại $K = 8$), do đó không yêu cầu phạt hiệu chỉnh kiểm định bội.
+
+Đối với các khảo sát độ nhạy phụ bao gồm các họ giả thuyết liên quan, quy trình Holm-Bonferroni step-down [@holm1979sequential] được áp dụng để kiểm soát tỷ lệ sai số theo họ (FWER) ở mức $\alpha = 0.05$:
+1. **Họ độ phân giải khoảng cách**: Hiệu chỉnh trên tập hợp 9 độ phân giải khoảng cách phụ ($K \in \{2, 4, 6, 10, 12, 14, 16, 18, 20\}$) so sánh với mốc neo khóa $K = 8$;
+2. **Họ độ bền trước nhiễu**: Hiệu chỉnh trên tập hợp các mức nhiễu tổng hợp $\epsilon \in \{0.00, \dots, 0.05\}$;
+3. **Họ lấy mẫu trực tiếp OD**: Hiệu chỉnh trên các tỷ lệ phần trăm quan sát được tiết lộ $p \in \{0.05\%, \dots, 1.0\%\}$.
+
+Cả giá trị $p$ thô chưa hiệu chỉnh và giá trị $p$ đã hiệu chỉnh theo Holm đều được báo cáo ở những nơi áp dụng kiểm định bội.
 
 ---
 
-### 3.6.5. Các kiểm tra độ bền và stress test chẩn đoán
+### 3.6.4. Các thí nghiệm độ bền và chẩn đoán cơ chế
 
-Các phân tích bổ sung được thiết kế để kiểm tra phạm vi và cơ chế của kết quả chính: (1) Độ phân giải khoảng cách: thay đổi $K \in \{2,4,6,8,10,12,14,16,18,20\}$ và so sánh chín cấu hình phụ với mốc khóa $K=8$ bằng hiệu chỉnh Holm step-down [@holm1979sequential]; (2) Độ phân giải không gian: so sánh $M1_{\mathrm{city}}$ với $M1_{\mathrm{county}}$; (3) Chất lượng quan sát: thêm nhiễu Total Variation có kiểm soát vào $Y_D$; (4) Thứ tự khoảng cách: hoán vị các khoảng của $Y_D$; (5) Tính đặc thù theo thành phố: sử dụng phân phối của thành phố khác trong matched-placebo; (6) Độ bền theo khởi tạo: lặp lại với các model seeds 1, 10, 100; và (7) Độ bền theo kiến trúc: đánh giá Urban GNN và Node MLP cùng với gravity baseline cổ điển. Các phân tích này không thay đổi estimand chính; chúng xác định ranh giới vận hành và cơ chế khoa học của phương pháp.
+Các thí nghiệm chẩn đoán bổ sung nhằm đánh giá ranh giới vận hành, các trường hợp suy biến và động lực cơ chế của phép hiệu chỉnh theo nhóm khoảng cách (trả lời RQ2). Các thử nghiệm sức chịu tải (stress tests) này cô lập các kênh thông tin cụ thể mà không làm thay đổi estimand chính của benchmark.
 
----
+#### Độ phân giải khoảng cách ($K$-Sensitivity)
+Sự phân vùng miền khoảng cách liên tục được thay đổi trên mười mức độ mịn:
 
-### 3.6.6. Phân tích độ phân giải không gian theo county
+$$K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$$
 
-$$\mathbf{Y}_{D,c,\ell} = \mathbf{Y}_{D,c},$$
+Với mỗi cấu hình $K$, các biên khoảng cách được ước lượng độc quyền từ các thành phố huấn luyện $\mathcal{C}_{\mathrm{train}}^{(f)}$ bằng các phân vị khoảng cách thực nghiệm, và phân phối mục tiêu $\mathbf{Y}_{D,c}^{(K)} \in \Delta^{K-1}$ được trích xuất. Toàn bộ các thành phần khác—bao gồm dự báo baseline đóng băng $\widehat{\mathbf{T}}_c^{(0)}$, tập hỗ trợ đánh giá $\Omega_{c,\mathrm{inter}}^+$, và lưu lượng ground truth $t_{c,ij}$—được giữ đồng nhất tuyệt đối. Các khoảng khoảng cách có khối lượng dự báo bằng 0 được xử lý qua cơ chế điều kiện hóa trên tập hỗ trợ hoạt động $\mathcal{A}_c^{(m)}$. Các so sánh bội với mốc chính ($K = 8$) được điều chỉnh qua hiệu chỉnh Holm-Bonferroni.
 
-$$M1_{\mathrm{county}} \equiv M1_{\mathrm{city}}, \qquad \Delta\operatorname{CPC}_{\mathrm{res},c} = 0$$
+#### Độ bền trước nhiễu quan sát
+Để xác định mức độ chịu đựng trước sự thiếu chính xác của dữ liệu quan sát, nhiễu tổng hợp được đưa vào phân phối mục tiêu hoạt động $\mathbf{p}_{\mathrm{active}}$. Các nhiễu loạn được tạo ra liên tục dọc theo vector Gaussian ngẫu nhiên $\mathbf{z} \in \mathbb{R}^{K_{\mathrm{act}}}$ trên simplex xác suất bằng cách tái cân bằng softmax:
 
-$$\Delta\operatorname{CPC}_{\mathrm{res},c} = \operatorname{CPC}_c(M1_{\mathrm{county}}) - \operatorname{CPC}_c(M1_{\mathrm{city}})$$
+$$\log p_b(\sigma) = \log p_{c,b} + \sigma z_b, \qquad p_b(\sigma) = \frac{\exp(\log p_b(\sigma))}{\sum_{r} \exp(\log p_r(\sigma))}$$
 
-Trong 50 bộ dữ liệu đô thị, 39 thành phố chỉ chứa các tract được gán vào một county, trong khi 11 thành phố chứa tract thuộc từ hai đến bảy counties. Nhóm multi-county gồm Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee và Atlanta. Đối với 39 single-county cities, tất cả origin tract thuộc cùng một nhóm county. Vì vậy, phân phối quan sát theo county và phân phối quan sát theo city là tương đương: $\mathbf{Y}_{D,c,\ell} = \mathbf{Y}_{D,c}$, dẫn đến $M1_{\mathrm{county}} \equiv M1_{\mathrm{city}}$ và $\Delta\operatorname{CPC}_{\mathrm{res},c}=0$. Trong đó, hiệu quả của việc tăng độ phân giải được định nghĩa là $\Delta\operatorname{CPC}_{\mathrm{res},c} = \operatorname{CPC}_c(M1_{\mathrm{county}}) - \operatorname{CPC}_c(M1_{\mathrm{city}})$. Do đó, 39 single-county cities đóng vai trò như một kiểm tra bất biến của thuật toán: việc chia một city thành đúng một nhóm không được làm thay đổi kết quả. Thông tin thực nghiệm về lợi ích của độ phân giải county đến từ 11 multi-county cities. Đối với các thành phố này, mỗi phân phối $\mathbf{Y}_{D,c,\ell}$ được xây dựng từ những chuyến đi có origin thuộc county $\ell$, còn dự báo cuối cùng vẫn được ghép và đánh giá trên toàn bộ positive support của city. Kết quả được báo cáo theo hai phạm vi: (1) kết quả pooled trên toàn bộ 50 thành phố, phản ánh hiệu quả trung bình của việc cung cấp quan sát county-level trên toàn benchmark; và (2) kết quả riêng trên 11 multi-county cities, phản ánh hiệu quả tại những thành phố mà county-level thực sự cung cấp độ phân giải bổ sung. Do 39 thành phố tạo ra chênh lệch bằng 0 theo cấu trúc, diễn giải về giá trị của county-level observation chủ yếu dựa trên nhóm 11 multi-county cities.
+Bộ giải chia đôi tìm nghiệm (bisection root-finder) xác định chính xác tham số tỷ lệ $\sigma(\epsilon) > 0$ sao cho sai số Total Variation (TV) thỏa mãn:
+
+$$\mathrm{TV}\left(\mathbf{p}(\sigma), \mathbf{p}_{\mathrm{active}}\right) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \left| p_b(\sigma) - p_{c,b} \right| = \epsilon$$
+
+Các đánh giá được thực hiện trên lưới kiểm soát biên độ nhiễu:
+
+$$\epsilon \in \{0.00, 0.01, 0.02, 0.03, 0.04, 0.05\}$$
+
+Công thức này bảo đảm rằng các phân phối bị nhiễu vẫn là các vector xác suất hợp lệ ($p_b \ge 0$, $\sum p_b = 1$) với độ dời TV chính xác. Dự báo baseline, tập hỗ trợ đánh giá và các tham số mô hình được giữ đóng băng nghiêm ngặt. Ngưỡng giao cắt thực nghiệm quan sát được được diễn giải là một đặc tính riêng của benchmark thay vì là một hằng số vật lý phổ quát.
+
+#### Hoán vị thứ tự bin
+Để xác minh rằng phép hiệu chỉnh khai thác ngữ nghĩa suy giảm không gian thực sự chứ không phải là sự kéo dãn phương sai bề mặt, các phần tử của phân phối mục tiêu hoạt động $\mathbf{p}_{\mathrm{active}}$ bị hoán vị ngẫu nhiên giữa các khoảng khoảng cách trong khi vẫn giữ nguyên các ngưỡng khoảng cách $[a_{b-1}, a_b)$ và dự báo baseline:
+
+$$\mathbf{Y}_{D,c}^{\mathrm{perm}} = \operatorname{Permute}\left(\mathbf{Y}_{D,c}\right)$$
+
+Can thiệp này bảo toàn chính xác tập đa phần tử của các xác suất theo bin và tổng khối lượng xác suất ($\sum Y_D = 1$), nhưng làm xáo trộn mối liên hệ khoảng cách không gian của chúng. Thử nghiệm này khác biệt về mặt bản chất so với việc thay đổi các seed ngẫu nhiên.
+
+#### Nhóm đối chứng donor-city placebo (Tính đặc thù theo mục tiêu)
+Để kiểm tra xem các lợi ích hiệu chỉnh có đòi hỏi mẫu hình di chuyển đặc thù của thành phố mục tiêu hay chỉ cần các tiên nghiệm suy giảm trơn thông thường, phân phối mục tiêu được thay thế bằng ba biến thể donor placebo:
+1. **Donor khớp liều lượng (Dose-Matched Donors)**: Với mỗi thành phố mục tiêu $c$ và donor huấn luyện $c' \in \mathcal{C}_{\mathrm{train}}^{(f)}$, các tỷ số điều chỉnh log-odds được tái co giãn sao cho độ lớn can thiệp $D_D = \|\tilde{\mathbf{r}}_D\|_2$ khớp với liều can thiệp tự nhiên của mục tiêu $D_T = \|\tilde{\mathbf{r}}_T\|_2$;
+2. **Donor ngẫu nhiên trong fold không điều chỉnh**: Các phân phối donor được chọn ngẫu nhiên từ trong cùng fold huấn luyện mà không điều chỉnh liều lượng;
+3. **Donor trung bình tập huấn luyện của fold**: Phân phối trung bình thực nghiệm $\bar{\mathbf{Y}}_{D,\mathrm{train}} = \frac{1}{|\mathcal{C}_{\mathrm{train}}^{(f)}|} \sum_{c' \in \mathcal{C}_{\mathrm{train}}^{(f)}} \mathbf{Y}_{D,c'}$ lấy trung bình trên toàn bộ 35 thành phố huấn luyện của fold.
+
+Trong tất cả các nhánh donor, dự báo baseline $\widehat{\mathbf{T}}_c^{(0)}$ và tập hỗ trợ mục tiêu $\Omega_{c,\mathrm{inter}}^+$ được giữ đóng băng. Mức tăng tính đặc thù được đo bằng $\Delta\operatorname{CPC}_c(Y_{D,c}) - \Delta\operatorname{CPC}_c(Y_{D,\mathrm{donor}})$.
+
+#### Phân tích độ phân giải không gian (Điều kiện hóa cấp origin-county)
+Để khảo sát tác động của độ phân giải không gian dưới cấp vùng đô thị, hiệu chỉnh cấp thành phố ($M1_{\mathrm{city}}$) được so sánh với hiệu chỉnh có điều kiện theo origin-county ($M1_{\mathrm{county}}$).
+
+Trong 50 thành phố benchmark, 39 vùng đô thị ánh xạ vào một county duy nhất, nơi điều kiện hóa theo county hoàn toàn đồng nhất về mặt toán học với hiệu chỉnh toàn thành phố ($\mathbf{Y}_{D,c,\ell} \equiv \mathbf{Y}_{D,c}$), mang lại $\Delta\operatorname{CPC}_{\mathrm{res},c} = 0$ như một kiểm tra độ lành mạnh bất biến của thuật toán. 11 vùng đô thị đa county còn lại (Kansas City, New York, Dallas, Denver, Omaha, Tulsa, Detroit, Chicago, Boston, Milwaukee và Atlanta) chứa các tract trải rộng từ 2 đến 7 counties và cung cấp phép thử thực sự cho việc tinh chỉnh độ phân giải không gian. Trong mọi trường hợp, các dự báo sau hiệu chỉnh đều được đánh giá trên cùng tập hỗ trợ dương của toàn thành phố $\Omega_{c,\mathrm{inter}}^+$.
+
+#### Độ bền theo khởi tạo và kiến trúc mô hình
+Để xác nhận hiệu năng hiệu chỉnh không phải là đặc thù ngẫu nhiên của một lần khởi tạo tham số neural hay một họ mô hình duy nhất, các thí nghiệm được lặp lại trên:
+1. **Ba khởi tạo mô hình độc lập**: $\mathcal{S} = \{1, 10, 100\}$;
+2. **Ba họ mô hình dự báo riêng biệt**: Gravity-Informed Urban GNN (chính), Pairwise Node MLP (mô hình neural phi đồ thị thay thế), và Two-Parameter Power-Law Gravity (mô hình tham số phi neural).
+
+Cùng một toán tử hiệu chỉnh xác định duy nhất được áp dụng cho các dự báo baseline đóng băng của từng họ mô hình mà không cần tinh chỉnh lại.
 
 ---
 
