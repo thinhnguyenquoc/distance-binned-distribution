@@ -80,7 +80,7 @@ Các nghiên cứu đã tổng quan xác lập vai trò quan trọng của kho�
 
 Nghiên cứu này không xem phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu là sự thay thế cho ma trận OD mục tiêu, cũng không xem nó là một đặc trưng mới để huấn luyện lại mạng neural. Thay vào đó, phân phối này là tín hiệu tổng hợp duy nhất về cường độ của thành phố mục tiêu được đưa vào sau khi mô hình đã huấn luyện xong. Thiết kế giữ nguyên tham số backbone (không cập nhật trọng số), đánh giá liên thành phố và các đối chứng chẩn đoán được khớp phù hợp được sử dụng để phân biệt giá trị thông tin đặc thù của target với hiệu ứng thích nghi mô hình, distance decay chung hoặc rescaling tùy ý. Các nghiên cứu hiện có chưa trực tiếp kiểm tra giá trị cải thiện biên của tín hiệu này trên một baseline cross-city đã được huấn luyện và giữ nguyên tham số. Phân tích cũng tách riêng độ phân giải cự ly với độ phân giải không gian dưới cấp vùng đô thị và kiểm tra độ trung thực của quan sát bằng nhiễu có kiểm soát cùng placebo về thứ tự ngữ nghĩa.
 
-Cách định vị này làm hẹp phạm vi claim nhưng giúp phạm vi đánh giá trở nên minh bạch. Nghiên cứu đặt câu hỏi liệu một đại lượng tổng hợp mục tiêu có số chiều thấp và đã biết có cải thiện ước lượng cường độ của các liên kết OD liên vùng có luồng dương đã biết trong một hệ thống dự báo cố định hay không. Nghiên cứu không tuyên bố tái tạo support chưa biết của mạng, chứng minh khả năng thu thập vận hành của tín hiệu tổng hợp này hoặc cung cấp bảo đảm quyền riêng tư chính thức. Mục 3 chuyển khoảng trống nghiên cứu này thành các định nghĩa dữ liệu, mô hình, toán tử hiệu chỉnh và protocol đánh giá liên thành phố được dùng trong thực nghiệm.
+Cách định vị này làm hẹp phạm vi claim nhưng giúp phạm vi đánh giá trở nên minh bạch. Nghiên cứu đặt câu hỏi liệu một đại lượng tổng hợp mục tiêu có số chiều thấp và đã biết có cải thiện ước lượng cường độ của các liên kết OD liên vùng có luồng dương đã biết trong một hệ thống dự báo cố định hay không. Nghiên cứu không tuyên bố tái tạo support chưa biết của mạng, chứng minh khả năng thu thập vận hành của tín hiệu tổng hợp này hoặc cung cấp bảo đảm quyền riêng tư chính thức.
 
 
 
@@ -90,7 +90,7 @@ Cách định vị này làm hẹp phạm vi claim nhưng giúp phạm vi đánh
 
 ## 3.1. Ký hiệu và dữ liệu đầu vào
 
-Gọi $c$ là một thành phố và $\mathcal{V}_c$ là tập các vùng đơn vị phân chia thành phố đó. Mỗi cặp có thứ tự $(i,j)$ với $i,j \in \mathcal{V}_c$ biểu diễn một cặp nguồn–đích (OD). Bảng 1 tổng hợp các ký hiệu toán học cốt lõi, nguồn dữ liệu gốc, cũng như vai trò và trạng thái sẵn có của từng đại lượng trong các giai đoạn huấn luyện mô hình, suy luận zero-shot, hiệu chỉnh và đánh giá. Các chi tiết triển khai cụ thể được định nghĩa bằng chữ tại các tiểu mục tương ứng.
+Gọi $c$ là một thành phố và $\mathcal{V}_c$ là tập các vùng đơn vị phân chia thành phố đó. Mỗi cặp có thứ tự $(i,j)$ với $i,j \in \mathcal{V}_c$ biểu diễn một cặp nguồn–đích (OD). 
 
 ### Bảng 1: Ký hiệu cốt lõi, nguồn dữ liệu và trạng thái sẵn có của thông tin
 
@@ -127,26 +127,22 @@ Trong phần còn lại của bài báo, $\Omega_c$ luôn chỉ tập hỗ trợ
 
 
 ## 3.3. Đơn vị không gian và cấu hình chuẩn cấp thành phố
-
-Bộ dữ liệu do Lab cung cấp được tổ chức theo từng thành phố. Mỗi thành phố $c$ bao gồm một tập các tract $\mathcal{V}_c$ và các cặp OD dương giữa những tract đó. Tract là đơn vị không gian cơ sở của mô hình, trong khi thành phố là đơn vị phân chia dữ liệu, thực hiện zero-shot transfer và đánh giá kết quả. Đối với mỗi thành phố mục tiêu, mô hình dự báo cường độ cho tập cặp OD liên vùng dương đã biết $\Omega_c$.
-
 Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = [a_{b-1}, a_b)$) được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,b} = 1.
 $$
 
-Vector $Y_D$ được trích xuất trực tiếp từ các luồng ground-truth của thành phố mục tiêu dưới dạng tín hiệu tổng hợp oracle, chỉ được cung cấp tại thời điểm suy luận để hiệu chỉnh toàn bộ dự báo OD của thành phố mục tiêu. Đây là cấu hình chính của nghiên cứu (`M1_city`). Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county; thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
-
+$Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố mục tiêu và được sử dụng như một quan sát oracle tại thời điểm hiệu chỉnh. Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county, thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
 
 
 ## 3.4. Cấu trúc mô hình và hiệu chỉnh tại thời điểm suy luận
 
 ### 3.4.1. Giao diện dự báo baseline chung
 
-Cả ba họ mô hình dự báo—mô hình neural chính Urban GNN kết hợp tiên nghiệm Gravity, mô hình bóc tách Pairwise Node MLP, và mô hình tham số cổ điển Gravity hai tham số—đều tạo ra dự báo cường độ luồng zero-shot ban đầu $\hat{t}_{c,ij}^{(0)}$ trên cùng tập hỗ trợ liên vùng dương $\Omega_c$. Mỗi mô hình được huấn luyện hoặc khớp tham số hoàn toàn trên các thành phố huấn luyện nguồn của fold tương ứng, và toàn bộ tham số đã học được giữ nguyên trước khi suy luận trên thành phố mục tiêu. Phân phối khoảng cách $Y_D$ của thành phố mục tiêu tuyệt đối không được sử dụng ở bước tạo dự báo baseline $M_0$.
+Ba mô hình dự báo được đánh giá gồm Urban GNN kết hợp tiên nghiệm Gravity, Pairwise Node MLP và Gravity hai tham số. Mỗi mô hình tạo dự báo zero-shot ban đầu $\hat{t}_{c,ij}^{(0)}$ trên $\Omega_c$, sau khi được huấn luyện hoặc khớp tham số hoàn toàn bằng các thành phố nguồn của fold tương ứng. Các tham số được giữ cố định khi suy luận trên thành phố mục tiêu và \(Y_{D,c}\) không được sử dụng để tạo dự báo \(M_0\).
 
-Sau đó, cùng một toán tử hiệu chỉnh giải tích được áp dụng thống nhất cho đầu ra của cả ba mô hình để tạo ra dự báo sau hiệu chỉnh $M_1$. Urban GNN là kiến trúc khẳng định chính, còn MLP và Gravity đóng vai trò đối chứng có cấu trúc nhằm kiểm tra xem lợi ích hiệu chỉnh có phụ thuộc vào cơ chế message passing trên đồ thị hay bản chất kiến trúc neural hay không.
+Cùng một quy tắc hiệu chỉnh theo khoảng cách được áp dụng cho dự báo ban đầu của cả ba mô hình. Urban GNN là mô hình chính, Pairwise Node MLP và Gravity hai tham số được sử dụng để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào kiến trúc baseline.
 
 ### 3.4.2. Mô hình neural chính: Urban GNN kết hợp tiên nghiệm Gravity
 
@@ -163,19 +159,37 @@ Chi tiết phương trình từng layer và tensor được trình bày trong Ph
 
 ### 3.4.3. Mô hình tham số cổ điển: Gravity hai tham số
 
-Để cung cấp một đường cơ sở tham số phi neural, mô hình tương tác không gian Gravity hai tham số cổ điển được xác định bởi:
+Để cung cấp một đường cơ sở tham số phi neural với độ phức tạp thấp, mô hình tương tác không gian Gravity hai tham số dạng lũy thừa cổ điển được xác định bởi:
 
 $$
-\hat{t}_{c,ij}^{\mathrm{grav}} = \exp(G) P_{c,i} P_{c,j} d_{c,ij}^{-\alpha}.
+\hat{t}_{c,ij}^{(0,\mathrm{grav})} = \exp(G) \cdot \frac{P_{c,i} P_{c,j}}{d_{c,ij}^\alpha}, \qquad (i,j) \in \Omega_c
 $$
 
-Mô hình dự báo cường độ luồng OD liên vùng $\hat{t}_{c,ij}^{\mathrm{grav}}$ trên tập hỗ trợ liên vùng dương đã biết $\Omega_c$. Hai tham số gồm hệ số quy mô toàn cục $G$ và số mũ phân rã khoảng cách $\alpha$ được ước lượng bằng mô hình Gravity dạng log-linear, được ước lượng bằng pooled ordinary least squares trên dữ liệu của các thành phố huấn luyện:
+trong đó:
+- $P_{c,i} = \max(\operatorname{pop}_{c,i}, 1.0)$ và $P_{c,j} = \max(\operatorname{pop}_{c,j}, 1.0)$ là dân số của tract xuất phát và tract đích (chặn dưới tại 1.0 để bảo đảm ổn định số học);
+- $d_{c,ij} = \max(\operatorname{dist}_{c,ij}, 0.1\text{ km})$ là khoảng cách Haversine giữa hai tâm tract (chặn dưới tại 0.1 km);
+- $G \in \mathbb{R}$ là hệ số quy mô toàn cục (hằng số log-scale);
+- $\alpha > 0$ là số mũ suy giảm tương tác theo khoảng cách (power-law distance decay exponent).
+
+Hai tham số $(G, \alpha)$ được ước lượng giải tích bằng phương pháp bình phương tối thiểu thông thường (Ordinary Least Squares - OLS) dạng log-linear gộp trên toàn bộ các cặp OD liên vùng dương của các thành phố huấn luyện trong fold $f$:
 
 $$
-\log t_{c,ij} - \log(P_{c,i} P_{c,j}) = G - \alpha \log d_{c,ij}.
+\log t_{c,ij} - \log(P_{c,i} P_{c,j}) = G - \alpha \log d_{c,ij}
 $$
 
-Phép hồi quy được ước lượng độc lập cho từng fold bằng nghiệm giải tích bình phương tối thiểu (`np.linalg.lstsq`) gộp trên toàn bộ các cặp liên vùng có luồng dương ($t_{c,ij} \ge 1, d_{c,ij} > 0$) của các thành phố thuộc tập huấn luyện $\mathcal{C}_{\mathrm{train}}^{(f)}$. Thành phố kiểm tra (test cities) tuyệt đối không tham gia vào quá trình ước lượng hệ số. Khi áp dụng lên thành phố kiểm tra $c \in \mathcal{C}_{\mathrm{test}}^{(f)}$, các hệ số $(G, \alpha)$ được giữ cố định để tạo ra dự báo baseline phi neural $\hat{t}_{c,ij}^{(0,\mathrm{grav})}$, sau đó được đưa qua cùng toán tử hiệu chỉnh với phân phối mục tiêu $Y_D$ nhằm so sánh độ nhạy trước can thiệp giữa các kiến trúc. Dân số các tract $P_{c,i}, P_{c,j}$ được chặn dưới tại 1.0 và khoảng cách $d_{c,ij}$ được chặn dưới tại 0.1 km để bảo đảm ổn định số học.
+Phương trình trên tương ứng với bài toán tối ưu bình phương tối thiểu:
+
+$$
+\min_{\boldsymbol{\beta}} \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|_2^2, \qquad \boldsymbol{\beta} = [G, \alpha]^T
+$$
+
+trong đó vector đáp ứng $\mathbf{y}$ có các phần tử $y_{c,ij} = \log t_{c,ij} - (\log P_{c,i} + \log P_{c,j})$ và ma trận thiết kế $\mathbf{X}$ có các hàng $[1, -\log d_{c,ij}]$ trên toàn bộ các cặp $(i,j) \in \Omega_c$ của các thành phố thuộc $\mathcal{C}_{\mathrm{train}}^{(f)}$. Nghiệm đóng được tính trực tiếp qua đại số tuyến tính (`np.linalg.lstsq`):
+
+$$
+\widehat{\boldsymbol{\beta}}^{(f)} = \left(\mathbf{X}^T \mathbf{X}\right)^{-1} \mathbf{X}^T \mathbf{y} = \left[\widehat{G}^{(f)}, \widehat{\alpha}^{(f)}\right]^T
+$$
+
+Các tham số $(\widehat{G}^{(f)}, \widehat{\alpha}^{(f)})$ được ước lượng một lần duy nhất cho mỗi fold từ các thành phố nguồn và được giữ nguyên tuyệt đối khi suy luận trên thành phố kiểm tra. Mô hình baseline này không sử dụng bất kỳ thông tin luồng nào của thành phố mục tiêu, không có hệ số cân bằng sản sinh/thu hút ($A_i, B_j$), và không truy cập các cặp ngoài tập hỗ trợ liên vùng dương $\Omega_c$. Đầu ra baseline zero-shot $\hat{t}_{c,ij}^{(0,\mathrm{grav})}$ sau đó được đưa qua toán tử hiệu chỉnh khoảng cách tại Mục 3.4.7 để đánh giá lợi ích của tín hiệu $Y_D$ trên một kiến trúc phi neural.
 
 ### 3.4.4. Mô hình bóc tách: Pairwise Node MLP
 
@@ -294,10 +308,6 @@ Các phân tích độ bền và chẩn đoán được thực hiện nhằm ki�
 - **Đối chứng Placebo thành phố hiến tặng (Donor-City Placebos)**: Đánh giá 3 đối chứng âm gồm donor đã ghép cặp cùng mức can thiệp (dose-matched donor), donor thô trong cùng fold (unadjusted in-fold donor), và phân phối trung bình tập huấn luyện (training-mean donor).
 - **Độ bền theo khởi tạo và kiến trúc mô hình**: Lặp lại đánh giá qua 3 model seeds độc lập và trên 3 họ mô hình dự báo khác nhau (Urban GNN, Pairwise Node MLP, Classical Two-Parameter Gravity).
 (Phân tích thăm dò về độ phân giải không gian cấp county được trình bày riêng tại Phụ lục S7).
-
-Toàn bộ chi tiết kỹ thuật của các thí nghiệm này được trình bày tại Phụ lục S6 và S7.
-
-
 
 # 4. Kết quả thực nghiệm
 
