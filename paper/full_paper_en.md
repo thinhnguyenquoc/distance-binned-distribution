@@ -191,43 +191,13 @@ The normalized city-level distance distribution is:
 
 $$Y_{D,c,b} = \frac{F_{c,b}}{\sum_{r=1}^K F_{c,r}}, \qquad \sum_{b=1}^K Y_{D,c,b} = 1$$
 
-The resulting vector $\mathbf{Y}_{D,c} = [Y_{D,c,1}, \dots, Y_{D,c,K}]^T$ is used to calibrate the entire OD flow prediction of target city $c$. This constitutes the primary configuration of the study (`M1_city`).
+The resulting vector $\mathbf{Y}_{D,c} = [Y_{D,c,1}, \dots, Y_{D,c,K}]^T$ is used to calibrate the entire OD flow prediction of target city $c$. This constitutes the primary configuration of the study (`M1_city`). An exploratory variant conditioning on origin-county observations is evaluated across the multi-county metropolitan areas; its setup, results, and limitations are presented in Supplementary Section S7.
 
 ---
 
-## 3.4 Fine-Grained Spatial Resolution Variant: County-Level Observations (`M1_county`)
+## 3.4 Model Structure and Inference-Time Calibration
 
-A supplementary experiment examines whether providing aggregate distance observations at a finer sub-metropolitan spatial resolution provides incremental predictive information. In this analysis, the tracts of each city are grouped by county.
-
-County boundaries are obtained from the Database of Global Administrative Areas, version 4.1 [@gadm41]. Each tract is mapped to its encompassing county via a spatial point-in-polygon join between the tract centroid and the county polygon. If a centroid does not receive a valid `within` match—for example, because it lies on a polygon boundary or near a coastline—the implementation falls back to a nearest-polygon join in EPSG:5070 and accepts the assignment only when the centroid-to-polygon distance is at most 5 km; otherwise, execution stops with an error. Duplicate matches are resolved deterministically so that each tract receives exactly one county label. GADM is strictly utilized for this spatial grouping step; GADM is not the source of tract centroid coordinates, urban features, or OD flows.
-
-Letting $g(i)$ denote the county assigned to tract $i$, OD pairs are grouped strictly by the **origin tract's county**:
-
-$$\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_{c,\mathrm{inter}}^+ : g(i) = \ell\right\}$$
-
-Destination tract $j$ may belong to the same county or a different county within the metropolitan area. The distance-binned flow mass of county group $\ell$ is:
-
-$$F_{c,\ell,b} = \sum_{(i,j) \in \Omega_{c,\ell}^+} t_{c,ij} \mathbb{I}(a_{b-1} \le d_{c,ij} < a_b)$$
-
-and its normalized distance distribution vector is:
-
-$$Y_{D,c,\ell,b} = \frac{F_{c,\ell,b}}{\sum_{r=1}^K F_{c,\ell,r}}, \qquad \sum_{b=1}^K Y_{D,c,\ell,b} = 1$$
-
-Because the input data are strictly bounded within the tracts of the city dataset provided by the laboratory, $\mathbf{Y}_{D,c,\ell}$ describes the outflow distance distribution of trips originating from the tracts of city $c$ assigned to county $\ell$. It does not represent total county-wide mobility outside the study city's spatial footprint.
-
-Each distribution $\mathbf{Y}_{D,c,\ell}$ is used to calibrate OD pairs whose origin tract belongs to county $\ell$. The calibrated predictions from all county groups are then assembled into a complete OD prediction for the city:
-
-$$\widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \widehat{T}_{c,ij}^{\mathrm{county}} : (i,j) \in \Omega_{c,\ell}^+ \right\}$$
-
-where $\mathcal{G}_c$ denotes the set of counties present in the dataset for city $c$.
-
-Crucially, increasing observational resolution from city to county does not alter the evaluation scope. The model still reconstructs and is evaluated against the complete set of positive flows $\Omega_{c,\mathrm{inter}}^+$ for the target city; only the aggregate supervisory signal supplied during calibration becomes spatially more granular (`M1_county`).
-
----
-
-## 3.5 Model Structure and Inference-Time Calibration
-
-### 3.5.1 Common Baseline Prediction Interface
+### 3.4.1 Common Baseline Prediction Interface
 
 All three candidate predictor families—the primary Gravity-Informed Urban GNN ($m = \text{GNN}$), the ablated Pairwise Node MLP ($m = \text{MLP}$), and the classical Two-Parameter Gravity model ($m = \text{Grav}$)—generate an initial zero-shot flow intensity prediction across the identical known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$. This shared operational interface is formalized as:
 
@@ -239,7 +209,7 @@ Each model is trained or fitted strictly on the source training cities $\mathcal
 
 ---
 
-### 3.5.2 Primary Neural Predictor: Gravity-Informed Urban GNN
+### 3.4.2 Primary Neural Predictor: Gravity-Informed Urban GNN
 
 The primary predictive model is a support-conditioned zero-shot architecture combining spatial graph convolutions with a physics-inspired gravity prior and a Zero-Truncated Negative Binomial (ZTNB) intensity head.
 
@@ -307,7 +277,7 @@ Because $\mu_{c,ij} > 0$ and $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\m
 
 ---
 
-### 3.5.3 Alternative Neural Predictor: Pairwise Node MLP
+### 3.4.4 Alternative Neural Predictor: Pairwise Node MLP
 
 To test whether the incremental information gain from distance distribution calibration is contingent on spatial graph convolutions, we evaluate an ablated neural architecture: the Pairwise Node MLP (`NodeMLP`). 
 
@@ -329,7 +299,7 @@ This model isolates the contribution of local node features and pairwise gravity
 
 ---
 
-### 3.5.4 Explicit Low-Complexity Baseline: Two-Parameter Power-Law Gravity
+### 3.4.3 Explicit Low-Complexity Baseline: Two-Parameter Power-Law Gravity
 
 To establish whether the calibration operator delivers benefits outside of deep neural architectures, we incorporate a classical two-parameter power-law gravity model as an explicit, low-complexity parametric benchmark:
 
@@ -353,7 +323,7 @@ This baseline provides a highly constrained, non-neural control whose distance-d
 
 ---
 
-### 3.5.5 Comparative Summary of Baseline Predictors
+### 3.4.4b Comparative Summary of Baseline Predictors
 
 Table 2 contrasts the input specifications, spatial mechanisms, output modeling assumptions, and scientific roles of the three baseline predictors.
 
@@ -369,7 +339,7 @@ Table 2 contrasts the input specifications, spatial mechanisms, output modeling 
 
 ---
 
-### 3.5.6 Model Fitting under Partial OD Observations
+### 3.4.5 Model Fitting under Partial OD Observations
 
 #### Partial positive-flow observation setting
 In empirical urban mobility modeling, the complete origin-destination flow matrix $\mathcal{V}_c \times \mathcal{V}_c$ is never assumed to be fully observable. Instead, empirical records capture only a subset of cell pairs exhibiting positive, verifiable travel movements. In our formulation, unobserved pairs are treated strictly as missing or unknown rather than zero-flow observations. The absence of an OD pair from the dataset is not treated as evidence of zero travel flow; unobserved pairs are therefore never incorporated into the loss function as structural zeros. Consequently, our predictive framework does not train binary classifiers to separate links from non-links, nor does it penalize models for unobserved pairs. The spatial link formation or observation process governing network sparsity is considered exogenous and falls outside the scope of our intensity models.
@@ -421,7 +391,7 @@ This parametric objective uses no Poisson likelihood, no iterative gradient desc
 
 ---
 
-### 3.5.7 Training, Model Selection, and Freezing
+### 3.4.6 Training, Model Selection, and Freezing
 
 #### Neural optimizer and hyperparameter configuration
 Both neural predictors (`UrbanGNN` and `NodeMLP`) share an identical training procedure. Parameter updates are performed using the AdamW optimizer [@loshchilov2019adamw] (`torch.optim.AdamW`) with an initial learning rate $\eta = 2 \times 10^{-3}$ and decoupled weight decay coefficient $\lambda_{\mathrm{wd}} = 10^{-4}$. Regularization is enforced strictly through the optimizer's decoupled weight decay mechanism; no explicit $\ell_2$ penalty term $\lambda \|\theta\|_2^2$ is added to the loss function. The weight decay value is fixed a priori without grid search. Dropout ($p = 0.1$) and LayerNorm modules embedded within each network layer provide internal architectural regularization during training passes. Optimization operates with full-city batching (passing all $|\Omega_{c,\mathrm{inter}}^+|$ positive interzonal pairs of a city simultaneously per forward/backward step), executing sequential gradient updates across the 35 training cities in each epoch for a maximum budget of 200 epochs. Gradients are clipped to a maximum Euclidean norm of $5.0$ before each parameter update. Network weights are initialized across three independent random seeds $\mathcal{S} = \{1, 10, 100\}$.
@@ -470,7 +440,7 @@ During zero-shot target-city inference, target city $c$ provides only permissibl
 
 ---
 
-### 3.5.8 Target-City Distance-Binned Observation
+### 3.4.7a Target-City Distance-Binned Observation
 
 The distance continuum is partitioned into $K$ intervals $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) using pair-weighted quantiles estimated strictly from training cities ($a_0 = 0, a_K = \infty$). The primary benchmark fixes the number of moving-distance intervals at $K = 8$ a priori (`K_MOVE = 8`). Alternative bin resolutions $K \in \{2, 4, 6, 10, 12, 14, 16, 18, 20\}$ are evaluated exclusively as secondary sensitivity settings in Section 4.3, rather than being selected via validation grid search.
 
@@ -486,7 +456,7 @@ Crucially, $\mathbf{Y}_{D,c}$ is a normalized probability distribution over coar
 
 ---
 
-### 3.5.9 Unified Analytical Inference-Time Calibration Operator
+### 3.4.7 Unified Analytical Inference-Time Calibration Operator
 
 Given any frozen baseline predictor $m \in \{\text{GNN}, \text{MLP}, \text{Grav}\}$ generating initial predictions $\widehat{T}_{c,ij}^{(0,m)}$ on $\Omega_{c,\mathrm{inter}}^+$, the calibration operator executes the following deterministic reallocation:
 
@@ -531,7 +501,7 @@ In our experimental pipeline, calibration strength is **pre-specified and fixed 
 
 ---
 
-### 3.5.10 Preserved Mathematical Invariants
+### 3.4.8 Preserved Mathematical Invariants
 
 The analytical calibration operator strictly guarantees three mathematical properties:
 
@@ -553,9 +523,9 @@ Figure 1 illustrates the complete support-conditioned zero-shot modeling and inf
 
 ---
 
-## 3.6 Cross-City Evaluation Protocol and Statistical Inference
+## 3.5 Cross-City Evaluation Protocol and Statistical Inference
 
-### 3.6.1 5-Fold Cross-City Validation Scheme
+### 3.5.1 5-Fold Cross-City Validation Scheme
 The empirical benchmark is structured around a 5-fold cross-validation protocol over $N=50$ U.S. metropolitan areas. In each fold, 35 cities are used for model training, 5 cities for model selection (validation), and 10 cities for evaluation (testing). Every city appears in the test partition exactly once, covering all 50 metropolitan areas across folds.
 
 The partitioning unit is the entire city rather than OD pairs, tracts, or observation samples within the same city. Consequently, all tracts and OD pairs belonging to a given city reside exclusively within a single partition (training, validation, or testing) in each fold, and are not dispersed across splits. This city-level division provides the necessary condition to support the cross-city zero-shot evaluation claim.
@@ -571,7 +541,7 @@ The comparison between $M_0$ and $M1_{\mathrm{city}}$ represents the primary exp
 
 Across all configurations, predictions are evaluated on the exact same observed positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ for the entire city.
 
-### 3.6.2 Evaluation Metrics and Model Comparison
+### 3.5.2 Evaluation Metrics and Model Comparison
 
 #### Primary evaluation metric: Common Part of Commuters (CPC)
 The primary quantitative metric for evaluating zero-shot travel flow reconstruction is the Common Part of Commuters (CPC) [@lenormand2016comparison], evaluated on the known positive interzonal support $\Omega_{c,\mathrm{inter}}^+$:
@@ -652,7 +622,7 @@ All three model families are subjected to the exact same cross-city evaluation p
 
 ---
 
-### 3.6.3 Statistical Analysis and Uncertainty Quantification
+### 3.5.3 Statistical Analysis and Uncertainty Quantification
 
 #### City-level estimand and model-seed aggregation
 To account for stochasticity in neural initialization and training optimization, each neural architecture is trained across three independent model seeds $\mathcal{S} = \{1, 10, 100\}$.
@@ -713,7 +683,7 @@ Both unadjusted raw $p$-values and Holm-adjusted $p$-values are reported where m
 
 ---
 
-### 3.6.4 Robustness and Diagnostic Experiments
+### 3.5.4 Robustness and Diagnostic Experiments
 
 Supplementary diagnostic experiments evaluate the operational boundaries, failure modes, and mechanistic drivers of distance-binned calibration (addressing RQ2). These stress tests isolate specific information channels without modifying the primary benchmark estimand.
 
@@ -864,20 +834,16 @@ Across the tested values of $K$, the improvement in OD reconstruction increases 
 
 ---
 
-### 4.3.2 County-level calibration yields a small pooled incremental gain
-
-Across all 50 cities, county-level calibration yields a small pooled incremental gain over city-level calibration ($\Delta\mathrm{CPC}_{\mathrm{res}}=+0.00014$, 95% CI $[+0.00002,+0.00028]$, Wilcoxon $p=0.0064$). This pooled result must be interpreted in light of the benchmark structure. For 39 single-county cities, $M1_{\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction, and therefore $\Delta\mathrm{CPC}_{\mathrm{res},c}=0$ exactly. The empirical comparison of finer spatial observation is consequently concentrated in the 11 multi-county cities.
-
-Across the evaluated multi-county subset, county-level calibration produced a small positive average incremental gain (mean $\Delta\mathrm{CPC}_{\mathrm{res}}=+0.00063$), with improvements in 9 of 11 cities. This subgroup result is descriptive unless a separately verified uncertainty estimate is reported. The observed pattern is consistent with the possibility that finer origin-group distance distributions add information in some multi-county metropolitan datasets, but the study does not directly measure or test intra-urban heterogeneity as the mechanism.
+In an exploratory analysis across 11 multi-county metropolitan areas, county-level calibration improved performance over city-level calibration in 9 of 11 cases. However, the pooled incremental gain across all 50 metropolitan areas was only $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, because the 39 single-county areas yield mathematically equivalent partitions. Therefore, this result is not interpreted as general evidence that increasing spatial resolution improves performance; details are presented in Supplementary Section S7.
 
 ---
 
 ![Figure 3](figures/fig3_resolution_sensitivity.png)
-**Figure 3 | Observational resolution sensitivity.** **(a)** Mean calibration gain $\Delta\mathrm{CPC}$ across $N=50$ test cities as a function of the number of distance bins $K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$ with 95% fold-stratified bootstrap confidence intervals. Gain increases across the tested values while average gain per bin declines. **(b)** Comparison of city-level vs. county-level calibration across the $N=11$ evaluated multi-county metropolitan areas; these subgroup differences are descriptive.
+**Figure 3 | Observational resolution sensitivity ($).** Mean interzonal $\Delta\text{CPC}$ improvement increases monotonically from =2$ ($+0.00098$) to =20$ ($+0.00639$). Shaded band represents 95% fold-stratified bootstrap confidence interval.
 
 ---
 
-### 4.3.3 Synthetic observation noise reduces the value of $Y_D$
+### 4.3.2 Synthetic observation noise reduces the value of $Y_D$
 
 Having assessed the impact of observational resolution, we next investigate how calibration efficacy depends on the fidelity of $Y_D$. Specifically, we perturb the target city's distance-binned mobility distribution across varying noise levels ($\epsilon \in [0.00, 0.05]$ Total Variation error), while holding the zero-shot baseline model, evaluation test cities, and calibration procedure strictly identical. This design isolates the effect of estimation errors in $Y_D$ from other sources of model variance.
 
@@ -1111,26 +1077,7 @@ Consequently, $Y_D$ calibration should be viewed as a conditioned post-processin
 
 ---
 
-## 5.7 County-level resolution: descriptive evidence and mechanism hypothesis
-
-The spatial resolution experiment examines whether the utility of $Y_D$ changes when the aggregate constraint is supplied at the county rather than city level. The pooled incremental gain across all 50 cities is small ($+0.00014$, 95% CI $[+0.00002,+0.00028]$, $p=0.0064$). This result includes 39 single-county cities, for which county-level and city-level calibration are mathematically identical and the incremental difference is exactly zero by construction.
-
-In the city-level configuration (`M1_city`), a single vector $\mathbf{Y}_{D,c}$ modulates flow mass across distance intervals for the entire metropolis. This operator effectively rectifies average distance decay biases in the baseline, but applies an identical set of scaling multipliers to all origin tracts. Consequently, it cannot accommodate settings where distinct subregions within the same urban area exhibit markedly different distance distributions.
-
-Across the 11 evaluated multi-county cities, the mean incremental gain is $+0.00063$, with improvements in 9 of 11 cities. Because no separately verified uncertainty artifact is reported for this subset, this result is descriptive. Descriptive city-level values for the 11 multi-county datasets are reported in Table S1, while the aggregate spatial-resolution pattern is summarized in Figure 3b. A city-wide distribution applies the same set of distance-bin constraints across all origin tracts, whereas county-level calibration allows the constraints to vary across origin-county groups. This provides a plausible hypothesis for the localized gains observed in the multi-county subset; it is not a direct test that county boundaries capture functional mobility heterogeneity. County membership is an administrative proxy, and the study does not independently measure the degree of intra-urban mobility divergence represented by that proxy.
-
-This formulation does not support a general condition linking county-level aggregation to improved reconstruction. It instead reports a small pooled gain, exact invariance where county grouping adds no partition, and a descriptive positive pattern in the evaluated multi-county subset. The calibration operator only reallocates flow mass between distance intervals or origin-county slices; it leaves the relative ordering of OD pairs within each slice strictly invariant. Consequently, overall accuracy remains bounded by the baseline's capacity to rank zone pairs internally.
-
-Three explicit limitations warrant consideration:
-1. **Administrative vs Functional Zoning**: County boundaries are administrative units and are not designed as functional commuting basins or travel communities. Whether functional urban zones or mobility communities produce more informative aggregate constraints requires separate study.
-2. **Dataset Footprint Boundary**: County groups comprise only those tracts included within the study city dataset provided by the laboratory, and do not represent total county-wide travel demand extending beyond the study area.
-3. **Oracle Aggregate Setting**: County distributions in our benchmark are derived as oracle aggregate observations from reference OD matrices. These results demonstrate the theoretical information ceiling of county-level granularity, but do not prove that equivalent gains would materialize under noisy or incomplete real-world telemetry.
-
-In summary, the county-level experiment provides a small pooled incremental result and descriptive evidence in the evaluated multi-county subset. It motivates, but does not test, the hypothesis that finer origin-group constraints may be useful when they encode information not represented by a city-wide distribution.
-
----
-
-## 5.8 Methodological implications and deployment hypothesis
+## 5.7 Methodological implications and deployment hypothesis
 
 Neural mobility frameworks such as Deep Gravity and UGNN illustrate that deep neural networks can synthesize multifaceted geographic information to learn transferable spatial mobility laws [@simini2021deepgravity; @guo2025ugnn]. However, these architectures fundamentally require granular OD observations from source training regions to fit model parameters. The contribution of the present study is not to eliminate the necessity of OD training data, but rather to show that a pre-trained cross-city model can be adjusted at inference time using an aggregate observation of the target city without updating model parameters.
 
@@ -1140,7 +1087,7 @@ The evaluated framework remains conditioned on the known positive support $\Omeg
 
 ---
 
-## 5.9 Limitations
+## 5.8 Limitations
 
 Several key scope boundaries and methodological limitations must be acknowledged:
 1. **Conditioning on Known Positive Support ($\Omega_c^+$)**: The evaluation is conducted on observed positive interzonal pairs ($T_{ij} \ge 1, D_{ij} > 0$). The framework does not address link prediction or the zero-flow identification problem.
@@ -1148,10 +1095,11 @@ Several key scope boundaries and methodological limitations must be acknowledged
 3. **Data Quality, Coverage, and Representation**: Human mobility datasets frequently contain substantial coverage biases, representativeness issues, and data processing artifacts that can influence model conclusions [@gallotti2024distorted; @pappalardo2023future]. Our benchmark is evaluated across 50 U.S. metropolitan areas at the census tract level; generalization to international contexts with informal transit systems requires independent empirical validation.
 4. **Privacy Scope Boundary**: Aggregating or reducing data resolution does not automatically guarantee formal privacy protection. Individual mobility traces can retain high re-identifiability even after coarse aggregation [@demontjoye2013unique], and providing user-level differential privacy guarantees for aggregate location data remains challenging in practice [@houssiau2022differential]. The present study does not perform a formal privacy analysis on $Y_D$; hence, $Y_D$ should be understood strictly as a low-dimensional aggregate observation, rather than a proven privacy-preserving mechanism.
 5. **Synthetic Noise Assumptions**: Noise experiments use centered Gaussian directions in log-ratio space with exponential tilting to reach specified TV magnitudes. Real-world observation errors may exhibit structured demographic or geographic non-randomness not represented by this perturbation design.
+6. **Exploratory County-Level Resolution**: The county-level analysis is exploratory. Only 11 metropolitan areas create genuine multi-county partitions, while the remaining 39 are mathematically equivalent to city-level calibration. Administrative boundaries do not necessarily align with functional commuting zones, so this result does not support a general claim linking finer spatial resolution to improved reconstruction.
 
 ---
 
-## 5.10 Future research directions
+## 5.9 Future research directions
 
 1. **Multi-Constraint Aggregate Calibration**: A natural extension is coupling $Y_D$ with complementary low-dimensional constraints, such as total origin outflows ($\mathcal{O}_i$) or total destination inflows ($\mathcal{D}_j$). Classical spatial interaction modeling provides a rigorous foundation for simultaneously applying production, attraction, and impedance constraints [@wilson1971family; @ortuzar2011modelling].
 2. **Coupling Mechanistic Principles with AI**: Combining mechanistic spatial interaction principles with deep transfer architectures represents an essential frontier for robust, interpretable human mobility modeling [@pappalardo2023future].
@@ -1331,11 +1279,52 @@ During the preparation of this manuscript, the authors utilized generative AI to
 
 ---
 
+# Supplementary Note S7. Exploratory Analysis of County-Level Spatial Resolution
+
+## S7.1 Setup
+
+This exploratory analysis investigates whether conditioning on aggregate distance observations at a finer sub-metropolitan spatial resolution—specifically grouped by administrative county units—provides supplemental information beyond city-level aggregation.
+
+County boundaries are obtained from the Database of Global Administrative Areas, version 4.1 (GADM 4.1) [@gadm41]. Each tract is mapped to its encompassing county via a spatial point-in-polygon join between the tract centroid and the county polygon. If a centroid does not receive a valid within match—for example, because it lies on a polygon boundary or near a coastline—the implementation falls back to a nearest-polygon join in EPSG:5070 and accepts the assignment only when the centroid-to-polygon distance is at most 5 km; otherwise, execution stops with an error. Duplicate matches are resolved deterministically so that each tract receives exactly one county label. GADM is strictly utilized for this spatial grouping step; GADM is not the source of tract centroid coordinates, urban features, or OD flows.
+
+Letting (i)$ denote the county assigned to tract $, OD pairs are grouped strictly by the **origin tract's county**:
+
+\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_c : g(i) = \ell\right\}.
+
+Destination tract $ may belong to the same county or a different county within the metropolitan area. The distance-binned flow mass of county group $\ell$ is:
+
+Y_{c,\ell,b} = \frac{\sum_{(i,j) \in \Omega_{c,\ell}^+} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_{c,\ell}^+} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,\ell,b} = 1.
+
+Because the input data are strictly bounded within the tracts of the city dataset provided by the laboratory, $\mathbf{Y}_{c,\ell}$ describes the outflow distance distribution of trips originating from the tracts of city $ assigned to county $\ell$. It does not represent total county-wide mobility outside the study city's spatial footprint.
+
+Each distribution $\mathbf{Y}_{c,\ell}$ is used to calibrate OD pairs whose origin tract belongs to county $\ell$. The calibrated predictions from all county groups are then assembled into a complete OD prediction for the city:
+
+\widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \hat{t}_{c,ij}^{\mathrm{county}} : (i,j) \in \Omega_{c,\ell}^+ \right\},
+
+where $\mathcal{G}_c$ denotes the set of counties present in the dataset for city $.
+
+Crucially, increasing observational resolution from city to county does not alter the evaluation scope. The model still reconstructs and is evaluated against the complete set of positive flows $\Omega_c$ for the target city; only the aggregate supervisory signal supplied during calibration becomes spatially more granular (M1_county).
+
+Among the 50 metropolitan datasets in the benchmark, exactly 39 are single-county areas (where all tracts belong to a single county, $|\mathcal{G}_c| = 1$). For these 39 areas, county partitioning is mathematically identical to city-level partitioning, yielding {\mathrm{county}} \equiv M1_{\mathrm{city}}$ and $\Delta\mathrm{CPC}_{\mathrm{res},c} = 0$ by construction. Only the 11 metropolitan areas spanning between 2 and 7 counties create genuine sub-metropolitan partitions.
+
+## S7.2 Results
+
+Across all 50 metropolitan datasets, the pooled incremental gain from county-level calibration over city-level calibration is very small:
+
+\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95% CI } [+0.00002, +0.00028], \quad \text{Wilcoxon } p = 0.0064.
+
+This modest pooled gain is heavily dominated by the 39 single-county areas where the incremental gain is identically zero by construction.
+
+For the subset of 11 multi-county metropolitan areas (22% of the benchmark), county-level calibration achieved gains in 9 of 11 areas, with a mean incremental gain of $+0.00063$ (Table S1 and Figure S1).
+
+![Figure S1](figures/fig_s1_spatial_resolution.png)
+**Figure S1. Comparison of city-level and county-level calibration CPC gains across 11 multi-county metropolitan areas.** Analysis is exploratory; the 39 single-county metropolitan areas are omitted because the two partitions are mathematically equivalent.
+
 ### Supplementary Table S1. Descriptive city-level results for the multi-county spatial-resolution subset
 
-City-level comparison of the zero-shot baseline ($M_0$), city-level oracle calibration ($M1_{\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M1_{\mathrm{county}}$) for the 11 metropolitan datasets containing tracts assigned to more than one county. The resolution increment is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c}=\mathrm{CPC}(M1_{\mathrm{county}})-\mathrm{CPC}(M1_{\mathrm{city}})$. Values are descriptive city-level estimates. No subgroup confidence interval or hypothesis test is reported unless supported by a separately verified uncertainty artifact.
+City-level comparison of the zero-shot baseline ($), city-level oracle calibration ({\mathrm{city}}$), and origin-county-conditioned oracle calibration ({\mathrm{county}}$) for the 11 metropolitan datasets containing tracts assigned to more than one county. The resolution increment is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c}=\mathrm{CPC}(M1_{\mathrm{county}})-\mathrm{CPC}(M1_{\mathrm{city}})$. Values are descriptive city-level estimates. No subgroup confidence interval or hypothesis test is reported unless supported by a separately verified uncertainty artifact.
 
-| City | Origin counties | $M_0$ CPC | $M1_{\mathrm{city}}$ CPC | $M1_{\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res}}$ |
+| City | Origin counties | $ CPC | {\mathrm{city}}$ CPC | {\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res}}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Kansas City | 3 | 0.721071 | 0.726877 | 0.729612 | +0.005807 | +0.008542 | +0.002735 |
 | New York | 7 | 0.524464 | 0.525775 | 0.527870 | +0.001311 | +0.003407 | +0.002096 |
@@ -1351,4 +1340,13 @@ City-level comparison of the zero-shot baseline ($M_0$), city-level oracle calib
 | **Multi-county mean** | — | — | — | — | — | — | **+0.000626** |
 | **Positive resolution gains** | — | — | — | — | — | — | **9 / 11** |
 
-*Note: Rows are sorted by $\Delta\mathrm{CPC}_{\mathrm{res}}$ in descending order. County labels are assigned from tract centroids using GADM 4.1 and group OD pairs by the county of the origin tract. Destination tracts may belong to the same or another county represented within the city dataset. Prediction and evaluation remain city-wide on the same known positive support. The 39 single-county cities are omitted from this table because $M1_{\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction. Results are seed-averaged across model seeds $\\{1, 10, 100\\}$.*
+*Note: Rows are sorted by $\Delta\mathrm{CPC}_{\mathrm{res}}$ in descending order. County labels are assigned from tract centroids using GADM 4.1 and group OD pairs by the county of the origin tract. Destination tracts may belong to the same or another county represented within the city dataset. Prediction and evaluation remain city-wide on the same known positive support. The 39 single-county cities are omitted from this table because {\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction. Results are seed-averaged across model seeds $\{1, 10, 100\}$.*
+
+## S7.3 Interpretive Boundaries
+
+Results of the county-level analysis must be interpreted under the following strict boundaries:
+
+1. **Small Sample Size and Descriptive Evidence**: The analysis is based on only 11 multi-county metropolitan areas. In the absence of a separately verified stratified uncertainty estimation for this subset, the 9/11 improvement remains purely descriptive empirical evidence and does not establish a generalized statistical law.
+2. **Administrative vs. Functional Boundaries**: Counties are historical administrative units not delineated based on travel commuting sheds, transport corridors, or functional urban zoning. Grouping by county therefore does not necessarily capture the true behavioral heterogeneity of spatial travel.
+3. **Incomplete Spatial Coverage**: County groups only encompass tracts located within the laboratory-provided metropolitan area boundary, and do not represent total travel flows across the full territorial area of those counties.
+4. **No Proof of Causality or Practical Operational Guarantee**: Assigning tract centroids geometrically and utilizing oracle distributions do not account for real-world linkage errors. The experiment does not prove that increasing spatial resolution in general will always improve OD matrix reconstruction in real-world applications.

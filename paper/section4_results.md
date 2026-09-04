@@ -110,25 +110,19 @@ Across the tested values of $K$, the improvement in OD reconstruction increases 
 
 ---
 
-### 4.3.2 County-level calibration yields a small pooled incremental gain
-*(Tiếng Việt: **4.3.2. Hiệu chỉnh cấp county tạo ra mức tăng bổ sung pooled nhỏ**)*
-
-Across all 50 cities, county-level calibration yields a small pooled incremental gain over city-level calibration ($\Delta\mathrm{CPC}_{\mathrm{res}}=+0.00014$, 95% CI $[+0.00002,+0.00028]$, Wilcoxon $p=0.0064$). This pooled result must be interpreted in light of the benchmark structure. For 39 single-county cities, $M1_{\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction, and therefore $\Delta\mathrm{CPC}_{\mathrm{res},c}=0$ exactly. The empirical comparison of finer spatial observation is consequently concentrated in the 11 multi-county cities.
-
-Across the evaluated multi-county subset, county-level calibration produced a small positive average incremental gain (mean $\Delta\mathrm{CPC}_{\mathrm{res}}=+0.00063$), with improvements in 9 of 11 cities. This subgroup result is descriptive unless a separately verified uncertainty estimate is reported. The observed pattern is consistent with the possibility that finer origin-group distance distributions add information in some multi-county metropolitan datasets, but the study does not directly measure or test intra-urban heterogeneity as the mechanism.
-
-*(Tiếng Việt: Trên toàn bộ 50 thành phố, hiệu chỉnh cấp county tạo ra mức tăng bổ sung pooled nhỏ so với hiệu chỉnh cấp city ($\Delta\mathrm{CPC}_{\mathrm{res}}=+0.00014$, khoảng tin cậy 95% $[+0.00002,+0.00028]$, Wilcoxon $p=0.0064$). Kết quả pooled này cần được diễn giải theo cấu trúc của benchmark. Với 39 thành phố single-county, $M1_{\mathrm{county}}\equiv M1_{\mathrm{city}}$ theo cấu trúc, do đó $\Delta\mathrm{CPC}_{\mathrm{res},c}=0$ chính xác. Vì vậy, phép so sánh thực nghiệm về quan sát không gian chi tiết hơn tập trung vào 11 thành phố multi-county.)*
-
-*(Tiếng Việt: Trên nhóm các thành phố multi-county đã đánh giá, hiệu chỉnh cấp county tạo ra mức tăng bổ sung trung bình nhỏ và dương (mean $\Delta\mathrm{CPC}_{\mathrm{res}}=+0.00063$), với 9/11 thành phố cải thiện. Kết quả subgroup này mang tính mô tả nếu chưa có một ước lượng bất định riêng đã được xác minh. Mẫu hình quan sát được phù hợp với khả năng rằng các phân phối theo nhóm origin chi tiết hơn có thể bổ sung thông tin trong một số bộ dữ liệu đô thị multi-county, nhưng nghiên cứu không đo lường hoặc kiểm định trực tiếp tính không đồng nhất nội đô như một cơ chế.)*
-
----
-
 ![Figure 3](figures/fig3_resolution_sensitivity.png)
-**Figure 3 | Observational resolution sensitivity.** **(a)** Mean calibration gain $\Delta\mathrm{CPC}$ across $N=50$ test cities as a function of the number of distance bins $K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$ with 95% fold-stratified bootstrap confidence intervals. Gain increases across the tested values while average gain per bin declines. **(b)** Comparison of city-level vs. county-level calibration across the $N=11$ evaluated multi-county metropolitan areas; these subgroup differences are descriptive.
+**Figure 3 | Observational resolution sensitivity ($K$).** Mean interzonal $\Delta\text{CPC}$ improvement increases monotonically from $K=2$ ($+0.00098$) to $K=20$ ($+0.00639$). Shaded band represents 95% fold-stratified bootstrap confidence interval.
+
+*(Tiếng Việt: **Hình 4 | Phân tích độ nhạy của độ phân giải thông tin ($K$).** Mức tăng CPC liên vùng trung bình $\Delta\text{CPC}$ tăng đơn điệu từ $K=2$ ($+0.00098$) lên $K=20$ ($+0.00639$). Dải bóng mờ biểu diễn khoảng tin cậy 95% bootstrap phân tầng.)*
+
+In an exploratory analysis across 11 multi-county metropolitan areas, county-level calibration improved performance over city-level calibration in 9 of 11 cases. However, the pooled incremental gain across all 50 metropolitan areas was only $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, because the 39 single-county areas yield mathematically equivalent partitions. Therefore, this result is not interpreted as general evidence that increasing spatial resolution improves performance; details are presented in Supplementary Section S7.
+
+*(Tiếng Việt: Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nhiều county, hiệu chỉnh cấp county cải thiện so với hiệu chỉnh cấp thành phố tại 9/11 trường hợp. Tuy nhiên, mức tăng bổ sung pooled trên toàn bộ 50 vùng đô thị chỉ là $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, vì 39 vùng single-county tạo ra hai phân hoạch tương đương về mặt toán học. Do đó, kết quả này không được xem là bằng chứng tổng quát rằng tăng độ phân giải không gian sẽ cải thiện hiệu năng; chi tiết được trình bày trong Phụ lục S7.)*
 
 ---
 
-### 4.3.3 Synthetic observation noise reduces the value of $Y_D$
+### 4.3.2 Synthetic observation noise reduces the value of $Y_D$
+*(Tiếng Việt: **4.3.2. Nhiễu quan sát tổng hợp làm giảm giá trị bổ sung của $Y_D$**)*
 
 Having assessed the impact of observational resolution, we next investigate how calibration efficacy depends on the fidelity of $Y_D$. Specifically, we perturb the target city's distance-binned mobility distribution across varying noise levels ($\epsilon \in [0.00, 0.05]$ Total Variation error), while holding the zero-shot baseline model, evaluation test cities, and calibration procedure strictly identical. This design isolates the effect of estimation errors in $Y_D$ from other sources of model variance.
 
