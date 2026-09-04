@@ -640,86 +640,10 @@ Tóm lại, phân phối di chuyển theo nhóm khoảng cách của thành ph�
 
 # Mục 7: Tuyên bố về khả năng truy cập dữ liệu và mã nguồn
 
----
+Bố sung sau
 
-## Tính khả dụng của dữ liệu
-
-Nghiên cứu sử dụng một benchmark do Lab tổng hợp, gồm cường độ luồng OD dương, tọa độ tâm tract và 26 đặc trưng tract được xây dựng từ thông tin Census, điểm quan tâm và mạng lưới đường. Nhà cung cấp ban đầu, thời gian thu thập, phiên bản nguồn, quy trình tiền xử lý và điều kiện phân phối lại của các thành phần này đang được xác minh với Lab và phải được bổ sung trước khi nộp bài. GADM phiên bản 4.1 chỉ được dùng để gán tọa độ tâm tract vào polygon county trong thí nghiệm bổ sung về độ phân giải không gian [@gadm41]; GADM không phải nguồn của tọa độ tract, đặc trưng đô thị hoặc luồng OD. Khi provenance và giấy phép chưa được xác nhận, tuyên bố này không khẳng định benchmark của Lab là dữ liệu công khai hoặc có thể phân phối lại.
-
-Đối với các điều kiện oracle chuẩn, mỗi phân phối theo nhóm khoảng cách của thành phố mục tiêu $\mathbf{Y}_{D,c}$ được xác định trực tiếp từ các luồng OD ground-truth dương của chính thành phố đó. Vì vậy, $\mathbf{Y}_{D,c}$ là một can thiệp thông tin mục tiêu trong thực nghiệm, không phải một sản phẩm telemetry bên ngoài được thu thập độc lập; các kết quả báo cáo đặc trưng cho một cận trên về giá trị thông tin.
-
----
-
-## Tính khả dụng của mã nguồn
-
-Tại thời điểm soạn thảo, repository công khai chưa có URL chính thức. Bản cuối cần bổ sung kho lưu trữ và định danh phiên bản của mã dùng cho tiền xử lý, huấn luyện mô hình, hiệu chỉnh theo khoảng cách, cross-validation, phân tích thống kê và tạo hình/bảng: **[bổ sung URL cùng release hoặc commit trước khi nộp bài]**. Mọi khẳng định về khả năng tái lập đầy đủ phải được đối chiếu với nội dung repository cuối cùng và các giới hạn truy cập dữ liệu nêu trên.
-
----
-
-## Artifact trung gian và khả năng tái lập
-
-DOI hoặc kho công khai cho các artifact trung gian hiện chưa được xác nhận. Trước khi nộp bài, tác giả cần xác định rõ những artifact đã xử lý, định nghĩa fold, biên khoảng cách, kết quả tổng hợp và đầu ra phân tích nào có thể chia sẻ theo quyền của Lab, sau đó lưu chúng tại **[bổ sung repository hoặc DOI]**. Các thành phần không thể chia sẻ cần được nêu cụ thể, kèm quy trình xin quyền truy cập và phạm vi pipeline vẫn có thể tái lập khi không có các thành phần đó.
-
----
-
-## Lời cảm ơn
-
-Tác giả cảm ơn **[tên người hướng dẫn, cộng tác viên hoặc đơn vị]** vì **[bổ sung đóng góp cụ thể sau khi xác nhận]**. Nhóm Lab chịu trách nhiệm tổng hợp benchmark cần được ghi nhận tại đây sau khi xác nhận tên người đóng góp, cách ghi cơ quan và mọi yêu cầu dẫn nguồn của nhà cung cấp dữ liệu.
-
----
-
-## Nguồn tài trợ
-
-**[Chọn và xác minh một tuyên bố tài trợ trước khi nộp bài; không giữ đồng thời cả hai phương án.]**
-
-Nếu có tài trợ: "Nghiên cứu này được hỗ trợ bởi **[tên cơ quan hoặc chương trình tài trợ]**, mã tài trợ **[mã số]**."
-
-Nếu nghiên cứu không nhận tài trợ:
-> *Nghiên cứu này không nhận bất kỳ khoản tài trợ cụ thể nào từ các cơ quan tài trợ thuộc khu vực công, thương mại hoặc phi lợi nhuận.*
-
----
-
-## Đóng góp của tác giả theo CRediT
-
-Đóng góp của các tác giả được trình bày theo hệ thống phân loại CRediT như sau:
-* **Khái niệm hóa (Conceptualization):** [Tên tác giả]
-* **Phương pháp nghiên cứu (Methodology):** [Tên tác giả]
-* **Phát triển phần mềm (Software):** [Tên tác giả]
-* **Kiểm chứng (Validation):** [Tên tác giả]
-* **Phân tích chính thức (Formal Analysis):** [Tên tác giả]
-* **Điều tra và thực nghiệm (Investigation):** [Tên tác giả]
-* **Quản lý dữ liệu (Data Curation):** [Tên tác giả]
-* **Trực quan hóa (Visualization):** [Tên tác giả]
-* **Viết bản thảo ban đầu (Writing – Original Draft):** [Tên tác giả]
-* **Rà soát và chỉnh sửa bản thảo (Writing – Review & Editing):** [Tên tác giả]
-* **Hướng dẫn khoa học (Supervision):** [Tên người hướng dẫn]
-* **Quản lý dự án (Project Administration):** [Tên tác giả hoặc người hướng dẫn]
-
-**[Cần xác nhận phân công vai trò và việc phê duyệt bản thảo cuối trước khi nộp bài.]**
-
----
-
-## Xung đột lợi ích
-
-**[Cần tất cả tác giả xác nhận trước khi nộp bài.]** Nếu được xác nhận, sử dụng: "Các tác giả tuyên bố không có xung đột lợi ích tài chính hoặc quan hệ cá nhân nào có thể ảnh hưởng đến công trình được báo cáo trong bài báo này."
-
----
-
-## Phê duyệt đạo đức
-
-Nghiên cứu phân tích một benchmark tổng hợp thứ cấp do Lab cung cấp và tác giả không tuyển người tham gia, thực hiện can thiệp hoặc trực tiếp thu thập thông tin định danh cá nhân. Tuy nhiên, provenance ban đầu, điều kiện truy cập và chi tiết xử lý quyền riêng tư của benchmark vẫn đang được xác minh. Vì vậy, cơ quan chủ quản cần xác định và ghi nhận trạng thái đạo đức phù hợp trước khi nộp bài: **[Không áp dụng / Được miễn trừ kèm xác nhận của cơ quan / Đã được IRB phê duyệt, mã phê duyệt]**.
-
----
-
-## Đồng thuận tham gia và công bố
-
-Tác giả không tuyển chọn hoặc tương tác trực tiếp với người tham gia. Tuyên bố đồng thuận cuối cùng cần tuân theo kết luận đạo đức của cơ quan chủ quản ở trên: **[Không áp dụng / bổ sung cách diễn đạt được cơ quan xác nhận]**.
-
----
-
-## Tuyên bố về việc sử dụng AI tạo sinh
-
-Trong quá trình chuẩn bị bản thảo, tác giả đã sử dụng công cụ AI tạo sinh để hỗ trợ trau chuốt ngôn ngữ, kiểm tra ngữ pháp và tổ chức nội dung. Tác giả đã kiểm tra, chỉnh sửa độc lập và chịu trách nhiệm hoàn toàn đối với nội dung, tính chính xác khoa học và các kết luận của bản thảo.
+# Mục 8: Các tuyên bố và cam kết khoa học
+Bổ sung sau
 
 # Mục 9: Tài liệu tham khảo
 
