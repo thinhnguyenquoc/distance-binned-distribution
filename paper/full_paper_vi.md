@@ -10,11 +10,11 @@ Phân phối di chuyển này được tổng hợp từ dữ liệu quan sát l
 
 # Mục 1: Giới thiệu
 
-Ma trận nguồn–đích (OD) mô tả cường độ di chuyển giữa các đơn vị không gian và là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị. Tuy nhiên, dữ liệu OD chi tiết thường không sẵn có tại mọi thành phố mục tiêu. Việc thu thập OD chi tiết cho thành phố mục tiêu thường tốn kém, có độ phủ không đầy đủ và có thể chịu sai lệch về tính đại diện[@gallotti2024distorted; @pappalardo2023future]. Luồng di chuyển cũng phụ thuộc vào bối cảnh đô thị và đặc trưng địa phương, nên các quy luật học được từ thành phố nguồn không nhất thiết chuyển giao hoàn toàn sang thành phố mục tiêu. Do đó, các mô hình chuyển giao giữa thành phố vẫn có thể mang sai lệch có hệ thống tại thành phố mục tiêu khi không có thông tin hiệu chỉnh địa phương [@yang2014limits].
+Ma trận nguồn–đích (OD) mô tả cường độ di chuyển giữa các đơn vị không gian và là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị. Tuy nhiên, dữ liệu OD chi tiết thường khó thu thập đầy đủ tại thành phố mục tiêu và có thể chịu hạn chế về độ phủ và tính đại diện [@gallotti2024distorted; @pappalardo2023future]. Luồng di chuyển cũng phụ thuộc vào bối cảnh đô thị và đặc trưng địa phương, nên các quy luật học được từ thành phố nguồn không nhất thiết chuyển giao hoàn toàn sang thành phố mục tiêu. Do đó, các mô hình chuyển giao giữa thành phố vẫn có thể mang sai lệch có hệ thống tại thành phố mục tiêu khi không có thông tin hiệu chỉnh địa phương [@yang2014limits].
 
-Các mô hình mobility gần đây đã kết hợp ngữ cảnh đô thị và khoảng cách để dự báo luồng có khả năng chuyển giao giữa các thành phố[@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm]. Tuy nhiên, một baseline cross-city giữ nguyên tham số chỉ suy luận thành phố mục tiêu từ các đặc trưng đầu vào sẵn có. Dù biết khoảng cách của từng cặp OD, mô hình không trực tiếp quan sát cách tổng khối lượng di chuyển của thành phố mục tiêu được phân bổ giữa các khoảng khoảng cách[@lenormand2016comparison; @verma2025distance]. Sự phân bổ luồng theo khoảng cách có thể khác nhau giữa các thành phố, nên một phân phối khoảng cách đặc thù của thành phố mục tiêu có thể chứa thông tin mà baseline cross-city chưa suy diễn đầy đủ.
+Các mô hình mobility gần đây đã kết hợp ngữ cảnh đô thị và khoảng cách để dự báo luồng có khả năng chuyển giao giữa các thành phố [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm]. Tuy nhiên, một baseline cross-city giữ nguyên tham số chỉ suy luận thành phố mục tiêu từ các đặc trưng đầu vào sẵn có. Dù biết khoảng cách của từng cặp OD, mô hình không trực tiếp quan sát cách tổng khối lượng di chuyển của thành phố mục tiêu được phân bổ giữa các khoảng khoảng cách [@lenormand2016comparison; @verma2025distance]. Sự phân bổ luồng theo khoảng cách có thể khác nhau giữa các thành phố, nên một phân phối khoảng cách đặc thù của thành phố mục tiêu có thể chứa thông tin mà baseline cross-city chưa suy diễn đầy đủ.
 
-Nghiên cứu này kiểm tra liệu phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu có cung cấp thông tin bổ sung cho một baseline cross-city đã huấn luyện hay không. Phân phối này chỉ mô tả tỷ trọng tổng luồng theo khoảng cách và được sử dụng tại thời điểm suy luận để hiệu chỉnh dự báo, trong khi toàn bộ tham số mô hình được giữ nguyên. Mục tiêu là đo giá trị thông tin bổ sung của Y_D, không phải đề xuất một thuật toán hiệu chỉnh tổng quát mới.
+Nghiên cứu này kiểm tra liệu phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu có cung cấp thông tin bổ sung cho một baseline cross-city đã huấn luyện hay không. Phân phối này chỉ mô tả tỷ trọng tổng luồng theo khoảng cách và được sử dụng tại thời điểm suy luận để hiệu chỉnh dự báo, trong khi toàn bộ tham số mô hình được giữ nguyên. Phép hiệu chỉnh được sử dụng như một công cụ thực nghiệm để định lượng giá trị thông tin bổ sung của Y_D.
 
 Nghiên cứu được tổ chức quanh hai câu hỏi: 
 - Phân phối di chuyển theo khoảng cách của thành phố mục tiêu có cải thiện tái tạo cường độ OD so với baseline cross-city zero-shot giữ nguyên tham số hay không?
@@ -29,7 +29,7 @@ Kết quả cho thấy Y_D tạo ra mức cải thiện nhỏ nhưng tương đ�
 Nghiên cứu có 3 đóng góp chính: 
 - Định lượng giá trị thông tin bổ sung của Y_D trên một baseline cross-city giữ nguyên tham số.
 - Xác định các điều kiện chi phối lợi ích của tín hiệu thông qua độ phân giải, nhiễu và các đối chứng target-specific.
-- Làm rõ cơ chế hiệu chỉnh và kiểm tra độ bền của kết quả trên nhiều khởi tạo và kiến trúc baseline.
+- Phân tích cơ chế hiệu chỉnh và kiểm tra độ bền của kết quả trên nhiều khởi tạo và kiến trúc baseline.
 
 
 
