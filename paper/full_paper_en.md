@@ -99,9 +99,9 @@ Let $c$ denote a metropolitan area (city) and let $\mathcal{V}_c$ denote the dis
 | Symbol | Description | Source / Role |
 | :--- | :--- | :--- |
 | $c$ | Metropolitan area (city) index ($c \in \mathcal{C}$) | City identifier |
-| $\mathcal{C}$ | Benchmark set of 50 U.S. metropolitan areas ($|\mathcal{C}| = 50$) | Experimental setting |
+| $\mathcal{C}$ | Benchmark set of 50 U.S. metropolitan areas ($\lvert\mathcal{C}\rvert = 50$) | Experimental setting |
 | $\mathcal{V}_c$ | Discrete set of census tract spatial units in city $c$ | Static target-city input |
-| $N_c$ | Number of spatial units in city $c$, $N_c = |\mathcal{V}_c|$ | Static target-city input |
+| $N_c$ | Number of spatial units in city $c$, $N_c = \lvert\mathcal{V}_c\rvert$ | Static target-city input |
 | $\mathcal{G}_c$ | Spatial radius graph $(\mathcal{V}_c, \mathcal{E}_c)$ with 5 km radius threshold | Computed from geography |
 | $i, j$ | Origin and destination tract indices, both belonging to $\mathcal{V}_c$ | Spatial unit index |
 | $\mathbf{s}_{c,i}$ | Geographic centroid coordinates $(\operatorname{lon}_{c,i}, \operatorname{lat}_{c,i})$ of tract $i$ | Static target-city input |
@@ -422,7 +422,7 @@ During zero-shot target-city inference, target city $c$ provides only permissibl
 | **Learning rate** | Initial step size ($\eta$) | $2 \times 10^{-3}$ | Fixed | Standard deep learning configuration |
 | **Weight decay** | Decoupled parameter shrinkage ($\lambda_{\mathrm{wd}}$) | $10^{-4}$ | Fixed | Standard deep learning configuration |
 | **Dropout** | Layer dropout rate ($p$) | $0.1$ | Fixed | Standard deep learning configuration |
-| **Batch size** | Optimization grouping | 1 city per step ($|\Omega_{c,\mathrm{inter}}^+|$ pairs) | Fixed | City-level batching |
+| **Batch size** | Optimization grouping | 1 city per step ($\lvert\Omega_{c,\mathrm{inter}}^+\rvert$ pairs) | Fixed | City-level batching |
 | **Maximum epochs** | Training budget | 200 epochs | Fixed | Computational budget |
 | **Early-stopping patience** | Convergence stopping criterion | 15 epochs without improvement $\ge 10^{-4}$ | Fixed | Monitored on validation cities ($\mathcal{C}_{\mathrm{val}}^{(f)}$) |
 | **Checkpoint metric** | Model selection criterion | Macro-averaged interzonal $\operatorname{CPC}_{\mathrm{val}}$ | Selected on validation cities | Validation partition ($\mathcal{C}_{\mathrm{val}}^{(f)}$) |
