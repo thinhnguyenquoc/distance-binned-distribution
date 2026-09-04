@@ -360,13 +360,13 @@ So sánh mức tăng tái tạo trung bình $\Delta\mathrm{CPC}$ trên $N=50$ th
 
 ## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
 
-Mức độ đóng góp của phân phối di chuyển theo nhóm khoảng cách tại thành phố mục tiêu có thể phụ thuộc vào lượng thông tin tổng hợp mà quan sát này còn giữ lại được. Vì vậy, chúng tôi xem xét độ phân giải theo khoảng cách $K$ cũng như độ trung thực của quan sát dưới các mức nhiễu tổng hợp. Các thí nghiệm này nhằm kiểm tra xem việc giữ lại nhiều cấu trúc chi tiết và chính xác hơn có cung cấp thêm các ràng buộc hữu ích cho quá trình tái tạo OD hay không.
+Chúng tôi đánh giá sự thay đổi của \(\Delta\mathrm{CPC}\) theo số khoảng khoảng cách \(K\) và theo mức sai số Total Variation được bổ sung vào \(Y_D\), lần lượt đại diện cho độ phân giải và chất lượng của quan sát.
 
 
 
 ### 4.3.1. Độ phân giải khoảng cách cao hơn cung cấp ràng buộc giàu thông tin hơn
 
-Trên các giá trị $K$ đã kiểm tra, mức cải thiện trong tái tạo OD tăng khi số lượng nhóm khoảng cách tăng. Ngay tại độ phân giải thấp nhất ($K=2$), việc hiệu chỉnh bằng $Y_D$ đã cải thiện CPC trung bình $+0.00098$ so với mô hình zero-shot cố định, với khoảng tin cậy bootstrap 95% là $[+0.00052,+0.00151]$, đồng thời cải thiện kết quả ở 39/50 thành phố. Mức cải thiện đạt $+0.00354$ CPC tại cấu hình tham chiếu ($K=8$) và $+0.00639$ CPC tại $K=20$. Ở độ phân giải cao nhất được kiểm tra, 46/50 thành phố có kết quả tốt hơn zero-shot baseline và khoảng tin cậy bootstrap 95% vẫn nằm hoàn toàn trên 0, $[+0.00508,+0.00769]$.
+ΔCPC tăng đơn điệu từ \(+0.00098\) tại \(K=2\) lên \(+0.00639\) tại \(K=20\), với mức \(+0.00354\) ở cấu hình chính \(K=8\). Khoảng tin cậy 95% nằm phía trên 0 tại tất cả các giá trị \(K\) được kiểm tra, trong khi số thành phố cải thiện tăng từ 39/50 tại \(K=2\) lên 46/50 tại \(K=20\). Tuy nhiên, mức tăng trung bình trên mỗi bin giảm từ \(0.000494\) tại \(K=4\) xuống \(0.000319\) tại \(K=20\), cho thấy lợi ích biên giảm dần khi độ phân giải tiếp tục tăng.
 
 ### Bảng 4: Độ mở rộng của độ phân giải thông tin qua các khoảng khoảng cách
 
@@ -396,7 +396,7 @@ Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nh
 
 ### 4.3.2. Nhiễu quan sát tổng hợp làm giảm giá trị bổ sung của $Y_D$
 
-Sau khi đánh giá ảnh hưởng của độ phân giải quan sát, chúng tôi tiếp tục kiểm tra mức độ phụ thuộc của hiệu quả hiệu chỉnh vào chất lượng của $Y_D$. Cụ thể, phân phối di chuyển theo khoảng cách của thành phố mục tiêu được gây nhiễu ở nhiều mức khác nhau ($\epsilon \in [0.00, 0.05]$ sai số Total Variation), trong khi giữ nguyên mô hình zero-shot, tập thành phố đánh giá và toàn bộ quy trình hiệu chỉnh. Thiết kế này cho phép cô lập ảnh hưởng của sai lệch trong $Y_D$ khỏi các nguồn biến thiên khác của mô hình.
+Độ nhạy đối với chất lượng quan sát được đánh giá bằng cách gây nhiễu \(Y_D\) của thành phố mục tiêu tại các mức sai số Total Variation \(\epsilon\in[0.00,0.05]\), trong khi giữ nguyên baseline, tập thành phố đánh giá và toán tử hiệu chỉnh.
 
 
 
@@ -405,9 +405,7 @@ Sau khi đánh giá ảnh hưởng của độ phân giải quan sát, chúng t�
 
 
 
-Kết quả trên Hình 5 cho thấy mức tăng suy giảm đơn điệu qua các mức nhiễu tổng hợp đã kiểm tra. Quan sát không nhiễu tạo ra mức tăng lớn nhất ($+0.00354$); mức tăng giảm còn $+0.00070$ tại sai số TV $4\%$ và trở thành âm tại $5\%$ ($-0.00087$). Trên 1.000 hướng nhiễu tổng hợp, điểm giao cắt trung bình được ước lượng tại $\epsilon_{\mathrm{cross}}=4.44\%$ (khoảng tin cậy 95% $[4.16\%,4.77\%]$). Đây là quan hệ dose-response riêng cho benchmark và thiết kế perturbation này, không phải ngưỡng dung sai phổ quát cho quan sát thực tế.
-
-Trong thiết kế perturbation này, mức tăng trung bình vẫn dương tại các mức nhiễu thấp đã kiểm tra, chẳng hạn $+0.00336$ ở TV $1\%$ và $+0.00282$ ở TV $2\%$. Sự suy giảm ở các mức nhiễu cao hơn cũng cho thấy không thể xem $Y_D$ là có lợi bất kể chất lượng quan sát.
+ΔCPC giảm đơn điệu từ \(+0.00354\) khi không có nhiễu xuống \(+0.00070\) tại sai số TV 4% và \(-0.00087\) tại 5%. Trên 1.000 hướng nhiễu, điểm giao cắt trung bình với baseline được ước lượng tại \(\epsilon_{\mathrm{cross}}=4.44\%\), với khoảng tin cậy 95% \([4.16\%,4.77\%]\). Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu đã sử dụng, không phải mức dung sai áp dụng chung cho dữ liệu thực tế.
 
 
 
@@ -427,9 +425,7 @@ Trong thiết kế perturbation này, mức tăng trung bình vẫn dương tạ
 
 ## 4.4. Kết quả có bền vững trước các lựa chọn huấn luyện và mô hình hóa hay không?
 
-Các kết quả trước cho thấy $Y_D$ cung cấp thông tin bổ sung hữu ích cho dự báo zero-shot, đồng thời mức độ hữu ích này phụ thuộc vào độ phân giải, chất lượng quan sát và tính đặc thù mục tiêu. Tuy nhiên, cần kiểm tra liệu mức cải thiện quan sát được có ổn định trước biến thiên của quá trình huấn luyện và lựa chọn mô hình hay không. Vì vậy, chúng tôi đánh giá nhiều model seeds và các backbone dự báo khác nhau. Một phép so sánh riêng theo protocol kiểm tra hiệu năng thu được từ quan sát trực tiếp các cặp OD.
-
-
+Các kết quả trước cho thấy \(Y_D\) cung cấp thông tin bổ sung cho dự báo zero-shot, nhưng mức cải thiện phụ thuộc vào độ phân giải, chất lượng quan sát và tính đặc thù của thành phố mục tiêu. Để đánh giá liệu kết quả này có ổn định trước biến thiên ngẫu nhiên trong huấn luyện và lựa chọn mô hình hay không, chúng tôi thực hiện phân tích trên nhiều model seeds và các kiến trúc baseline khác nhau. Cuối cùng, một so sánh theo protocol cụ thể với các cặp OD được quan sát trực tiếp được sử dụng để đặt giá trị thông tin của \(Y_D\) trong tương quan với một dạng giám sát target chi tiết hơn.
 
 ### 4.4.1. Tính ổn định qua các lần khởi tạo mô hình độc lập
 
