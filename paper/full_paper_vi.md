@@ -251,13 +251,7 @@ $$
 \hat{t}_{c,ij}^{(1)} = \hat{t}_{c,ij}^{(0)} \frac{Y_{c,b(i,j)}}{\widehat{Y}_{c,b(i,j)}^{(0)}}
 $$
 
-trong đó $b(i,j)$ là khoảng khoảng cách chứa $d_{c,ij}$. 
-
-Toán tử này áp dụng trên các khoảng khoảng cách hoạt động (tại cấu hình chính $K = 8$, toàn bộ các khoảng khoảng cách của 50 thành phố đều hoạt động và chứa cặp ứng viên). Cùng một hệ số tỷ lệ dương được nhân đồng nhất cho mọi cặp OD trong cùng một khoảng cự ly. Mô hình và toàn bộ tham số đã học được giữ nguyên tuyệt đối; phép hiệu chỉnh không thực hiện lan truyền ngược, không fine-tuning và không tối ưu hóa tham số trên thành phố mục tiêu. Dạng mở rộng tổng quát khi $q \in [0, 1]$ được trình bày trong Phụ lục S2.
-
-### 3.4.8. Các đặc tính toán học bất biến được bảo toàn
-
-Vì mỗi cặp trong cùng một khoảng được nhân với cùng một hệ số dương, phép hiệu chỉnh giữ nguyên tập support $\Omega_c$ và thứ hạng tương đối nội khoảng. Việc chuẩn hóa theo tỷ trọng khoảng đồng thời bảo toàn tổng khối lượng dự báo của baseline: $\sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}^{(1)} = \sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}^{(0)}$. Các chứng minh giải tích và kiểm tra số học được cung cấp trong Phụ lục S3.
+Trong đó, \(b(i,j)\) là khoảng chứa \(d_{c,ij}\). Mọi cặp OD trong cùng một khoảng được nhân với cùng một hệ số. Ở cấu hình chính \(K=8\), tất cả các khoảng đều hoạt động trên 50 thành phố đánh giá. Phép hiệu chỉnh không cập nhật tham số mô hình. Dạng tổng quát với \(q\in[0,1]\) được trình bày trong Phụ lục S2. Do các hệ số hiệu chỉnh dương và không đổi trong mỗi khoảng, toán tử bảo toàn tập hỗ trợ, thứ hạng nội khoảng và tổng khối lượng dự báo; các chứng minh được trình bày trong Phụ lục S3.
 
 Hình 1 minh họa toàn bộ pipeline mô hình hóa zero-shot và hiệu chỉnh tại thời điểm suy luận.
 
@@ -315,12 +309,7 @@ Các phân tích độ bền và chẩn đoán được thực hiện nhằm ki�
 
 ## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot giữ nguyên tham số hay không?
 
-Trong thí nghiệm chính, việc bổ sung phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu làm CPC liên vùng trung bình trên 50 thành phố Hoa Kỳ tăng từ 0.71281 ở baseline zero-shot giữ nguyên tham số ($M_0$) lên 0.71635 ở dự báo sau hiệu chỉnh ($M_1$). Mức cải thiện trung bình đạt $\Delta\mathrm{CPC}=+0.00354$, với khoảng tin cậy 95% từ fold-stratified hierarchical bootstrap là $[+0.0026,+0.0045]$. Toàn bộ khoảng tin cậy nằm phía trên 0, cho thấy mức cải thiện CPC trung bình được ước lượng là dương dưới giao thức bootstrap đã sử dụng. Mức tăng nhỏ tương đương 0.5% với baseline CPC là 0.713. Tuy nhiên, cải thiện này xuất hiện ở 90% thành phố và có ý nghĩa thống kê mạnh, cho thấy tín hiệu mang thông tin bổ sung ổn định chứ không phải nhiễu ngẫu nhiên.
-
-Theo Hình 2, mức cải thiện không chỉ tập trung ở một số ít thành phố mà xuất hiện trên phần lớn các thành phố được đánh giá. Cụ thể, CPC tăng sau hiệu chỉnh ở 45 trong 50 thành phố (90.0%). Trung vị $\Delta\mathrm{CPC}=+0.00195$ cũng nằm phía dương, mặc dù mức cải thiện khác nhau đáng kể giữa các thành phố. Năm thành phố còn lại có CPC giảm sau hiệu chỉnh, cho thấy lợi ích của thông tin khoảng cách không xuất hiện ở mọi trường hợp. Nhìn chung, phân bố theo thành phố cho thấy mức cải thiện có quy mô nhỏ nhưng khá nhất quán trên tập đánh giá.
-
-Để kiểm tra thêm liệu xu hướng cải thiện này có mang tính hệ thống hay không, chúng tôi sử dụng kiểm định Wilcoxon signed-rank hai phía trên các cặp kết quả $M_0$ và $M_1$ của 50 thành phố. Kiểm định cho $p=1.93\times10^{-9}$, cung cấp bằng chứng mạnh chống lại giả thuyết không có sự thay đổi có hệ thống giữa hai điều kiện. Kết hợp các kết quả trên, phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu mang lại một mức cải thiện nhỏ nhưng nhất quán trên phần lớn các thành phố được đánh giá so với baseline zero-shot giữ nguyên tham số.
-
+Trong thí nghiệm chính, CPC liên vùng trung bình trên 50 thành phố tăng từ 0.71281 ở baseline $M_0$ lên 0.71635 sau hiệu chỉnh $M_1$, tương ứng với $\Delta\mathrm{CPC}=+0.00354$ và khoảng tin cậy bootstrap 95% $[+0.0026,+0.0045]$. Trung vị $\Delta\mathrm{CPC}$ là $+0.00195$, với 45/50 thành phố có mức thay đổi dương. Kiểm định Wilcoxon signed-rank ghép cặp cho $p=1.93\times10^{-9}$. Mức tăng tương đương khoảng 0.5% CPC của baseline và có năm thành phố suy giảm, cho thấy hiệu quả có quy mô nhỏ và không xuất hiện ở mọi thành phố.
 
 
 ![Hình 2](figures/fig2_main_per_city.png)
@@ -342,11 +331,11 @@ Biểu đồ cột thể hiện mức thay đổi hiệu năng theo từng thàn
 
 ## 4.2. Mức cải thiện có thực sự đặc thù theo thành phố mục tiêu và có ý nghĩa cấu trúc hay không?
 
-Mặc dù kết quả ở Mục 4.1 cho thấy việc hiệu chỉnh bằng phân phối di chuyển theo nhóm khoảng cách $Y_D$ của thành phố mục tiêu giúp cải thiện CPC, kết quả đó vẫn chưa cho biết liệu mức cải thiện có thực sự đến từ thông tin khoảng cách đặc thù của thành phố mục tiêu hay chỉ đơn giản là hệ quả của quá trình hiệu chỉnh. Để kiểm tra điều này, chúng tôi so sánh trường hợp sử dụng đúng $Y_D$ của thành phố mục tiêu với trường hợp sử dụng phân phối của các thành phố khác. Để bảo đảm so sánh công bằng, các phân phối từ thành phố khác được điều chỉnh sao cho tạo ra cùng mức độ can thiệp $D_T$ như trường hợp sử dụng thông tin của thành phố mục tiêu. Khi sử dụng đúng $Y_D$ của thành phố mục tiêu, mức cải thiện CPC trung bình đạt $\Delta\mathrm{CPC}=+0.003539$. Ngược lại, khi sử dụng các phân phối từ thành phố khác nhưng đã được khớp cùng mức độ can thiệp, mức thay đổi CPC trung bình chỉ là $\Delta\mathrm{CPC}=-0.000091$, tức gần như không mang lại cải thiện. Chênh lệch về mức cải thiện giữa hai điều kiện đạt $+0.003630$, với khoảng tin cậy 95% là $[+0.00287,+0.00445]$. Kiểm định Wilcoxon signed-rank một phía khi so sánh trường hợp sử dụng đúng thông tin của thành phố mục tiêu với trường hợp sử dụng thông tin từ thành phố khác cho $p=2.19\times10^{-11}$. Kết quả này cho thấy rằng khi mức độ hiệu chỉnh được kiểm soát ở cùng một mức, việc sử dụng phân phối khoảng cách của các thành phố khác không tái tạo được mức cải thiện đạt được khi sử dụng phân phối của chính thành phố mục tiêu. Nói cách khác, lợi ích của quá trình hiệu chỉnh không chỉ đến từ việc thay đổi dự báo mà còn phụ thuộc vào việc thông tin khoảng cách được sử dụng có phù hợp với thành phố mục tiêu hay không.
+Để phân biệt thông tin đặc thù của thành phố mục tiêu với ảnh hưởng chung của việc thay đổi dự báo, chúng tôi so sánh $Y_D$ chính xác của target với các phân phối donor được khớp để tạo ra cùng mức thay đổi phân phối. $Y_D$ của target tạo ra mức tăng trung bình $\Delta\mathrm{CPC}=+0.003539$, trong khi các donor đã khớp chỉ tạo ra $-0.000091$. Chênh lệch giữa hai điều kiện là $+0.003630$, với khoảng tin cậy 95% $[+0.00287,+0.00445]$ và kiểm định Wilcoxon một phía $p=2.19\times10^{-11}$. Vì vậy, cùng một mức độ điều chỉnh nhưng sử dụng phân phối của thành phố khác không tái tạo được lợi ích của thông tin target.
 
-Một khả năng khác là không cần biết chính xác phân phối di chuyển theo khoảng cách của từng thành phố mục tiêu; thay vào đó, một phân phối trung bình được xây dựng từ các thành phố trong tập huấn luyện có thể đã đủ để mang lại mức cải thiện tương tự. Nếu điều này xảy ra, lợi ích quan sát được có thể chủ yếu đến từ một quy luật suy giảm theo khoảng cách mang tính tổng quát, thay vì từ thông tin đặc thù của từng thành phố. Tuy nhiên, khi sử dụng phân phối trung bình của các thành phố huấn luyện với cùng mức độ hiệu chỉnh, mức cải thiện trung bình chỉ đạt $\Delta\mathrm{CPC}=+0.000914$, thấp hơn so với $+0.003539$ khi sử dụng $Y_D$ của chính thành phố mục tiêu. Chênh lệch giữa hai điều kiện là $+0.002626$, với khoảng tin cậy 95% $[+0.00197,+0.00336]$ và kiểm định Wilcoxon một phía cho $p=4.03\times10^{-11}$. Kết quả này cho thấy một quy luật suy giảm theo khoảng cách tổng quát có thể tạo ra một mức cải thiện nhỏ, nhưng không tái tạo được mức cải thiện đạt được khi sử dụng phân phối khoảng cách đặc thù của thành phố mục tiêu. Điều này hỗ trợ vai trò của thông tin đặc thù theo thành phố trong $Y_D$ đối với mức cải thiện quan sát được.
+Để kiểm tra liệu một phân phối khoảng cách chung có đủ để hiệu chỉnh baseline hay không, chúng tôi sử dụng phân phối trung bình của các thành phố huấn luyện, được khớp theo cùng mức độ thay đổi phân phối. Điều kiện này tạo ra $\Delta\mathrm{CPC}=+0.000914$, thấp hơn mức $+0.003539$ khi sử dụng $Y_D$ của target. Chênh lệch giữa hai điều kiện là $+0.002626$, với khoảng tin cậy 95% $[+0.00197,+0.00336]$ và kiểm định Wilcoxon một phía $p=4.03\times10^{-11}$, cho thấy phân phối trung bình không tái tạo được lợi ích của thông tin đặc thù theo thành phố.
 
-Bên cạnh các kiểm tra sử dụng phân phối thay thế từ những nguồn khác, chúng tôi còn thực hiện một phép kiểm tra bằng cách hoán đổi vị trí các khoảng trong chính $Y_D$ của thành phố mục tiêu. Phép hoán đổi này giữ nguyên các tỷ lệ ban đầu của phân phối nhưng phá vỡ mối quan hệ giữa mỗi tỷ lệ di chuyển và khoảng cách tương ứng, qua đó kiểm tra liệu cấu trúc theo khoảng cách của $Y_D$ có quan trọng đối với mức cải thiện hay không. Trong điều kiện này, CPC giảm trung bình với $\Delta\mathrm{CPC}=-0.006964$, trái ngược với mức cải thiện $\Delta\mathrm{CPC}=+0.003539$ khi sử dụng đúng $Y_D$. Kết quả này cung cấp thêm bằng chứng rằng giá trị của $Y_D$ không chỉ nằm ở các tỷ lệ di chuyển được quan sát mà còn ở việc các tỷ lệ đó được gắn đúng với các khoảng cách tương ứng. Kết hợp với các kiểm tra sử dụng phân phối sai thành phố và phân phối trung bình từ tập huấn luyện, kết quả này củng cố bằng chứng rằng mức cải thiện gắn với thông tin khoảng cách có cấu trúc và đặc thù của thành phố mục tiêu.
+Để kiểm tra vai trò của thứ tự khoảng cách, chúng tôi hoán vị các thành phần trong $Y_D$ của target. Phép biến đổi này giữ nguyên các giá trị tỷ trọng nhưng phá vỡ sự tương ứng giữa mỗi tỷ trọng và khoảng cách của nó. Hiệu chỉnh bằng phân phối đã hoán vị làm CPC giảm trung bình $-0.006964$, trái với mức tăng $+0.003539$ khi sử dụng đúng thứ tự. Kết quả cho thấy lợi ích của $Y_D$ phụ thuộc vào sự liên kết chính xác giữa tỷ trọng luồng và các khoảng cách tương ứng.
 
 
 
@@ -357,18 +346,14 @@ So sánh mức tăng tái tạo trung bình $\Delta\mathrm{CPC}$ trên $N=50$ th
 
 
 
-### Bảng 3: Tính đặc thù mục tiêu và các đối chứng Placebo ($N=50$ thành phố; $B_{\text{draw}}=1000$, $B_{\text{boot}}=10,000$)
+### Bảng 3: Tính đặc thù mục tiêu và các đối chứng Placebo ($N=50$)
 
 | Experimental Condition | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Benefit vs $M_0$ ($p_{\text{2-sided}}$) | Specificity Gain vs Placebo | Specificity 95% CI | Target vs Placebo ($p_{\text{1-sided}}$) | Tỷ lệ thắng ($Target > Placebo$) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **1. Oracle Target $Y_D$ (Upper Bound)** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs M0)** |
 | **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46 / 50 (92.0%)** |
 | **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47 / 50 (94.0%)** |
-| **4. Raw Test Donors (In-Fold 9-Donor Average, E1)** | **$-0.037721$** | $[-0.04357, -0.03268]$ | $1.78 \times 10^{-15}$ | **$+0.041261$** | $[+0.03641, +0.04688]$ | $8.88 \times 10^{-16}$ | **50 / 50 (100%)** |
-| **5. Raw Test Donors ($B_{\text{draw}}=1000$ Draws)** | **$-0.037787$** | $[-0.04358, -0.03278]$ | $1.78 \times 10^{-15}$ | **$+0.041326$** | $[+0.03646, +0.04688]$ | $8.88 \times 10^{-16}$ | **50 / 50 (100%)** |
-| **6. Raw Training Donors ($B_{\text{draw}}=1000$ Draws)** | **$-0.035148$** | $[-0.04014, -0.03067]$ | $1.78 \times 10^{-15}$ | **$+0.038687$** | $[+0.03431, +0.04349]$ | $8.88 \times 10^{-16}$ | **50 / 50 (100%)** |
-| **7. Raw Fold Train-Mean $Y_D$** | **$-0.017735$** | $[-0.02365, -0.01243]$ | $4.91 \times 10^{-12}$ | **$+0.021275$** | $[+0.01613, +0.02706]$ | $4.44 \times 10^{-15}$ | **48 / 50 (96.0%)** |
-| **8. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
+| **4. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
 
 
 
