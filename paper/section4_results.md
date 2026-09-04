@@ -80,7 +80,7 @@ In addition to tests using alternative distributions from other sources, we cond
 
 The contribution of the target-city distance-binned mobility distribution may depend on the amount of structured information preserved during aggregation. We therefore examine two dimensions of observational resolution (distance granularity $K$ and spatial resolution) as well as observational fidelity under synthetic perturbations. These experiments investigate whether retaining finer-grained or higher-fidelity structure within the aggregate observation provides stronger, more effective constraints for zero-shot OD reconstruction.
 
-*(Tiếng Việt: Mức độ đóng góp của phân phối di chuyển theo nhóm khoảng cách tại thành phố mục tiêu có thể phụ thuộc vào lượng thông tin tổng hợp mà quan sát này còn giữ lại được. Vì vậy, chúng tôi xem xét hai khía cạnh của độ phân giải quan sát (độ phân giải theo khoảng cách $K$ và độ phân giải theo không gian) cũng như độ trung thực của quan sát dưới các mức nhiễu tổng hợp. Các thí nghiệm này nhằm kiểm tra xem việc giữ lại nhiều cấu trúc chi tiết và chính xác hơn có cung cấp thêm các ràng buộc hữu ích cho quá trình tái tạo OD hay không.)*
+*(Tiếng Việt: Mức độ đóng góp của phân phối di chuyển theo nhóm khoảng cách tại thành phố mục tiêu có thể phụ thuộc vào lượng thông tin tổng hợp mà quan sát này còn giữ lại được. Vì vậy, chúng tôi xem xét độ phân giải theo khoảng cách $K$ cũng như độ trung thực của quan sát dưới các mức nhiễu tổng hợp. Các thí nghiệm này nhằm kiểm tra xem việc giữ lại nhiều cấu trúc chi tiết và chính xác hơn có cung cấp thêm các ràng buộc hữu ích cho quá trình tái tạo OD hay không.)*
 
 ---
 
