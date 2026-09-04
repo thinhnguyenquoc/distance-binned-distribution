@@ -523,6 +523,58 @@ def render_html_to_pdf_chrome(html_path: Path, output_pdf_path: Path) -> None:
     subprocess.run(cmd, check=True)
 
 
+def render_markdown_to_pdf_pandoc(input_path: Path, output_pdf_path: Path) -> bool:
+    """Renders a Markdown academic paper to PDF via Pandoc + XeLaTeX."""
+    import os
+    import shutil
+    import subprocess
+
+    env = dict(os.environ)
+    current_path = env.get("PATH", "")
+    tex_paths = ["/Library/TeX/texbin", "/opt/homebrew/bin", "/usr/local/bin"]
+    for p in tex_paths:
+        if p not in current_path and os.path.exists(p):
+            current_path = f"{p}:{current_path}"
+    env["PATH"] = current_path
+
+    pandoc_exe = shutil.which("pandoc", path=env["PATH"])
+    xelatex_exe = shutil.which("xelatex", path=env["PATH"])
+
+    if not (pandoc_exe and xelatex_exe):
+        return False
+
+    bib_candidates = [
+        input_path.parent / "references.bib",
+        Path("paper/references.bib"),
+    ]
+    bib_file = next((b for b in bib_candidates if b.exists()), None)
+
+    cmd = [
+        pandoc_exe,
+        "-f", "markdown+tex_math_single_backslash",
+        str(input_path.resolve()),
+        f"--resource-path=.:{input_path.parent.resolve()}:{(input_path.parent / 'figures').resolve()}",
+        "--pdf-engine=xelatex",
+        "-V", "geometry:margin=20mm",
+        "-V", "mainfont=Times New Roman",
+        "-V", "papersize=a4",
+        "-V", "colorlinks=true",
+        "-V", "linkcolor=blue",
+        "-V", "urlcolor=blue",
+        "-V", "citecolor=blue",
+        "-o", str(output_pdf_path.resolve()),
+    ]
+    if bib_file:
+        cmd.extend(["--citeproc", f"--bibliography={bib_file.resolve()}"])
+
+    try:
+        subprocess.run(cmd, env=env, capture_output=True, text=True, check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Pandoc/XeLaTeX warning: {e.stderr}")
+        return False
+
+
 def convert_paper_to_pdf(
     input_path: Path,
     output_path: Path | None = None,
@@ -537,9 +589,16 @@ def convert_paper_to_pdf(
         output_path = input_path.with_suffix(".pdf")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    temp_html_path = output_path.with_suffix(".html")
 
     print(f"Reading Markdown: {input_path}")
+    print("Attempting compilation via Pandoc + XeLaTeX...")
+    if render_markdown_to_pdf_pandoc(input_path, output_path):
+        size_mb = output_path.stat().st_size / (1024 * 1024)
+        print(f"Success! Generated publication-quality PDF via Pandoc/XeLaTeX: {output_path} ({size_mb:.2f} MB)")
+        return output_path
+
+    print("Pandoc/XeLaTeX unavailable or failed; proceeding to HTML + Chromium pipeline...")
+    temp_html_path = output_path.with_suffix(".html")
     md_text = input_path.read_text(encoding="utf-8")
 
     title_match = re.search(r"^#\s+(.+)$", md_text, flags=re.MULTILINE)
