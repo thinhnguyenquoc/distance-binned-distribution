@@ -235,7 +235,7 @@ Toàn bộ quá trình huấn luyện tuân thủ cấu hình cố định tiên
 | **Model Seeds** | $\mathcal{S} = \{1, 10, 100\}$ | Đánh giá độ ổn định ngẫu nhiên |
 | **Cố định tham số** | Giữ nguyên tuyệt đối | Không cập nhật trọng số trên test cities |
 
-Không sử dụng hàm phạt điều chuẩn phụ (regularization penalty) cộng thêm vào loss vì mã nguồn tối ưu trực tiếp trên hàm mất mát ZTNB. Cả Urban GNN và Pairwise Node MLP đều dùng chung cấu hình tối ưu này; khác biệt duy nhất là Urban GNN sử dụng 2 lớp GNN truyền thông điệp trên đồ thị bán kính 5 km, còn Pairwise Node MLP sử dụng 2 lớp MLP truyền thẳng không có truyền thông điệp qua cạnh.
+Cả hai neural backbone sử dụng cùng cấu hình huấn luyện. Điều chuẩn được thực hiện thông qua weight decay của AdamW và dropout; không có hàm phạt bổ sung được cộng trực tiếp vào loss ZTNB.
 
 ### 3.4.7. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
