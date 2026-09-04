@@ -1,14 +1,14 @@
-# Cải thiện tái tạo cường độ luồng OD cua mo hinh zero-shot bằng phân phối di chuyển theo khoảng cách của thành phố mục tiêu
+# Cải thiện tái tạo cường độ luồng OD của mô hình zero-shot giữ nguyên tham số bằng phân phối di chuyển theo khoảng cách của thành phố mục tiêu
 
 ---
 
 ## Tóm tắt
 
-Ma trận nguồn–đích (origin–destination, OD) là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị, nhưng dữ liệu chi tiết về cường độ luồng OD của thành phố mục tiêu thường khó thu thập. Các nghiên cứu sử dụng ngữ cảnh đô thị và khoảng cách địa lý đã phát triển các baseline cross-city zero-shot có khả năng dự báo luồng di chuyển mà không sử dụng dữ liệu quan sát về cường độ OD của thành phố mục tiêu. Nghiên cứu này xem xét liệu phân phối di chuyển theo khoảng cách của thành phố mục tiêu có thể cải thiện việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết thông qua hiệu chỉnh kết quả của một baseline zero-shot hay không.
+Ma trận nguồn–đích (origin–destination, OD) là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị, nhưng dữ liệu chi tiết về cường độ luồng OD của thành phố mục tiêu thường khó thu thập. Các nghiên cứu sử dụng ngữ cảnh đô thị và khoảng cách địa lý đã phát triển các baseline cross-city zero-shot có khả năng dự báo luồng di chuyển mà không sử dụng dữ liệu quan sát về cường độ OD của thành phố mục tiêu. Nghiên cứu này xem xét liệu phân phối di chuyển theo khoảng cách của thành phố mục tiêu có thể cải thiện việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết thông qua hiệu chỉnh kết quả của một baseline zero-shot có tham số được giữ nguyên hay không.
 
 Phân phối di chuyển này được tổng hợp từ dữ liệu quan sát luồng của chính thành phố mục tiêu và chỉ cung cấp tỷ trọng khối lượng luồng theo các khoảng khoảng cách, không cung cấp cường độ của từng cặp OD cụ thể. Trong thí nghiệm chính, phương pháp được đánh giá bằng quy trình kiểm định chéo 5-fold trên 50 vùng đô thị của Hoa Kỳ. Hiệu chỉnh ở cấp thành phố tạo ra mức cải thiện nhỏ nhưng nhất quán: CPC trung bình tăng 0.00354 (CI 95%: $[+0{.}0026; +0{.}0045]$), với kết quả có cải thiện cho baseline zero-shot tại 45 thành phố. Đồng thời, mức cải thiện cũng giảm khi độ phân giải hoặc chất lượng của phân phối quan sát dần suy giảm.
 
-Nghiên cứu giới hạn phạm vi tạp trung đánh giá ở các cặp OD đã biết có luồng di chuyển. Các cặp OD chưa được quan sát chưa có số liệu di chuyển không được đưa vào các phép đánh giá.
+Nghiên cứu giới hạn phạm vi tập trung đánh giá ở các cặp OD đã biết có luồng di chuyển. Các cặp OD chưa được quan sát chưa có số liệu di chuyển không được đưa vào các phép đánh giá.
 
 **Từ khóa:** ma trận nguồn–đích; tái tạo cường độ OD; phân phối di chuyển theo khoảng cách; zero-shot; học chuyển giao giữa các thành phố; quan sát tổng hợp; di chuyển không gian.
 
@@ -20,17 +20,25 @@ Ma trận nguồn–đích (origin–destination, OD) mô tả khối lượng d
 
 Tuy nhiên, việc thu thập cường độ OD chi tiết cho mọi thành phố mục tiêu gặp nhiều khó khăn. Khảo sát đi lại có thể tốn kém và thưa về mặt không gian, trong khi dữ liệu di chuyển thu thập thụ động có thể chịu ảnh hưởng của độ phủ không đầy đủ, sai lệch mẫu, sai lệch do quy trình xử lý, hạn chế truy cập và tính đại diện chưa rõ ràng [@gallotti2024distorted; @pappalardo2023future]. Hơn nữa, luồng di chuyển không chỉ được quyết định bởi khoảng cách địa lý. Cấu trúc luồng còn phản ánh phân bố dân cư và việc làm, sử dụng đất, hạ tầng giao thông, hình thái đô thị và hành vi đặc thù của từng thành phố. Do đó, các mô hình chuyển giao giữa thành phố vẫn có thể mang sai lệch có hệ thống tại miền mục tiêu khi không có thông tin hiệu chỉnh địa phương [@yang2014limits].
 
-Các mô hình neural mobility gần đây kết hợp thuộc tính địa lý, biểu diễn không gian và tương tác phụ thuộc khoảng cách để học các quy luật luồng có khả năng chuyển giao giữa các khu vực [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm]. Những phương pháp này làm giảm nhu cầu phải xây dựng một mô hình độc lập từ đầu cho từng thành phố. Tuy nhiên, một mô hình cross-city đã đóng băng vẫn phải suy luận cấu trúc di chuyển của thành phố mục tiêu từ các đặc trưng đầu vào sẵn có. Cần lưu ý rằng baseline cross-city zero-shot đóng băng không sử dụng giá trị cường độ luồng OD của thành phố mục tiêu để huấn luyện hoặc cập nhật tham số, và phạm vi đánh giá được giới hạn nghiêm ngặt trong việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết. Mặc dù baseline biết khoảng cách địa lý của từng cặp OD, mô hình không trực tiếp quan sát cách tổng khối lượng di chuyển của thành phố mục tiêu được phân bổ giữa các khoảng khoảng cách. Phân phối cự ly chuyến đi này là một đặc trưng tổng hợp quan trọng, phản ánh lực cản không gian và cấu trúc di chuyển đặc thù của thành phố, trong khi quy luật suy giảm theo khoảng cách thực tế lại thay đổi theo bộ dữ liệu, thang không gian, mục đích chuyến đi và bối cảnh đô thị [@lenormand2016comparison; @verma2025distance].
+Các mô hình neural mobility gần đây kết hợp thuộc tính địa lý, biểu diễn không gian và tương tác phụ thuộc khoảng cách để học các quy luật luồng có khả năng chuyển giao giữa các khu vực [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm]. Những phương pháp này làm giảm nhu cầu phải xây dựng một mô hình độc lập từ đầu cho từng thành phố. Tuy nhiên, một mô hình cross-city có tham số được giữ nguyên vẫn phải suy luận cấu trúc di chuyển của thành phố mục tiêu từ các đặc trưng đầu vào sẵn có. Cần lưu ý rằng baseline cross-city zero-shot có tham số được giữ nguyên không sử dụng giá trị cường độ luồng OD của thành phố mục tiêu để huấn luyện hoặc cập nhật tham số, và phạm vi đánh giá được giới hạn nghiêm ngặt trong việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết. Mặc dù baseline biết khoảng cách địa lý của từng cặp OD, mô hình không trực tiếp quan sát cách tổng khối lượng di chuyển của thành phố mục tiêu được phân bổ giữa các khoảng khoảng cách. Phân phối cự ly chuyến đi này là một đặc trưng tổng hợp quan trọng, phản ánh lực cản không gian và cấu trúc di chuyển đặc thù của thành phố, trong khi quy luật suy giảm theo khoảng cách thực tế lại thay đổi theo bộ dữ liệu, thang không gian, mục đích chuyến đi và bối cảnh đô thị [@lenormand2016comparison; @verma2025distance].
 
 Nghiên cứu này kiểm tra liệu phần thông tin còn thiếu đó có thể được bổ sung bằng một quan sát tổng hợp gọn nhẹ: phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu, được định nghĩa là tỷ trọng khối lượng chuyến đi quan sát được nằm trong các khoảng khoảng cách. Là một tín hiệu tổng hợp số chiều thấp, phân phối này chỉ mô tả cách tổng khối lượng được phân bổ theo khoảng cách và không tiết lộ cường độ của từng cặp OD riêng lẻ. Thay vì huấn luyện lại hoặc fine-tune mô hình dự báo, phân phối này chỉ được sử dụng tại thời điểm suy luận để tái phân bổ giải tích khối lượng luồng dự báo giữa các khoảng khoảng cách trong khi backbone và toàn bộ tham số đã huấn luyện được giữ cố định, đồng thời bảo toàn tổng khối lượng di chuyển dự báo và thứ hạng tương đối của các cặp OD trong từng khoảng. Phép hiệu chỉnh này được thiết kế có chủ ý theo dạng đơn giản và đóng. Vai trò của nó không phải là đề xuất một thuật toán hiệu chỉnh tổng quát mới, mà là một công cụ thực nghiệm để đo lượng thông tin bổ sung chứa trong một tín hiệu tổng hợp có số chiều thấp và đặc thù cho thành phố mục tiêu.
 
-Nghiên cứu được tổ chức quanh hai câu hỏi chính: (1) **RQ1—Giá trị thông tin bổ sung:** Khi được đánh giá trên cùng một tập hỗ trợ liên vùng dương đã biết, việc đưa phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu vào như thông tin bổ sung duy nhất tại bước hiệu chỉnh có cải thiện tái tạo cường độ luồng OD zero-shot so với mô hình cross-city đã đóng băng (với toàn bộ tham số đã huấn luyện được giữ cố định và không sử dụng dữ liệu cường độ luồng của thành phố mục tiêu) hay không? (2) **RQ2—Điều kiện ảnh hưởng đến giá trị quan sát:** Mức cải thiện thay đổi như thế nào theo số lượng khoảng khoảng cách, chất lượng quan sát, thứ tự của các khoảng và tính đặc thù của thành phố mục tiêu? Cả hai câu hỏi được đánh giá trong phạm vi tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết. Các cặp ngoài tập hỗ trợ được xem là chưa biết, không được gán là luồng bằng 0 và không thuộc phạm vi đánh giá của nghiên cứu; do đó, kết quả không đại diện cho khả năng phát hiện liên kết hoặc khôi phục toàn bộ ma trận OD. Ngoài ra, phân phối này được trích xuất trực tiếp từ luồng tham chiếu của chính thành phố mục tiêu nên được xem là một **quan sát tổng hợp oracle**. Thiết lập này đóng vai trò như một thí nghiệm thăm dò giá trị thông tin có kiểm soát hoặc một thí nghiệm định tính khả thi nhằm kiểm tra xem một tín hiệu tổng hợp có số chiều thấp có chứa thông tin bổ sung đủ rõ để tạo động lực cho các nghiên cứu thu thập hoặc ước lượng phân phối này trong tương lai hay không, chứ chưa chứng minh khả năng triển khai vận hành với độ chính xác, chi phí, khả năng truy cập hoặc đặc tính quyền riêng tư tương đương từ một nguồn dữ liệu độc lập.
+Nghiên cứu được tổ chức quanh hai câu hỏi chính: 
+- Khi được đánh giá trên cùng một tập hỗ trợ liên vùng dương đã biết, việc đưa phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu vào như thông tin bổ sung duy nhất tại bước hiệu chỉnh có cải thiện tái tạo cường độ luồng OD zero-shot so với mô hình cross-city đã cố định tham số hay không? 
+- Nếu có cải thiện thì mức cải thiện thay đổi như thế nào theo số lượng khoảng khoảng cách, chất lượng quan sát, thứ tự của các khoảng và tính đặc thù của thành phố mục tiêu? 
+
+Cả hai câu hỏi được đánh giá trong phạm vi tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết. Các cặp ngoài tập hỗ trợ được xem là chưa biết, không được gán là luồng bằng 0 và không thuộc phạm vi đánh giá của nghiên cứu. Do đó, kết quả không đại diện cho khả năng phát hiện liên kết hoặc khôi phục toàn bộ ma trận OD. Ngoài ra, phân phối này được trích xuất trực tiếp từ luồng tham chiếu của chính thành phố mục tiêu nên được xem là một quan sát tổng hợp từ thực tế. Thiết lập này đóng vai trò như một thí nghiệm thăm dò giá trị thông tin có kiểm soát hoặc một thí nghiệm định tính khả thi nhằm kiểm tra xem một tín hiệu tổng hợp có số chiều thấp có chứa thông tin bổ sung đủ rõ để tạo động lực cho các nghiên cứu thu thập hoặc ước lượng phân phối này trong tương lai hay không.
 
 Nghiên cứu sử dụng kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị của Hoa Kỳ, trong đó mỗi thành phố được đánh giá ở fold mà thành phố đó không tham gia huấn luyện mô hình. Backbone neural và toàn bộ tham số đã huấn luyện được giữ cố định trước bước hiệu chỉnh cho thành phố mục tiêu. Thí nghiệm chính sử dụng phân phối cấp thành phố. Các phân tích bổ sung khảo sát ảnh hưởng của số lượng khoảng khoảng cách, sai số quan sát, hoán vị khoảng cách, phân phối từ thành phố khác, các lần khởi tạo ngẫu nhiên và kiến trúc mô hình khác nhau. Một phân tích thăm dò bổ sung về phân giải không gian cấp county được trình bày trong Phụ lục S7.
 
-Kết quả cho thấy phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu tạo ra mức cải thiện nhỏ nhưng tương đối nhất quán so với baseline zero-shot đã đóng băng: CPC trung bình tăng 0.00354 và cải thiện kết quả tại 45 trong tổng số 50 thành phố. Mức cải thiện giảm khi độ phân giải và chất lượng của phân phối quan sát suy giảm, đồng thời phụ thuộc vào việc các khoảng khoảng cách được giữ đúng thứ tự và đặc thù cho thành phố mục tiêu.
+Kết quả cho thấy phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu tạo ra mức cải thiện nhỏ nhưng tương đối nhất quán so với baseline zero-shot giữ nguyên tham số: CPC trung bình tăng 0.00354 và cải thiện kết quả tại 45 trong tổng số 50 thành phố. Mức cải thiện giảm khi độ phân giải và chất lượng của phân phối quan sát suy giảm, đồng thời phụ thuộc vào việc các khoảng khoảng cách được giữ đúng thứ tự và đặc thù cho thành phố mục tiêu.
 
-Nghiên cứu có bốn đóng góp chính: (1) hình thức hóa một thí nghiệm có điều kiện theo tập hỗ trợ liên vùng dương đã biết nhằm cô lập giá trị thông tin bổ sung của phân phối khoảng cách cấp thành phố trong khi giữ cố định mô hình dự báo; (2) đánh giá tín hiệu này bằng kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị, với bất định được lượng hóa ở cấp thành phố thay vì xem các cặp OD trong cùng thành phố là độc lập; (3) xác định các điều kiện làm tín hiệu trở nên hữu ích thông qua phân tích độ phân giải, nhiễu, hoán vị, donor placebo, khởi tạo và kiến trúc; và (4) diễn giải cơ chế hiệu chỉnh như sự tái phân bổ khối lượng liên khoảng có bảo toàn thứ hạng nội khoảng, đồng thời phân biệt rõ liên hệ thực nghiệm với bằng chứng nhân quả và đánh giá oracle với triển khai vận hành.
+Nghiên cứu có bốn đóng góp chính: 
+- Thiết lập một thí nghiệm có điều kiện theo tập hỗ trợ liên vùng dương đã biết nhằm cô lập giá trị thông tin bổ sung của phân phối khoảng cách cấp thành phố trong khi giữ cố định mô hình dự báo. Từ đó đánh giá đúng giá trị mà phân phối thực sự cung cấp.
+- Đánh giá tín hiệu này bằng kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị, với bất định được lượng hóa ở cấp thành phố thay vì xem các cặp OD trong cùng thành phố là độc lập. 
+- Xác định các điều kiện làm tín hiệu trở nên hữu ích thông qua phân tích độ phân giải, nhiễu, hoán vị, donor placebo, khởi tạo và kiến trúc.
+- Diễn giải cơ chế hiệu chỉnh như sự tái phân bổ khối lượng liên khoảng có bảo toàn thứ hạng nội khoảng, đồng thời phân biệt rõ liên hệ thực nghiệm với bằng chứng nhân quả và đánh giá oracle với triển khai vận hành.
 
 ---
 
@@ -74,7 +82,7 @@ Dữ liệu di chuyển có thể chịu sai lệch về độ phủ, tính đ�
 
 Các nghiên cứu đã tổng quan xác lập vai trò quan trọng của khoảng cách trong tương tác không gian, nhu cầu hiệu chỉnh địa phương, khả năng chuyển giao ngày càng cao của mô hình neural mobility và giá trị của một số ràng buộc tổng hợp. Tuy nhiên, một câu hỏi thông tin cụ thể vẫn chưa được làm rõ đầy đủ: **sau khi mô hình cross-city đã học từ bối cảnh đô thị tĩnh và khoảng cách giữa các cặp vùng, phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?**
 
-Nghiên cứu này không xem phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu là sự thay thế cho ma trận OD mục tiêu, cũng không xem nó là một đặc trưng mới để huấn luyện lại mạng neural. Thay vào đó, phân phối này là tín hiệu tổng hợp duy nhất về cường độ của thành phố mục tiêu được đưa vào sau khi mô hình đã huấn luyện xong. Thiết kế backbone đóng băng, đánh giá liên thành phố và các đối chứng chẩn đoán được khớp phù hợp được sử dụng để phân biệt giá trị thông tin đặc thù của target với hiệu ứng thích nghi mô hình, distance decay chung hoặc rescaling tùy ý. Các nghiên cứu hiện có chưa trực tiếp kiểm tra giá trị cải thiện biên của tín hiệu này trên một baseline cross-city đã được huấn luyện và giữ cố định. Phân tích cũng tách riêng độ phân giải cự ly với độ phân giải không gian dưới cấp vùng đô thị và kiểm tra độ trung thực của quan sát bằng nhiễu có kiểm soát cùng placebo về thứ tự ngữ nghĩa.
+Nghiên cứu này không xem phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu là sự thay thế cho ma trận OD mục tiêu, cũng không xem nó là một đặc trưng mới để huấn luyện lại mạng neural. Thay vào đó, phân phối này là tín hiệu tổng hợp duy nhất về cường độ của thành phố mục tiêu được đưa vào sau khi mô hình đã huấn luyện xong. Thiết kế giữ nguyên tham số backbone (không cập nhật trọng số), đánh giá liên thành phố và các đối chứng chẩn đoán được khớp phù hợp được sử dụng để phân biệt giá trị thông tin đặc thù của target với hiệu ứng thích nghi mô hình, distance decay chung hoặc rescaling tùy ý. Các nghiên cứu hiện có chưa trực tiếp kiểm tra giá trị cải thiện biên của tín hiệu này trên một baseline cross-city đã được huấn luyện và giữ nguyên tham số. Phân tích cũng tách riêng độ phân giải cự ly với độ phân giải không gian dưới cấp vùng đô thị và kiểm tra độ trung thực của quan sát bằng nhiễu có kiểm soát cùng placebo về thứ tự ngữ nghĩa.
 
 Cách định vị này làm hẹp phạm vi claim nhưng giúp phạm vi đánh giá trở nên minh bạch. Nghiên cứu đặt câu hỏi liệu một đại lượng tổng hợp mục tiêu có số chiều thấp và đã biết có cải thiện ước lượng cường độ của các liên kết OD liên vùng có luồng dương đã biết trong một hệ thống dự báo cố định hay không. Nghiên cứu không tuyên bố tái tạo support chưa biết của mạng, chứng minh khả năng thu thập vận hành của tín hiệu tổng hợp này hoặc cung cấp bảo đảm quyền riêng tư chính thức. Mục 3 chuyển khoảng trống nghiên cứu này thành các định nghĩa dữ liệu, mô hình, toán tử hiệu chỉnh và protocol đánh giá liên thành phố được dùng trong thực nghiệm.
 
@@ -100,9 +108,9 @@ Gọi $c$ là một thành phố và $\mathcal{V}_c$ là tập các vùng đơn 
 | $I_b$ | Khoảng khoảng cách thứ $b$ ($b = 1, \dots, K$) | Phân vị khoảng cách |
 | $K$ | Số lượng khoảng khoảng cách ($K = 8$ ở thiết lập chính) | Cấu hình thực nghiệm cố định |
 | $Y_{c,b}$ | Tỷ trọng luồng di chuyển mục tiêu trong khoảng $b$ ($\sum_{b=1}^K Y_{c,b} = 1$) | Dữ liệu đầu vào hiệu chỉnh oracle |
-| $\hat{t}_{c,ij}^{(0)}$ | Dự báo cường độ luồng của baseline cross-city zero-shot (điều kiện $M_0$) | Đầu ra baseline đóng băng |
+| $\hat{t}_{c,ij}^{(0)}$ | Dự báo cường độ luồng của baseline cross-city zero-shot (điều kiện $M_0$) | Đầu ra baseline giữ nguyên tham số |
 | $\hat{t}_{c,ij}^{(1)}$ | Dự báo cường độ luồng sau hiệu chỉnh tại thời điểm suy luận (điều kiện $M_1$) | Đầu ra sau hiệu chỉnh |
-| $M_0, M_1$ | Tên hai điều kiện thực nghiệm (baseline zero-shot đóng băng và dự báo sau hiệu chỉnh) | Điều kiện thực nghiệm đối chứng |
+| $M_0, M_1$ | Tên hai điều kiện thực nghiệm (baseline zero-shot giữ nguyên tham số và dự báo sau hiệu chỉnh) | Điều kiện thực nghiệm đối chứng |
 
 ---
 
@@ -140,7 +148,7 @@ Vector $Y_D$ được trích xuất trực tiếp từ các luồng ground-truth
 
 ### 3.4.1. Giao diện dự báo baseline chung
 
-Cả ba họ mô hình dự báo—mô hình neural chính Urban GNN kết hợp tiên nghiệm Gravity, mô hình bóc tách Pairwise Node MLP, và mô hình tham số cổ điển Gravity hai tham số—đều tạo ra dự báo cường độ luồng zero-shot ban đầu $\hat{t}_{c,ij}^{(0)}$ trên cùng tập hỗ trợ liên vùng dương $\Omega_c$. Mỗi mô hình được huấn luyện hoặc khớp tham số hoàn toàn trên các thành phố huấn luyện nguồn của fold tương ứng, và toàn bộ tham số đã học được đóng băng nghiêm ngặt trước khi suy luận trên thành phố mục tiêu. Phân phối khoảng cách $Y_D$ của thành phố mục tiêu tuyệt đối không được sử dụng ở bước tạo dự báo baseline $M_0$.
+Cả ba họ mô hình dự báo—mô hình neural chính Urban GNN kết hợp tiên nghiệm Gravity, mô hình bóc tách Pairwise Node MLP, và mô hình tham số cổ điển Gravity hai tham số—đều tạo ra dự báo cường độ luồng zero-shot ban đầu $\hat{t}_{c,ij}^{(0)}$ trên cùng tập hỗ trợ liên vùng dương $\Omega_c$. Mỗi mô hình được huấn luyện hoặc khớp tham số hoàn toàn trên các thành phố huấn luyện nguồn của fold tương ứng, và toàn bộ tham số đã học được giữ nguyên trước khi suy luận trên thành phố mục tiêu. Phân phối khoảng cách $Y_D$ của thành phố mục tiêu tuyệt đối không được sử dụng ở bước tạo dự báo baseline $M_0$.
 
 Sau đó, cùng một toán tử hiệu chỉnh giải tích được áp dụng thống nhất cho đầu ra của cả ba mô hình để tạo ra dự báo sau hiệu chỉnh $M_1$. Urban GNN là kiến trúc khẳng định chính, còn MLP và Gravity đóng vai trò đối chứng có cấu trúc nhằm kiểm tra xem lợi ích hiệu chỉnh có phụ thuộc vào cơ chế message passing trên đồ thị hay bản chất kiến trúc neural hay không.
 
@@ -215,13 +223,13 @@ Toàn bộ quá trình huấn luyện tuân thủ cấu hình cố định tiên
 | **Tiêu chí chọn checkpoint** | Validation CPC cao nhất | Chọn mô hình tốt nhất theo macro-average trên $\mathcal{C}_{\mathrm{val}}^{(f)}$ |
 | **Chặn gradient (Clipping)** | $\|\mathbf{g}\|_2 \le 5.0$ | Cắt chuẩn Euclid tối đa bằng `clip_grad_norm_` |
 | **Model Seeds** | $\mathcal{S} = \{1, 10, 100\}$ | Đánh giá độ ổn định ngẫu nhiên |
-| **Đóng băng tham số** | Đóng băng tuyệt đối | Không cập nhật trọng số trên test cities |
+| **Cố định tham số** | Giữ nguyên tuyệt đối | Không cập nhật trọng số trên test cities |
 
 Không sử dụng hàm phạt điều chuẩn phụ (regularization penalty) cộng thêm vào loss vì mã nguồn tối ưu trực tiếp trên hàm mất mát ZTNB. Cả Urban GNN và Pairwise Node MLP đều dùng chung cấu hình tối ưu này; khác biệt duy nhất là Urban GNN sử dụng 2 lớp GNN truyền thông điệp trên đồ thị bán kính 5 km, còn Pairwise Node MLP sử dụng 2 lớp MLP truyền thẳng không có truyền thông điệp qua cạnh.
 
 ### 3.4.7. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
-Cho bất kỳ mô hình baseline đóng băng nào tạo ra dự báo ban đầu $\hat{t}_{c,ij}^{(0)}$ trên $\Omega_c$, phân phối khoảng cách ngầm định bởi baseline trong khoảng thứ $b$ là:
+Cho bất kỳ mô hình baseline giữ nguyên tham số nào tạo ra dự báo ban đầu $\hat{t}_{c,ij}^{(0)}$ trên $\Omega_c$, phân phối khoảng cách ngầm định bởi baseline trong khoảng thứ $b$ là:
 
 $$
 \widehat{Y}_{c,b}^{(0)} = \frac{\sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}^{(0)} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}^{(0)}}.
@@ -235,7 +243,7 @@ $$
 
 trong đó $b(i,j)$ là khoảng khoảng cách chứa $d_{c,ij}$. 
 
-Toán tử này áp dụng trên các khoảng khoảng cách hoạt động (tại cấu hình chính $K = 8$, toàn bộ các khoảng khoảng cách của 50 thành phố đều hoạt động và chứa cặp ứng viên). Cùng một hệ số tỷ lệ dương được nhân đồng nhất cho mọi cặp OD trong cùng một khoảng cự ly. Mô hình và toàn bộ tham số đã học được giữ đóng băng tuyệt đối; phép hiệu chỉnh không thực hiện lan truyền ngược, không fine-tuning và không tối ưu hóa tham số trên thành phố mục tiêu. Dạng mở rộng tổng quát khi $q \in [0, 1]$ được trình bày trong Phụ lục S2.
+Toán tử này áp dụng trên các khoảng khoảng cách hoạt động (tại cấu hình chính $K = 8$, toàn bộ các khoảng khoảng cách của 50 thành phố đều hoạt động và chứa cặp ứng viên). Cùng một hệ số tỷ lệ dương được nhân đồng nhất cho mọi cặp OD trong cùng một khoảng cự ly. Mô hình và toàn bộ tham số đã học được giữ nguyên tuyệt đối; phép hiệu chỉnh không thực hiện lan truyền ngược, không fine-tuning và không tối ưu hóa tham số trên thành phố mục tiêu. Dạng mở rộng tổng quát khi $q \in [0, 1]$ được trình bày trong Phụ lục S2.
 
 ### 3.4.8. Các đặc tính toán học bất biến được bảo toàn
 
@@ -244,7 +252,9 @@ Vì mỗi cặp trong cùng một khoảng được nhân với cùng một hệ
 Hình 1 minh họa toàn bộ pipeline mô hình hóa zero-shot và hiệu chỉnh tại thời điểm suy luận.
 
 ![Hình 1](figures/fig1_oracle_calibration_framework.svg)
-**Hình 1. Framework hiệu chỉnh oracle có điều kiện theo support.** Mô hình cross-city $M_0$ được huấn luyện trên các thành phố nguồn và đóng băng trước khi suy luận trên thành phố mục tiêu. Đối với một thành phố mục tiêu, $M_0$ trước hết tạo ra dự báo cường độ baseline $\widehat{\mathbf{T}}_c^{(0)}$ trên tập hỗ trợ dương đã biết $\Omega_c$. Phân phối theo nhóm khoảng cách oracle $Y_D$ được xác định trực tiếp từ các luồng OD ground-truth của thành phố mục tiêu và chỉ được đưa vào tại thời điểm suy luận. Các hệ số theo bin tái phân bổ khối lượng dự báo giữa các khoảng cự ly để tạo $\widehat{\mathbf{T}}_c^{(1)}$ mà không cập nhật tham số mô hình hoặc tạo liên kết OD mới.
+**Hình 1. Framework hiệu chỉnh oracle có điều kiện theo support.** 
+
+Mô hình cross-city $M_0$ được huấn luyện trên các thành phố nguồn và giữ nguyên toàn bộ tham số trước khi suy luận trên thành phố mục tiêu. Đối với một thành phố mục tiêu, $M_0$ trước hết tạo ra dự báo cường độ baseline $\widehat{\mathbf{T}}_c^{(0)}$ trên tập hỗ trợ dương đã biết $\Omega_c$. Phân phối theo nhóm khoảng cách oracle $Y_D$ được xác định trực tiếp từ các luồng OD ground-truth của thành phố mục tiêu và chỉ được đưa vào tại thời điểm suy luận. Các hệ số theo bin tái phân bổ khối lượng dự báo giữa các khoảng cự ly để tạo $\widehat{\mathbf{T}}_c^{(1)}$ mà không cập nhật tham số mô hình hoặc tạo liên kết OD mới.
 
 ---
 
@@ -297,13 +307,13 @@ Toàn bộ chi tiết kỹ thuật của các thí nghiệm này được trình
 
 ---
 
-## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot đóng băng hay không?
+## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot giữ nguyên tham số hay không?
 
-Trong thí nghiệm chính, việc bổ sung phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu làm CPC liên vùng trung bình trên 50 thành phố Hoa Kỳ tăng từ 0.71281 ở baseline zero-shot đóng băng ($M_0$) lên 0.71635 ở dự báo sau hiệu chỉnh ($M_1$). Mức cải thiện trung bình đạt $\Delta\mathrm{CPC}=+0.00354$, với khoảng tin cậy 95% từ fold-stratified hierarchical bootstrap là $[+0.0026,+0.0045]$. Toàn bộ khoảng tin cậy nằm phía trên 0, cho thấy mức cải thiện CPC trung bình được ước lượng là dương dưới giao thức bootstrap đã sử dụng.
+Trong thí nghiệm chính, việc bổ sung phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu làm CPC liên vùng trung bình trên 50 thành phố Hoa Kỳ tăng từ 0.71281 ở baseline zero-shot giữ nguyên tham số ($M_0$) lên 0.71635 ở dự báo sau hiệu chỉnh ($M_1$). Mức cải thiện trung bình đạt $\Delta\mathrm{CPC}=+0.00354$, với khoảng tin cậy 95% từ fold-stratified hierarchical bootstrap là $[+0.0026,+0.0045]$. Toàn bộ khoảng tin cậy nằm phía trên 0, cho thấy mức cải thiện CPC trung bình được ước lượng là dương dưới giao thức bootstrap đã sử dụng.
 
 Theo Hình 2, mức cải thiện không chỉ tập trung ở một số ít thành phố mà xuất hiện trên phần lớn các thành phố được đánh giá. Cụ thể, CPC tăng sau hiệu chỉnh ở 45 trong 50 thành phố (90.0%). Trung vị $\Delta\mathrm{CPC}=+0.00195$ cũng nằm phía dương, mặc dù mức cải thiện khác nhau đáng kể giữa các thành phố. Năm thành phố còn lại có CPC giảm sau hiệu chỉnh, cho thấy lợi ích của thông tin khoảng cách không xuất hiện ở mọi trường hợp. Nhìn chung, phân bố theo thành phố cho thấy mức cải thiện có quy mô nhỏ nhưng khá nhất quán trên tập đánh giá.
 
-Để kiểm tra thêm liệu xu hướng cải thiện này có mang tính hệ thống hay không, chúng tôi sử dụng kiểm định Wilcoxon signed-rank hai phía trên các cặp kết quả $M_0$ và $M_1$ của 50 thành phố. Kiểm định cho $p=1.93\times10^{-9}$, cung cấp bằng chứng mạnh chống lại giả thuyết không có sự thay đổi có hệ thống giữa hai điều kiện. Kết hợp các kết quả trên, phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu mang lại một mức cải thiện nhỏ nhưng nhất quán trên phần lớn các thành phố được đánh giá so với baseline zero-shot đóng băng.
+Để kiểm tra thêm liệu xu hướng cải thiện này có mang tính hệ thống hay không, chúng tôi sử dụng kiểm định Wilcoxon signed-rank hai phía trên các cặp kết quả $M_0$ và $M_1$ của 50 thành phố. Kiểm định cho $p=1.93\times10^{-9}$, cung cấp bằng chứng mạnh chống lại giả thuyết không có sự thay đổi có hệ thống giữa hai điều kiện. Kết hợp các kết quả trên, phân phối di chuyển theo nhóm khoảng cách oracle của thành phố mục tiêu mang lại một mức cải thiện nhỏ nhưng nhất quán trên phần lớn các thành phố được đánh giá so với baseline zero-shot giữ nguyên tham số.
 
 ---
 
@@ -316,7 +326,7 @@ Theo Hình 2, mức cải thiện không chỉ tập trung ở một số ít th
 
 | Điều kiện thực nghiệm | CPC liên vùng TB | Trung vị CPC | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Tỷ lệ thành phố thắng | Wilcoxon $p$ (Hai phía) |
 |---|---|---|---|---|---|---|
-| **Baseline zero-shot đóng băng ($M_0$)** | $0.71281 \pm 0.04434$ | $0.71632$ | — | — | — | — |
+| **Baseline zero-shot giữ nguyên tham số ($M_0$)** | $0.71281 \pm 0.04434$ | $0.71632$ | — | — | — | — |
 | **Dự báo sau hiệu chỉnh ($M_1$)** | $0.71635 \pm 0.04454$ | $0.71988$ | **$+0.00354$** | **$[+0.0026, +0.0045]$** | **45 / 50 (90.0%)** | $\mathbf{1.93 \times 10^{-9}}$ |
 
 *Ghi chú: Được đánh giá trên tập hỗ trợ liên vùng dương quan sát được $\Omega_c$. Khoảng tin cậy được tính qua bootstrap phân tầng $B=10,000$ lần trên các thành phố. Giá trị trung bình qua 3 model seeds độc lập.*
@@ -463,7 +473,7 @@ Kết quả tại Bảng 7 cho thấy mức tăng do hiệu chỉnh xuất hiệ
 
 ### Bảng 7: Tính tổng quát trên các kiến trúc backbone ($N=50$ thành phố, $K=8$ khoảng)
 
-| Kiến trúc backbone | CPC $M_0$ (Zero-Shot đóng băng) | CPC $M_1$ (Sau hiệu chỉnh) | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% Bootstrap | Tỷ lệ thành phố thắng | Wilcoxon $p$ | $\Delta\text{RMSE}$ |
+| Kiến trúc backbone | CPC $M_0$ (Zero-Shot giữ nguyên tham số) | CPC $M_1$ (Sau hiệu chỉnh) | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% Bootstrap | Tỷ lệ thành phố thắng | Wilcoxon $p$ | $\Delta\text{RMSE}$ |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Urban GNN (Truyền thông điệp)** | $0.71281 \pm 0.04434$ | $0.71635 \pm 0.04454$ | **$+0.00354$** | $[+0.0026, +0.0045]$ | **45 / 50 (90.0%)** | $\mathbf{1.93 \times 10^{-9}}$ | $-2.98$ |
 | **Node MLP (Không truyền thông điệp đồ thị)** | $0.70913 \pm 0.04754$ | $0.71242 \pm 0.04737$ | **$+0.00329$** | $[+0.0025, +0.0042]$ | **47 / 50 (94.0%)** | $\mathbf{4.38 \times 10^{-11}}$ | $-2.57$ |
@@ -548,7 +558,7 @@ Trong phần này, chúng tôi đặt các phát hiện của nghiên cứu vào
 
 ## 5.1. Các phát hiện chính và giá trị thông tin
 
-Nghiên cứu về di chuyển con người bao gồm nhiều dạng dữ liệu, thang không gian và mô hình khác nhau, trong đó OD matrices là một biểu diễn quan trọng của tương tác không gian ở cấp độ quần thể [@barbosa2018humanmobility]. Các mô hình neural mobility gần đây cho thấy đặc trưng địa lý và biểu diễn học từ nhiều khu vực có thể hỗ trợ dự báo luồng tại những khu vực không xuất hiện trong huấn luyện [@simini2021deepgravity; @guo2025ugnn]. Nghiên cứu hiện tại mở rộng hướng tiếp cận này bằng cách kiểm tra liệu một quan sát tổng hợp có số chiều thấp của thành phố mục tiêu có cung cấp thông tin bổ sung cho một mô hình cross-city đã được đóng băng hay không. Kết quả thực nghiệm trên 50 thành phố cho thấy $\mathbf{Y}_{D,c}$ tạo ra mức cải thiện nhỏ nhưng có ý nghĩa thống kê và nhất quán (Bảng 2: $\overline{\Delta\mathrm{CPC}} = +0.00354$, $95\%\text{ CI: } [+0.0026, +0.0045]$, $p = 1.93 \times 10^{-9}$, thắng 45/50 thành phố).
+Nghiên cứu về di chuyển con người bao gồm nhiều dạng dữ liệu, thang không gian và mô hình khác nhau, trong đó OD matrices là một biểu diễn quan trọng của tương tác không gian ở cấp độ quần thể [@barbosa2018humanmobility]. Các mô hình neural mobility gần đây cho thấy đặc trưng địa lý và biểu diễn học từ nhiều khu vực có thể hỗ trợ dự báo luồng tại những khu vực không xuất hiện trong huấn luyện [@simini2021deepgravity; @guo2025ugnn]. Nghiên cứu hiện tại mở rộng hướng tiếp cận này bằng cách kiểm tra liệu một quan sát tổng hợp có số chiều thấp của thành phố mục tiêu có cung cấp thông tin bổ sung cho một mô hình cross-city có tham số được giữ nguyên hay không. Kết quả thực nghiệm trên 50 thành phố cho thấy $\mathbf{Y}_{D,c}$ tạo ra mức cải thiện nhỏ nhưng có ý nghĩa thống kê và nhất quán (Bảng 2: $\overline{\Delta\mathrm{CPC}} = +0.00354$, $95\%\text{ CI: } [+0.0026, +0.0045]$, $p = 1.93 \times 10^{-9}$, thắng 45/50 thành phố).
 
 Cần lưu ý rằng $\mathbf{Y}_{D,c}$ trong thí nghiệm được tổng hợp từ OD tham chiếu dưới dạng oracle aggregate observation. Vì vậy, kết quả hiện tại đánh giá giá trị thông tin tiềm năng của một phân phối khoảng cách chính xác, chứ chưa chứng minh hiệu quả triển khai với một nguồn quan sát bên ngoài có nhiễu hoặc thiếu dữ liệu.
 
@@ -592,7 +602,7 @@ Các benchmark trước đây cho thấy hiệu quả của trip-distribution mo
 
 Các mô hình như Deep Gravity và UGNN cho thấy neural networks có thể kết hợp nhiều dạng thông tin địa lý để học các quy luật mobility có khả năng chuyển giao [@simini2021deepgravity; @guo2025ugnn]. Tuy nhiên, các mô hình này vẫn cần OD observations từ các khu vực nguồn để huấn luyện. Đóng góp của nghiên cứu hiện tại không phải loại bỏ nhu cầu về OD training data, mà là cho thấy một mô hình nguồn đã huấn luyện có thể được điều chỉnh tại inference time bằng một quan sát tổng hợp của thành phố mục tiêu mà không cần cập nhật tham số.
 
-Về mặt phương pháp, kết quả cho thấy một ràng buộc tổng hợp chính xác tại miền mục tiêu có thể điều chỉnh mô hình cross-city đã đóng băng ở thời điểm suy luận mà không cần fine-tuning tham số hoặc huấn luyện lại end-to-end. Thí nghiệm oracle này xác lập giá trị thông tin tiềm năng của ràng buộc; việc các quan sát tổng hợp thu thập độc lập có mang lại mức hữu ích tương đương hay không cần được kiểm chứng bằng thực nghiệm riêng.
+Về mặt phương pháp, kết quả cho thấy một ràng buộc tổng hợp chính xác tại miền mục tiêu có thể điều chỉnh mô hình cross-city có tham số được giữ nguyên ở thời điểm suy luận mà không cần fine-tuning tham số hoặc huấn luyện lại end-to-end. Thí nghiệm oracle này xác lập giá trị thông tin tiềm năng của ràng buộc; việc các quan sát tổng hợp thu thập độc lập có mang lại mức hữu ích tương đương hay không cần được kiểm chứng bằng thực nghiệm riêng.
 
 Nghiên cứu đánh giá việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết $\Omega_c$. Phép hiệu chỉnh tái phân bổ khối lượng luồng dự báo giữa các khoảng cự ly mà không cập nhật tham số mô hình hoặc tạo liên kết OD mới. Các cặp ngoài tập hỗ trợ được xem là chưa biết thay vì được gán bằng 0; do đó, kết quả không đại diện cho khả năng phát hiện liên kết hoặc khôi phục toàn bộ ma trận OD.
 
@@ -614,7 +624,7 @@ Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng 
 
 # 6. Kết luận
 
-Nghiên cứu này xem xét liệu một quan sát tổng hợp có số chiều thấp—phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu, ký hiệu là $Y_D$—có thể cải thiện kết quả tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết so với một baseline cross-city zero-shot đã đóng băng hay không. Trong thiết lập này, baseline ($M_0$) được giữ cố định và chỉ sử dụng bối cảnh đô thị cùng khoảng cách địa lý giữa các cặp vùng. Thông tin về cường độ luồng của thành phố mục tiêu chỉ đi vào $M_1$ dưới dạng phân phối di chuyển theo khoảng cách tổng hợp $Y_D$ tại thời điểm suy luận mà không đòi hỏi bất kỳ sự huấn luyện lại hay cập nhật tham số nào.
+Nghiên cứu này xem xét liệu một quan sát tổng hợp có số chiều thấp—phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu, ký hiệu là $Y_D$—có thể cải thiện kết quả tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết so với một baseline cross-city zero-shot có tham số được giữ nguyên hay không. Trong thiết lập này, baseline ($M_0$) có toàn bộ tham số được giữ nguyên và chỉ sử dụng bối cảnh đô thị cùng khoảng cách địa lý giữa các cặp vùng. Thông tin về cường độ luồng của thành phố mục tiêu chỉ đi vào $M_1$ dưới dạng phân phối di chuyển theo khoảng cách tổng hợp $Y_D$ tại thời điểm suy luận mà không đòi hỏi bất kỳ sự huấn luyện lại hay cập nhật tham số nào.
 
 ---
 
@@ -626,7 +636,7 @@ Các thí nghiệm chẩn đoán và kiểm tra độ bền vững làm rõ các
 
 ---
 
-Về mặt phương pháp, nghiên cứu cung cấp bằng chứng thực nghiệm rằng một quan sát tổng hợp có số chiều thấp có thể hiệu chỉnh một mô hình neural cross-city cố định tại thời điểm suy luận mà không cần fine-tuning. Về mặt cơ chế, toán tử hiệu chỉnh sử dụng $Y_D$ để tái phân bổ khối lượng luồng dự báo giữa các khoảng khoảng cách và bảo toàn thứ hạng nội khoảng. Sai lệch phân bổ khoảng cách của baseline có liên hệ mạnh với mức tăng sau hiệu chỉnh ($r_{\text{partial}}=+0.7951$, $p=5.35\times10^{-12}$); mẫu hình này phù hợp với cơ chế trên nhưng chưa đủ để thiết lập quan hệ nhân quả. Vì vậy, $Y_D$ là một ràng buộc vĩ mô bổ sung chứ không phải sự thay thế độc lập cho ma trận OD chi tiết.
+Về mặt phương pháp, nghiên cứu cung cấp bằng chứng thực nghiệm rằng một quan sát tổng hợp có số chiều thấp có thể hiệu chỉnh một mô hình neural cross-city có tham số được giữ nguyên tại thời điểm suy luận mà không cần fine-tuning. Về mặt cơ chế, toán tử hiệu chỉnh sử dụng $Y_D$ để tái phân bổ khối lượng luồng dự báo giữa các khoảng khoảng cách và bảo toàn thứ hạng nội khoảng. Sai lệch phân bổ khoảng cách của baseline có liên hệ mạnh với mức tăng sau hiệu chỉnh ($r_{\text{partial}}=+0.7951$, $p=5.35\times10^{-12}$); mẫu hình này phù hợp với cơ chế trên nhưng chưa đủ để thiết lập quan hệ nhân quả. Vì vậy, $Y_D$ là một ràng buộc vĩ mô bổ sung chứ không phải sự thay thế độc lập cho ma trận OD chi tiết.
 
 ---
 
@@ -634,7 +644,7 @@ Ranh giới phạm vi của kết luận nằm ở bài toán tái tạo cườn
 
 ---
 
-Tóm lại, phân phối di chuyển theo nhóm khoảng cách của thành phố mục tiêu cung cấp một ràng buộc tổng hợp minh bạch về mặt toán học và tạo ra mức cải thiện nhỏ nhưng tương đối nhất quán so với baseline zero-shot đóng băng trong benchmark này. Nghiên cứu chỉ đánh giá việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết với quan sát tổng hợp oracle. Các cặp ngoài tập hỗ trợ được xem là chưa biết thay vì được gán bằng 0; do đó, kết quả không đại diện cho khả năng phát hiện liên kết, khôi phục toàn bộ ma trận OD hoặc triển khai vận hành với dữ liệu tổng hợp thực tế được thu thập độc lập.
+Tóm lại, phân phối di chuyển theo nhóm khoảng cách của thành phố mục tiêu cung cấp một ràng buộc tổng hợp minh bạch về mặt toán học và tạo ra mức cải thiện nhỏ nhưng tương đối nhất quán so với baseline zero-shot giữ nguyên tham số trong benchmark này. Nghiên cứu chỉ đánh giá việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết với quan sát tổng hợp oracle. Các cặp ngoài tập hỗ trợ được xem là chưa biết thay vì được gán bằng 0; do đó, kết quả không đại diện cho khả năng phát hiện liên kết, khôi phục toàn bộ ma trận OD hoặc triển khai vận hành với dữ liệu tổng hợp thực tế được thu thập độc lập.
 
 ---
 
