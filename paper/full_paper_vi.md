@@ -389,22 +389,15 @@ Phù hợp với cơ chế này, các thành phố có sai lệch phân phối k
 
 Sự khác biệt về mức cải thiện giữa các thành phố vì vậy có thể được hiểu một phần qua mức sai lệch phân phối khoảng cách ban đầu của baseline.
 
-### 5.3. Độ phân giải của quan sát
-
+### 5.3. Các điều kiện chi phối giá trị của Y_D
+	​
 Kết quả theo $K$ cho thấy giá trị của $Y_D$ tăng khi ràng buộc khoảng cách trở nên chi tiết hơn, nhưng lợi ích biên giảm ở các phân hoạch mịn hơn. Điều này gợi ý rằng phần lớn thông tin hữu ích nằm ở cấu trúc phân bổ cự ly tương đối thô, trong khi tăng thêm độ chi tiết chỉ mang lại lợi ích bổ sung nhỏ hơn.
 
-### 5.4. Tính đúng cấu trúc và chất lượng của quan sát
-
 Giá trị của $Y_D$ phụ thuộc vào cả cấu trúc và độ chính xác của quan sát. Khi thứ tự các khoảng khoảng cách bị phá vỡ, lợi ích của hiệu chỉnh không còn được duy trì. Lợi ích này phụ thuộc vào việc các tỷ trọng được gắn đúng với các khoảng khoảng cách của thành phố mục tiêu và được quan sát với độ chính xác đủ cao.
-
-
-### 5.5. Tính đặc thù của thông tin mục tiêu
 
 Các đối chứng donor cho thấy lợi ích của hiệu chỉnh không xuất hiện chỉ vì mô hình được cung cấp thêm một phân phối khoảng cách bất kỳ. Phân phối của thành phố khác hoặc phân phối trung bình từ tập huấn luyện không tái tạo được mức cải thiện đạt được khi sử dụng $Y_D$ của đúng thành phố mục tiêu.
 
 Kết quả này cho thấy phần thông tin hữu ích trong $Y_D$ mang tính đặc thù theo thành phố, thay vì chỉ phản ánh một prior suy giảm theo khoảng cách chung có thể chuyển trực tiếp giữa các đô thị.
-
-
 
 
 ## 5.6. Ý nghĩa phương pháp luận và phạm vi ứng dụng

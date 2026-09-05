@@ -310,12 +310,49 @@ def load_bibliography(bib_path: Path) -> dict[str, int]:
     return {k.strip(): idx for idx, k in enumerate(keys, 1)}
 
 
+def preprocess_markdown_citations_and_references(md_text: str, key_to_idx: dict[str, int]) -> str:
+    """
+    Preprocesses Markdown for citation linking and reference anchoring:
+    1. Replaces citeproc-style citations `[@key1; @key2]` with numeric markdown links `[[idx1](#ref-idx1), [idx2](#ref-idx2)]`.
+    2. Adds `<span id="ref-{n}"></span>` anchors before each numbered item in the References section.
+    """
+    def citation_replacer(match: re.Match) -> str:
+        raw_content = match.group(1)
+        raw_keys = [k.strip().lstrip("@").strip() for k in raw_content.split(";")]
+        nums = []
+        for k in raw_keys:
+            if not k:
+                continue
+            if k in key_to_idx:
+                nums.append(key_to_idx[k])
+        if not nums:
+            return match.group(0)
+        sorted_nums = sorted(list(set(nums)))
+        links = [f"[{n}](#ref-{n})" for n in sorted_nums]
+        return f"[{', '.join(links)}]"
+
+    if key_to_idx:
+        md_text = re.sub(r"\[@([^\]]+)\]", citation_replacer, md_text)
+
+    def add_reference_anchors(text: str) -> str:
+        pattern = r"((?:#+\s*(?:Mục\s*9\s*:\s*)?(?:Tài liệu tham khảo|References).*?\n)(?:---\s*\n)?)(.+?)(?=\n#+ |\Z)"
+        match = re.search(pattern, text, flags=re.DOTALL | re.IGNORECASE)
+        if not match:
+            return text
+        header = match.group(1)
+        body = match.group(2)
+        new_body = re.sub(r"(?m)^(\d+)\.\s+(?!<span id=)", r'\1. <span id="ref-\1"></span>', body)
+        return text[:match.start()] + header + new_body + text[match.end():]
+
+    return add_reference_anchors(md_text)
+
+
 def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
     """
     Protects math blocks and citations from markdown parser transformations,
     converts to HTML, and fixes relative image links.
     """
-    # 0. Load bibliography and protect citations
+    # 0. Load bibliography and preprocess citations and reference anchors
     bib_candidates = [
         base_dir / "references.bib",
         base_dir / "paper" / "references.bib",
@@ -326,30 +363,7 @@ def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
     bib_path = next((p for p in bib_candidates if p.exists()), None)
     key_to_idx = load_bibliography(bib_path) if bib_path else {}
 
-    citation_store: list[str] = []
-
-    def citation_replacer(match: re.Match) -> str:
-        raw_content = match.group(1)
-        raw_keys = [k.strip().lstrip("@").strip() for k in raw_content.split(";")]
-        nums = []
-        for k in raw_keys:
-            if not k:
-                continue
-            if k not in key_to_idx:
-                raise ValueError(f"Undefined citation key: '{k}' in '[@{raw_content}]'")
-            nums.append(key_to_idx[k])
-        
-        sorted_nums = sorted(list(set(nums)))
-        links = [f'<a href="#ref-{n}" class="citation-link">{n}</a>' for n in sorted_nums]
-        formatted = f"[{', '.join(links)}]"
-        idx = len(citation_store)
-        citation_store.append(formatted)
-        return f"@@CITATION_{idx}@@"
-
-    if key_to_idx:
-        protected = re.sub(r"\[@([^\]]+)\]", citation_replacer, md_text)
-    else:
-        protected = md_text
+    protected = preprocess_markdown_citations_and_references(md_text, key_to_idx)
 
     # 1. Protect block math $$ ... $$
     block_math_store: list[str] = []
@@ -385,10 +399,7 @@ def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
         ],
     )
 
-    # 4. Restore citations and math
-    for idx, cite_content in enumerate(citation_store):
-        html = html.replace(f"@@CITATION_{idx}@@", cite_content)
-
+    # 4. Restore math
     for idx, math_content in enumerate(block_math_store):
         html = html.replace(f"@@DISPLAY_MATH_{idx}@@", math_content)
 
@@ -501,6 +512,12 @@ def render_html_to_pdf_chrome(html_path: Path, output_pdf_path: Path) -> None:
     import time
 
     candidates = [
+        Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+        Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
+        Path("/Applications/Chromium.app/Contents/MacOS/Chromium"),
+        Path("/usr/bin/google-chrome"),
+        Path("/usr/bin/chromium"),
+        Path("/usr/bin/chromium-browser"),
         Path("C:/Program Files/Google/Chrome/Application/chrome.exe"),
         Path("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"),
         Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"),
@@ -524,7 +541,7 @@ def render_html_to_pdf_chrome(html_path: Path, output_pdf_path: Path) -> None:
 
 
 def render_markdown_to_pdf_pandoc(input_path: Path, output_pdf_path: Path) -> bool:
-    """Renders a Markdown academic paper to PDF via Pandoc + XeLaTeX."""
+    """Renders a Markdown academic paper to PDF via Pandoc + XeLaTeX with proper citation hyperlinks."""
     import os
     import shutil
     import subprocess
@@ -548,11 +565,26 @@ def render_markdown_to_pdf_pandoc(input_path: Path, output_pdf_path: Path) -> bo
         Path("paper/references.bib"),
     ]
     bib_file = next((b for b in bib_candidates if b.exists()), None)
+    key_to_idx = load_bibliography(bib_file) if bib_file else {}
+
+    md_text = input_path.read_text(encoding="utf-8")
+    preprocessed_md = preprocess_markdown_citations_and_references(md_text, key_to_idx)
+
+    # For XeLaTeX compatibility, if .svg is referenced but .png or .pdf exists, substitute it
+    def svg_replacer(match: re.Match) -> str:
+        prefix = match.group(1)
+        img_rel = match.group(2)
+        for cand_ext in [".png", ".pdf"]:
+            cand_path = input_path.parent / f"{img_rel}{cand_ext}"
+            if cand_path.exists():
+                return f"{prefix}{img_rel}{cand_ext}"
+        return match.group(0)
+
+    preprocessed_md = re.sub(r'(!\[[^\]]*\]\()([^)]+?)\.svg(\))', svg_replacer, preprocessed_md)
 
     cmd = [
         pandoc_exe,
         "-f", "markdown+tex_math_single_backslash",
-        str(input_path.resolve()),
         f"--resource-path=.:{input_path.parent.resolve()}:{(input_path.parent / 'figures').resolve()}",
         "--pdf-engine=xelatex",
         "-V", "geometry:margin=20mm",
@@ -564,11 +596,9 @@ def render_markdown_to_pdf_pandoc(input_path: Path, output_pdf_path: Path) -> bo
         "-V", "citecolor=blue",
         "-o", str(output_pdf_path.resolve()),
     ]
-    if bib_file:
-        cmd.extend(["--citeproc", f"--bibliography={bib_file.resolve()}"])
 
     try:
-        subprocess.run(cmd, env=env, capture_output=True, text=True, check=True)
+        subprocess.run(cmd, input=preprocessed_md, env=env, capture_output=True, text=True, check=True)
         return True
     except subprocess.CalledProcessError as e:
         print(f"Pandoc/XeLaTeX warning: {e.stderr}")
