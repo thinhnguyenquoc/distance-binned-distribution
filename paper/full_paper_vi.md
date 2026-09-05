@@ -24,8 +24,6 @@ Trong nghiên cứu này, phân phối được trích xuất từ luồng tham 
 
 Nghiên cứu được đánh giá bằng kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị Hoa Kỳ. Mỗi thành phố được đánh giá khi không tham gia huấn luyện, và toàn bộ tham số mô hình được giữ nguyên trước bước hiệu chỉnh.
 
-Kết quả cho thấy phân phối tạo ra mức cải thiện nhỏ nhưng tương đối nhất quán, và lợi ích này phụ thuộc vào độ phân giải, chất lượng và tính đặc thù của quan sát mục tiêu.
-
 Nghiên cứu có 3 đóng góp chính: 
 - Định lượng giá trị thông tin bổ sung của phân phối trên một baseline cross-city giữ nguyên tham số.
 - Xác định các điều kiện chi phối lợi ích của tín hiệu thông qua độ phân giải, nhiễu và các đối chứng target-specific.
@@ -51,16 +49,13 @@ Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh �
 
 Vì vậy, nghiên cứu hiện tại giải quyết một vấn đề bổ sung cho hướng thiết kế kiến trúc neural. Khác với hướng cải thiện kiến trúc hoặc fine-tuning, nghiên cứu này giữ nguyên mô hình cross-city đã huấn luyện và kiểm tra riêng giá trị thông tin của một quan sát tổng hợp từ miền mục tiêu. Cách thiết kế này tách giá trị thông tin của quan sát mục tiêu khỏi những cải thiện có thể phát sinh do huấn luyện bổ sung, fine-tuning hoặc thay đổi kiến trúc.
 
-## 2.3. Quan sát tổng hợp như một ràng buộc hiệu chỉnh
+## 2.3. Quan sát tổng hợp và khoảng trống nghiên cứu
 
 Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được dùng để áp đặt tính nhất quán vĩ mô với số lượng quan sát ít hơn nhiều so với số ô OD.
 
 Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc vài tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách. Điều này cho phép kiểm tra giá trị của tín hiệu ở nhiều mức độ phân giải khác nhau thông qua số lượng khoảng $K$. $Y_D$ khác với các biên origin/destination hoặc các cặp OD quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng được phân bổ giữa các dải cự ly và không xác định phân bổ giữa các cặp trong cùng một khoảng.
 
 Tín hiệu tổng hợp trong nghiên cứu này không đồng nhất với tổng lượng chuyến đi theo điểm đi và điểm đến hoặc một mẫu các cặp OD được quan sát trực tiếp. Mỗi loại quan sát ràng buộc một khía cạnh khác nhau của ma trận luồng chưa biết. Phân phối di chuyển theo các khoảng khoảng cách chỉ ràng buộc tỷ lệ tổng khối lượng di chuyển được phân bổ vào từng khoảng cự ly; bản thân nó không xác định cặp origin–destination cụ thể nào phải nhận nhiều luồng hơn trong cùng một khoảng.
-
-
-## 2.4. Khoảng trống nghiên cứu và vị trí của nghiên cứu hiện tại
 
 Các hướng nghiên cứu trước đã cho thấy vai trò quan trọng của khoảng cách trong tương tác không gian, khả năng chuyển giao của các mô hình dự báo luồng và giá trị của các ràng buộc tổng hợp. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình cross-city đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
 
@@ -213,8 +208,6 @@ Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được 
 Đối với mỗi thành phố, mức cải thiện được tính từ chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline, sau đó lấy trung bình qua các model seeds và macro-average trên toàn bộ 50 thành phố.
 
 Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold. Ý nghĩa thống kê của các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung.
-
-### 3.5.4. Các phân tích độ bền và chẩn đoán
 
 Ngoài thí nghiệm chính, chúng tôi kiểm tra liệu hiệu quả của $Y_D$ có phụ thuộc vào độ phân giải khoảng cách, chất lượng quan sát, thứ tự các khoảng, tính đặc thù của thành phố mục tiêu, khởi tạo mô hình và kiến trúc baseline hay không. Các thiết lập cụ thể được trình bày cùng kết quả tương ứng.
 
