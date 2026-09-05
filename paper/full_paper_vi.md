@@ -37,7 +37,7 @@ Nghiên cứu có 3 đóng góp chính:
 
 ## 2.1. Mô hình tương tác không gian và hiệu chỉnh dựa trên khoảng cách
 
-Mô hình hóa luồng điểm đi–điểm đến từ lâu đã được nghiên cứu thông qua các mô hình tương tác không gian, trong đó chuyển động giữa origin và destination được biểu diễn theo khả năng phát sinh chuyến đi, mức độ thu hút và độ phân cách hoặc chi phí di chuyển. Các mô hình tương tác không gian từ lâu đã biểu diễn luồng OD thông qua khả năng phát sinh, mức độ thu hút và lực cản không gian, trong đó khoảng cách hoặc chi phí di chuyển là thành phần cốt lõi của cấu trúc luồng [@wilson1971family; @ortuzar2011modelling].
+Các mô hình tương tác không gian từ lâu đã biểu diễn luồng OD thông qua khả năng phát sinh, mức độ thu hút và lực cản không gian, trong đó khoảng cách hoặc chi phí di chuyển là thành phần cốt lõi của cấu trúc luồng [@wilson1971family; @ortuzar2011modelling].
 
 Các phương pháp hiệu chỉnh cổ điển cho thấy thống kê tổng hợp về cự ly chuyến đi có thể được dùng để xác định tham số lực cản, chẳng hạn chiều dài chuyến đi trung bình trong Hyman (1969) hoặc trung vị thời gian di chuyển trong Merlin (2020). Các nghiên cứu so sánh cũng cho thấy quy luật suy giảm theo khoảng cách thay đổi giữa bộ dữ liệu và bối cảnh đô thị, thay vì tồn tại một dạng hàm cố định phù hợp cho mọi nơi. Mẫu hình suy giảm thực nghiệm có thể thay đổi theo phương thức, mục đích chuyến đi, mức độ đô thị hóa và điều kiện kinh tế–xã hội [@verma2025distance].
 
@@ -239,7 +239,7 @@ Biểu đồ cột thể hiện mức thay đổi hiệu năng theo từng thàn
 
 
 
-### Bảng 2: Bảng 2: Benchmark chính với Urban GNN (N=50,K=8)
+### Bảng 2: Benchmark chính với Urban GNN (N=50,K=8)
 
 | Điều kiện thực nghiệm | CPC liên vùng TB | Trung vị CPC | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Tỷ lệ thành phố thắng | Wilcoxon $p$ (Hai phía) |
 |---|---|---|---|---|---|---|
@@ -320,15 +320,13 @@ Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nh
 
 
 ![Hình 5](figures/fig4_noise_dose_response.png)
-**Hình 5 | Đường đáp ứng liều lượng nhiễu Total Variation (TV).** Hiệu năng sau hiệu chỉnh ($M_1$) suy giảm đơn điệu theo mức nhiễu TV tăng dần từ $\epsilon=0.00$ đến $\epsilon=0.05$. Đường ngang đứt nét màu đỏ thể hiện ngưỡng baseline zero-shot ($M_0 = 0.71281$). Điểm giao cắt thực nghiệm nằm tại mức sai số TV $\approx 4.44\%$, chỉ ra rằng $Y_D$ vẫn mang lại giá trị gia tăng chừng nào sai số ước lượng phân phối tổng hợp còn dưới ngưỡng này.
+**Hình 5 | Đường đáp ứng theo mức nhiễu Total Variation (TV).** Mức cải thiện sau hiệu chỉnh, $\Delta\mathrm{CPC}$, giảm khi mức nhiễu TV tăng từ $\epsilon=0.00$ đến $\epsilon=0.05$. Đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức hiệu năng tương đương baseline zero-shot $M_0$. Đường đứt nét màu đỏ thẳng đứng biểu thị điểm giao cắt thực nghiệm $\epsilon_{\mathrm{cross}}\approx4.44\%$, tại đó lợi ích trung bình của hiệu chỉnh xấp xỉ bằng 0. Dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%. Giá trị $\epsilon_{\mathrm{cross}}$ chỉ áp dụng cho benchmark và cơ chế gây nhiễu được sử dụng trong nghiên cứu này.
 
-$\Delta\mathrm{CPC}$ giảm đơn điệu từ $+0.00354$ khi không có nhiễu xuống $+0.00070$ tại sai số TV 4% và $-0.00087$ tại 5%. Trên 1.000 hướng nhiễu, điểm giao cắt trung bình với baseline được ước lượng tại $\epsilon_{\mathrm{cross}}=4.44\%$, với khoảng tin cậy 95% $[4.16\%,4.77\%]$. Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu đã sử dụng, không phải mức dung sai áp dụng chung cho dữ liệu thực tế.
-
-Mức cải thiện giảm đơn điệu khi sai số Total Variation tăng. $\Delta\mathrm{CPC}$ giảm từ $+0.00354$ khi không có nhiễu xuống gần 0 ở mức sai số khoảng 4–5%, và trở thành âm tại mức nhiễu cao nhất được đánh giá. Điểm giao cắt trung bình với baseline được ước lượng tại khoảng $4.44\%$ TV error; giá trị này chỉ áp dụng cho benchmark và cơ chế gây nhiễu của nghiên cứu.
+$\Delta\mathrm{CPC}$ giảm đơn điệu từ $+0.00354$ khi không có nhiễu xuống $+0.00070$ tại sai số TV 4% và $-0.00087$ tại 5%. Trên 1.000 hướng nhiễu, điểm giao cắt trung bình với baseline được ước lượng tại $\epsilon_{\mathrm{cross}}=4.44\%$, với khoảng tin cậy 95% $[4.16\%, 4.77\%]$. Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu đã sử dụng, không phải mức dung sai áp dụng chung cho dữ liệu thực tế.
 
 ## 4.4. Kết quả có bền vững trước các lựa chọn huấn luyện và mô hình hóa hay không?
 
-Các kết quả trước cho thấy $Y_D$ cung cấp thông tin bổ sung cho dự báo zero-shot, nhưng mức cải thiện phụ thuộc vào độ phân giải, chất lượng quan sát và tính đặc thù của thành phố mục tiêu. Để đánh giá liệu kết quả này có ổn định trước biến thiên ngẫu nhiên trong huấn luyện và lựa chọn mô hình hay không, chúng tôi thực hiện phân tích trên nhiều model seeds và các kiến trúc baseline khác nhau. Cuối cùng, một so sánh theo protocol cụ thể với các cặp OD được quan sát trực tiếp được sử dụng để đặt giá trị thông tin của $Y_D$ trong tương quan với một dạng giám sát target chi tiết hơn.
+Các kết quả trước cho thấy $Y_D$ cung cấp thông tin bổ sung cho dự báo zero-shot, nhưng mức cải thiện phụ thuộc vào độ phân giải, chất lượng quan sát và tính đặc thù của thành phố mục tiêu. Để đánh giá liệu kết quả này có ổn định trước biến thiên ngẫu nhiên trong huấn luyện và lựa chọn mô hình hay không, chúng tôi thực hiện phân tích trên nhiều model seeds và các kiến trúc baseline khác nhau.
 
 ### 4.4.1. Tính ổn định qua các lần khởi tạo mô hình độc lập
 
@@ -343,7 +341,7 @@ Mức cải thiện do $Y_D$ xuất hiện trên cả hai neural backbone đư�
 
 
 
-### Bảng 7: Tính tổng quát trên các kiến trúc backbone ($N=50$ thành phố, $K=8$ khoảng)
+### Bảng 5: Tính tổng quát trên các kiến trúc backbone ($N=50$ thành phố, $K=8$ khoảng)
 
 | Kiến trúc backbone | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% Bootstrap | Tỷ lệ thành phố thắng |
 |:---|:---:|:---:|:---:|
@@ -726,9 +724,14 @@ $$
    Sau công thức, hệ số co giãn $\sigma$ được tìm bằng phương pháp chia đôi (bisection solver) để đạt mức TV yêu cầu $\epsilon$.
 
 2. **Đối chứng Donor Placebo**:
-   * *Matched Donor*: Chọn thành phố hiến tặng trong cùng fold có khoảng cách can thiệp $D_T = \operatorname{TV}(\widehat{\mathbf{Y}}_c^{(0)}, \mathbf{Y}_{\mathrm{donor}})$ gần nhất với mức can thiệp thực tế của mục tiêu.
-   * *Unadjusted Donor*: Lấy trung bình hiệu năng trên toàn bộ các thành phố khác trong cùng fold huấn luyện mà không điều chỉnh mức can thiệp.
-   * *Training-Mean Donor*: Sử dụng phân phối khoảng cách trung bình cộng gộp của toàn bộ các thành phố huấn luyện trong fold.
+
+   Training-Mean Donor: Trước hết, phân phối khoảng cách trung bình $\bar{Y}_{D,\mathrm{train}}$ được tính từ toàn bộ các thành phố huấn luyện trong cùng fold. Để bảo đảm so sánh công bằng với điều kiện target-specific, log-ratio giữa $\bar{Y}_{D,\mathrm{train}}$ và phân phối khoảng cách của baseline được centered và sau đó co giãn để có cùng cường độ can thiệp $D_T$ với target $Y_D$:
+
+$$
+\tilde{\mathbf{r}}_M^{*} = \tilde{\mathbf{r}}_M \frac{D_T}{D_M},
+$$
+
+   trong đó $D_M = \|\tilde{\mathbf{r}}_M\|_2$ là độ lớn can thiệp ban đầu của Training-Mean. Vector đã dose-match $\tilde{\mathbf{r}}_M^{*}$ sau đó được dùng để xây dựng phân phối hiệu chỉnh theo cùng quy trình như các placebo khác.
 
 
 
