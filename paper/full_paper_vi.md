@@ -110,8 +110,10 @@ Trong toàn bài, các cặp ngoài $\Omega_c$ được xem là chưa biết và
 Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = [a_{b-1}, a_b)$) được định nghĩa là:
 
 $$
-Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,b} = 1.
+Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}} 
 $$
+
+Các tỷ trọng được chuẩn hóa để: $\qquad \sum_{b=1}^K Y_{c,b} = 1$
 
 $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố mục tiêu và được sử dụng như một quan sát oracle tại thời điểm hiệu chỉnh. Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county, thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
 
@@ -120,7 +122,7 @@ $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố m�
 
 ### 3.4.1. Giao diện dự báo baseline chung
 
-Ba mô hình dự báo được đánh giá gồm Urban GNN kết hợp tiên nghiệm Gravity, Pairwise Node MLP và Gravity hai tham số. Mỗi mô hình tạo dự báo zero-shot ban đầu $\hat{t}_{c,ij}^{(0)}$ trên $\Omega_c$, sau khi được huấn luyện hoặc khớp tham số hoàn toàn bằng các thành phố nguồn của fold tương ứng. Các tham số được giữ cố định khi suy luận trên thành phố mục tiêu và $Y_{D,c}$ không được sử dụng để tạo dự báo $M_0$.
+Ba baseline được đánh giá gồm Urban GNN, Pairwise Node MLP và Gravity hai tham số. Mỗi baseline được huấn luyện hoặc ước lượng chỉ trên các thành phố nguồn và tạo dự báo zero-shot \(\hat t^{(0)}_{c,ij}\) trên thành phố mục tiêu mà không sử dụng \(Y_D\). Cùng một toán tử hiệu chỉnh được áp dụng cho cả ba baseline.
 
 Cùng một quy tắc hiệu chỉnh theo khoảng cách được áp dụng cho dự báo ban đầu của cả ba mô hình. Urban GNN là mô hình chính, Pairwise Node MLP và Gravity hai tham số được sử dụng để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào kiến trúc baseline.
 
@@ -158,19 +160,17 @@ Hai tham số $(G, \alpha)$ được ước lượng bằng pooled log-linear or
 
 ### 3.4.5. Mục tiêu huấn luyện dưới quan sát partial OD
 
-Do dữ liệu di chuyển chỉ bao gồm các luồng dương ($t_{c,ij} \ge 1$), cả hai mô hình neural (GNN và MLP) được huấn luyện bằng hàm mất mát Negative Binomial cắt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated; @hilbe2011negative]:
+Do benchmark chỉ chứa các luồng dương, hai neural baseline được huấn luyện bằng Zero-Truncated Negative Binomial likelihood.
 
 $$
 p_+(t \mid \mu, \phi) = \frac{p_{\mathrm{NB}}(t \mid \mu, \phi)}{1 - p_{\mathrm{NB}}(0 \mid \mu, \phi)}, \qquad \mathcal{L}_c = -\frac{1}{|\Omega_c|} \sum_{(i,j) \in \Omega_c} \log p_+(t_{c,ij} \mid \mu_{c,ij}, \phi).
 $$
 
-Do benchmark chỉ bao gồm các cặp OD có luồng dương, hai neural baseline được huấn luyện bằng likelihood Negative Binomial cắt tại 0. Loss được lấy trung bình trên các cặp \((i,j)\in\Omega_c\) của từng thành phố để tránh các đô thị có nhiều cặp OD chi phối quá trình tối ưu.
+Loss được lấy trung bình trên các cặp \((i,j)\in\Omega_c\) của từng thành phố để tránh các đô thị có nhiều cặp OD chi phối quá trình tối ưu.
 
 ### 3.4.6. Cấu hình huấn luyện và lựa chọn checkpoint
 
-Hai neural baseline được huấn luyện bằng cùng một protocol tối ưu hóa cố định và sử dụng early stopping dựa trên CPC của tập validation. Checkpoint có CPC validation cao nhất được chọn cho mỗi fold. Ba model seeds độc lập được sử dụng để đánh giá độ ổn định của kết quả.
-
-Sau khi checkpoint được chọn, toàn bộ tham số mô hình được giữ cố định khi suy luận trên các thành phố kiểm tra; không có cập nhật trọng số nào được thực hiện trong bước hiệu chỉnh bằng \(Y_D\). Chi tiết siêu tham số huấn luyện được cung cấp trong Phụ lục.
+Hai neural baseline sử dụng cùng protocol huấn luyện, chọn checkpoint theo CPC validation và được lặp trên ba model seeds. Sau khi chọn checkpoint, toàn bộ tham số được giữ nguyên trên target cities. Chi tiết siêu tham số huấn luyện được cung cấp trong Phụ lục.
 
 ### 3.4.7. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
@@ -180,20 +180,16 @@ $$
 \widehat{Y}_{c,b}^{(0)} = \frac{\sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}^{(0)} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}^{(0)}}.
 $$
 
-Với cường độ hiệu chỉnh được khóa cố định tiên nghiệm tại $q = 1.0$ trong toàn bộ benchmark, toán tử hiệu chỉnh giải tích tái phân bổ khối lượng luồng theo công thức nghiệm đóng:
+Toán tử hiệu chỉnh giải tích tái phân bổ khối lượng luồng theo công thức nghiệm đóng:
 
 $$
 \hat{t}_{c,ij}^{(1)} = \hat{t}_{c,ij}^{(0)} \frac{Y_{c,b(i,j)}}{\widehat{Y}_{c,b(i,j)}^{(0)}}
 $$
 
-Trong đó, $b(i,j)$ là khoảng chứa $d_{c,ij}$. Mọi cặp OD trong cùng một khoảng được nhân với cùng một hệ số. Ở cấu hình chính $K=8$, tất cả các khoảng đều hoạt động trên 50 thành phố đánh giá. Phép hiệu chỉnh không cập nhật tham số mô hình. Dạng tổng quát với $q\in[0,1]$ được trình bày trong Phụ lục S2. Do các hệ số hiệu chỉnh dương và không đổi trong mỗi khoảng, toán tử bảo toàn tập hỗ trợ, thứ hạng nội khoảng và tổng khối lượng dự báo; các chứng minh được trình bày trong Phụ lục S3.
-
-Hình 1 minh họa toàn bộ pipeline mô hình hóa zero-shot và hiệu chỉnh tại thời điểm suy luận.
+Trong đó, $b(i,j)$ là khoảng chứa $d_{c,ij}$. Mọi cặp OD trong cùng một khoảng được nhân với cùng một hệ số. Phép hiệu chỉnh không cập nhật tham số mô hình. Thiết lập chính cố định \(q=1\); dạng tổng quát \(q\in[0,1]\) được trình bày trong Phụ lục S2. Do các hệ số hiệu chỉnh dương và không đổi trong mỗi khoảng, toán tử bảo toàn tập hỗ trợ, thứ hạng nội khoảng và tổng khối lượng dự báo; các chứng minh được trình bày trong Phụ lục S3.
 
 ![Hình 1](figures/fig1_oracle_calibration_framework.png)
-**Hình 1. Framework hiệu chỉnh oracle có điều kiện theo support.** 
-
-Mô hình cross-city $M_0$ được huấn luyện trên các thành phố nguồn và giữ nguyên toàn bộ tham số trước khi suy luận trên thành phố mục tiêu. Đối với một thành phố mục tiêu, $M_0$ trước hết tạo ra dự báo cường độ baseline $\widehat{\mathbf{T}}_c^{(0)}$ trên tập hỗ trợ dương đã biết $\Omega_c$. Phân phối theo nhóm khoảng cách oracle $Y_D$ được xác định trực tiếp từ các luồng OD ground-truth của thành phố mục tiêu và chỉ được đưa vào tại thời điểm suy luận. Các hệ số theo bin tái phân bổ khối lượng dự báo giữa các khoảng cự ly để tạo $\widehat{\mathbf{T}}_c^{(1)}$ mà không cập nhật tham số mô hình hoặc tạo liên kết OD mới.
+**Hình 1. Framework hiệu chỉnh oracle có điều kiện theo support.** Baseline cross-city tạo dự báo \(\hat T^{(0)}\) trên thành phố mục tiêu; Y_D oracle được dùng để tái phân bổ khối lượng giữa các khoảng khoảng cách và tạo \(\hat T^{(1)}\) mà không cập nhật tham số mô hình.
 
 
 
@@ -211,9 +207,9 @@ $$
 \operatorname{CPC}_c(\hat{t}) = \frac{2 \sum_{(i,j) \in \Omega_c} \min(t_{c,ij}, \hat{t}_{c,ij})}{\sum_{(i,j) \in \Omega_c} t_{c,ij} + \sum_{(i,j) \in \Omega_c} \hat{t}_{c,ij}}.
 $$
 
-CPC đo tỷ lệ phần trăm khối lượng di chuyển được chia sẻ đồng thời giữa luồng thực tế và cường độ dự báo, bị chặn nghiêm ngặt trong đoạn $[0, 1]$. Dự báo $\hat{t}_{c,ij}$ là các giá trị thực dương ước lượng cường độ di chuyển.
+CPC nằm trong \([0,1]\), với giá trị lớn hơn biểu thị mức chồng lấp lớn hơn giữa cường độ dự báo và quan sát.
 
-Để kiểm tra độ nhạy và bảo đảm kết luận không phụ thuộc riêng vào dạng hàm CPC, sáu thước đo sai số phụ gồm MAE, RMSE, NRMSE, RMSE trên thang log ($\operatorname{RMSE}_{\log1p}$), hệ số tương quan hạng Spearman, và sai số tương đối tổng luồng ($\operatorname{RelError}$) được tính toán trên cùng tập hỗ trợ $\Omega_c$ (định nghĩa chi tiết tại Phụ lục S4).
+Các thước đo sai số và xếp hạng bổ sung được báo cáo như kiểm tra độ bền; định nghĩa đầy đủ được trình bày trong Phụ lục S4.
 
 Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được đối chiếu với $Y_D$ như một chẩn đoán cơ chế nội bộ nhằm xác nhận thuật toán đã tái phân bổ khối lượng đúng thiết kế. Cả ba họ mô hình (GNN, MLP, Gravity) được so sánh trên cùng tập hỗ trợ $\Omega_c$ theo CPC baseline.
 
@@ -567,6 +563,8 @@ Tham số cường độ hiệu chỉnh $q \in [0, 1]$ điều khiển mức đ�
 * $q = 0$: giữ nguyên dự báo ban đầu của baseline ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$);
 * $q = 1$: khớp đầy đủ tỷ trọng luồng theo từng khoảng khoảng cách;
 * Nghiên cứu chính cố định $q = 1$.
+
+Ở cấu hình chính $K=8$, tất cả các khoảng đều hoạt động trên 50 thành phố đánh giá.
 
 Quy trình hiệu chỉnh tổng quát được thực hiện qua các bước:
 
