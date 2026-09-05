@@ -43,17 +43,13 @@ Những kết quả này cho thấy khoảng cách là một cấu trúc tổ ch
 
 ## 2.2. Sinh dữ liệu di chuyển và mô hình không gian dựa trên học máy
 
-Các mô hình học máy gần đây như Deep Gravity và các kiến trúc neural có nhận thức địa lý cho thấy đặc trưng đô thị và khoảng cách có thể được học để dự báo luồng và chuyển giao giữa các khu vực [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm].
-
-Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh đô thị sang luồng không bất biến theo không gian. Một mô hình nguồn có thể biết khoảng cách của từng cặp nhưng vẫn không biết tỷ lệ thực nghiệm của tổng luồng tại thành phố mục tiêu được phân bổ giữa các dải cự ly. Nghiên cứu trước về khả năng dự báo luồng đi làm cho thấy việc thiếu dữ liệu hiệu chỉnh địa phương tạo ra giới hạn đáng kể đối với độ chính xác [@yang2014limits].Vì vậy, nghiên cứu hiện tại giải quyết một vấn đề bổ sung cho hướng thiết kế kiến trúc neural. 
+Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh đô thị sang luồng không bất biến theo không gian. Nghiên cứu trước về khả năng dự báo luồng đi làm cho thấy việc thiếu dữ liệu hiệu chỉnh địa phương tạo ra giới hạn đáng kể đối với độ chính xác [18]. Điều này cho thấy việc đưa khoảng cách và đặc trưng đô thị vào mô hình chưa loại bỏ hoàn toàn nhu cầu về thông tin đặc thù của miền mục tiêu.
 
 ## 2.3. Quan sát tổng hợp và khoảng trống nghiên cứu
 
 Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được dùng để áp đặt tính nhất quán vĩ mô với số lượng quan sát ít hơn nhiều so với số ô OD.
 
-Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc vài tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách. Điều này cho phép kiểm tra giá trị của tín hiệu ở nhiều mức độ phân giải khác nhau thông qua số lượng khoảng $K$. Khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp, \(Y_D\) chỉ ràng buộc tỷ trọng tổng khối lượng luồng giữa các khoảng cự ly; nó không xác định cách khối lượng được phân bổ giữa các cặp OD trong cùng một khoảng.
-
-Tín hiệu tổng hợp trong nghiên cứu này không đồng nhất với tổng lượng chuyến đi theo điểm đi và điểm đến hoặc một mẫu các cặp OD được quan sát trực tiếp. Mỗi loại quan sát ràng buộc một khía cạnh khác nhau của ma trận luồng chưa biết.
+Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc vài tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách, cho phép kiểm tra giá trị của tín hiệu ở nhiều mức độ phân giải thông qua số lượng khoảng \(K\). \(Y_D\) cũng khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng luồng được phân bổ giữa các dải cự ly, nhưng không xác định cách khối lượng đó được phân bổ giữa các cặp origin–destination trong cùng một khoảng.
 
 Các hướng nghiên cứu trước đã cho thấy vai trò quan trọng của khoảng cách trong tương tác không gian, khả năng chuyển giao của các mô hình dự báo luồng và giá trị của các ràng buộc tổng hợp. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình cross-city đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
 
@@ -213,13 +209,13 @@ Khoảng tin cậy 95% được ước lượng bằng paired nonparametric boot
 
 ## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot giữ nguyên tham số hay không?
 
-Trong thí nghiệm chính sử dụng Urban GNN làm baseline chính, CPC liên vùng trung bình trên 50 thành phố tăng từ 0.71281 ở baseline $M_0$ lên 0.71635 sau hiệu chỉnh $M_1$, tương ứng với $\Delta\mathrm{CPC}=+0.00354$ và khoảng tin cậy bootstrap 95% $[+0.0026,+0.0045]$. Trung vị $\Delta\mathrm{CPC}$ là $+0.00195$, với 45/50 thành phố có mức thay đổi dương. Kiểm định Wilcoxon signed-rank ghép cặp cho $p=1.93\times10^{-9}$. Mức tăng tương đương khoảng 0.5% CPC của baseline và có năm thành phố suy giảm, cho thấy hiệu quả có quy mô nhỏ và không xuất hiện ở mọi thành phố.
+Trong thí nghiệm chính với Urban GNN, CPC liên vùng trung bình tăng từ 0.71281 ở baseline \(M_0\) lên 0.71635 sau hiệu chỉnh \(M_1\), tương ứng với mức cải thiện trung bình \(\Delta CPC = +0.00354\). Mức cải thiện xuất hiện ở phần lớn thành phố nhưng có độ lớn tuyệt đối nhỏ và không đồng đều giữa các trường hợp. Các thống kê đầy đủ được trình bày trong Bảng 2, còn Hình 2 cho thấy phân bố mức cải thiện theo từng thành phố.
 
 
 ![Hình 2](figures/fig2_main_per_city.png)
 **Hình 2: Mức cải thiện CPC liên vùng theo từng thành phố từ hiệu chỉnh khoảng cách mục tiêu.** 
 
-Urban GNN tăng CPC trung bình từ 0.71281 lên 0.71635, tương ứng \(\Delta CPC=+0.00354\). Mức cải thiện xuất hiện ở 45/50 thành phố nhưng có độ lớn tuyệt đối nhỏ.
+Biểu đồ cột thể hiện \(\Delta CPC_c = CPC(M_{1,c}) - CPC(M_{0,c})\) trên 50 thành phố, xếp từ thấp đến cao. Đường nét đứt biểu diễn mức cải thiện trung bình và đường chấm biểu diễn trung vị.
 
 
 
@@ -235,18 +231,15 @@ Urban GNN tăng CPC trung bình từ 0.71281 lên 0.71635, tương ứng \(\Delt
 
 ## 4.2. Mức cải thiện có thực sự đặc thù theo thành phố mục tiêu và có ý nghĩa cấu trúc hay không?
 
-Để phân biệt thông tin đặc thù của thành phố mục tiêu với ảnh hưởng chung của việc thay đổi dự báo, chúng tôi so sánh $Y_D$ chính xác của target với các phân phối donor được khớp để tạo ra cùng mức thay đổi phân phối. $Y_D$ của target tạo ra mức tăng trung bình $\Delta\mathrm{CPC}=+0.003539$, trong khi các donor đã khớp chỉ tạo ra $-0.000091$. Chênh lệch giữa hai điều kiện là $+0.003630$, với khoảng tin cậy 95% $[+0.00287,+0.00445]$ và kiểm định Wilcoxon một phía $p=2.19\times10^{-11}$. Vì vậy, cùng một mức độ điều chỉnh nhưng sử dụng phân phối của thành phố khác không tái tạo được lợi ích của thông tin target.
+Các đối chứng placebo cho thấy lợi ích của \(Y_D\) không xuất hiện chỉ do thực hiện một phép tái phân bổ có cùng cường độ. Khi thay \(Y_D\) của thành phố mục tiêu bằng phân phối từ các thành phố donor hoặc bằng phân phối trung bình của tập huấn luyện đã được dose-match, mức cải thiện giảm mạnh so với điều kiện target-specific. Các so sánh ghép cặp đều cho thấy target \(Y_D\) vượt trội so với hai đối chứng này (Bảng 3).”
 
-Để kiểm tra liệu một phân phối khoảng cách chung có đủ để hiệu chỉnh baseline hay không, chúng tôi sử dụng phân phối trung bình của các thành phố huấn luyện, được khớp theo cùng mức độ thay đổi phân phối. Điều kiện này tạo ra $\Delta\mathrm{CPC}=+0.000914$, thấp hơn mức $+0.003539$ khi sử dụng $Y_D$ của target. Chênh lệch giữa hai điều kiện là $+0.002626$, với khoảng tin cậy 95% $[+0.00197,+0.00336]$ và kiểm định Wilcoxon một phía $p=4.03\times10^{-11}$, cho thấy phân phối trung bình không tái tạo được lợi ích của thông tin đặc thù theo thành phố.
-
-Để kiểm tra vai trò của thứ tự khoảng cách, chúng tôi hoán vị các thành phần trong $Y_D$ của target. Phép biến đổi này giữ nguyên các giá trị tỷ trọng nhưng phá vỡ sự tương ứng giữa mỗi tỷ trọng và khoảng cách của nó. Hiệu chỉnh bằng phân phối đã hoán vị làm CPC giảm trung bình $-0.006964$, trái với mức tăng $+0.003539$ khi sử dụng đúng thứ tự. Kết quả cho thấy lợi ích của $Y_D$ phụ thuộc vào sự liên kết chính xác giữa tỷ trọng luồng và các khoảng cách tương ứng.
-
+“Tính đúng cấu trúc khoảng cách cũng là điều kiện cần. Khi các thành phần của \(Y_D\) được hoán vị, các tỷ trọng vẫn được bảo toàn nhưng không còn gắn với đúng khoảng cự ly, và hiệu chỉnh làm hiệu năng giảm thay vì tăng. Kết quả này cho thấy lợi ích của \(Y_D\) phụ thuộc đồng thời vào tính đặc thù của thành phố mục tiêu và sự tương ứng đúng giữa tỷ trọng luồng với các khoảng khoảng cách.
 
 
 ![Hình 3](figures/fig5_structural_validity_placebo.png)
 **Hình 3: Các đối chứng placebo khớp liều lượng công bằng.** 
 
-So sánh mức tăng tái tạo trung bình $\Delta\mathrm{CPC}$ trên $N=50$ thành phố kiểm tra dưới 3 điều kiện: (1) Phân phối mục tiêu thực sự ($Y_D$, $+0.00354$, $p < 10^{-8}$); (2) Đối chứng donor từ thành phố khác đã khớp liều lượng ($-0.00009$, không có ý nghĩa); và (3) Hoán vị các khoảng khoảng cách ($-0.00696$, $p < 10^{-14}$). Thanh sai số biểu diễn khoảng tin cậy 95% bootstrap phân tầng.
+Hình 3. Đối chứng về tính đặc thù mục tiêu và cấu trúc khoảng cách. Hình so sánh \(\Delta CPC\) của target \(Y_D\), dose-matched donor và permuted \(Y_D\) trên 50 thành phố. Thanh sai số biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
 
 
 
@@ -267,7 +260,7 @@ So sánh mức tăng tái tạo trung bình $\Delta\mathrm{CPC}$ trên $N=50$ th
 Chúng tôi đánh giá sự thay đổi của $\Delta\mathrm{CPC}$ theo số khoảng khoảng cách $K$ và theo mức sai số Total Variation được bổ sung vào $Y_D$, lần lượt đại diện cho độ phân giải và chất lượng của quan sát.
 
 
-$\Delta\mathrm{CPC}$ tăng đơn điệu từ $+0.00098$ tại $K=2$ lên $+0.00639$ tại $K=20$, với mức $+0.00354$ ở cấu hình chính $K=8$. Khoảng tin cậy 95% nằm phía trên 0 tại tất cả các giá trị $K$ được kiểm tra, trong khi số thành phố cải thiện tăng từ 39/50 tại $K=2$ lên 46/50 tại $K=20$. Mức cải thiện tăng theo độ phân giải khoảng cách trong phạm vi các giá trị $K$ được đánh giá, với tốc độ tăng có xu hướng chậm lại ở các cấu hình $K$ lớn hơn.
+Mức cải thiện tăng theo độ phân giải khoảng cách trong toàn bộ dải \(K\) được đánh giá, từ các phân hoạch thô đến các cấu hình chi tiết hơn. Tuy nhiên, tốc độ tăng có xu hướng chậm lại khi \(K\) lớn, cho thấy lợi ích biên giảm dần. Các giá trị chi tiết theo từng cấu hình được trình bày trong Bảng 4 và Hình 4.
 
 ### Bảng 4: Độ mở rộng của độ phân giải thông tin qua các khoảng khoảng cách
 
@@ -289,7 +282,7 @@ $\Delta\mathrm{CPC}$ tăng đơn điệu từ $+0.00098$ tại $K=2$ lên $+0.00
 
 
 ![Hình 4](figures/fig3_resolution_sensitivity.png)
-**Hình 4 | Phân tích độ nhạy của độ phân giải thông tin ($K$).** gain tăng theo \(K\), nhưng tốc độ tăng chậm dần.
+Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách \(K\). Đường biểu diễn mean \(\Delta CPC\) trên 50 thành phố theo các mức \(K\); dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
 
 Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nhiều county, hiệu chỉnh cấp county cải thiện so với hiệu chỉnh cấp thành phố tại 9/11 trường hợp. Tuy nhiên, mức tăng bổ sung pooled trên toàn bộ 50 vùng đô thị chỉ là $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, vì 39 vùng single-county tạo ra hai phân hoạch tương đương về mặt toán học. Do đó, kết quả này không được xem là bằng chứng tổng quát rằng tăng độ phân giải không gian sẽ cải thiện hiệu năng; chi tiết được trình bày trong Phụ lục S7.
 
@@ -298,9 +291,9 @@ Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nh
 
 
 ![Hình 5](figures/fig4_noise_dose_response.png)
-**Hình 5 | Đường đáp ứng theo mức nhiễu Total Variation (TV).** Mức cải thiện sau hiệu chỉnh, $\Delta\mathrm{CPC}$, giảm khi mức nhiễu TV tăng từ $\epsilon=0.00$ đến $\epsilon=0.05$. Đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức hiệu năng tương đương baseline zero-shot $M_0$. Đường đứt nét màu đỏ thẳng đứng biểu thị điểm giao cắt thực nghiệm $\epsilon_{\mathrm{cross}}\approx4.44\%$, tại đó lợi ích trung bình của hiệu chỉnh xấp xỉ bằng 0. Dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%. Giá trị $\epsilon_{\mathrm{cross}}$ chỉ áp dụng cho benchmark và cơ chế gây nhiễu được sử dụng trong nghiên cứu này.
+Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation. Đường biểu diễn mean \(\Delta CPC\) theo mức sai số TV; đường ngang tại \(\Delta CPC=0\) biểu thị mức tương đương baseline, đường đứt nét thẳng đứng biểu thị điểm giao cắt thực nghiệm và dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%.
 
-$\Delta\mathrm{CPC}$ giảm đơn điệu từ $+0.00354$ khi không có nhiễu xuống $+0.00070$ tại sai số TV 4% và $-0.00087$ tại 5%. Trên 1.000 hướng nhiễu, điểm giao cắt trung bình với baseline được ước lượng tại $\epsilon_{\mathrm{cross}}=4.44\%$, với khoảng tin cậy 95% $[4.16\%, 4.77\%]$. Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu đã sử dụng, không phải mức dung sai áp dụng chung cho dữ liệu thực tế.
+ΔCPC giảm đơn điệu từ +0.00354 khi không có nhiễu xuống +0.00070 tại sai số TV 4% và −0.00087 tại 5%. Trên 1.000 hướng nhiễu, điểm giao cắt trung bình với baseline được ước lượng tại \(\epsilon_{cross}=4.44\%\), với khoảng tin cậy 95% [4.16%, 4.77%]. Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu đã sử dụng, không phải mức dung sai áp dụng chung cho dữ liệu thực tế.
 
 ## 4.4. Độ bền vững theo khởi tạo và kiến trúc baseline
 
