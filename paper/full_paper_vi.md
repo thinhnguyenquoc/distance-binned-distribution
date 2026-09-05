@@ -45,21 +45,19 @@ Những kết quả này cho thấy khoảng cách là một cấu trúc tổ ch
 
 Các mô hình học máy gần đây như Deep Gravity và các kiến trúc neural có nhận thức địa lý cho thấy đặc trưng đô thị và khoảng cách có thể được học để dự báo luồng và chuyển giao giữa các khu vực [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm].
 
-Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh đô thị sang luồng không bất biến theo không gian. Một mô hình nguồn có thể biết khoảng cách của từng cặp nhưng vẫn không biết tỷ lệ thực nghiệm của tổng luồng tại thành phố mục tiêu được phân bổ giữa các dải cự ly. Nghiên cứu trước về khả năng dự báo luồng đi làm cho thấy việc thiếu dữ liệu hiệu chỉnh địa phương tạo ra giới hạn đáng kể đối với độ chính xác [@yang2014limits]. Hạn chế này không tự biến mất khi khoảng cách cặp được đưa vào đầu vào: khoảng cách cho mô hình biết hai vùng cách nhau bao xa, nhưng không cho biết tỷ lệ thực nghiệm của tổng luồng tại thành phố mục tiêu được phân bổ vào dải cự ly đó.
-
-Vì vậy, nghiên cứu hiện tại giải quyết một vấn đề bổ sung cho hướng thiết kế kiến trúc neural. Khác với hướng cải thiện kiến trúc hoặc fine-tuning, nghiên cứu này giữ nguyên mô hình cross-city đã huấn luyện và kiểm tra riêng giá trị thông tin của một quan sát tổng hợp từ miền mục tiêu. Cách thiết kế này tách giá trị thông tin của quan sát mục tiêu khỏi những cải thiện có thể phát sinh do huấn luyện bổ sung, fine-tuning hoặc thay đổi kiến trúc.
+Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh đô thị sang luồng không bất biến theo không gian. Một mô hình nguồn có thể biết khoảng cách của từng cặp nhưng vẫn không biết tỷ lệ thực nghiệm của tổng luồng tại thành phố mục tiêu được phân bổ giữa các dải cự ly. Nghiên cứu trước về khả năng dự báo luồng đi làm cho thấy việc thiếu dữ liệu hiệu chỉnh địa phương tạo ra giới hạn đáng kể đối với độ chính xác [@yang2014limits].Vì vậy, nghiên cứu hiện tại giải quyết một vấn đề bổ sung cho hướng thiết kế kiến trúc neural. 
 
 ## 2.3. Quan sát tổng hợp và khoảng trống nghiên cứu
 
 Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được dùng để áp đặt tính nhất quán vĩ mô với số lượng quan sát ít hơn nhiều so với số ô OD.
 
-Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc vài tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách. Điều này cho phép kiểm tra giá trị của tín hiệu ở nhiều mức độ phân giải khác nhau thông qua số lượng khoảng $K$. $Y_D$ khác với các biên origin/destination hoặc các cặp OD quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng được phân bổ giữa các dải cự ly và không xác định phân bổ giữa các cặp trong cùng một khoảng.
+Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc vài tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách. Điều này cho phép kiểm tra giá trị của tín hiệu ở nhiều mức độ phân giải khác nhau thông qua số lượng khoảng $K$. Khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp, \(Y_D\) chỉ ràng buộc tỷ trọng tổng khối lượng luồng giữa các khoảng cự ly; nó không xác định cách khối lượng được phân bổ giữa các cặp OD trong cùng một khoảng.
 
-Tín hiệu tổng hợp trong nghiên cứu này không đồng nhất với tổng lượng chuyến đi theo điểm đi và điểm đến hoặc một mẫu các cặp OD được quan sát trực tiếp. Mỗi loại quan sát ràng buộc một khía cạnh khác nhau của ma trận luồng chưa biết. Phân phối di chuyển theo các khoảng khoảng cách chỉ ràng buộc tỷ lệ tổng khối lượng di chuyển được phân bổ vào từng khoảng cự ly; bản thân nó không xác định cặp origin–destination cụ thể nào phải nhận nhiều luồng hơn trong cùng một khoảng.
+Tín hiệu tổng hợp trong nghiên cứu này không đồng nhất với tổng lượng chuyến đi theo điểm đi và điểm đến hoặc một mẫu các cặp OD được quan sát trực tiếp. Mỗi loại quan sát ràng buộc một khía cạnh khác nhau của ma trận luồng chưa biết.
 
 Các hướng nghiên cứu trước đã cho thấy vai trò quan trọng của khoảng cách trong tương tác không gian, khả năng chuyển giao của các mô hình dự báo luồng và giá trị của các ràng buộc tổng hợp. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình cross-city đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
 
-Trong thiết kế của nghiên cứu này, phân phối di chuyển theo khoảng cách của thành phố mục tiêu được sử dụng như tín hiệu target-specific duy nhất đưa vào sau khi mô hình đã huấn luyện xong; backbone được giữ nguyên và không có cập nhật trọng số. Cách thiết kế này cho phép tách giá trị thông tin của quan sát mục tiêu khỏi những cải thiện có thể phát sinh do fine-tuning hoặc huấn luyện bổ sung.
+Trong thiết kế của nghiên cứu này, phân phối di chuyển theo khoảng cách của thành phố mục tiêu được sử dụng như tín hiệu target-specific duy nhất đưa vào sau khi mô hình đã huấn luyện xong và backbone được giữ nguyên và không có cập nhật trọng số. Cách thiết kế này cho phép tách giá trị thông tin của quan sát mục tiêu khỏi những cải thiện có thể phát sinh do fine-tuning hoặc huấn luyện bổ sung.
 
 Các nghiên cứu hiện có chưa trực tiếp kiểm tra giá trị cải thiện biên của tín hiệu này trên một baseline cross-city đã được huấn luyện và giữ nguyên tham số. Vì vậy, nghiên cứu tập trung vào việc định lượng giá trị bổ sung của phân phối di chuyển theo khoảng cách của thành phố mục tiêu và xác định những điều kiện quan sát chi phối mức cải thiện đó.
 
@@ -118,7 +116,7 @@ $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố m�
 
 ### 3.4.1. Các baseline và giao diện dự báo chung
 
-Cùng một quy tắc hiệu chỉnh theo khoảng cách được áp dụng cho dự báo ban đầu của cả ba mô hình. Urban GNN là mô hình chính, Pairwise Node MLP và Gravity hai tham số được sử dụng để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào kiến trúc baseline.
+Ba baseline được đánh giá dưới cùng một giao thức hiệu chỉnh tại thời điểm suy luận. Urban GNN là mô hình chính, Pairwise Node MLP và Gravity hai tham số được sử dụng để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào kiến trúc baseline.
 
 
 Urban GNN là baseline chính của nghiên cứu. Mô hình mã hóa các đặc trưng bối cảnh đô thị của từng tract thông qua một đồ thị không gian, sau đó kết hợp embedding của origin và destination với khoảng cách cặp và một gravity prior để dự báo cường độ luồng OD dương.
@@ -207,9 +205,7 @@ Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được 
 
 Đối với mỗi thành phố, mức cải thiện được tính từ chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline, sau đó lấy trung bình qua các model seeds và macro-average trên toàn bộ 50 thành phố.
 
-Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold. Ý nghĩa thống kê của các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung.
-
-Ngoài thí nghiệm chính, chúng tôi kiểm tra liệu hiệu quả của $Y_D$ có phụ thuộc vào độ phân giải khoảng cách, chất lượng quan sát, thứ tự các khoảng, tính đặc thù của thành phố mục tiêu, khởi tạo mô hình và kiến trúc baseline hay không. Các thiết lập cụ thể được trình bày cùng kết quả tương ứng.
+Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold. Ý nghĩa thống kê của các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung. Các phân tích độ nhạy và độ bền tương ứng được trình bày trong Section 4.
 
 # 4. Kết quả thực nghiệm
 
@@ -223,7 +219,7 @@ Trong thí nghiệm chính sử dụng Urban GNN làm baseline chính, CPC liên
 ![Hình 2](figures/fig2_main_per_city.png)
 **Hình 2: Mức cải thiện CPC liên vùng theo từng thành phố từ hiệu chỉnh khoảng cách mục tiêu.** 
 
-Biểu đồ cột thể hiện mức thay đổi hiệu năng theo từng thành phố $\Delta\text{CPC}_c = \text{CPC}(M_{1,c}) - \text{CPC}(M_{0,c})$ trên $N=50$ thành phố kiểm tra, xếp từ thấp đến cao. Đường nét đứt màu xanh lá thể hiện mức cải thiện trung bình ($+0.00354$) và đường chấm màu cam thể hiện trung vị ($+0.00195$). Tổng cộng có 45/50 thành phố (90.0%) đạt mức tăng dương, với khoảng tin cậy 95% phân tầng theo fold là $[+0.0026, +0.0045]$.
+Urban GNN tăng CPC trung bình từ 0.71281 lên 0.71635, tương ứng \(\Delta CPC=+0.00354\). Mức cải thiện xuất hiện ở 45/50 thành phố nhưng có độ lớn tuyệt đối nhỏ.
 
 
 
@@ -293,7 +289,7 @@ $\Delta\mathrm{CPC}$ tăng đơn điệu từ $+0.00098$ tại $K=2$ lên $+0.00
 
 
 ![Hình 4](figures/fig3_resolution_sensitivity.png)
-**Hình 4 | Phân tích độ nhạy của độ phân giải thông tin ($K$).** Mức tăng CPC liên vùng trung bình $\Delta\text{CPC}$ tăng đơn điệu từ $K=2$ ($+0.00098$) lên $K=20$ ($+0.00639$). Dải bóng mờ biểu diễn khoảng tin cậy 95% bootstrap phân tầng.
+**Hình 4 | Phân tích độ nhạy của độ phân giải thông tin ($K$).** gain tăng theo \(K\), nhưng tốc độ tăng chậm dần.
 
 Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nhiều county, hiệu chỉnh cấp county cải thiện so với hiệu chỉnh cấp thành phố tại 9/11 trường hợp. Tuy nhiên, mức tăng bổ sung pooled trên toàn bộ 50 vùng đô thị chỉ là $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, vì 39 vùng single-county tạo ra hai phân hoạch tương đương về mặt toán học. Do đó, kết quả này không được xem là bằng chứng tổng quát rằng tăng độ phân giải không gian sẽ cải thiện hiệu năng; chi tiết được trình bày trong Phụ lục S7.
 
