@@ -4,7 +4,7 @@
 
 Ma trận nguồn–đích là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị, nhưng dữ liệu chi tiết về cường độ luồng OD của thành phố mục tiêu thường khó thu thập. Các nghiên cứu sử dụng ngữ cảnh đô thị và khoảng cách địa lý đã phát triển các baseline cross-city zero-shot có khả năng dự báo luồng di chuyển mà không sử dụng dữ liệu quan sát về cường độ OD của thành phố mục tiêu. Nghiên cứu này xem xét liệu phân phối di chuyển theo khoảng cách của thành phố mục tiêu có thể cải thiện việc tái tạo cường độ luồng OD liên vùng trên tập hỗ trợ dương đã biết thông qua hiệu chỉnh kết quả của một baseline zero-shot có tham số được giữ nguyên hay không.
 
-Phân phối di chuyển này được tổng hợp từ dữ liệu quan sát luồng của chính thành phố mục tiêu và chỉ cung cấp tỷ trọng khối lượng luồng theo các khoảng khoảng cách, không cung cấp cường độ của từng cặp OD cụ thể. Trong thí nghiệm chính, phương pháp được đánh giá bằng quy trình kiểm định chéo 5-fold trên các thành phố của Hoa Kỳ. Hiệu chỉnh ở cấp thành phố tạo ra mức cải thiện nhỏ nhưng nhất quán: CPC trung bình tăng 0.00354 (CI 95%: $[+0.0026, +0.0045]$), với 45/50 thành phố được cải thiện. Đồng thời, mức cải thiện cũng giảm khi độ phân giải hoặc chất lượng của phân phối quan sát dần suy giảm. Nghiên cứu chỉ đánh giá tái tạo cường độ trên tập các cặp OD liên vùng có luồng dương đã biết.
+Phân phối di chuyển này được tổng hợp từ dữ liệu quan sát luồng của chính thành phố mục tiêu và chỉ cung cấp tỷ trọng khối lượng luồng theo các khoảng khoảng cách, không cung cấp cường độ của từng cặp OD cụ thể. Trong thí nghiệm chính, phương pháp được đánh giá bằng quy trình kiểm định chéo 5-fold trên các thành phố của Hoa Kỳ. Hiệu chỉnh ở cấp thành phố tạo ra mức cải thiện nhỏ nhưng nhất quán: CPC trung bình tăng 0.00354 (CI 95%: $[+0.0026, +0.0045]$), với 45/50 thành phố được cải thiện. Đồng thời, mức cải thiện giảm khi quan sát trở nên thô hơn hoặc bị suy giảm chất lượng. Nghiên cứu chỉ đánh giá tái tạo cường độ trên tập các cặp OD liên vùng có luồng dương đã biết.
 
 **Từ khóa:** ma trận nguồn–đích; tái tạo cường độ OD; phân phối di chuyển theo khoảng cách; zero-shot; học chuyển giao giữa các thành phố; quan sát tổng hợp; di chuyển không gian.
 
@@ -24,7 +24,7 @@ Trong nghiên cứu này, phân phối được trích xuất từ luồng tham 
 
 Nghiên cứu được đánh giá bằng kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị Hoa Kỳ. Mỗi thành phố được đánh giá khi không tham gia huấn luyện, và toàn bộ tham số mô hình được giữ nguyên trước bước hiệu chỉnh.
 
-Nghiên cứu có 3 đóng góp chính: định lượng giá trị bổ sung, xác định điều kiện chi phối, phân tích cơ chế/robustness.
+Nghiên cứu đóng góp bằng cách định lượng giá trị thông tin bổ sung của phân phối di chuyển theo khoảng cách của thành phố mục tiêu, xác định các điều kiện quan sát chi phối mức cải thiện, và kiểm tra cơ chế cùng độ bền của hiệu ứng trên nhiều khởi tạo và kiến trúc baseline.
 
 # Mục 2: Nghiên cứu liên quan
 
@@ -38,7 +38,7 @@ Những kết quả này cho thấy khoảng cách là một cấu trúc tổ ch
 
 ## 2.2. Sinh dữ liệu di chuyển và mô hình không gian dựa trên học máy
 
-Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh đô thị sang luồng không bất biến theo không gian. Nghiên cứu trước về khả năng dự báo luồng đi làm cho thấy việc thiếu dữ liệu hiệu chỉnh địa phương tạo ra giới hạn đáng kể đối với độ chính xác [18]. Điều này cho thấy việc đưa khoảng cách và đặc trưng đô thị vào mô hình chưa loại bỏ hoàn toàn nhu cầu về thông tin đặc thù của miền mục tiêu.
+Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh đô thị sang luồng không bất biến theo không gian. Nghiên cứu trước về khả năng dự báo luồng đi làm cho thấy việc thiếu dữ liệu hiệu chỉnh địa phương tạo ra giới hạn đáng kể đối với độ chính xác [@yang2014limits]. Điều này cho thấy việc đưa khoảng cách và đặc trưng đô thị vào mô hình chưa loại bỏ hoàn toàn nhu cầu về thông tin đặc thù của miền mục tiêu.
 
 ## 2.3. Quan sát tổng hợp và khoảng trống nghiên cứu
 
@@ -48,7 +48,7 @@ Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc vài tha
 
 Các hướng nghiên cứu trước đã cho thấy vai trò quan trọng của khoảng cách trong tương tác không gian, khả năng chuyển giao của các mô hình dự báo luồng và giá trị của các ràng buộc tổng hợp. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình cross-city đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
 
-Nghiên cứu hiện tại khác các hướng trên ở chỗ nó không dùng quan sát tổng hợp để huấn luyện hoặc tái ước lượng mô hình, mà để đo trực tiếp giá trị thông tin bổ sung của tín hiệu target-specific sau khi baseline cross-city đã được huấn luyện. Vì vậy, nghiên cứu tập trung vào việc định lượng giá trị bổ sung của phân phối di chuyển theo khoảng cách của thành phố mục tiêu và xác định những điều kiện quan sát chi phối mức cải thiện đó.
+Nghiên cứu hiện tại khác các hướng trên ở chỗ nó không dùng quan sát tổng hợp để huấn luyện hoặc tái ước lượng mô hình, mà để đo trực tiếp giá trị thông tin bổ sung của tín hiệu target-specific sau khi baseline cross-city đã được huấn luyện.
 
 
 # Mục 3: Nguồn dữ liệu, đơn vị không gian và phương pháp luận
@@ -238,7 +238,7 @@ Hình 3. Đối chứng về tính đặc thù mục tiêu và cấu trúc kho�
 
 | Experimental Condition | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Benefit vs $M_0$ ($p_{\text{2-sided}}$) | Specificity Gain vs Placebo | Specificity 95% CI | Target vs Placebo ($p_{\text{1-sided}}$) | Target-specific win rate ($\text{Target } Y_D > \text{Placebo}$) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1. Oracle Target $Y_D$ (Upper Bound)** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs $M_0$)** |
+| **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs $M_0$)** |
 | **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46 / 50 (92.0%)** |
 | **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47 / 50 (94.0%)** |
 | **4. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
@@ -307,21 +307,14 @@ Mức tăng được tái hiện trên cả Urban GNN và Node MLP, trong khi Gr
 
 ## 4.5. Mức sai lệch phân phối khoảng cách của baseline có liên hệ mạnh với mức cải thiện hiệu chỉnh theo thành phố
 
-Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ mạnh với mức cải thiện sau hiệu chỉnh. Mẫu hình này phù hợp với cơ chế của phương pháp: $Y_D$ mang lại lợi ích lớn hơn ở những thành phố mà baseline phân bổ khối lượng giữa các dải cự ly kém chính xác hơn. Kết quả này chỉ được diễn giải như một liên hệ quan sát, không phải quan hệ nhân quả.
+Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ mạnh với mức cải thiện sau hiệu chỉnh. Sau khi kiểm soát độ chính xác baseline và quy mô đô thị, tương quan từng phần đạt $r_{\mathrm{partial}}=+0.7951$ ($p=5.35\times10^{-12}$). Mẫu hình này phù hợp với cơ chế của phương pháp nhưng chỉ được diễn giải như một liên hệ quan sát, không phải quan hệ nhân quả.
 
 
 ![Hình 6](figures/fig6_mechanistic_dpre.png)
-Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức cải thiện sau hiệu chỉnh. $d_{\mathrm{pre}}$ được đo bằng Total Variation giữa phân phối khoảng cách của baseline và ground truth. Sau khi kiểm soát độ chính xác baseline và quy mô đô thị, tương quan từng phần đạt $r_{\mathrm{partial}}=+0.7951$ ($p=5.35\times10^{-12}$). Phân tích này được sử dụng như một chẩn đoán liên hệ quan sát, không nhằm thiết lập quan hệ nhân quả.
-
-
-
-*Ghi chú: Đánh giá trên toàn bộ $N=50$ thành phố kiểm tra. $d_{\mathrm{pre}} = \operatorname{TV}(\widehat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ measures the Total Variation error between the zero-shot baseline's distance allocation and ground truth. Multivariate OLS serves as an observational diagnostic for linear association with performance gain heterogeneity rather than a causal model. Significance: *** $p < 0.001$.*
+Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức cải thiện sau hiệu chỉnh. $d_{\mathrm{pre}}$ là Total Variation giữa phân phối khoảng cách của baseline và ground truth; đường biểu diễn quan hệ tuyến tính ước lượng trên 50 thành phố.
 
 
 # Mục 5: Thảo luận chuyên sâu
-
-Trong phần này, chúng tôi đặt các phát hiện của nghiên cứu vào bức tranh tổng thể của các nghiên cứu về mô hình hóa di chuyển con người và học chuyển giao không gian [@barbosa2018humanmobility; @enaya2026transgm; @lenormand2016comparison; @simini2021deepgravity]. Chúng tôi phân tích các cơ chế lý thuyết giải thích giá trị thông tin của phân phối cự ly tổng hợp, đánh giá độ phân giải quan sát và độ nhạy đối với nhiễu tổng hợp có kiểm soát, thảo luận ý nghĩa phương pháp luận và thực tiễn cho phân tích đô thị khan hiếm dữ liệu, đồng thời nêu rõ các hạn chế chính và định hướng nghiên cứu tiếp theo.
-
 
 ### 5.1. Giá trị thông tin và cơ chế hiệu chỉnh của $Y_D$
 	​
@@ -340,10 +333,7 @@ Mẫu hình theo độ phân giải gợi ý rằng giá trị của $Y_D$ phụ
 Ngoài độ chính xác, ý nghĩa của $Y_D$ còn phụ thuộc vào việc các tỷ trọng được gắn đúng với các khoảng khoảng cách tương ứng. Việc hoán vị các thành phần phá vỡ lợi ích cho thấy $Y_D$ không chỉ là một vector tỷ trọng, mà là một mô tả có cấu trúc theo cự ly. Đồng thời, các đối chứng donor cho thấy phần thông tin hữu ích mang tính đặc thù theo thành phố, thay vì chỉ phản ánh một prior suy giảm theo khoảng cách chung có thể chuyển trực tiếp giữa các đô thị.
 
 ## 5.3. Ý nghĩa phương pháp luận và phạm vi ứng dụng
-
-Các mô hình như Deep Gravity và UGNN cho thấy neural networks có thể kết hợp nhiều dạng thông tin địa lý để học các quy luật mobility có khả năng chuyển giao [@simini2021deepgravity; @guo2025ugnn]. Tuy nhiên, các mô hình này vẫn cần OD observations từ các khu vực nguồn để huấn luyện. Đóng góp của nghiên cứu hiện tại không phải loại bỏ nhu cầu về OD training data, mà là cho thấy một mô hình nguồn đã huấn luyện có thể được điều chỉnh tại inference time bằng một quan sát tổng hợp của thành phố mục tiêu mà không cần cập nhật tham số.
-
-Về mặt phương pháp, kết quả cho thấy một ràng buộc tổng hợp chính xác tại miền mục tiêu có thể điều chỉnh mô hình cross-city có tham số được giữ nguyên ở thời điểm suy luận mà không cần fine-tuning tham số hoặc huấn luyện lại end-to-end. Kết quả không chứng minh tính khả thi triển khai, mà chỉ xác lập rằng nếu một quan sát tổng hợp đủ chính xác tồn tại, nó có thể chứa thông tin bổ sung hữu ích. Do phép hiệu chỉnh chỉ tái phân bổ cường độ trên tập hỗ trợ đã biết, kết quả không mở rộng sang bài toán phát hiện các liên kết OD chưa quan sát.
+Các mô hình như Deep Gravity và UGNN cho thấy neural networks có thể học các quy luật mobility có khả năng chuyển giao từ dữ liệu nguồn [@simini2021deepgravity; @guo2025ugnn]. Kết quả của nghiên cứu này bổ sung rằng một quan sát tổng hợp của miền mục tiêu có thể cung cấp thông tin hiệu chỉnh cho một mô hình cross-city đã huấn luyện mà không cần cập nhật tham số. Tuy nhiên, điều này chưa chứng minh tính khả thi triển khai, vì \(Y_D\) ở đây là oracle và phép hiệu chỉnh chỉ hoạt động trên tập hỗ trợ đã biết.
 
 
 ## 5.4. Các giới hạn của nghiên cứu
@@ -647,7 +637,6 @@ $$
 $$
 \operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
 $$
-   Sau công thức, hệ số co giãn $\sigma$ được tìm bằng phương pháp chia đôi (bisection solver) để đạt mức TV yêu cầu $\epsilon$.
 
 2. **Đối chứng Donor Placebo**:
 
