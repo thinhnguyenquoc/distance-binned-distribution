@@ -335,7 +335,7 @@ def preprocess_markdown_citations_and_references(md_text: str, key_to_idx: dict[
         md_text = re.sub(r"\[@([^\]]+)\]", citation_replacer, md_text)
 
     def add_reference_anchors(text: str) -> str:
-        pattern = r"((?:#+\s*(?:Mục\s*9\s*:\s*)?(?:Tài liệu tham khảo|References).*?\n)(?:---\s*\n)?)(.+?)(?=\n#+ |\Z)"
+        pattern = r"((?:#+\s*(?:(?:Mục\s*)?9[.:]\s*)?(?:Tài liệu tham khảo|References).*?\n)(?:---\s*\n)?)(.+?)(?=\n#+ |\Z)"
         match = re.search(pattern, text, flags=re.DOTALL | re.IGNORECASE)
         if not match:
             return text
