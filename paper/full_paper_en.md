@@ -783,7 +783,7 @@ In addition to tests using alternative distributions from other sources, we cond
 ---
 
 ![Figure 5](figures/fig5_structural_validity_placebo.png)
-**Figure 5 | Fair matched placebo controls.** Comparison of mean reconstruction gain $\Delta\mathrm{CPC}$ across $N=50$ test cities under three conditions from the fair matched placebo branch: (1) authentic target-city distribution ($Y_D$, $+0.00357$, $p < 10^{-8}$); (2) dose-matched cross-city donor placebo ($-0.00009$, not significant); and (3) permuted distance bins ($-0.00669$, $p < 10^{-14}$). Error bars represent 95% fold-stratified bootstrap confidence intervals over city-level values. This robustness visualization is distinct from the primary unified placebo estimates reported in Table 2.
+**Figure 5 | Target specificity and bin-order controls.** Comparison of mean reconstruction gain $\Delta\mathrm{CPC}$ across $N=50$ test cities under three conditions: (1) target $Y_D$ ($+0.00354$); (2) dose-matched training-donor placebo ($-0.00009$); and (3) permuted target $Y_D$ ($-0.00696$). Error bars represent 95% fold-stratified bootstrap confidence intervals over city-level values.
 
 ---
 

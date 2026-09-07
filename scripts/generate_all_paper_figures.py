@@ -232,9 +232,8 @@ def generate_figure4():
 
 
 def generate_figure5():
-    """Figure 5: Structural Validity and Specificity Controls (Correct vs Permuted vs Donor Placebo)."""
-    # Reconciled Table 2 / verified_results.md benchmark statistics across N=50 cities x 3 seeds
-    conditions = ["Correct $Y_D$\n(Target MSA)", "Cross-City Placebo\n(Donor $Y_D$)", "Permuted Bins\n(Shuffled Order)"]
+    """Figure 5 / Hinh 3: Target Specificity and Bin-Order Controls (Target Y_D vs Dose-Matched Donor vs Permuted Y_D)."""
+    conditions = ["Target $Y_D$", "Dose-matched donor", "Permuted $Y_D$"]
     means = [+0.003539, -0.000091, -0.006964]
     ci_low = [+0.00260, -0.00089, -0.00914]
     ci_high = [+0.00450, +0.00071, -0.00512]
@@ -251,16 +250,16 @@ def generate_figure5():
     ax.axhline(0, color="#333333", linewidth=0.9, linestyle="-", zorder=2)
     ax.set_xticks(range(len(conditions)))
     ax.set_xticklabels(conditions, fontweight="bold")
-    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$ (with 95% Bootstrap CI)", fontweight="bold")
-    ax.set_title("Structural Validity and Target Specificity Placebo Controls", fontweight="bold")
+    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.set_title("Target Specificity and Bin-Order Controls", fontweight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.35)
 
-    # Annotations
-    ax.text(0, means[0] + 0.0009, f"{means[0]:+.5f}\n($p < 10^{{-8}}$)", ha="center", fontsize=8.5, fontweight="bold", color=PRIMARY_BLUE)
-    ax.text(1, means[1] + 0.0008, f"{means[1]:.5f}\n(n.s.)", ha="center", fontsize=8.5, color="#555555")
-    ax.text(2, means[2] - 0.0018, f"{means[2]:.5f}\n($p < 10^{{-14}}$)", ha="center", fontsize=8.5, fontweight="bold", color=MUTED_RED)
+    # Clean numeric values positioned cleanly above/below the CI error bars
+    ax.text(0, ci_high[0] + 0.0006, f"{means[0]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=PRIMARY_BLUE)
+    ax.text(1, ci_high[1] + 0.0006, f"{means[1]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color="#555555")
+    ax.text(2, ci_low[2] - 0.0011, f"{means[2]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=MUTED_RED)
 
-    ax.set_ylim(-0.012, +0.007)
+    ax.set_ylim(-0.0125, +0.0075)
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "fig5_structural_validity_placebo.png", dpi=300)
     fig.savefig(FIGURES_DIR / "fig5_structural_validity_placebo.pdf")
