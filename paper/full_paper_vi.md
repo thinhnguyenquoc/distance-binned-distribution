@@ -300,7 +300,7 @@ Mức tăng được tái hiện trên cả Urban GNN và Pairwise Node MLP, tro
 Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ mạnh với mức cải thiện sau hiệu chỉnh. Sau khi kiểm soát độ chính xác baseline, quy mô đô thị và khoảng cách địa lý trung bình, tương quan từng phần đạt $r_{\mathrm{partial}} = +0.7951$ ($p = 5.35 \times 10^{-12}$). Mẫu hình này phù hợp với cơ chế của phương pháp nhưng chỉ được diễn giải như một liên hệ quan sát, không phải quan hệ nhân quả.
 
 ![Hình 6](figures/fig6_mechanistic_dpre.png)
-**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức cải thiện sau hiệu chỉnh.** $d_{\mathrm{pre}}$ là Total Variation giữa phân phối khoảng cách của baseline và ground truth; đường biểu diễn quan hệ tuyến tính ước lượng trên 50 thành phố.
+**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức cải thiện sau hiệu chỉnh.** $d_{\mathrm{pre}}$ là khoảng cách Total Variation giữa phân phối khoảng cách của baseline và ground truth. Mỗi điểm biểu diễn một thành phố; đường thẳng là linear fit trên 50 thành phố. Tương quan từng phần sau khi kiểm soát các biến quy mô–không gian được báo cáo trong Mục 4.5.
 
 
 # 5. Thảo luận

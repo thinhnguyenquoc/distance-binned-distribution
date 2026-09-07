@@ -297,33 +297,31 @@ def generate_figure6():
 
     slope, intercept, r_val, p_val, std_err = stats.linregress(x, y)
 
-    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    fig, ax = plt.subplots(figsize=(6.2, 4.2))
 
-    ax.scatter(x, y, color=PRIMARY_BLUE, edgecolor="#144a70", s=45, alpha=0.85, zorder=3, label="Test Cities ($N=50$)")
+    ax.scatter(x, y, color=PRIMARY_BLUE, edgecolor="#144a70", s=45, alpha=0.85, zorder=3, label="Cities ($N=50$)")
 
-    # Regression line and CI band
+    # Regression line
     x_grid = np.linspace(x.min(), x.max(), 100)
     y_fit = intercept + slope * x_grid
-    ax.plot(x_grid, y_fit, color=ACCENT_GREEN, linewidth=2.0, zorder=4,
-            label=f"Linear Fit: $\\Delta\\mathrm{{CPC}} = {slope:.3f} d_{{\\mathrm{{pre}}}} {intercept:+.3f}$")
+    ax.plot(x_grid, y_fit, color=ACCENT_GREEN, linewidth=2.0, zorder=4, label="Linear fit")
 
     ax.axhline(0, color="#333333", linewidth=0.8, linestyle="--", alpha=0.5, zorder=2)
-    ax.set_xlabel("Baseline Distance Mismatch $d_{\\mathrm{pre}} = \\mathrm{TV}(\\hat{Y}_D^{(0)}, Y_D^{\\mathrm{GT}})$", fontweight="bold")
-    ax.set_ylabel("Reconstruction Gain $\\Delta\\mathrm{CPC}$ ($M_1 - M_0$)", fontweight="bold")
-    ax.set_title("Mechanistic Diagnostic: Baseline Distance Misalignment ($d_{\\mathrm{pre}}$)", fontweight="bold")
+    ax.set_xlabel("Baseline distance mismatch $d_{\\mathrm{pre}}$", fontweight="bold")
+    ax.set_ylabel("Calibration gain $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.set_title("Baseline Distance Mismatch vs. Calibration Gain", fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.35)
 
-    # Text box with statistical diagnostics
+    # Clean text box with only partial correlation
     ax.text(
         0.05, 0.92,
-        f"Pearson $r = +{r_val:.4f}$ ($p = {p_val:.2e}$)\n"
-        f"Partial $r = +0.7951$ ($p = 5.35 \\times 10^{{-12}}$)",
+        "Partial $r = 0.795$\n$p = 5.35 \\times 10^{-12}$",
         transform=ax.transAxes,
-        fontsize=8.5,
+        fontsize=9.0,
         verticalalignment="top",
         bbox=dict(boxstyle="round,pad=0.4", facecolor="#f9f9f9", edgecolor="#cccccc", alpha=0.95)
     )
-    ax.legend(loc="lower right", frameon=True)
+    ax.legend(loc="lower right", frameon=True, framealpha=0.9)
 
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "fig6_mechanistic_dpre.png", dpi=300)
