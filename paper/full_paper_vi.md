@@ -12,7 +12,7 @@ Phân phối di chuyển này được tổng hợp từ dữ liệu quan sát l
 
 Ma trận nguồn–đích (OD) mô tả cường độ di chuyển giữa các đơn vị không gian và là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị. Tuy nhiên, dữ liệu OD chi tiết thường khó thu thập đầy đủ tại thành phố mục tiêu và có thể chịu hạn chế về độ phủ và tính đại diện [@gallotti2024distorted; @pappalardo2023future]. Luồng di chuyển cũng phụ thuộc vào bối cảnh đô thị và đặc trưng địa phương, nên các quy luật học được từ thành phố nguồn không nhất thiết chuyển giao hoàn toàn sang thành phố mục tiêu. Do đó, các mô hình chuyển giao giữa thành phố vẫn có thể mang sai lệch có hệ thống tại thành phố mục tiêu khi không có thông tin hiệu chỉnh địa phương [@yang2014limits].
 
-Các mô hình mobility gần đây đã kết hợp ngữ cảnh đô thị và khoảng cách để dự báo luồng có khả năng chuyển giao giữa các thành phố [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm]. Tuy nhiên, một baseline cross-city giữ nguyên tham số chỉ suy luận thành phố mục tiêu từ các đặc trưng đầu vào sẵn có. Dù biết khoảng cách của từng cặp OD, mô hình không trực tiếp quan sát cách tổng khối lượng di chuyển của thành phố mục tiêu được phân bổ giữa các khoảng khoảng cách [@lenormand2016comparison; @verma2025distance]. Sự phân bổ luồng theo khoảng cách có thể khác nhau giữa các thành phố, nên một phân phối khoảng cách đặc thù của thành phố mục tiêu có thể chứa thông tin mà baseline cross-city chưa suy diễn đầy đủ.
+Các mô hình mobility gần đây đã kết hợp ngữ cảnh đô thị và khoảng cách để dự báo luồng có khả năng chuyển giao giữa các thành phố [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm]. Tuy nhiên, một baseline zero-shot liên thành phố giữ nguyên tham số chỉ suy luận thành phố mục tiêu từ các đặc trưng đầu vào sẵn có. Dù biết khoảng cách của từng cặp OD, mô hình không trực tiếp quan sát cách tổng khối lượng di chuyển của thành phố mục tiêu được phân bổ giữa các khoảng khoảng cách. Các nghiên cứu trước cho thấy cấu trúc suy giảm theo khoảng cách có thể thay đổi đáng kể giữa các bối cảnh đô thị [@lenormand2016comparison; @verma2025distance].
 
 Nghiên cứu này kiểm tra liệu phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu có cung cấp thông tin bổ sung cho một baseline cross-city đã huấn luyện hay không. Phân phối này chỉ mô tả tỷ trọng tổng luồng theo khoảng cách và được sử dụng tại thời điểm suy luận để hiệu chỉnh dự báo, trong khi toàn bộ tham số mô hình được giữ nguyên. Phép hiệu chỉnh được sử dụng như một công cụ thực nghiệm để định lượng giá trị thông tin bổ sung của phân phối di chuyển.
 
@@ -30,25 +30,27 @@ Nghiên cứu đóng góp bằng cách định lượng giá trị thông tin b�
 
 ## 2.1. Mô hình tương tác không gian và hiệu chỉnh dựa trên khoảng cách
 
-Các mô hình tương tác không gian từ lâu đã biểu diễn luồng OD thông qua khả năng phát sinh, mức độ thu hút và lực cản không gian, trong đó khoảng cách hoặc chi phí di chuyển là thành phần cốt lõi của cấu trúc luồng [@wilson1971family; @ortuzar2011modelling].
+Các mô hình tương tác không gian từ lâu đã biểu diễn luồng OD thông qua khả năng phát sinh, mức độ thu hút và lực cản không gian, trong đó khoảng cách hoặc chi phí di chuyển là thành phần cốt lõi của cấu trúc luồng [@ortuzar2011modelling; @wilson1971family].
 
-Các phương pháp hiệu chỉnh cổ điển cho thấy thống kê tổng hợp về cự ly chuyến đi có thể được dùng để xác định tham số lực cản, chẳng hạn chiều dài chuyến đi trung bình trong Hyman (1969) hoặc trung vị thời gian di chuyển trong Merlin (2020). Các nghiên cứu so sánh cũng cho thấy quy luật suy giảm theo khoảng cách thay đổi giữa bộ dữ liệu và bối cảnh đô thị, thay vì tồn tại một dạng hàm cố định phù hợp cho mọi nơi. Mẫu hình suy giảm thực nghiệm có thể thay đổi theo phương thức, mục đích chuyến đi, mức độ đô thị hóa và điều kiện kinh tế–xã hội [@verma2025distance].
+Các phương pháp hiệu chỉnh cổ điển cho thấy thống kê tổng hợp về cự ly chuyến đi có thể được sử dụng để xác định tham số lực cản. Hyman [@hyman1969calibration] đề xuất hiệu chỉnh mô hình phân bố chuyến đi dựa trên chiều dài chuyến đi trung bình, trong khi Merlin [@merlin2020medians] sử dụng trung vị thời gian di chuyển để hiệu chỉnh mô hình tương tác không gian một tham số.
+
+Các nghiên cứu so sánh cũng cho thấy quy luật suy giảm theo khoảng cách không cố định giữa các bộ dữ liệu và bối cảnh đô thị. Mẫu hình suy giảm thực nghiệm có thể thay đổi theo phương thức di chuyển, mục đích chuyến đi, mức độ đô thị hóa và điều kiện kinh tế–xã hội [@verma2025distance].
 
 Những kết quả này cho thấy cấu trúc cự ly có tính đặc thù theo bối cảnh. Nghiên cứu hiện tại kế thừa ý tưởng đó nhưng sử dụng toàn bộ phân phối theo khoảng thay vì hiệu chỉnh một tham số suy giảm theo khoảng cách đơn lẻ.
 
 ## 2.2. Sinh dữ liệu di chuyển và mô hình không gian dựa trên học máy
 
-Khái quát hóa liên thành phố vẫn khó vì ánh xạ từ bối cảnh đô thị sang luồng không bất biến theo không gian. Nghiên cứu trước về khả năng dự báo luồng đi làm cho thấy việc thiếu dữ liệu hiệu chỉnh địa phương tạo ra giới hạn đáng kể đối với độ chính xác [@yang2014limits]. Điều này cho thấy việc đưa khoảng cách và đặc trưng đô thị vào mô hình chưa loại bỏ hoàn toàn nhu cầu về thông tin đặc thù của miền mục tiêu.
+Khái quát hóa liên thành phố vẫn là một thách thức vì quan hệ giữa bối cảnh đô thị và luồng di chuyển có thể thay đổi giữa các thành phố. Yang et al. [@yang2014limits] cho thấy khả năng dự báo luồng đi làm bị giới hạn đáng kể khi thiếu dữ liệu địa phương dùng cho hiệu chỉnh. Kết quả này cho thấy việc sử dụng khoảng cách và đặc trưng đô thị không nhất thiết loại bỏ hoàn toàn nhu cầu về thông tin đặc thù của miền mục tiêu.
 
 ## 2.3. Quan sát tổng hợp và khoảng trống nghiên cứu
 
-Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được dùng để áp đặt tính nhất quán vĩ mô với số lượng quan sát ít hơn nhiều so với số ô OD.
+Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được sử dụng để áp đặt tính nhất quán vĩ mô trong các mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family].
+ 
+ Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc một số ít tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách, cho phép đánh giá giá trị của tín hiệu ở nhiều mức độ phân giải thông qua số lượng khoảng \(K\). \(Y_D\) cũng khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng luồng được phân bổ giữa các dải cự ly, nhưng không xác định cách khối lượng đó được phân bổ giữa các cặp origin–destination trong cùng một khoảng.
+ 
+ Các nghiên cứu trước đã làm rõ vai trò của khoảng cách trong mô hình tương tác không gian[@guo2025ugnn], khả năng khái quát hóa của các mô hình dự báo luồng và giá trị của các ràng buộc tổng hợp [@wilson1971family; @simini2021deepgravity; @yang2014limits]. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình liên thành phố đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
 
-Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc vài tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách, cho phép kiểm tra giá trị của tín hiệu ở nhiều mức độ phân giải thông qua số lượng khoảng $K$. $Y_D$ cũng khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng luồng được phân bổ giữa các dải cự ly, nhưng không xác định cách khối lượng đó được phân bổ giữa các cặp origin–destination trong cùng một khoảng.
-
-Các hướng nghiên cứu trước đã cho thấy vai trò quan trọng của khoảng cách trong tương tác không gian, khả năng chuyển giao của các mô hình dự báo luồng và giá trị của các ràng buộc tổng hợp. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình cross-city đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
-
-Nghiên cứu hiện tại khác các hướng trên ở chỗ nó không dùng quan sát tổng hợp để huấn luyện hoặc tái ước lượng mô hình, mà để đo trực tiếp giá trị thông tin bổ sung của tín hiệu đặc thù của thành phố mục tiêu sau khi baseline cross-city đã được huấn luyện.
+Nghiên cứu hiện tại khác các hướng trên ở chỗ quan sát tổng hợp không được sử dụng để huấn luyện hoặc tái ước lượng mô hình, mà để đo trực tiếp giá trị thông tin bổ sung của tín hiệu đặc thù theo thành phố mục tiêu sau khi baseline liên thành phố đã được huấn luyện.
 
 
 # 3. Nguồn dữ liệu, đơn vị không gian và phương pháp luận
@@ -140,7 +142,7 @@ Pairwise Node MLP được sử dụng để tách ảnh hưởng của cơ ch�
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
-Do benchmark chỉ chứa các luồng dương, hai baseline neural được huấn luyện bằng Zero-Truncated Negative Binomial likelihood.
+Do benchmark chỉ chứa các luồng dương, hai baseline neural được huấn luyện bằng hàm hợp lý Zero-Truncated Negative Binomial (ZTNB), một dạng mô hình đếm âm nhị thức có điều kiện loại bỏ giá trị 0 [@grogger1991truncated].
 
 $$
 p_+(t \mid \mu, \phi) = \frac{p_{\mathrm{NB}}(t \mid \mu, \phi)}{1 - p_{\mathrm{NB}}(0 \mid \mu, \phi)}, \qquad \mathcal{L}_c = -\frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j) \in \Omega_c} \log p_+(t_{c,ij} \mid \mu_{c,ij}, \phi).
@@ -149,7 +151,7 @@ $$
 Loss được lấy trung bình trên các cặp $(i,j) \in \Omega_c$ của từng thành phố để tránh các đô thị có nhiều cặp OD chi phối quá trình tối ưu.
 
 
-Hai baseline neural sử dụng cùng protocol huấn luyện, chọn checkpoint theo CPC validation và được lặp trên ba model seeds. Sau khi chọn checkpoint, toàn bộ tham số được giữ nguyên trên các thành phố mục tiêu. Chi tiết siêu tham số huấn luyện được cung cấp trong Phụ lục.
+Hai baseline neural sử dụng cùng protocol huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC validation và được lặp trên ba model seeds. Sau khi chọn checkpoint, toàn bộ tham số được giữ nguyên trên các thành phố mục tiêu. Chi tiết siêu tham số huấn luyện được cung cấp trong Phụ lục.
 
 ### 3.4.3. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
@@ -196,7 +198,7 @@ Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được 
 
 Đối với mỗi thành phố, mức cải thiện được tính từ chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline, sau đó lấy trung bình qua các model seeds và macro-average trên toàn bộ 50 thành phố.
 
-Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold. Ý nghĩa thống kê của các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung. Các phân tích độ nhạy và độ bền tương ứng được trình bày trong Mục 4.
+Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold [@efron1993bootstrap]. Các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank hai phía [@wilcoxon1945ranking]. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung. Các phân tích độ nhạy và độ bền tương ứng được trình bày trong Mục 4.
 
 # 4. Kết quả thực nghiệm
 
@@ -341,7 +343,7 @@ Hai giới hạn trực tiếp của thiết kế là $Y_D$ được trích từ
 
 ## 5.5. Các định hướng nghiên cứu tương lai
 
-Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các hướng nghiên cứu gần đây cũng nhấn mạnh giá trị của việc kết hợp mechanistic mobility models với các phương pháp học máy có khả năng mở rộng và diễn giải [@pappalardo2023future]. Nghiên cứu tiếp theo có thể đánh giá các nguồn quan sát tổng hợp độc lập, các đơn vị địa lý khác nhau và điều kiện thu thập thực tế; nghiên cứu hiện tại chưa sử dụng nguồn quan sát bên ngoài.
+Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các thảo luận gần đây về tương lai của khoa học di chuyển cũng nhấn mạnh nhu cầu phát triển các mô hình vừa có khả năng khái quát hóa, vừa có khả năng diễn giải và gắn kết tốt hơn với cơ chế di chuyển[@pappalardo2023future]. Nghiên cứu tiếp theo có thể đánh giá các nguồn quan sát tổng hợp độc lập, các đơn vị địa lý khác nhau và điều kiện thu thập thực tế; nghiên cứu hiện tại chưa sử dụng nguồn quan sát bên ngoài.
 
 # 6. Kết luận
 
@@ -606,7 +608,7 @@ $$
 H_0: \operatorname{median}(\Delta_c) = 0, \qquad H_1: \operatorname{median}(\Delta_c) \neq 0.
 $$
 
-4. **Hiệu chỉnh Holm–Bonferroni**:
+4. **Hiệu chỉnh Holm–Bonferroni** [@holm1979sequential]:
    Đối với họ gồm $M$ giả thuyết:
 $$
 p_{(k)} \leq \frac{\alpha}{M - k + 1}, \qquad k = 1, \dots, M.
