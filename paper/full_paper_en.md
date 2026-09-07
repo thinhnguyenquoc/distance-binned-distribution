@@ -839,7 +839,7 @@ In an exploratory analysis across 11 multi-county metropolitan areas, county-lev
 ---
 
 ![Figure 3](figures/fig3_resolution_sensitivity.png)
-**Figure 3 | Observational resolution sensitivity ($).** Mean interzonal $\Delta\text{CPC}$ improvement increases monotonically from =2$ ($+0.00098$) to =20$ ($+0.00639$). Shaded band represents 95% fold-stratified bootstrap confidence interval.
+**Figure 3 | Calibration gain versus distance-bin resolution.** Points depict mean $\Delta\mathrm{CPC}$ across 50 test cities with 95% fold-stratified bootstrap confidence intervals. $K=8$ denotes the canonical anchor configuration.
 
 ---
 

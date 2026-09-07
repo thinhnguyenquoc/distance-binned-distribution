@@ -258,7 +258,7 @@ Trước hết, khi tăng số lượng khoảng khoảng cách, mức cải thi
 | **$K = 20$** | $0.71920 \pm 0.04462$ | $0.72266$ | **$+0.00639$** | $+0.00494$ | $[+0.00508, +0.00769]$ | **46 / 50 (92.0%)** | 
 
 ![Hình 4](figures/fig3_resolution_sensitivity.png)
-Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách $K$. Đường biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố theo các mức $K$; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
+**Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách $K$.** Điểm biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố và thanh sai số biểu diễn bootstrap CI 95% phân tầng theo fold. $K=8$ là cấu hình chính của nghiên cứu.
 
 Kết quả này cho thấy một phần đáng kể giá trị bổ sung của $Y_D$ đã xuất hiện ở các mức phân giải tương đối thô, trong khi các phân hoạch chi tiết hơn tiếp tục cung cấp lợi ích nhưng với mức tăng biên nhỏ dần.
 
@@ -275,7 +275,7 @@ $$ \epsilon_{\mathrm{cross}} \approx 4.44\% \text{ TV}, $$
 với CI 95% $[4.16\%,\,4.77\%]$. Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu được sử dụng, không nên được diễn giải như một mức dung sai phổ quát.
 
 ![Hình 5](figures/fig4_noise_dose_response.png)
-Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation. Đường biểu diễn mean $\Delta\mathrm{CPC}$ theo mức sai số TV; đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức tương đương baseline, đường đứt nét thẳng đứng biểu thị điểm giao cắt thực nghiệm, và dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%.
+**Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation.** Điểm biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố; dải bóng mờ là bootstrap CI 95% phân tầng theo fold. Đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức tương đương baseline, và đường đứt nét đánh dấu điểm giao cắt thực nghiệm $\epsilon_{\mathrm{cross}}\approx4.44\%$.
 
 Nhìn chung, các kết quả cho thấy giá trị của $Y_D$ phụ thuộc vào hai thuộc tính tách biệt: lượng cấu trúc được giữ lại trong quan sát và độ chính xác của cấu trúc đó. Tăng độ phân giải có thể làm giàu thông tin theo cự ly, nhưng lợi ích bổ sung giảm dần; ngược lại, khi quan sát bị suy giảm chất lượng, lợi ích hiệu chỉnh giảm và cuối cùng biến mất. Phân tích county-level gợi ý thêm rằng độ chi tiết không gian có thể cung cấp thông tin bổ sung trong một số đô thị, nhưng bằng chứng này hiện chỉ mang tính thăm dò.
 

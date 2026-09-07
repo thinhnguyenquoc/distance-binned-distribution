@@ -116,8 +116,7 @@ def generate_figure2():
 
 
 def generate_figure3():
-    """Figure 3: Standalone K-sweep Resolution Sensitivity."""
-    # 1. K-sweep data
+    """Figure 3 (Hinh 4): Calibration Gain vs. Distance-Bin Resolution (K sweep)."""
     k_json = Path("results/k_sensitivity_v1/k_sensitivity_summary.json")
     with open(k_json, "r") as f:
         k_data = json.load(f)
@@ -128,27 +127,45 @@ def generate_figure3():
     k_ci_low = [k_map[k]["ci_low"] for k in k_vals]
     k_ci_high = [k_map[k]["ci_high"] for k in k_vals]
 
-    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+    fig, ax = plt.subplots(figsize=(6.2, 4.2))
 
-    # K-sweep
     yerr_low = np.array(k_means) - np.array(k_ci_low)
     yerr_high = np.array(k_ci_high) - np.array(k_means)
 
-    ax.plot(k_vals, k_means, marker="o", color=PRIMARY_BLUE, linewidth=1.8, markersize=5, zorder=3)
+    # Plot trend curve with error bars
+    ax.plot(k_vals, k_means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=3)
     ax.errorbar(k_vals, k_means, yerr=[yerr_low, yerr_high], fmt="none",
-                ecolor=PRIMARY_BLUE, capsize=3.0, elinewidth=1.1, zorder=3)
+                ecolor=PRIMARY_BLUE, capsize=3.5, elinewidth=1.2, zorder=3)
+
+    # Highlight K=8 main setting (anchor)
+    k8_idx = k_vals.index(8)
+    ax.plot(8, k_means[k8_idx], marker="o", markersize=8.5, color=PRIMARY_BLUE,
+            markeredgecolor="#0f3b5c", markeredgewidth=1.8, zorder=5)
+    ax.axvline(8, color="#888888", linestyle=":", linewidth=1.1, alpha=0.7, zorder=2)
+    ax.annotate(
+        "Main setting",
+        xy=(8, k_means[k8_idx]),
+        xytext=(8.6, k_means[k8_idx] - 0.0009),
+        fontsize=9.0,
+        fontweight="bold",
+        color="#172b3a",
+        arrowprops=dict(arrowstyle="->", color="#333333", lw=1.0, shrinkA=3, shrinkB=4),
+        zorder=6
+    )
+
     ax.set_xticks(k_vals)
-    ax.set_xticklabels([f"K={k}" for k in k_vals], rotation=45)
-    ax.set_xlabel("Number of Distance Bins ($K$)", fontweight="bold")
-    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$ (with 95% CI)", fontweight="bold")
-    ax.set_title("Distance Bin Granularity Sweep", fontweight="bold", loc="left")
+    ax.set_xticklabels([f"{k}" for k in k_vals])
+    ax.set_xlabel("Distance bins ($K$)", fontweight="bold")
+    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.set_title("Calibration Gain vs. Distance-Bin Resolution", fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.35)
 
+    ax.set_ylim(+0.0000, +0.0085)
     fig.tight_layout()
     fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.png", dpi=300)
     fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.pdf")
     plt.close(fig)
-    print("Generated Figure 3 (K-sensitivity standalone)")
+    print("Generated Figure 3 (K-sensitivity)")
 
 
 def generate_figure_s1():
@@ -209,18 +226,21 @@ def generate_figure4():
     ci_lowers = [res[str(e)]["ci_lower"] for e in epsilons]
     ci_uppers = [res[str(e)]["ci_upper"] for e in epsilons]
 
-    fig, ax = plt.subplots(figsize=(6.8, 4.2))
+    fig, ax = plt.subplots(figsize=(6.4, 4.0))
 
-    ax.plot(eps_pct, means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=4, label="Calibrated Gain $\\Delta\\mathrm{CPC}$")
-    ax.fill_between(eps_pct, ci_lowers, ci_uppers, color=PRIMARY_BLUE, alpha=0.18, zorder=2, label="95% Bootstrap CI")
+    ax.plot(eps_pct, means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=4, label="Mean $\\Delta\\mathrm{CPC}$")
+    ax.fill_between(eps_pct, ci_lowers, ci_uppers, color=PRIMARY_BLUE, alpha=0.18, zorder=2, label="95% bootstrap CI")
 
-    ax.axhline(0, color="#333333", linestyle="-", linewidth=0.9, zorder=2, label="Zero-Shot Baseline ($M_0$)")
-    ax.axvline(eps_cross * 100, color=MUTED_RED, linestyle="--", linewidth=1.2, zorder=3,
-               label=f"Crossover Threshold ($\\epsilon_{{\\mathrm{{cross}}}} \\approx {eps_cross*100:.2f}\\%$)")
+    ax.axhline(0, color="#333333", linestyle="-", linewidth=0.9, zorder=2)
+    ax.axvline(eps_cross * 100, color=MUTED_RED, linestyle="--", linewidth=1.2, zorder=3)
 
-    ax.set_xlabel("Observation Noise / Perturbation $\\epsilon$ (Total Variation %)", fontweight="bold")
-    ax.set_ylabel("Reconstruction Gain $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.set_title("Calibration Benefit vs. Observation Quality ($N=50$ Cities)", fontweight="bold")
+    # Direct annotation for crossover threshold
+    ax.text(eps_cross * 100 + 0.12, 0.0002, f"$\\epsilon_{{\\mathrm{{cross}}}} \\approx {eps_cross*100:.2f}\\%$",
+            color=MUTED_RED, fontsize=9.5, fontweight="bold", verticalalignment="bottom")
+
+    ax.set_xlabel("TV noise $\\epsilon$ (%)", fontweight="bold")
+    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.set_title("Calibration Gain vs. Observation Noise", fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.35)
     ax.legend(loc="upper right", frameon=True, framealpha=0.9)
 
