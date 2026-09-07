@@ -10,7 +10,7 @@ Phân phối di chuyển này được tổng hợp từ dữ liệu quan sát l
 
 # 1. Giới thiệu
 
-Ma trận nguồn–đích (OD) mô tả cường độ di chuyển giữa các đơn vị không gian và là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị. Tuy nhiên, dữ liệu OD chi tiết thường khó thu thập đầy đủ tại thành phố mục tiêu và có thể chịu hạn chế về độ phủ và tính đại diện [@gallotti2024distorted; @pappalardo2023future]. Luồng di chuyển cũng phụ thuộc vào bối cảnh đô thị và đặc trưng địa phương, nên các quy luật học được từ thành phố nguồn không nhất thiết chuyển giao hoàn toàn sang thành phố mục tiêu. Do đó, các mô hình chuyển giao giữa thành phố vẫn có thể mang sai lệch có hệ thống tại thành phố mục tiêu khi không có thông tin hiệu chỉnh địa phương [@yang2014limits].
+Ma trận nguồn–đích (OD) mô tả cường độ di chuyển giữa các đơn vị không gian và là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị [@barbosa2018humanmobility]. Tuy nhiên, dữ liệu OD chi tiết thường khó thu thập đầy đủ tại thành phố mục tiêu và có thể chịu hạn chế về độ phủ và tính đại diện [@gallotti2024distorted; @pappalardo2023future]. Luồng di chuyển cũng phụ thuộc vào bối cảnh đô thị và đặc trưng địa phương, nên các quy luật học được từ thành phố nguồn không nhất thiết chuyển giao hoàn toàn sang thành phố mục tiêu. Do đó, các mô hình chuyển giao giữa thành phố vẫn có thể mang sai lệch có hệ thống tại thành phố mục tiêu khi không có thông tin hiệu chỉnh địa phương [@yang2014limits].
 
 Các mô hình mobility gần đây đã kết hợp ngữ cảnh đô thị và khoảng cách để dự báo luồng có khả năng chuyển giao giữa các thành phố [@simini2021deepgravity; @guo2025ugnn; @enaya2026transgm]. Tuy nhiên, một baseline zero-shot liên thành phố giữ nguyên tham số chỉ suy luận thành phố mục tiêu từ các đặc trưng đầu vào sẵn có. Dù biết khoảng cách của từng cặp OD, mô hình không trực tiếp quan sát cách tổng khối lượng di chuyển của thành phố mục tiêu được phân bổ giữa các khoảng khoảng cách. Các nghiên cứu trước cho thấy cấu trúc suy giảm theo khoảng cách có thể thay đổi đáng kể giữa các bối cảnh đô thị [@lenormand2016comparison; @verma2025distance].
 
@@ -38,17 +38,15 @@ Các nghiên cứu so sánh cũng cho thấy quy luật suy giảm theo khoảng
 
 Những kết quả này cho thấy cấu trúc cự ly có tính đặc thù theo bối cảnh. Nghiên cứu hiện tại kế thừa ý tưởng đó nhưng sử dụng toàn bộ phân phối theo khoảng thay vì hiệu chỉnh một tham số suy giảm theo khoảng cách đơn lẻ.
 
-## 2.2. Sinh dữ liệu di chuyển và mô hình không gian dựa trên học máy
+## 2.2. Mô hình học máy liên thành phố và quan sát tổng hợp
 
 Khái quát hóa liên thành phố vẫn là một thách thức vì quan hệ giữa bối cảnh đô thị và luồng di chuyển có thể thay đổi giữa các thành phố. Yang et al. [@yang2014limits] cho thấy khả năng dự báo luồng đi làm bị giới hạn đáng kể khi thiếu dữ liệu địa phương dùng cho hiệu chỉnh. Kết quả này cho thấy việc sử dụng khoảng cách và đặc trưng đô thị không nhất thiết loại bỏ hoàn toàn nhu cầu về thông tin đặc thù của miền mục tiêu.
 
-## 2.3. Quan sát tổng hợp và khoảng trống nghiên cứu
-
-Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được sử dụng để áp đặt tính nhất quán vĩ mô trong các mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family].
+Một hướng bổ sung là sử dụng các quan sát tổng hợp của miền mục tiêu thay cho việc tái huấn luyện mô hình bằng dữ liệu OD chi tiết. Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được sử dụng để áp đặt tính nhất quán vĩ mô trong các mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family].
  
- Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc một số ít tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách, cho phép đánh giá giá trị của tín hiệu ở nhiều mức độ phân giải thông qua số lượng khoảng \(K\). \(Y_D\) cũng khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng luồng được phân bổ giữa các dải cự ly, nhưng không xác định cách khối lượng đó được phân bổ giữa các cặp origin–destination trong cùng một khoảng.
+ Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc một số ít tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách, cho phép đánh giá giá trị của tín hiệu ở nhiều mức độ phân giải thông qua số lượng khoảng $K$. $Y_D$ cũng khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng luồng được phân bổ giữa các dải cự ly, nhưng không xác định cách khối lượng đó được phân bổ giữa các cặp origin–destination trong cùng một khoảng.
  
- Các nghiên cứu trước đã làm rõ vai trò của khoảng cách trong mô hình tương tác không gian[@guo2025ugnn], khả năng khái quát hóa của các mô hình dự báo luồng và giá trị của các ràng buộc tổng hợp [@wilson1971family; @simini2021deepgravity; @yang2014limits]. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình liên thành phố đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
+ Các nghiên cứu trước đã làm rõ vai trò của khoảng cách và các ràng buộc trong mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family], đồng thời cho thấy khả năng khái quát hóa của các mô hình dự báo luồng và những giới hạn khi thiếu thông tin hiệu chỉnh địa phương [@guo2025ugnn; @simini2021deepgravity; @yang2014limits]. Tuy nhiên, một câu hỏi vẫn chưa được kiểm tra trực tiếp: sau khi một mô hình liên thành phố đã học từ ngữ cảnh đô thị và khoảng cách giữa các cặp vùng, phân phối di chuyển theo khoảng cách của chính thành phố mục tiêu còn cung cấp thêm bao nhiêu giá trị, và giá trị đó duy trì trong những điều kiện quan sát nào?
 
 Nghiên cứu hiện tại khác các hướng trên ở chỗ quan sát tổng hợp không được sử dụng để huấn luyện hoặc tái ước lượng mô hình, mà để đo trực tiếp giá trị thông tin bổ sung của tín hiệu đặc thù theo thành phố mục tiêu sau khi baseline liên thành phố đã được huấn luyện.
 
@@ -80,7 +78,9 @@ Gọi $c$ là một thành phố và $\mathcal{V}_c$ là tập các vùng đơn 
 
 
 
-## 3.2. Nguồn dữ liệu và biểu diễn không gian
+## 3.2. Phạm vi hỗ trợ và biểu diễn không gian
+
+Dữ liệu thực nghiệm bao gồm 50 vùng đô thị tại Hoa Kỳ, với tract là đơn vị không gian cơ sở. Mỗi tract được biểu diễn bằng tọa độ tâm và các đặc trưng đô thị; dữ liệu còn bao gồm khoảng cách giữa các cặp tract và cường độ luồng OD quan sát được. Nguồn và quy trình xây dựng benchmark sẽ được mô tả đầy đủ theo tài liệu dữ liệu gốc trước khi nộp bài.
 
 Phạm vi đánh giá được giới hạn trên tập hỗ trợ liên vùng dương đã biết:
 
@@ -91,7 +91,7 @@ $$
 Trong toàn bài, các cặp ngoài $\Omega_c$ được xem là chưa biết và không thuộc phạm vi đánh giá.
 
 
-## 3.3. Đơn vị không gian và cấu hình chuẩn cấp thành phố
+## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
 Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = [a_{b-1}, a_b)$) được định nghĩa là:
 
 $$
@@ -200,9 +200,9 @@ Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được 
 
 Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold [@efron1993bootstrap]. Các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank hai phía [@wilcoxon1945ranking]. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung. Các phân tích độ nhạy và độ bền tương ứng được trình bày trong Mục 4.
 
+Ngoài các kiểm định chính, một phân tích cơ chế thăm dò đánh giá mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện sau hiệu chỉnh. Sai lệch ban đầu $d_{\mathrm{pre}}$ được tính bằng Total Variation giữa phân phối khoảng cách dự báo của baseline và phân phối tham chiếu. Tương quan Pearson và tương quan từng phần được báo cáo; tương quan từng phần kiểm soát độ chính xác baseline ($M_0$ CPC) và các đặc trưng quy mô không gian của thành phố gồm $\log N_{\mathrm{tracts}}$, $\log N_{\mathrm{pairs}}$ và khoảng cách địa lý trung bình.
+
 # 4. Kết quả thực nghiệm
-
-
 
 ## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot giữ nguyên tham số hay không?
 
@@ -225,30 +225,25 @@ Biểu đồ cột thể hiện $\Delta\mathrm{CPC}_c = \operatorname{CPC}(M_{1,
 Các đối chứng placebo cho thấy lợi ích của hiệu chỉnh phụ thuộc vào thông tin đặc thù của thành phố mục tiêu: $Y_D$ đặc thù theo thành phố mục tiêu vượt các phân phối donor được dose-match. Khi thứ tự các bin bị hoán vị, lợi ích không còn duy trì và hiệu năng giảm, cho thấy cấu trúc gắn giữa tỷ trọng luồng và khoảng cách là cần thiết.
 
 ![Hình 3](figures/fig5_structural_validity_placebo.png)
-**Hình 3: Các đối chứng placebo khớp liều lượng công bằng.**
-
 Hình 3. Đối chứng về tính đặc thù mục tiêu và cấu trúc khoảng cách. Hình so sánh $\Delta\mathrm{CPC}$ của target $Y_D$, dose-matched donor và permuted $Y_D$ trên 50 thành phố. Thanh sai số biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
 
-
-
 ### Bảng 3: Tính đặc thù mục tiêu và các đối chứng Placebo ($N=50$)
-
-| Experimental Condition | $\Delta\mathrm{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Benefit vs $M_0$ ($p_{\text{2-sided}}$) | Specificity Gain vs Placebo | Specificity 95% CI | Target vs Placebo ($p_{\text{1-sided}}$) | Target-specific win rate ($\text{Target } Y_D > \text{Placebo}$) |
+ 
+| Điều kiện thực nghiệm | $\Delta\mathrm{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Lợi ích so với $M_0$ ($p_{\text{2-sided}}$) | Mức tăng đặc thù vs Placebo | KTC 95% tính đặc thù | Target vs Placebo ($p_{\text{1-sided}}$) | Tỷ lệ thắng đặc thù ($\text{Target } Y_D > \text{Placebo}$) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs $M_0$)** |
+| **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (so với $M_0$)** |
 | **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46 / 50 (92.0%)** |
 | **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47 / 50 (94.0%)** |
 | **4. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
 
-
+Ghi chú: Khoảng tin cậy bootstrap được tính cho mean $\Delta\mathrm{CPC}$, trong khi $p$-value được lấy từ kiểm định Wilcoxon signed-rank trên các chênh lệch ghép cặp cấp thành phố; do đó hai thống kê không kiểm định cùng một đại lượng và không nhất thiết dẫn đến cùng kết luận.
 
 
 ## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
 
-Độ phân giải và chất lượng quan sát được đánh giá lần lượt thông qua số khoảng $K$ và mức nhiễu Total Variation bổ sung vào $Y_D$.
+Độ phân giải và chất lượng của quan sát $Y_D$ được đánh giá theo ba khía cạnh bổ sung: số lượng khoảng khoảng cách $K$, độ phân giải không gian của tín hiệu tổng hợp, và mức suy giảm chất lượng quan sát do nhiễu. Các phân tích này nhằm xác định không chỉ liệu $Y_D$ có hữu ích hay không, mà còn điều kiện nào chi phối mức thông tin bổ sung mà tín hiệu này cung cấp.
 
-
-Mức cải thiện tăng theo độ phân giải khoảng cách trong toàn bộ dải $K$ được đánh giá, từ các phân hoạch thô đến các cấu hình chi tiết hơn. Tuy nhiên, tốc độ tăng có xu hướng chậm lại khi $K$ lớn, cho thấy lợi ích biên giảm dần. 
+Trước hết, khi tăng số lượng khoảng khoảng cách, mức cải thiện CPC tăng trên toàn bộ dải $K$ được đánh giá. Với phân hoạch thô $K=2$, mean $\Delta\mathrm{CPC}$ chỉ đạt khoảng $+0.00098$, trong khi tại cấu hình chính $K=8$, mức tăng đạt $+0.00354$. Khi tiếp tục tăng độ phân giải đến $K=20$, mean $\Delta\mathrm{CPC}$ đạt $+0.00639$. Tuy nhiên, tốc độ tăng giảm dần khi $K$ lớn hơn, cho thấy lợi ích biên của việc bổ sung thêm độ chi tiết theo khoảng cách có xu hướng suy giảm.
 
 ### Bảng 4: Độ mở rộng của độ phân giải thông tin qua các khoảng khoảng cách
 
@@ -270,18 +265,27 @@ Mức cải thiện tăng theo độ phân giải khoảng cách trong toàn b�
 
 
 ![Hình 4](figures/fig3_resolution_sensitivity.png)
-**Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách $K$.** Đường biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố theo các mức $K$; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
+Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách $K$. Đường biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố theo các mức $K$; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
 
-Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nhiều county, hiệu chỉnh cấp county cải thiện so với hiệu chỉnh cấp thành phố tại 9/11 trường hợp. Tuy nhiên, mức tăng bổ sung pooled trên toàn bộ 50 vùng đô thị chỉ là $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, vì 39 vùng single-county tạo ra hai phân hoạch tương đương về mặt toán học. Do đó, kết quả này không được xem là bằng chứng tổng quát rằng tăng độ phân giải không gian sẽ cải thiện hiệu năng; chi tiết được trình bày trong Phụ lục S7.
+Kết quả này cho thấy một phần đáng kể giá trị bổ sung của $Y_D$ đã xuất hiện ở các mức phân giải tương đối thô, trong khi các phân hoạch chi tiết hơn tiếp tục cung cấp lợi ích nhưng với mức tăng biên nhỏ dần.
 
+Ngoài độ phân giải theo khoảng cách, chúng tôi cũng thực hiện một phân tích thăm dò về độ phân giải không gian của quan sát. Trên 11 vùng đô thị trải rộng qua nhiều county, hiệu chỉnh sử dụng phân phối $Y_D$ theo origin-county cải thiện so với hiệu chỉnh cấp thành phố tại 9/11 trường hợp. Tuy nhiên, mức tăng bổ sung pooled trên toàn bộ 50 vùng đô thị chỉ là
 
-Độ nhạy đối với chất lượng quan sát được đánh giá bằng cách gây nhiễu $Y_D$ của thành phố mục tiêu tại các mức sai số Total Variation $\epsilon \in [0.00, 0.05]$, trong khi giữ nguyên baseline, tập thành phố đánh giá và toán tử hiệu chỉnh.
+$$ \Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, $$
+
+vì 39 vùng single-county tạo ra hai phân hoạch tương đương về mặt toán học và do đó có $\Delta\mathrm{CPC}_{\mathrm{res}}=0$ theo cấu trúc. Với riêng nhóm 11 vùng multi-county, mức tăng bổ sung trung bình đạt khoảng $+0.00063$. Vì vậy, kết quả này chỉ được xem là bằng chứng thăm dò rằng độ phân giải không gian chi tiết hơn có thể cung cấp thêm thông tin trong một số cấu trúc đô thị, chứ không phải bằng chứng tổng quát rằng tăng độ phân giải không gian luôn cải thiện hiệu năng.
+
+Tách biệt với độ phân giải, chúng tôi tiếp tục đánh giá độ nhạy đối với chất lượng của chính quan sát $Y_D$. Nhiễu được bổ sung vào phân phối của thành phố mục tiêu theo các mức sai số Total Variation, trong khi giữ nguyên baseline, tập thành phố đánh giá và toán tử hiệu chỉnh. Khi mức nhiễu tăng, mean $\Delta\mathrm{CPC}$ giảm đơn điệu và đi qua mức tương đương baseline tại khoảng
+
+$$ \epsilon_{\mathrm{cross}} \approx 4.44\% \text{ TV}, $$
+
+với CI 95% $[4.16\%,\,4.77\%]$. Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu được sử dụng, không nên được diễn giải như một mức dung sai phổ quát.
 
 
 ![Hình 5](figures/fig4_noise_dose_response.png)
-**Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation.** Đường biểu diễn mean $\Delta\mathrm{CPC}$ theo mức sai số TV; đường ngang tại $\Delta\mathrm{CPC} = 0$ biểu thị mức tương đương baseline, đường đứt nét thẳng đứng biểu thị điểm giao cắt thực nghiệm và dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%.
+Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation. Đường biểu diễn mean $\Delta\mathrm{CPC}$ theo mức sai số TV; đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức tương đương baseline, đường đứt nét thẳng đứng biểu thị điểm giao cắt thực nghiệm, và dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%.
 
-$\Delta\mathrm{CPC}$ giảm đơn điệu khi mức nhiễu tăng và đi qua mức tương đương baseline tại khoảng $\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV (CI 95%: $[4.16\%, 4.77\%]$). Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu đã sử dụng, không phải mức dung sai phổ quát.
+Nhìn chung, các kết quả cho thấy giá trị của $Y_D$ phụ thuộc vào hai thuộc tính tách biệt: lượng cấu trúc được giữ lại trong quan sát và độ chính xác của cấu trúc đó. Tăng độ phân giải có thể làm giàu thông tin theo cự ly, nhưng lợi ích bổ sung giảm dần; ngược lại, khi quan sát bị suy giảm chất lượng, lợi ích hiệu chỉnh giảm và cuối cùng biến mất. Phân tích county-level gợi ý thêm rằng độ chi tiết không gian có thể cung cấp thông tin bổ sung trong một số đô thị, nhưng bằng chứng này hiện chỉ mang tính thăm dò.
 
 ## 4.4. Độ bền vững theo khởi tạo và kiến trúc baseline
 
@@ -304,7 +308,7 @@ Mức tăng được tái hiện trên cả Urban GNN và Pairwise Node MLP, tro
 
 ## 4.5. Mức sai lệch phân phối khoảng cách của baseline có liên hệ mạnh với mức cải thiện hiệu chỉnh theo thành phố
 
-Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ mạnh với mức cải thiện sau hiệu chỉnh. Sau khi kiểm soát độ chính xác baseline và quy mô đô thị, tương quan từng phần đạt $r_{\mathrm{partial}} = +0.7951$ ($p = 5.35 \times 10^{-12}$). Mẫu hình này phù hợp với cơ chế của phương pháp nhưng chỉ được diễn giải như một liên hệ quan sát, không phải quan hệ nhân quả.
+Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ mạnh với mức cải thiện sau hiệu chỉnh. Sau khi kiểm soát độ chính xác baseline, quy mô đô thị và khoảng cách địa lý trung bình, tương quan từng phần đạt $r_{\mathrm{partial}} = +0.7951$ ($p = 5.35 \times 10^{-12}$). Mẫu hình này phù hợp với cơ chế của phương pháp nhưng chỉ được diễn giải như một liên hệ quan sát, không phải quan hệ nhân quả.
 
 
 ![Hình 6](figures/fig6_mechanistic_dpre.png)
@@ -313,7 +317,7 @@ Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ 
 
 # 5. Thảo luận
 
-### 5.1. Giá trị thông tin và cơ chế hiệu chỉnh của $Y_D$
+### 5.1. Giá trị thông tin, cơ chế hiệu chỉnh và ý nghĩa phương pháp luận
 
 Việc $Y_D$ vẫn cải thiện dự báo sau khi baseline đã sử dụng bối cảnh đô thị và khoảng cách giữa các cặp vùng cho thấy các thông tin này chưa suy diễn đầy đủ cách tổng khối lượng di chuyển của từng thành phố mục tiêu được phân bổ theo cự ly. Vì baseline không được cập nhật tham số trong bước hiệu chỉnh, phần cải thiện này được diễn giải như giá trị thông tin bổ sung của $Y_D$, thay vì lợi ích từ fine-tuning hoặc huấn luyện lại.
 
@@ -321,19 +325,13 @@ Cấu trúc của phép hiệu chỉnh đồng thời giới hạn rõ loại sa
 
 Do đó, $Y_D$ chủ yếu có khả năng sửa các sai lệch giữa các khoảng (between-bin), khi baseline phân bổ chưa đúng khối lượng giữa các dải cự ly. Ngược lại, nếu sai số chủ yếu nằm trong cùng một khoảng (within-bin), tức là ở cách phân bổ luồng giữa các cặp OD có khoảng cách tương tự, $Y_D$ không trực tiếp chứa thông tin để khắc phục sai lệch đó. Mối liên hệ quan sát giữa sai lệch phân bổ khoảng cách ban đầu và mức cải thiện theo thành phố phù hợp với cơ chế này, nhưng không được diễn giải như bằng chứng nhân quả.
 
+Cơ chế trên cũng làm rõ ý nghĩa phương pháp luận của kết quả. Các mô hình như Deep Gravity và UGNN cho thấy neural networks có thể học các quy luật mobility có khả năng chuyển giao từ dữ liệu nguồn [@simini2021deepgravity; @guo2025ugnn]. Kết quả của nghiên cứu này bổ sung rằng một quan sát tổng hợp của miền mục tiêu có thể cung cấp thông tin hiệu chỉnh cho một mô hình cross-city đã huấn luyện mà không cần cập nhật tham số. Tuy nhiên, điều này chưa chứng minh tính khả thi triển khai, vì $Y_D$ ở đây là oracle và phép hiệu chỉnh chỉ hoạt động trên tập hỗ trợ liên vùng dương đã biết $\Omega_c$.
+
 ### 5.2. Các điều kiện chi phối giá trị của $Y_D$
 
-Mẫu hình theo độ phân giải gợi ý rằng giá trị của $Y_D$ phụ thuộc vào mức độ chi tiết mà cấu trúc cự ly của thành phố mục tiêu được quan sát. Tuy nhiên, lợi ích biên giảm ở các phân hoạch mịn cho thấy phần lớn thông tin bổ sung có thể đã được nắm bắt ở mức cấu trúc cự ly tương đối thô.
+Kết quả cho thấy giá trị của $Y_D$ phụ thuộc vào hai thuộc tính tách biệt: lượng cấu trúc mà quan sát giữ lại và độ chính xác của cấu trúc đó. Việc tăng độ phân giải chỉ hữu ích khi thông tin bổ sung vẫn đáng tin cậy; ngược lại, một phân phối chi tiết nhưng sai có thể làm mất lợi ích hiệu chỉnh. Các placebo và permutation còn cho thấy tín hiệu hữu ích không chỉ nằm ở hình dạng chung của vector, mà ở sự gắn đúng giữa tỷ trọng luồng, khoảng cách và thành phố mục tiêu.
 
-Độ phân giải và chất lượng quan sát là hai thuộc tính khác nhau. Tăng độ phân giải làm giàu cấu trúc được biểu diễn, trong khi nhiễu làm suy giảm độ tin cậy của chính cấu trúc đó. Sự suy giảm lợi ích khi $Y_D$ bị nhiễu cho thấy tín hiệu này chỉ hữu ích khi nó phản ánh đủ chính xác phân bổ luồng theo cự ly của thành phố mục tiêu.
-
-Ngoài độ chính xác, ý nghĩa của $Y_D$ còn phụ thuộc vào việc các tỷ trọng được gắn đúng với các khoảng khoảng cách tương ứng. Việc hoán vị các thành phần phá vỡ lợi ích cho thấy $Y_D$ không chỉ là một vector tỷ trọng, mà là một mô tả có cấu trúc theo cự ly. Đồng thời, các đối chứng donor cho thấy phần thông tin hữu ích mang tính đặc thù theo thành phố, thay vì chỉ phản ánh một prior suy giảm theo khoảng cách chung có thể chuyển trực tiếp giữa các đô thị.
-
-## 5.3. Ý nghĩa phương pháp luận và phạm vi ứng dụng
-Các mô hình như Deep Gravity và UGNN cho thấy neural networks có thể học các quy luật mobility có khả năng chuyển giao từ dữ liệu nguồn [@simini2021deepgravity; @guo2025ugnn]. Kết quả của nghiên cứu này bổ sung rằng một quan sát tổng hợp của miền mục tiêu có thể cung cấp thông tin hiệu chỉnh cho một mô hình cross-city đã huấn luyện mà không cần cập nhật tham số. Tuy nhiên, điều này chưa chứng minh tính khả thi triển khai, vì $Y_D$ ở đây là oracle và phép hiệu chỉnh chỉ hoạt động trên tập hỗ trợ liên vùng dương đã biết $\Omega_c$.
-
-
-## 5.4. Các giới hạn của nghiên cứu
+## 5.3. Giới hạn và hướng nghiên cứu tương lai
 
 Mobility datasets có thể chứa sai lệch về độ phủ, tính đại diện và quy trình tiền xử lý [@gallotti2024distorted; @pappalardo2023future]. Ngoài ra, giảm độ phân giải hoặc tổng hợp dữ liệu không tự động tạo ra bảo đảm quyền riêng tư. Mobility traces vẫn có thể chứa thông tin nhận dạng đáng kể sau khi được làm thô [@demontjoye2013unique], và việc cung cấp bảo đảm differential privacy ở cấp người dùng cho dữ liệu vị trí tổng hợp vẫn gặp nhiều khó khăn thực tế [@houssiau2022differential]. Nghiên cứu hiện tại không thực hiện privacy analysis đối với $Y_D$; vì vậy, $Y_D$ chỉ nên được gọi là một quan sát tổng hợp có số chiều thấp, không phải một cơ chế privacy-preserving đã được chứng minh.
 
@@ -341,9 +339,7 @@ Phân tích county-level chỉ mang tính thăm dò. Chỉ 11 vùng đô thị t
 
 Hai giới hạn trực tiếp của thiết kế là $Y_D$ được trích từ ground-truth OD của thành phố mục tiêu thay vì nguồn quan sát độc lập, và việc đánh giá chỉ diễn ra trên tập hỗ trợ liên vùng dương đã biết nên không xử lý zero flows hay link discovery.
 
-## 5.5. Các định hướng nghiên cứu tương lai
-
-Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các thảo luận gần đây về tương lai của khoa học di chuyển cũng nhấn mạnh nhu cầu phát triển các mô hình vừa có khả năng khái quát hóa, vừa có khả năng diễn giải và gắn kết tốt hơn với cơ chế di chuyển[@pappalardo2023future]. Nghiên cứu tiếp theo có thể đánh giá các nguồn quan sát tổng hợp độc lập, các đơn vị địa lý khác nhau và điều kiện thu thập thực tế; nghiên cứu hiện tại chưa sử dụng nguồn quan sát bên ngoài.
+Những giới hạn này đồng thời xác định một số hướng mở rộng tự nhiên cho nghiên cứu tiếp theo. Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các thảo luận gần đây về tương lai của khoa học di chuyển cũng nhấn mạnh nhu cầu phát triển các mô hình vừa có khả năng khái quát hóa, vừa có khả năng diễn giải và gắn kết tốt hơn với cơ chế di chuyển [@pappalardo2023future]. Nghiên cứu tiếp theo có thể đánh giá các nguồn quan sát tổng hợp độc lập, các đơn vị địa lý khác nhau và điều kiện thu thập thực tế; nghiên cứu hiện tại chưa sử dụng nguồn quan sát bên ngoài.
 
 # 6. Kết luận
 
@@ -381,35 +377,33 @@ Bổ sung sau
 
 7. **Guo, J., Bai, S., Li, X., Xian, K., Liu, E., Ding, W., & Ma, X.** (2025). A universal geography neural network for mobility flow prediction in planning scenarios. *Computer-Aided Civil and Infrastructure Engineering*, 40, 5769–5789. [https://doi.org/10.1111/mice.13398](https://doi.org/10.1111/mice.13398)
 
-8. **Hilbe, J. M.** (2011). *Negative binomial regression* (2nd ed.). Cambridge University Press.
+8. **Houssiau, F., Rocher, L., & de Montjoye, Y.-A.** (2022). On the difficulty of achieving differential privacy in practice: User-level guarantees in aggregate location data. *Nature Communications*, 13, 29. [https://doi.org/10.1038/s41467-021-27566-0](https://doi.org/10.1038/s41467-021-27566-0)
 
-9. **Houssiau, F., Rocher, L., & de Montjoye, Y.-A.** (2022). On the difficulty of achieving differential privacy in practice: User-level guarantees in aggregate location data. *Nature Communications*, 13, 29. [https://doi.org/10.1038/s41467-021-27566-0](https://doi.org/10.1038/s41467-021-27566-0)
+9. **Hyman, G. M.** (1969). The calibration of trip distribution models. *Environment and Planning A*, 1(1), 105–112. [https://doi.org/10.1068/a010105](https://doi.org/10.1068/a010105)
 
-10. **Hyman, G. M.** (1969). The calibration of trip distribution models. *Environment and Planning A*, 1(1), 105–112. [https://doi.org/10.1068/a010105](https://doi.org/10.1068/a010105)
+10. **Lenormand, M., Bassolas, A., & Ramasco, J. J.** (2016). Systematic comparison of trip distribution laws and models. *Journal of Transport Geography*, 51, 158–169. [https://doi.org/10.1016/j.jtrangeo.2015.12.008](https://doi.org/10.1016/j.jtrangeo.2015.12.008)
 
-11. **Lenormand, M., Bassolas, A., & Ramasco, J. J.** (2016). Systematic comparison of trip distribution laws and models. *Journal of Transport Geography*, 51, 158–169. [https://doi.org/10.1016/j.jtrangeo.2015.12.008](https://doi.org/10.1016/j.jtrangeo.2015.12.008)
+11. **Merlin, L. A.** (2020). A new method using medians to calibrate single-parameter spatial interaction models. *Journal of Transport and Land Use*, 13(1), 49–70. [https://doi.org/10.5198/jtlu.2020.1614](https://doi.org/10.5198/jtlu.2020.1614)
 
-12. **Merlin, L. A.** (2020). A new method using medians to calibrate single-parameter spatial interaction models. *Journal of Transport and Land Use*, 13(1), 49–70. [https://doi.org/10.5198/jtlu.2020.1614](https://doi.org/10.5198/jtlu.2020.1614)
+12. **Ortúzar, J. de D., & Willumsen, L. G.** (2011). *Modelling transport* (4th ed.). John Wiley & Sons. [https://doi.org/10.1002/9781119993308](https://doi.org/10.1002/9781119993308)
 
-13. **Ortúzar, J. de D., & Willumsen, L. G.** (2011). *Modelling transport* (4th ed.). John Wiley & Sons. [https://doi.org/10.1002/9781119993308](https://doi.org/10.1002/9781119993308)
+13. **Pappalardo, L., Manley, E., Sekara, V., & Alessandretti, L.** (2023). Future directions in human mobility science. *Nature Computational Science*, 3, 588–600. [https://doi.org/10.1038/s43588-023-00469-4](https://doi.org/10.1038/s43588-023-00469-4)
 
-14. **Pappalardo, L., Manley, E., Sekara, V., & Alessandretti, L.** (2023). Future directions in human mobility science. *Nature Computational Science*, 3, 588–600. [https://doi.org/10.1038/s43588-023-00469-4](https://doi.org/10.1038/s43588-023-00469-4)
+14. **Simini, F., Barlacchi, G., Luca, M., & Pappalardo, L.** (2021). A Deep Gravity model for mobility flows generation. *Nature Communications*, 12, 6576. [https://doi.org/10.1038/s41467-021-26752-4](https://doi.org/10.1038/s41467-021-26752-4)
 
-15. **Simini, F., Barlacchi, G., Luca, M., & Pappalardo, L.** (2021). A Deep Gravity model for mobility flows generation. *Nature Communications*, 12, 6576. [https://doi.org/10.1038/s41467-021-26752-4](https://doi.org/10.1038/s41467-021-26752-4)
+15. **Verma, R., & Ukkusuri, S. V.** (2025). What determines travel time and distance decay in spatial interaction and accessibility? *Journal of Transport Geography*, 122, 104061. [https://doi.org/10.1016/j.jtrangeo.2024.104061](https://doi.org/10.1016/j.jtrangeo.2024.104061)
 
-16. **Verma, R., & Ukkusuri, S. V.** (2025). What determines travel time and distance decay in spatial interaction and accessibility? *Journal of Transport Geography*, 122, 104061. [https://doi.org/10.1016/j.jtrangeo.2024.104061](https://doi.org/10.1016/j.jtrangeo.2024.104061)
+16. **Wilson, A. G.** (1971). A family of spatial interaction models, and associated developments. *Environment and Planning A*, 3(1), 1–32. [https://doi.org/10.1068/a030001](https://doi.org/10.1068/a030001)
 
-17. **Wilson, A. G.** (1971). A family of spatial interaction models, and associated developments. *Environment and Planning A*, 3(1), 1–32. [https://doi.org/10.1068/a030001](https://doi.org/10.1068/a030001)
+17. **Yang, Y., Herrera, C., Eagle, N., & González, M. C.** (2014). Limits of predictability in commuting flows in the absence of data for calibration. *Scientific Reports*, 4, 5662. [https://doi.org/10.1038/srep05662](https://doi.org/10.1038/srep05662)
 
-18. **Yang, Y., Herrera, C., Eagle, N., & González, M. C.** (2014). Limits of predictability in commuting flows in the absence of data for calibration. *Scientific Reports*, 4, 5662. [https://doi.org/10.1038/srep05662](https://doi.org/10.1038/srep05662)
+18. **Efron, B., & Tibshirani, R. J.** (1993). *An introduction to the bootstrap*. Chapman & Hall.
 
-19. **Efron, B., & Tibshirani, R. J.** (1993). *An introduction to the bootstrap*. Chapman & Hall.
+19. **Holm, S.** (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. [https://www.jstor.org/stable/4615733](https://www.jstor.org/stable/4615733)
 
-20. **Holm, S.** (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. [https://www.jstor.org/stable/4615733](https://www.jstor.org/stable/4615733)
+20. **Loshchilov, I., & Hutter, F.** (2019). Decoupled weight decay regularization. In *International Conference on Learning Representations (ICLR)*. [https://openreview.net/forum?id=Bkg6RiCqY7](https://openreview.net/forum?id=Bkg6RiCqY7)
 
-21. **Loshchilov, I., & Hutter, F.** (2019). Decoupled weight decay regularization. In *International Conference on Learning Representations (ICLR)*. [https://openreview.net/forum?id=Bkg6RiCqY7](https://openreview.net/forum?id=Bkg6RiCqY7)
-
-22. **Wilcoxon, F.** (1945). Individual comparisons by ranking methods. *Biometrics Bulletin*, 1(6), 80–83. [https://doi.org/10.2307/3001968](https://doi.org/10.2307/3001968)
+21. **Wilcoxon, F.** (1945). Individual comparisons by ranking methods. *Biometrics Bulletin*, 1(6), 80–83. [https://doi.org/10.2307/3001968](https://doi.org/10.2307/3001968)
 
 
 
@@ -602,11 +596,7 @@ $$
 \mathrm{CI}_{95\%} = \bigl[ Q_{0.025}\bigl(\overline{\Delta}^*\bigr), Q_{0.975}\bigl(\overline{\Delta}^*\bigr) \bigr].
 $$
 
-3. **Kiểm định Wilcoxon signed-rank hai phía**:
-   Kiểm định giả thuyết ghép cặp hai phía trên 50 hiệu số cấp thành phố:
-$$
-H_0: \operatorname{median}(\Delta_c) = 0, \qquad H_1: \operatorname{median}(\Delta_c) \neq 0.
-$$
+3. **Kiểm định Wilcoxon signed-rank hai phía**: kiểm định liệu các chênh lệch ghép cặp có được phân bố đối xứng quanh 0 hay không.
 
 4. **Hiệu chỉnh Holm–Bonferroni** [@holm1979sequential]:
    Đối với họ gồm $M$ giả thuyết:

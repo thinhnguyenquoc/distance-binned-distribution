@@ -298,8 +298,7 @@ def generate_figure6():
     ax.text(
         0.05, 0.92,
         f"Pearson $r = +{r_val:.4f}$ ($p = {p_val:.2e}$)\n"
-        f"Partial $r = +0.7951$ ($p = 5.35 \\times 10^{{-12}}$)\n"
-        f"Multivariate $R^2 = 73.7\\%$",
+        f"Partial $r = +0.7951$ ($p = 5.35 \\times 10^{{-12}}$)",
         transform=ax.transAxes,
         fontsize=8.5,
         verticalalignment="top",
