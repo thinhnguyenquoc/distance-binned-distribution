@@ -16,9 +16,7 @@ Các mô hình mobility gần đây đã kết hợp ngữ cảnh đô thị và
 
 Nghiên cứu này kiểm tra liệu phân phối di chuyển theo các khoảng khoảng cách của thành phố mục tiêu có cung cấp thông tin bổ sung cho một baseline cross-city đã huấn luyện hay không. Phân phối này chỉ mô tả tỷ trọng tổng luồng theo khoảng cách và được sử dụng tại thời điểm suy luận để hiệu chỉnh dự báo, trong khi toàn bộ tham số mô hình được giữ nguyên. Phép hiệu chỉnh được sử dụng như một công cụ thực nghiệm để định lượng giá trị thông tin bổ sung của phân phối di chuyển.
 
-Nghiên cứu được tổ chức quanh hai câu hỏi: 
-- Phân phối di chuyển theo khoảng cách của thành phố mục tiêu có cải thiện tái tạo cường độ OD so với baseline cross-city zero-shot giữ nguyên tham số hay không?
-- Nếu có, mức cải thiện phụ thuộc như thế nào vào độ phân giải, chất lượng, thứ tự khoảng và tính đặc thù của quan sát mục tiêu?
+Nghiên cứu tập trung vào hai câu hỏi. Thứ nhất, phân phối di chuyển theo khoảng cách của thành phố mục tiêu có cải thiện tái tạo cường độ OD so với baseline cross-city zero-shot giữ nguyên tham số hay không? Thứ hai, nếu có cải thiện, mức cải thiện đó phụ thuộc như thế nào vào độ phân giải, chất lượng, thứ tự khoảng và tính đặc thù của quan sát mục tiêu?
 
 Trong nghiên cứu này, phân phối được trích xuất từ luồng tham chiếu của chính thành phố mục tiêu và vì vậy được xem là quan sát oracle. Thiết lập này được sử dụng để kiểm tra giá trị thông tin của tín hiệu trước khi xem xét khả năng thu thập hoặc ước lượng nó từ nguồn độc lập.
 
@@ -42,7 +40,7 @@ Những kết quả này cho thấy cấu trúc cự ly có tính đặc thù th
 
 Khái quát hóa liên thành phố vẫn là một thách thức vì quan hệ giữa bối cảnh đô thị và luồng di chuyển có thể thay đổi giữa các thành phố. Yang et al. [@yang2014limits] cho thấy khả năng dự báo luồng đi làm bị giới hạn đáng kể khi thiếu dữ liệu địa phương dùng cho hiệu chỉnh. Kết quả này cho thấy việc sử dụng khoảng cách và đặc trưng đô thị không nhất thiết loại bỏ hoàn toàn nhu cầu về thông tin đặc thù của miền mục tiêu.
 
-Một hướng bổ sung là sử dụng các quan sát tổng hợp của miền mục tiêu thay cho việc tái huấn luyện mô hình bằng dữ liệu OD chi tiết. Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được sử dụng để áp đặt tính nhất quán vĩ mô trong các mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family].
+Trong bối cảnh đó, quan sát tổng hợp của miền mục tiêu tạo ra một mức thông tin trung gian giữa zero-shot hoàn toàn và tái huấn luyện bằng dữ liệu OD chi tiết. Quan sát tổng hợp nằm giữa hai cực: hoàn toàn không có thông tin tại thành phố mục tiêu và quan sát trực tiếp toàn bộ ma trận OD. Các ràng buộc cổ điển như tổng outflow, inflow hoặc moment chi phí đã được sử dụng để áp đặt tính nhất quán vĩ mô trong các mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family].
  
  Khác với các phương pháp chủ yếu hiệu chỉnh một hoặc một số ít tham số, nghiên cứu này sử dụng trực tiếp vector tỷ trọng luồng theo các khoảng khoảng cách, cho phép đánh giá giá trị của tín hiệu ở nhiều mức độ phân giải thông qua số lượng khoảng $K$. $Y_D$ cũng khác với các biên origin/destination hoặc các cặp OD được quan sát trực tiếp: nó chỉ ràng buộc cách tổng khối lượng luồng được phân bổ giữa các dải cự ly, nhưng không xác định cách khối lượng đó được phân bổ giữa các cặp origin–destination trong cùng một khoảng.
  
@@ -112,7 +110,7 @@ $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố m�
 Ba baseline được đánh giá dưới cùng một giao thức hiệu chỉnh tại thời điểm suy luận. Urban GNN là baseline chính, Pairwise Node MLP là baseline neural bổ sung, và Gravity hai tham số là baseline cổ điển bổ sung để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào kiến trúc mô hình.
 
 
-Urban GNN là baseline chính của nghiên cứu. Mô hình mã hóa các đặc trưng bối cảnh đô thị của từng tract thông qua một đồ thị không gian, sau đó kết hợp embedding của origin và destination với khoảng cách cặp và một gravity prior để dự báo cường độ luồng OD dương.
+Urban GNN mã hóa các đặc trưng bối cảnh đô thị của từng tract thông qua một đồ thị không gian, sau đó kết hợp embedding của origin và destination với khoảng cách cặp và một gravity prior để dự báo cường độ luồng OD dương.
 
 Mô hình được huấn luyện trên các thành phố nguồn của từng fold và toàn bộ tham số được giữ cố định khi suy luận trên thành phố mục tiêu.
 
@@ -204,7 +202,7 @@ Ngoài các kiểm định chính, một phân tích cơ chế thăm dò đánh 
 
 # 4. Kết quả thực nghiệm
 
-## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot giữ nguyên tham số hay không?
+## 4.1. $Y_D$ có cải thiện tái tạo cường độ OD trên tập hỗ trợ liên vùng dương đã biết so với baseline zero-shot hay không?
 
 Trong thí nghiệm chính với Urban GNN, hiệu chỉnh bằng $Y_D$ làm CPC liên vùng tăng trung bình $+0.00354$. Mức cải thiện xuất hiện ở phần lớn thành phố nhưng có độ lớn tuyệt đối nhỏ và không đồng đều giữa các trường hợp.
 
@@ -222,7 +220,7 @@ Biểu đồ cột thể hiện $\Delta\mathrm{CPC}_c = \operatorname{CPC}(M_{1,
 
 ## 4.2. Mức cải thiện có thực sự đặc thù theo thành phố mục tiêu và có ý nghĩa cấu trúc hay không?
 
-Các đối chứng placebo cho thấy lợi ích của hiệu chỉnh phụ thuộc vào thông tin đặc thù của thành phố mục tiêu: $Y_D$ đặc thù theo thành phố mục tiêu vượt các phân phối donor được dose-match. Khi thứ tự các bin bị hoán vị, lợi ích không còn duy trì và hiệu năng giảm, cho thấy cấu trúc gắn giữa tỷ trọng luồng và khoảng cách là cần thiết.
+Các đối chứng placebo cho thấy lợi ích của hiệu chỉnh phụ thuộc vào thông tin đặc thù của thành phố mục tiêu: $Y_D$ đặc thù theo thành phố mục tiêu vượt các phân phối donor được dose-match. Khi thứ tự các bin bị hoán vị, lợi ích không còn duy trì và hiệu năng giảm, cho thấy lợi ích hiệu chỉnh phụ thuộc vào việc bảo toàn đúng sự gắn kết giữa tỷ trọng luồng và các khoảng khoảng cách.
 
 ![Hình 3](figures/fig5_structural_validity_placebo.png)
 Hình 3. Đối chứng về tính đặc thù mục tiêu và cấu trúc khoảng cách. Hình so sánh $\Delta\mathrm{CPC}$ của target $Y_D$, dose-matched donor và permuted $Y_D$ trên 50 thành phố. Thanh sai số biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
@@ -293,7 +291,7 @@ Mức cải thiện vẫn dương trên cả ba model seeds, với mean $\Delta\
 
 
 
-### Bảng 5: Tính tổng quát trên các kiến trúc mô hình ($N=50$ thành phố, $K=8$ khoảng)
+### Bảng 5: Độ bền theo kiến trúc baseline ($N=50$ thành phố, $K=8$ khoảng)
 
 | Kiến trúc mô hình | $\Delta\mathrm{CPC}$ trung bình | Khoảng tin cậy 95% Bootstrap | Tỷ lệ thành phố thắng |
 |:---|:---:|:---:|:---:|
@@ -306,7 +304,7 @@ Ghi chú: Hai baseline neural được tổng hợp qua ba model seeds. Gravity 
 Mức tăng được tái hiện trên cả Urban GNN và Pairwise Node MLP, trong khi Gravity cho hiệu ứng nhỏ hơn; do đó bằng chứng về độ bền theo kiến trúc hiện chỉ hỗ trợ hai baseline neural đã đánh giá và không nên khái quát cho mọi họ mô hình.
 
 
-## 4.5. Mức sai lệch phân phối khoảng cách của baseline có liên hệ mạnh với mức cải thiện hiệu chỉnh theo thành phố
+## 4.5. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện hiệu chỉnh
 
 Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ mạnh với mức cải thiện sau hiệu chỉnh. Sau khi kiểm soát độ chính xác baseline, quy mô đô thị và khoảng cách địa lý trung bình, tương quan từng phần đạt $r_{\mathrm{partial}} = +0.7951$ ($p = 5.35 \times 10^{-12}$). Mẫu hình này phù hợp với cơ chế của phương pháp nhưng chỉ được diễn giải như một liên hệ quan sát, không phải quan hệ nhân quả.
 
@@ -345,7 +343,7 @@ Những giới hạn này đồng thời xác định một số hướng mở r
 
 Nghiên cứu này kiểm tra liệu phân phối di chuyển theo khoảng cách của thành phố mục tiêu có cung cấp thông tin bổ sung cho một baseline cross-city zero-shot giữ nguyên tham số hay không. Phép hiệu chỉnh chỉ sử dụng $Y_D$ tại thời điểm suy luận và không cập nhật tham số mô hình.
 
-Trên 50 thành phố Hoa Kỳ, hiệu chỉnh bằng $Y_D$ làm CPC tăng trung bình $+0.00354$, với 45/50 thành phố cải thiện so với baseline. Kết quả này cho thấy phân phối khoảng cách của thành phố mục tiêu chứa một lượng thông tin bổ sung nhỏ nhưng tương đối nhất quán mà baseline zero-shot chưa phản ánh đầy đủ. Các phân tích độ nhạy cho thấy giá trị này phụ thuộc vào độ phân giải và chất lượng của quan sát, đồng thời cần bảo toàn đúng cấu trúc khoảng cách và tính đặc thù của thành phố mục tiêu.
+Trên 50 thành phố Hoa Kỳ, hiệu chỉnh bằng $Y_D$ làm CPC tăng trung bình $+0.00354$, với 45/50 thành phố cải thiện so với baseline. Kết quả này cho thấy phân phối khoảng cách của thành phố mục tiêu chứa một lượng thông tin bổ sung nhỏ nhưng tương đối nhất quán mà baseline zero-shot chưa phản ánh đầy đủ. Các phân tích độ nhạy cho thấy giá trị này phụ thuộc vào độ phân giải và chất lượng của quan sát, đồng thời cho thấy lợi ích phụ thuộc vào việc bảo toàn đúng cấu trúc khoảng cách và tính đặc thù của thành phố mục tiêu.
 
 Mức cải thiện có độ lớn tuyệt đối nhỏ và nên được hiểu như một hiệu chỉnh bổ sung hơn là sự thay thế cho dữ liệu OD chi tiết. Phạm vi kết luận chỉ giới hạn ở tái tạo cường độ trên tập hỗ trợ liên vùng dương đã biết với $Y_D$ oracle; nghiên cứu chưa đánh giá link discovery, full-matrix reconstruction hoặc việc sử dụng $Y_D$ được thu thập độc lập trong triển khai thực tế.
 
