@@ -518,8 +518,8 @@ The analytical calibration operator strictly guarantees three mathematical prope
 
 Figure 1 illustrates the complete support-conditioned zero-shot modeling and inference-time calibration pipeline.
 
-![Figure 1](figures/fig1_oracle_calibration_framework.svg)
-**Figure 1. Support-conditioned oracle calibration framework.** The cross-city model $M_0$ is trained on source cities and frozen before target-city inference. For a target city, $M_0$ first produces baseline intensities $\widehat{\mathbf{T}}_c^{(0)}$ on the known positive support $\Omega_{c,\mathrm{inter}}^+$. The oracle distance-binned distribution $\mathbf{Y}_{D,c}$ is deterministically derived from the same target-city positive ground-truth OD flows used for evaluation and is introduced only at inference time. Bin-specific scaling factors reallocate predicted mass across distance intervals to obtain $\widehat{\mathbf{T}}_c^{(1)}$ without updating model parameters or creating new OD links. The schematic represents an oracle information intervention, not an independently collected external telemetry pipeline.
+![Figure 1](figures/fig1_oracle_calibration_framework.png)
+**Figure 1. Support-conditioned oracle calibration framework.** Cross-city baseline $M_0$ is trained across source cities and held frozen on the target city. The oracle distance distribution $Y_D$, extracted from the target city's reference OD flows, reallocates predicted flow mass across distance intervals to obtain $\widehat{\mathbf{T}}_c^{(1)}$ on the same positive support $\Omega_c^+$.
 
 ---
 
@@ -783,7 +783,7 @@ In addition to tests using alternative distributions from other sources, we cond
 ---
 
 ![Figure 5](figures/fig5_structural_validity_placebo.png)
-**Figure 5 | Target specificity and bin-order controls.** Comparison of mean reconstruction gain $\Delta\mathrm{CPC}$ across $N=50$ test cities under three conditions: (1) target $Y_D$ ($+0.00354$); (2) dose-matched training-donor placebo ($-0.00009$); and (3) permuted target $Y_D$ ($-0.00696$). Error bars represent 95% fold-stratified bootstrap confidence intervals over city-level values.
+**Figure 5 | Target specificity and distance structure controls.** Comparison of target $Y_D$, dose-matched training-donor placebo, and permuted target $Y_D$ across 50 test cities. Error bars represent fold-stratified 95% bootstrap confidence intervals.
 
 ---
 
@@ -839,7 +839,7 @@ In an exploratory analysis across 11 multi-county metropolitan areas, county-lev
 ---
 
 ![Figure 3](figures/fig3_resolution_sensitivity.png)
-**Figure 3 | Calibration gain versus distance-bin resolution.** Points depict mean $\Delta\mathrm{CPC}$ across 50 test cities with 95% fold-stratified bootstrap confidence intervals. $K=8$ denotes the canonical anchor configuration.
+**Figure 3 | Sensitivity of calibration gain to distance bin resolution $K$.** Points depict mean $\Delta\mathrm{CPC}$ across 50 test cities with fold-stratified 95% bootstrap confidence intervals. $K=8$ denotes the canonical anchor configuration.
 
 ---
 
@@ -850,7 +850,7 @@ Having assessed the impact of observational resolution, we next investigate how 
 ---
 
 ![Figure 4](figures/fig4_noise_dose_response.png)
-**Figure 4 | Effect of observation fidelity on calibration benefit across 50 metropolitan areas.** The solid blue curve displays the mean interzonal $\Delta\mathrm{CPC}$ across the 50 evaluated test cities as a function of Total Variation (TV) perturbation magnitude $\epsilon$ in the target-city aggregate distance observation $Y_D$. The shaded band denotes the 95% fold-stratified bootstrap confidence interval. The dashed vertical line marks the empirical signal breakdown crossover threshold ($\epsilon_{\mathrm{cross}} = 4.44\%$ TV error).
+**Figure 4 | Sensitivity of calibration gain to Total Variation observation noise.** Points depict mean $\Delta\mathrm{CPC}$ across 50 test cities; shaded band denotes 95% fold-stratified bootstrap confidence interval. Horizontal line at $\Delta\mathrm{CPC}=0$ indicates baseline-equivalent performance, and dashed vertical line marks empirical crossover threshold $\epsilon_{\mathrm{cross}}\approx 4.44\%$.
 
 ---
 
@@ -979,7 +979,7 @@ By contrast, baseline distance-distribution mismatch $d_{\mathrm{pre}}=\mathrm{T
 ---
 
 ![Figure 6](figures/fig6_mechanistic_dpre.png)
-**Figure 6 | Mechanistic diagnostic: Calibration gain increases with baseline distance misalignment.** Scatter plot of baseline distance mismatch $d_{\mathrm{pre}} = \mathrm{TV}(\hat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ versus reconstruction gain $\Delta\mathrm{CPC}$ across all $N=50$ test cities. The green line depicts the linear regression fit (Pearson $r = +0.7995$, $p = 3.36 \times 10^{-12}$, partial $r = +0.7951$, $p = 5.35 \times 10^{-12}$ controlling for baseline performance and network scale).
+**Figure 6 | Relationship between baseline distance distribution mismatch and post-calibration gain.** $d_{\mathrm{pre}}$ is the Total Variation distance between the baseline predicted distance distribution and ground truth. Each point denotes one city; the line is the linear fit across 50 test cities. Partial correlation controlling for scale and spatial covariates is reported in Section 4.5.
 
 ---
 
@@ -1318,13 +1318,13 @@ This modest pooled gain is heavily dominated by the 39 single-county areas where
 For the subset of 11 multi-county metropolitan areas (22% of the benchmark), county-level calibration achieved gains in 9 of 11 areas, with a mean incremental gain of $+0.00063$ (Table S1 and Figure S1).
 
 ![Figure S1](figures/fig_s1_spatial_resolution.png)
-**Figure S1. Comparison of city-level and county-level calibration CPC gains across 11 multi-county metropolitan areas.** Analysis is exploratory; the 39 single-county metropolitan areas are omitted because the two partitions are mathematically equivalent.
+**Figure S1. Comparison of city-level and county-level calibration CPC gains across 11 multi-county metropolitan areas.** Analysis is exploratory; 39 single-county metropolitan areas are omitted because the two partitions are mathematically equivalent.
 
 ### Supplementary Table S1. Descriptive city-level results for the multi-county spatial-resolution subset
 
-City-level comparison of the zero-shot baseline ($), city-level oracle calibration ({\mathrm{city}}$), and origin-county-conditioned oracle calibration ({\mathrm{county}}$) for the 11 metropolitan datasets containing tracts assigned to more than one county. The resolution increment is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c}=\mathrm{CPC}(M1_{\mathrm{county}})-\mathrm{CPC}(M1_{\mathrm{city}})$. Values are descriptive city-level estimates. No subgroup confidence interval or hypothesis test is reported unless supported by a separately verified uncertainty artifact.
+City-level comparison of the zero-shot baseline ($M_0$), city-level oracle calibration ($M1_{\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M1_{\mathrm{county}}$) for the 11 metropolitan datasets containing tracts assigned to more than one county. The resolution increment is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c}=\mathrm{CPC}(M1_{\mathrm{county}})-\mathrm{CPC}(M1_{\mathrm{city}})$. Values are descriptive city-level estimates. No subgroup confidence interval or hypothesis test is reported unless supported by a separately verified uncertainty artifact.
 
-| City | Origin counties | $ CPC | {\mathrm{city}}$ CPC | {\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res}}$ |
+| City | Origin counties | $M_0$ CPC | $M1_{\mathrm{city}}$ CPC | $M1_{\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res}}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Kansas City | 3 | 0.721071 | 0.726877 | 0.729612 | +0.005807 | +0.008542 | +0.002735 |
 | New York | 7 | 0.524464 | 0.525775 | 0.527870 | +0.001311 | +0.003407 | +0.002096 |
@@ -1340,7 +1340,7 @@ City-level comparison of the zero-shot baseline ($), city-level oracle calibrati
 | **Multi-county mean** | — | — | — | — | — | — | **+0.000626** |
 | **Positive resolution gains** | — | — | — | — | — | — | **9 / 11** |
 
-*Note: Rows are sorted by $\Delta\mathrm{CPC}_{\mathrm{res}}$ in descending order. County labels are assigned from tract centroids using GADM 4.1 and group OD pairs by the county of the origin tract. Destination tracts may belong to the same or another county represented within the city dataset. Prediction and evaluation remain city-wide on the same known positive support. The 39 single-county cities are omitted from this table because {\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction. Results are seed-averaged across model seeds $\{1, 10, 100\}$.*
+*Note: Rows are sorted by $\Delta\mathrm{CPC}_{\mathrm{res}}$ in descending order. County labels are assigned from tract centroids using GADM 4.1 and group OD pairs by the county of the origin tract. Destination tracts may belong to the same or another county represented within the city dataset. Prediction and evaluation remain city-wide on the same known positive support. The 39 single-county cities are omitted from this table because $M1_{\mathrm{county}}\equiv M1_{\mathrm{city}}$ by construction. Results are seed-averaged across model seeds $\{1, 10, 100\}$.*
 
 ## S7.3 Interpretive Boundaries
 

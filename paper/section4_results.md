@@ -55,7 +55,9 @@ In addition to tests using alternative distributions from other sources, we cond
 ---
 
 ![Figure 5](figures/fig5_structural_validity_placebo.png)
-**Figure 5 | Fair matched placebo controls.** Comparison of mean reconstruction gain $\Delta\mathrm{CPC}$ across $N=50$ test cities under three conditions from the fair matched placebo branch: (1) authentic target-city distribution ($Y_D$, $+0.00357$, $p < 10^{-8}$); (2) dose-matched cross-city donor placebo ($-0.00009$, not significant); and (3) permuted distance bins ($-0.00669$, $p < 10^{-14}$). Error bars represent 95% fold-stratified bootstrap confidence intervals over city-level values. This robustness visualization is distinct from the primary unified placebo estimates reported in Table 2.
+**Figure 5 | Target specificity and distance structure controls.** Comparison of target $Y_D$, dose-matched training-donor placebo, and permuted target $Y_D$ across 50 test cities. Error bars represent fold-stratified 95% bootstrap confidence intervals.
+
+*(Tiếng Việt: **Hình 3. Đối chứng về tính đặc thù mục tiêu và cấu trúc khoảng cách.** Hình so sánh target $Y_D$, dose-matched training-donor placebo và permuted target $Y_D$ trên 50 thành phố. Thanh sai số biểu diễn CI bootstrap 95% phân tầng theo fold.)*
 
 ---
 
@@ -111,9 +113,9 @@ Across the tested values of $K$, the improvement in OD reconstruction increases 
 ---
 
 ![Figure 3](figures/fig3_resolution_sensitivity.png)
-**Figure 3 | Observational resolution sensitivity ($K$).** Mean interzonal $\Delta\text{CPC}$ improvement increases monotonically from $K=2$ ($+0.00098$) to $K=20$ ($+0.00639$). Shaded band represents 95% fold-stratified bootstrap confidence interval.
+**Figure 3 | Sensitivity of calibration gain to distance bin resolution $K$.** Points depict mean $\Delta\mathrm{CPC}$ across 50 test cities with fold-stratified 95% bootstrap confidence intervals. $K=8$ denotes the canonical anchor configuration.
 
-*(Tiếng Việt: **Hình 4 | Phân tích độ nhạy của độ phân giải thông tin ($K$).** Mức tăng CPC liên vùng trung bình $\Delta\text{CPC}$ tăng đơn điệu từ $K=2$ ($+0.00098$) lên $K=20$ ($+0.00639$). Dải bóng mờ biểu diễn khoảng tin cậy 95% bootstrap phân tầng.)*
+*(Tiếng Việt: **Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách $K$.** Điểm biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố và thanh sai số biểu diễn bootstrap CI 95% phân tầng theo fold. $K=8$ là cấu hình chính của nghiên cứu.)*
 
 In an exploratory analysis across 11 multi-county metropolitan areas, county-level calibration improved performance over city-level calibration in 9 of 11 cases. However, the pooled incremental gain across all 50 metropolitan areas was only $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, because the 39 single-county areas yield mathematically equivalent partitions. Therefore, this result is not interpreted as general evidence that increasing spatial resolution improves performance; details are presented in Supplementary Section S7.
 
@@ -131,7 +133,9 @@ Having assessed the impact of observational resolution, we next investigate how 
 ---
 
 ![Figure 4](figures/fig4_noise_dose_response.png)
-**Figure 4 | Effect of observation fidelity on calibration benefit across 50 metropolitan areas.** The solid blue curve displays the mean interzonal $\Delta\mathrm{CPC}$ across the 50 evaluated test cities as a function of Total Variation (TV) perturbation magnitude $\epsilon$ in the target-city aggregate distance observation $Y_D$. The shaded band denotes the 95% fold-stratified bootstrap confidence interval. The dashed vertical line marks the empirical signal breakdown crossover threshold ($\epsilon_{\mathrm{cross}} = 4.44\%$ TV error).
+**Figure 4 | Sensitivity of calibration gain to Total Variation observation noise.** Points depict mean $\Delta\mathrm{CPC}$ across 50 test cities; shaded band denotes 95% fold-stratified bootstrap confidence interval. Horizontal line at $\Delta\mathrm{CPC}=0$ indicates baseline-equivalent performance, and dashed vertical line marks empirical crossover threshold $\epsilon_{\mathrm{cross}}\approx 4.44\%$.
+
+*(Tiếng Việt: **Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation.** Điểm biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố; dải bóng mờ là bootstrap CI 95% phân tầng theo fold. Đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức tương đương baseline, và đường đứt nét đánh dấu điểm giao cắt thực nghiệm $\epsilon_{\mathrm{cross}}\approx4.44\%$.)*
 
 ---
 
@@ -292,7 +296,9 @@ By contrast, baseline distance-distribution mismatch $d_{\mathrm{pre}}=\mathrm{T
 ---
 
 ![Figure 6](figures/fig6_mechanistic_dpre.png)
-**Figure 6 | Mechanistic diagnostic: Calibration gain increases with baseline distance misalignment.** Scatter plot of baseline distance mismatch $d_{\mathrm{pre}} = \mathrm{TV}(\hat{Y}_D^{(0)}, Y_D^{\mathrm{GT}})$ versus reconstruction gain $\Delta\mathrm{CPC}$ across all $N=50$ test cities. The green line depicts the linear regression fit ($R^2 = 73.7\%$, Pearson $r = +0.7995$, $p = 3.36 \times 10^{-12}$, partial $r = +0.7951$, $p = 5.35 \times 10^{-12}$ controlling for baseline performance and network scale).
+**Figure 6 | Relationship between baseline distance distribution mismatch and post-calibration gain.** $d_{\mathrm{pre}}$ is the Total Variation distance between the baseline predicted distance distribution and ground truth. Each point denotes one city; the line is the linear fit across 50 test cities. Partial correlation controlling for scale and spatial covariates is reported in Section 4.5.
+
+*(Tiếng Việt: **Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức cải thiện sau hiệu chỉnh.** $d_{\mathrm{pre}}$ là khoảng cách Total Variation giữa phân phối khoảng cách của baseline và ground truth. Mỗi điểm biểu diễn một thành phố; đường thẳng là linear fit trên 50 thành phố. Tương quan từng phần sau khi kiểm soát các biến quy mô–không gian được báo cáo trong Mục 4.5.)*
 
 ---
 
