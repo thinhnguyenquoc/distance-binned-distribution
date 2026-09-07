@@ -34,7 +34,7 @@ Các mô hình tương tác không gian từ lâu đã biểu diễn luồng OD 
 
 Các phương pháp hiệu chỉnh cổ điển cho thấy thống kê tổng hợp về cự ly chuyến đi có thể được dùng để xác định tham số lực cản, chẳng hạn chiều dài chuyến đi trung bình trong Hyman (1969) hoặc trung vị thời gian di chuyển trong Merlin (2020). Các nghiên cứu so sánh cũng cho thấy quy luật suy giảm theo khoảng cách thay đổi giữa bộ dữ liệu và bối cảnh đô thị, thay vì tồn tại một dạng hàm cố định phù hợp cho mọi nơi. Mẫu hình suy giảm thực nghiệm có thể thay đổi theo phương thức, mục đích chuyến đi, mức độ đô thị hóa và điều kiện kinh tế–xã hội [@verma2025distance].
 
-Những kết quả này cho thấy khoảng cách là một cấu trúc tổ chức quan trọng của luồng, đồng thời thông tin cự ly đặc thù của miền mục tiêu có thể bổ sung cho một quy luật suy giảm được chuyển giao chung. Nghiên cứu hiện tại kế thừa ý tưởng đó nhưng dùng toàn bộ phân phối theo khoảng thay vì ước lượng một tham số distance-decay đơn lẻ.
+Những kết quả này cho thấy cấu trúc cự ly có tính đặc thù theo bối cảnh. Nghiên cứu hiện tại kế thừa ý tưởng đó nhưng sử dụng toàn bộ phân phối theo khoảng thay vì hiệu chỉnh một tham số suy giảm theo khoảng cách đơn lẻ.
 
 ## 2.2. Sinh dữ liệu di chuyển và mô hình không gian dựa trên học máy
 
@@ -113,7 +113,7 @@ Urban GNN là baseline chính của nghiên cứu. Mô hình mã hóa các đặ
 Mô hình được huấn luyện trên các thành phố nguồn của từng fold và toàn bộ tham số được giữ cố định khi suy luận trên thành phố mục tiêu.
 
 
-Để kiểm tra liệu hiệu quả hiệu chỉnh có phụ thuộc vào backbone neural hay không, chúng tôi sử dụng thêm một baseline gravity dạng lũy thừa:
+Một baseline Gravity dạng lũy thừa được sử dụng để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào họ mô hình.
 
 $$
 \hat{t}^{(0,\mathrm{grav})}_{c,ij} = \exp(G) \frac{P_{c,i} P_{c,j}}{d_{c,ij}^{\alpha}}, \qquad (i,j) \in \Omega_c.
@@ -134,7 +134,7 @@ $$
 Hai tham số $(G, \alpha)$ được ước lượng bằng pooled log-linear ordinary least squares chỉ trên các thành phố huấn luyện của từng fold và được giữ cố định khi suy luận trên thành phố kiểm tra. Dự báo gravity sau đó được đưa qua cùng toán tử hiệu chỉnh bằng $Y_D$ như các baseline khác.
 
 
-Để kiểm tra liệu hiệu quả của $Y_D$ có phụ thuộc riêng vào cơ chế truyền thông điệp trên đồ thị hay không, chúng tôi sử dụng thêm một Pairwise Node MLP không có graph convolution. Mô hình sử dụng cùng đặc trưng tract, cùng gravity prior và cùng decoder cặp OD như baseline neural chính, nhưng mỗi tract được mã hóa độc lập trước khi dự báo luồng.
+Pairwise Node MLP được sử dụng để tách ảnh hưởng của cơ chế truyền thông điệp trên đồ thị. Mô hình sử dụng cùng đặc trưng tract, cùng gravity prior và cùng decoder cặp OD như baseline neural chính, nhưng mỗi tract được mã hóa độc lập trước khi dự báo luồng.
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
@@ -202,41 +202,34 @@ Khoảng tin cậy 95% được ước lượng bằng paired nonparametric boot
 
 ## 4.1. Việc sử dụng $Y_D$ có cải thiện tái tạo OD so với baseline zero-shot giữ nguyên tham số hay không?
 
-Trong thí nghiệm chính với Urban GNN, hiệu chỉnh bằng $Y_D$ làm CPC liên vùng tăng trung bình $+0.00354$. Mức cải thiện xuất hiện ở phần lớn thành phố nhưng có độ lớn tuyệt đối nhỏ và không đồng đều giữa các trường hợp. Bảng 2 báo cáo đầy đủ thống kê tổng hợp, còn Hình 2 cho thấy phân bố $\Delta\mathrm{CPC}$ theo thành phố.
- 
- 
+Trong thí nghiệm chính với Urban GNN, hiệu chỉnh bằng $Y_D$ làm CPC liên vùng tăng trung bình $+0.00354$. Mức cải thiện xuất hiện ở phần lớn thành phố nhưng có độ lớn tuyệt đối nhỏ và không đồng đều giữa các trường hợp.
+
 ![Hình 2](figures/fig2_main_per_city.png)
-**Hình 2: Mức cải thiện CPC liên vùng theo từng thành phố từ hiệu chỉnh khoảng cách mục tiêu.** 
- 
+**Hình 2: Mức cải thiện CPC liên vùng theo từng thành phố từ hiệu chỉnh khoảng cách mục tiêu.**
+
 Biểu đồ cột thể hiện $\Delta\mathrm{CPC}_c = \operatorname{CPC}(M_{1,c}) - \operatorname{CPC}(M_{0,c})$ trên 50 thành phố, xếp từ thấp đến cao. Đường nét đứt biểu diễn mức cải thiện trung bình và đường chấm biểu diễn trung vị.
- 
- 
- 
-### Bảng 2: Benchmark chính với Urban GNN (N=50,K=8)
- 
-| Điều kiện thực nghiệm | CPC liên vùng TB | Trung vị CPC | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Tỷ lệ thành phố thắng | Wilcoxon $p$ (Hai phía) |
+
+### Bảng 2: Benchmark chính với Urban GNN ($N=50$, $K=8$)
+
+| Điều kiện thực nghiệm | CPC liên vùng TB | Trung vị CPC | $\Delta\mathrm{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Tỷ lệ thành phố thắng | Wilcoxon $p$ (Hai phía) |
 |---|---|---|---|---|---|---|
 | **Baseline zero-shot giữ nguyên tham số ($M_0$)** | $0.71281 \pm 0.04434$ | $0.71632$ | — | — | — | — |
 | **Dự báo sau hiệu chỉnh ($M_1$)** | $0.71635 \pm 0.04454$ | $0.71988$ | **$+0.00354$** | **$[+0.0026, +0.0045]$** | **45 / 50 (90.0%)** | $\mathbf{1.93 \times 10^{-9}}$ |
- 
- 
- 
- 
+
 ## 4.2. Mức cải thiện có thực sự đặc thù theo thành phố mục tiêu và có ý nghĩa cấu trúc hay không?
- 
-Các đối chứng placebo cho thấy lợi ích của hiệu chỉnh phụ thuộc vào thông tin đặc thù của thành phố mục tiêu: $Y_D$ target-specific vượt các phân phối donor được dose-match. Khi thứ tự các bin bị hoán vị, lợi ích không còn duy trì và hiệu năng giảm, cho thấy cấu trúc gắn giữa tỷ trọng luồng và khoảng cách là cần thiết. Các so sánh định lượng được trình bày trong Bảng 3 và Hình 3.
- 
- 
+
+Các đối chứng placebo cho thấy lợi ích của hiệu chỉnh phụ thuộc vào thông tin đặc thù của thành phố mục tiêu: $Y_D$ target-specific vượt các phân phối donor được dose-match. Khi thứ tự các bin bị hoán vị, lợi ích không còn duy trì và hiệu năng giảm, cho thấy cấu trúc gắn giữa tỷ trọng luồng và khoảng cách là cần thiết.
+
 ![Hình 3](figures/fig5_structural_validity_placebo.png)
-**Hình 3: Các đối chứng placebo khớp liều lượng công bằng.** 
- 
+**Hình 3: Các đối chứng placebo khớp liều lượng công bằng.**
+
 Hình 3. Đối chứng về tính đặc thù mục tiêu và cấu trúc khoảng cách. Hình so sánh $\Delta\mathrm{CPC}$ của target $Y_D$, dose-matched donor và permuted $Y_D$ trên 50 thành phố. Thanh sai số biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
 
 
 
 ### Bảng 3: Tính đặc thù mục tiêu và các đối chứng Placebo ($N=50$)
 
-| Experimental Condition | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Benefit vs $M_0$ ($p_{\text{2-sided}}$) | Specificity Gain vs Placebo | Specificity 95% CI | Target vs Placebo ($p_{\text{1-sided}}$) | Target-specific win rate ($\text{Target } Y_D > \text{Placebo}$) |
+| Experimental Condition | $\Delta\mathrm{CPC}$ trung bình | Khoảng tin cậy 95% (Phân tầng) | Benefit vs $M_0$ ($p_{\text{2-sided}}$) | Specificity Gain vs Placebo | Specificity 95% CI | Target vs Placebo ($p_{\text{1-sided}}$) | Target-specific win rate ($\text{Target } Y_D > \text{Placebo}$) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs $M_0$)** |
 | **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46 / 50 (92.0%)** |
@@ -248,14 +241,14 @@ Hình 3. Đối chứng về tính đặc thù mục tiêu và cấu trúc kho�
 
 ## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
 
-Chúng tôi đánh giá sự thay đổi của $\Delta\mathrm{CPC}$ theo số khoảng khoảng cách $K$ và theo mức sai số Total Variation được bổ sung vào $Y_D$, lần lượt đại diện cho độ phân giải và chất lượng của quan sát.
+Độ phân giải và chất lượng quan sát được đánh giá lần lượt thông qua số khoảng \(K\) và mức nhiễu Total Variation bổ sung vào \(Y_D\).
 
 
 Mức cải thiện tăng theo độ phân giải khoảng cách trong toàn bộ dải $K$ được đánh giá, từ các phân hoạch thô đến các cấu hình chi tiết hơn. Tuy nhiên, tốc độ tăng có xu hướng chậm lại khi $K$ lớn, cho thấy lợi ích biên giảm dần. 
 
 ### Bảng 4: Độ mở rộng của độ phân giải thông tin qua các khoảng khoảng cách
 
-| Độ phân giải ($K$) | CPC liên vùng TB | Trung vị CPC | $\Delta\text{CPC}$ trung bình | Trung vị $\Delta\text{CPC}$ | Khoảng tin cậy 95% (Phân tầng) | Tỷ lệ thành phố thắng |
+| Độ phân giải ($K$) | CPC liên vùng TB | Trung vị CPC | $\Delta\mathrm{CPC}$ trung bình | Trung vị $\Delta\mathrm{CPC}$ | Khoảng tin cậy 95% (Phân tầng) | Tỷ lệ thành phố thắng |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Baseline ($M_0$)** | $0.71281 \pm 0.04434$ | $0.71632$ | — | — | — | — |
 | **$K = 2$** | $0.71379 \pm 0.04441$ | $0.71665$ | **$+0.00098$** | $+0.00034$ | $[+0.00052, +0.00151]$ | **39 / 50 (78.0%)** |
@@ -273,7 +266,7 @@ Mức cải thiện tăng theo độ phân giải khoảng cách trong toàn b�
 
 
 ![Hình 4](figures/fig3_resolution_sensitivity.png)
-Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách $K$. Đường biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố theo các mức $K$; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
+**Hình 4. Độ nhạy của mức cải thiện theo số khoảng khoảng cách $K$.** Đường biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố theo các mức $K$; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% phân tầng theo fold.
 
 Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nhiều county, hiệu chỉnh cấp county cải thiện so với hiệu chỉnh cấp thành phố tại 9/11 trường hợp. Tuy nhiên, mức tăng bổ sung pooled trên toàn bộ 50 vùng đô thị chỉ là $\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014$, vì 39 vùng single-county tạo ra hai phân hoạch tương đương về mặt toán học. Do đó, kết quả này không được xem là bằng chứng tổng quát rằng tăng độ phân giải không gian sẽ cải thiện hiệu năng; chi tiết được trình bày trong Phụ lục S7.
 
@@ -282,7 +275,7 @@ Trong một phân tích thăm dò trên 11 vùng đô thị trải rộng qua nh
 
 
 ![Hình 5](figures/fig4_noise_dose_response.png)
-Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation. Đường biểu diễn mean $\Delta\mathrm{CPC}$ theo mức sai số TV; đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức tương đương baseline, đường đứt nét thẳng đứng biểu thị điểm giao cắt thực nghiệm và dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%.
+**Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation.** Đường biểu diễn mean $\Delta\mathrm{CPC}$ theo mức sai số TV; đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức tương đương baseline, đường đứt nét thẳng đứng biểu thị điểm giao cắt thực nghiệm và dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%.
 
 $\Delta\mathrm{CPC}$ giảm đơn điệu khi mức nhiễu tăng và đi qua mức tương đương baseline tại khoảng $\epsilon_{\mathrm{cross}}\approx4.44\%$ TV (CI 95%: $[4.16\%, 4.77\%]$). Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu đã sử dụng, không phải mức dung sai phổ quát.
 
@@ -294,7 +287,7 @@ Mức cải thiện vẫn dương trên cả ba model seeds, với mean $\Delta\
 
 ### Bảng 5: Tính tổng quát trên các kiến trúc backbone ($N=50$ thành phố, $K=8$ khoảng)
 
-| Kiến trúc backbone | $\Delta\text{CPC}$ trung bình | Khoảng tin cậy 95% Bootstrap | Tỷ lệ thành phố thắng |
+| Kiến trúc backbone | $\Delta\mathrm{CPC}$ trung bình | Khoảng tin cậy 95% Bootstrap | Tỷ lệ thành phố thắng |
 |:---|:---:|:---:|:---:|
 | **Urban GNN (Truyền thông điệp)**  | **$+0.00354$** | $[+0.0026, +0.0045]$ | **45 / 50 (90.0%)** |
 | **Node MLP (Không truyền thông điệp đồ thị)**  | **$+0.00329$** | $[+0.0025, +0.0042]$ | **47 / 50 (94.0%)** | 
@@ -302,7 +295,7 @@ Mức cải thiện vẫn dương trên cả ba model seeds, với mean $\Delta\
 
 Ghi chú: Hai neural baseline được tổng hợp qua ba model seeds. Gravity được ước lượng chỉ trên các thành phố huấn luyện của từng fold và không sử dụng luồng của thành phố kiểm tra.
 
-Mức tăng được tái hiện trên cả Urban GNN và Node MLP, trong khi Gravity cho hiệu ứng nhỏ hơn; do đó bằng chứng robustness theo kiến trúc hiện chỉ hỗ trợ hai neural backbone đã đánh giá, không nên khái quát cho mọi họ mô hình.
+Mức tăng được tái hiện trên cả Urban GNN và Node MLP, trong khi Gravity cho hiệu ứng nhỏ hơn; do đó bằng chứng về độ bền theo kiến trúc hiện chỉ hỗ trợ hai neural backbone đã đánh giá và không nên khái quát cho mọi họ mô hình.
 
 
 ## 4.5. Mức sai lệch phân phối khoảng cách của baseline có liên hệ mạnh với mức cải thiện hiệu chỉnh theo thành phố
@@ -311,21 +304,21 @@ Sai lệch phân phối khoảng cách ban đầu của baseline có liên hệ 
 
 
 ![Hình 6](figures/fig6_mechanistic_dpre.png)
-Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức cải thiện sau hiệu chỉnh. $d_{\mathrm{pre}}$ là Total Variation giữa phân phối khoảng cách của baseline và ground truth; đường biểu diễn quan hệ tuyến tính ước lượng trên 50 thành phố.
+**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức cải thiện sau hiệu chỉnh.** $d_{\mathrm{pre}}$ là Total Variation giữa phân phối khoảng cách của baseline và ground truth; đường biểu diễn quan hệ tuyến tính ước lượng trên 50 thành phố.
 
 
 # Mục 5: Thảo luận chuyên sâu
 
 ### 5.1. Giá trị thông tin và cơ chế hiệu chỉnh của $Y_D$
-	​
+
 Việc $Y_D$ vẫn cải thiện dự báo sau khi baseline đã sử dụng bối cảnh đô thị và khoảng cách giữa các cặp vùng cho thấy các thông tin này chưa suy diễn đầy đủ cách tổng khối lượng di chuyển của từng thành phố mục tiêu được phân bổ theo cự ly. Vì baseline không được cập nhật tham số trong bước hiệu chỉnh, phần cải thiện này được diễn giải như giá trị thông tin bổ sung của $Y_D$, thay vì lợi ích từ fine-tuning hoặc huấn luyện lại.
 
 Cấu trúc của phép hiệu chỉnh đồng thời giới hạn rõ loại sai lệch mà $Y_D$ có thể xử lý. Tín hiệu này cung cấp thông tin về cách tổng khối lượng luồng nên được phân bổ giữa các dải cự ly, nhưng không cung cấp thêm thông tin để phân biệt các cặp OD nằm trong cùng một khoảng khoảng cách.
 
-Do đó, $Y_D$ chủ yếu có khả năng sửa các sai lệch between-bin, khi baseline phân bổ chưa đúng khối lượng giữa các dải cự ly. Ngược lại, nếu sai số chủ yếu nằm ở mức within-bin, tức là ở cách phân bổ luồng giữa các cặp OD có khoảng cách tương tự, $Y_D$ không trực tiếp chứa thông tin để khắc phục sai lệch đó. Mối liên hệ quan sát giữa sai lệch phân bổ khoảng cách ban đầu và mức cải thiện theo thành phố phù hợp với cơ chế này, nhưng không được diễn giải như bằng chứng nhân quả.
+Do đó, \(Y_D\) chủ yếu có khả năng sửa các sai lệch giữa các khoảng (between-bin), khi baseline phân bổ chưa đúng khối lượng giữa các dải cự ly. Ngược lại, nếu sai số chủ yếu nằm trong cùng một khoảng (within-bin), tức là ở cách phân bổ luồng giữa các cặp OD có khoảng cách tương tự, \(Y_D\) không trực tiếp chứa thông tin để khắc phục sai lệch đó.. Mối liên hệ quan sát giữa sai lệch phân bổ khoảng cách ban đầu và mức cải thiện theo thành phố phù hợp với cơ chế này, nhưng không được diễn giải như bằng chứng nhân quả.
 
 ### 5.2. Các điều kiện chi phối giá trị của $Y_D$
-	​
+
 Mẫu hình theo độ phân giải gợi ý rằng giá trị của $Y_D$ phụ thuộc vào mức độ chi tiết mà cấu trúc cự ly của thành phố mục tiêu được quan sát. Tuy nhiên, lợi ích biên giảm ở các phân hoạch mịn cho thấy phần lớn thông tin bổ sung có thể đã được nắm bắt ở mức cấu trúc cự ly tương đối thô.
 
 Độ phân giải và chất lượng quan sát là hai thuộc tính khác nhau. Tăng độ phân giải làm giàu cấu trúc được biểu diễn, trong khi nhiễu làm suy giảm độ tin cậy của chính cấu trúc đó. Sự suy giảm lợi ích khi $Y_D$ bị nhiễu cho thấy tín hiệu này chỉ hữu ích khi nó phản ánh đủ chính xác phân bổ luồng theo cự ly của thành phố mục tiêu.
@@ -333,7 +326,7 @@ Mẫu hình theo độ phân giải gợi ý rằng giá trị của $Y_D$ phụ
 Ngoài độ chính xác, ý nghĩa của $Y_D$ còn phụ thuộc vào việc các tỷ trọng được gắn đúng với các khoảng khoảng cách tương ứng. Việc hoán vị các thành phần phá vỡ lợi ích cho thấy $Y_D$ không chỉ là một vector tỷ trọng, mà là một mô tả có cấu trúc theo cự ly. Đồng thời, các đối chứng donor cho thấy phần thông tin hữu ích mang tính đặc thù theo thành phố, thay vì chỉ phản ánh một prior suy giảm theo khoảng cách chung có thể chuyển trực tiếp giữa các đô thị.
 
 ## 5.3. Ý nghĩa phương pháp luận và phạm vi ứng dụng
-Các mô hình như Deep Gravity và UGNN cho thấy neural networks có thể học các quy luật mobility có khả năng chuyển giao từ dữ liệu nguồn [@simini2021deepgravity; @guo2025ugnn]. Kết quả của nghiên cứu này bổ sung rằng một quan sát tổng hợp của miền mục tiêu có thể cung cấp thông tin hiệu chỉnh cho một mô hình cross-city đã huấn luyện mà không cần cập nhật tham số. Tuy nhiên, điều này chưa chứng minh tính khả thi triển khai, vì \(Y_D\) ở đây là oracle và phép hiệu chỉnh chỉ hoạt động trên tập hỗ trợ đã biết.
+Các mô hình như Deep Gravity và UGNN cho thấy neural networks có thể học các quy luật mobility có khả năng chuyển giao từ dữ liệu nguồn [@simini2021deepgravity; @guo2025ugnn]. Kết quả của nghiên cứu này bổ sung rằng một quan sát tổng hợp của miền mục tiêu có thể cung cấp thông tin hiệu chỉnh cho một mô hình cross-city đã huấn luyện mà không cần cập nhật tham số. Tuy nhiên, điều này chưa chứng minh tính khả thi triển khai, vì $Y_D$ ở đây là oracle và phép hiệu chỉnh chỉ hoạt động trên tập hỗ trợ đã biết.
 
 
 ## 5.4. Các giới hạn của nghiên cứu
@@ -342,13 +335,11 @@ Mobility datasets có thể chứa sai lệch về độ phủ, tính đại di�
 
 Phân tích county-level chỉ mang tính thăm dò. Chỉ 11 vùng đô thị trong benchmark tạo ra phân hoạch multi-county thực sự, trong khi 39 trường hợp còn lại tương đương với hiệu chỉnh cấp thành phố. Hơn nữa, county là ranh giới hành chính và có thể không phản ánh đúng các vùng di chuyển chức năng. Vì vậy, kết quả này không hỗ trợ một claim tổng quát về lợi ích của độ phân giải không gian chi tiết hơn.
 
-$Y_D$ được trích từ chính target ground-truth OD, nên chưa chứng minh hiệu quả với quan sát được thu thập độc lập.
-
-Evaluation chỉ diễn ra trên known positive support, không xử lý zero flows hoặc link discovery.
+Hai giới hạn trực tiếp của thiết kế là \(Y_D\) được trích từ ground-truth OD của thành phố mục tiêu thay vì nguồn quan sát độc lập, và việc đánh giá chỉ diễn ra trên tập hỗ trợ dương đã biết nên không xử lý zero flows hay link discovery.
 
 ## 5.5. Các định hướng nghiên cứu tương lai
 
-Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các hướng nghiên cứu gần đây cũng nhấn mạnh giá trị của việc kết hợp mechanistic mobility models với các phương pháp học máy có khả năng mở rộng và diễn giải [@pappalardo2023future]. Future work có thể đánh giá các nguồn quan sát tổng hợp độc lập, đơn vị địa lý, điều kiện truy cập và mức độ phù hợp được xác lập—nhưng nghiên cứu hiện tại chưa sử dụng telemetry bên ngoài.
+Một hướng phát triển tự nhiên là kết hợp $Y_D$ với các ràng buộc tổng hợp khác, chẳng hạn tổng outflow theo origin hoặc tổng inflow theo destination. Các mô hình spatial interaction cổ điển cung cấp nền tảng cho việc áp dụng đồng thời các ràng buộc sản sinh, thu hút và impedance [@wilson1971family; @ortuzar2011modelling]. Các hướng nghiên cứu gần đây cũng nhấn mạnh giá trị của việc kết hợp mechanistic mobility models với các phương pháp học máy có khả năng mở rộng và diễn giải [@pappalardo2023future]. Nghiên cứu tiếp theo có thể đánh giá các nguồn quan sát tổng hợp độc lập, các đơn vị địa lý khác nhau và điều kiện thu thập thực tế; nghiên cứu hiện tại chưa sử dụng nguồn quan sát bên ngoài.
 
 # 6. Kết luận
 
@@ -463,7 +454,7 @@ Trong quá trình huấn luyện, log-likelihood của ZTNB được tính toán
 
 * Tham số trung bình cơ sở được chặn dưới: $\mu_{c,ij} = \operatorname{softplus}(\log T_{c,ij}^{\mathrm{grav}} + \operatorname{residual}_{c,ij}) + 10^{-4}$.
 * Tham số phân tán được chặn trong không gian log: $\log \phi_{\mathrm{safe}} = \operatorname{clamp}(\log \phi, \text{min}=-10.0, \text{max}=10.0)$, sau đó $\phi = \exp(\log \phi_{\mathrm{safe}})$.
-* Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit; xác suất tại 0 được chuẩn hóa số học qua $\log(1 - P_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log P_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - P_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
+* Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit; xác suất tại 0 được chuẩn hóa số học qua $\log(1 - P_{\mathrm{NB}}(0)) = \mathrm{log1p}(-\exp(\log P_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - P_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
 * Gradient của toàn bộ tham số mô hình được cắt theo chuẩn Euclid tối đa: $\|\mathbf{g}\|_2 \le 5.0$ thông qua `torch.nn.utils.clip_grad_norm_`.
 
 
@@ -575,9 +566,9 @@ $$
 \overline{t}_c = \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} t_{c,ij}, \qquad \operatorname{NRMSE}_c = \frac{\operatorname{RMSE}_c}{\overline{t}_c}.
 $$
 
-4. **RMSE trên thang log ($\operatorname{RMSE}_{\log 1p}$)**:
+4. **RMSE trên thang log ($\operatorname{RMSE}_{\mathrm{log1p}}$)**:
 $$
-\operatorname{RMSE}_{\log 1p,c} = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl[ \log(1+t_{c,ij}) - \log(1+\widehat{t}_{c,ij}) \bigr]^2 }.
+\operatorname{RMSE}_{\mathrm{log1p},c} = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl[ \log(1+t_{c,ij}) - \log(1+\widehat{t}_{c,ij}) \bigr]^2 }.
 $$
 
 5. Hệ số tương quan hạng Spearman $\rho_{\mathrm{Spearman},c}$: đo mức độ tương quan đơn điệu giữa các cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị thứ hạng phù hợp hơn.
@@ -683,7 +674,7 @@ Trong số 50 vùng đô thị của benchmark, có đúng 39 vùng single-count
 Trên toàn bộ 50 vùng đô thị, mức tăng bổ sung pooled từ hiệu chỉnh cấp county so với hiệu chỉnh cấp thành phố là rất nhỏ:
 
 $$
-\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95\% CI } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
+\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95% CI } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
 $$
 
 
@@ -696,7 +687,7 @@ Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-cou
 
 ### Bảng S1: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
 
-*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M1_{\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M1_{\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c}=\mathrm{CPC}(M1_{\mathrm{county}})-\mathrm{CPC}(M1_{\mathrm{city}})$. Các giá trị là ước lượng mô tả ở cấp city. Không báo cáo khoảng tin cậy hoặc kiểm định giả thuyết cho subgroup nếu không có artifact bất định riêng đã được xác minh.*
+*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M1_{\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M1_{\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M1_{\mathrm{county}}) - \operatorname{CPC}(M1_{\mathrm{city}})$. Các giá trị là ước lượng mô tả ở cấp city. Không báo cáo khoảng tin cậy hoặc kiểm định giả thuyết cho subgroup nếu không có artifact bất định riêng đã được xác minh.*
 
 | Thành phố | Số county gốc | $M_0$ CPC | $M1_{\mathrm{city}}$ CPC | $M1_{\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res}}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|

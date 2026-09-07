@@ -386,6 +386,9 @@ def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
     # Match $...$ where $ is not preceded by backslash and content is not empty
     protected = re.sub(r"(?<!\\)\$(?!\s)(.+?)(?<!\s)(?<!\\)\$", inline_math_replacer, protected)
 
+    # Match \(...\) where content is not empty
+    protected = re.sub(r"\\\((.+?)\\\)", inline_math_replacer, protected)
+
     # 3. Convert markdown to HTML
     html = markdown.markdown(
         protected,
