@@ -171,7 +171,7 @@ The internal bin edges are defined at the $b/K$ quantiles:
 
 $$a_b = Q_{b/K}\left(\mathcal{D}_{\mathrm{train}}^{(f)}\right), \qquad b = 1, \dots, K-1$$
 
-with $a_0 = 0$ and $a_K = \infty$. Each OD pair contributes exactly one distance observation to quantile estimation, independent of trip count (**pair-weighted quantiles**). Because edges are derived strictly from training cities, test-city data are never used to define distance bins. Duplicate quantile values are removed, so the active number of bins may be strictly less than $K$.
+with $a_0 = 0$ and $a_K = \infty$. Each OD pair contributes exactly one distance observation to quantile estimation, independent of trip count (**pair-weighted quantiles**). Because bin edges are derived only from training cities, test-city data are not used to define the distance bins. Duplicate quantile values are removed, so the active number of bins may be less than $K$.
 
 ---
 
@@ -273,7 +273,7 @@ At inference time on target cities, the model outputs the exact **conditional ex
 
 $$\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} = \mathbb{E}[T_{c,ij} \mid T_{c,ij} \ge 1] = \frac{\mu_{c,ij}}{1 - p_{0,c,ij}}$$
 
-Because $\mu_{c,ij} > 0$ and $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ is a strictly positive real value ($\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} > \mu_{c,ij} > 0$). The formal ZTNB training likelihood, gradient normalization, and optimization setup are established in Section 3.5.6.
+Because $\mu_{c,ij} > 0$ and $p_{0,c,ij} \in (0, 1)$, $\widehat{T}_{c,ij}^{(0,\mathrm{GNN})}$ is a positive real value ($\widehat{T}_{c,ij}^{(0,\mathrm{GNN})} > \mu_{c,ij} > 0$). The formal ZTNB training likelihood, gradient normalization, and optimization setup are described in Section 3.4.6.
 
 ---
 
@@ -350,7 +350,7 @@ Formally, we distinguish three operational roles across the cross-validation par
 3. **Test target cities ($c \in \mathcal{C}_{\mathrm{test}}^{(f)}$)**: Baseline parameters remain frozen. Ground-truth flow intensities $t_{c,ij}$ are never accessed during baseline forward passes; they are accessed solely to construct the oracle aggregate distance observation $\mathbf{Y}_{D,c}$ for the controlled calibration experiment and to evaluate downstream accuracy. Under the evaluated estimand, the positive interzonal support $\Omega_{c,\mathrm{inter}}^+$ of the target city is assumed known.
 
 #### Neural ZTNB objective
-Because training observations are restricted to strictly positive counts ($t_{c,ij} \ge 1$), both neural architectures—the Urban GNN ($m = \text{GNN}$) and the Pairwise Node MLP ($m = \text{MLP}$)—are optimized using the same Zero-Truncated Negative Binomial (ZTNB) likelihood. Let $\theta_m$ denote the trainable parameters of neural backbone $m$ (including node encoder, pairwise decoder, and gravity prior parameters), and let $\phi = \exp(\log \phi) > 0$ denote the global dispersion parameter, where $\log \phi \in \mathbb{R}$ is a shared learnable scalar. 
+Because training observations are restricted to positive counts ($t_{c,ij} \ge 1$), both neural architectures—the Urban GNN ($m = \text{GNN}$) and the Pairwise Node MLP ($m = \text{MLP}$)—are optimized using the same Zero-Truncated Negative Binomial (ZTNB) likelihood. Let $\theta_m$ denote the trainable parameters of neural backbone $m$ (including node encoder, pairwise decoder, and gravity prior parameters), and let $\phi = \exp(\log \phi) > 0$ denote the global dispersion parameter, where $\log \phi \in \mathbb{R}$ is a shared learnable scalar. 
 
 For any city $c \in \mathcal{C}_{\mathrm{train}}^{(f)}$, the network outputs unconstrained base Negative Binomial mean values $\mu_{c,ij}^{(m)} > 0$ for all $(i,j) \in \Omega_{c,\mathrm{inter}}^+$. The base Negative Binomial probability at integer count $t$ is:
 
@@ -387,7 +387,7 @@ where the response vector $\mathbf{y}$ contains elements $y_{c,ij} = \log t_{c,i
 
 $$\widehat{\boldsymbol{\beta}} = \left(\mathbf{X}^T \mathbf{X}\right)^{-1} \mathbf{X}^T \mathbf{y}$$
 
-This parametric objective uses no Poisson likelihood, no iterative gradient descent, no balancing factors ($A_i, B_j$), no origin or destination trip marginals ($O_i, D_j$), and no unobserved pairs. It is fitted once per fold strictly on $\mathcal{C}_{\mathrm{train}}^{(f)}$ and held frozen during evaluation.
+This parametric objective uses no Poisson likelihood, no iterative gradient descent, no balancing factors ($A_i, B_j$), no origin or destination trip marginals ($O_i, D_j$), and no unobserved pairs. It is fitted once per fold using only the training cities and held fixed during evaluation.
 
 ---
 
@@ -397,10 +397,10 @@ This parametric objective uses no Poisson likelihood, no iterative gradient desc
 Both neural predictors (`UrbanGNN` and `NodeMLP`) use the same training procedure. Parameter updates are performed using the AdamW optimizer [@loshchilov2019adamw] (`torch.optim.AdamW`) with an initial learning rate $\eta = 2 \times 10^{-3}$ and decoupled weight decay coefficient $\lambda_{\mathrm{wd}} = 10^{-4}$. Regularization is enforced through the optimizer's decoupled weight decay mechanism; no explicit $\ell_2$ penalty term $\lambda \|\theta\|_2^2$ is added to the loss function. The weight decay value is fixed a priori without grid search. Dropout ($p = 0.1$) and LayerNorm modules embedded within each network layer provide internal architectural regularization during training passes. Optimization operates with full-city batching (passing all $|\Omega_{c,\mathrm{inter}}^+|$ positive interzonal pairs of a city simultaneously per forward/backward step), executing sequential gradient updates across the 35 training cities in each epoch for a maximum budget of 200 epochs. Gradients are clipped to a maximum Euclidean norm of $5.0$ before each parameter update. Network weights are initialized across three independent random seeds $\mathcal{S} = \{1, 10, 100\}$.
 
 #### Gravity parameter estimation
-The two parameters of the classical gravity baseline ($G \in \mathbb{R}$ and $\alpha > 0$) are learned model parameters estimated via Ordinary Least Squares (OLS). They are not regularization hyperparameters. Estimation minimizes the sum of squared log-intensity residuals across the pooled positive interzonal training pairs of $\mathcal{C}_{\mathrm{train}}^{(f)}$ using `np.linalg.lstsq(rcond=None)`. Because this is solved directly by linear least squares, no iterative optimizer, initialization, convergence threshold, or restarts are required. The decay exponent $\alpha$ is unconstrained during fitting and empirically yields $\alpha \approx 1.09 - 1.22 > 0$ across folds. Parameters are fitted once per fold strictly on source training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ and are held frozen during test evaluation.
+The two parameters of the classical gravity baseline ($G \in \mathbb{R}$ and $\alpha > 0$) are learned model parameters estimated via Ordinary Least Squares (OLS). They are not regularization hyperparameters. Estimation minimizes the sum of squared log-intensity residuals across the pooled positive interzonal training pairs of $\mathcal{C}_{\mathrm{train}}^{(f)}$ using `np.linalg.lstsq(rcond=None)`. Because this is solved directly by linear least squares, no iterative optimizer, initialization, convergence threshold, or restarts are required. The decay exponent $\alpha$ is unconstrained during fitting and empirically yields $\alpha \approx 1.09 - 1.22 > 0$ across folds. Parameters are fitted once per fold using only source training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ and are held fixed during test evaluation.
 
 #### Checkpoint selection and validation protocol
-Model selection follows the cross-city validation protocol (35 training, 5 validation, and 10 test cities per fold; see Section 3.6.1 for detailed split definitions). No sub-city, tract-level, or origin-zone cross-validation folds are created within cities, preserving the city-level zero-shot transfer structure:
+Model selection follows the cross-city validation protocol (35 training, 5 validation, and 10 test cities per fold; see Section 3.5.1 for detailed split definitions). No sub-city, tract-level, or origin-zone cross-validation folds are created within cities, preserving the city-level zero-shot transfer structure:
 
 1. **Training Objective vs. Validation Criterion**: The training objective minimized by AdamW on $\mathcal{C}_{\mathrm{train}}^{(f)}$ is the ZTNB negative log-likelihood $\mathcal{L}_{\mathrm{neural}}$. In contrast, checkpoint tracking and early stopping on $\mathcal{C}_{\mathrm{val}}^{(f)}$ are governed by macro-averaged interzonal **Validation CPC** ($\operatorname{CPC}_{\mathrm{val}}$):
    $$\operatorname{CPC}_{\mathrm{val}} = \frac{1}{|\mathcal{C}_{\mathrm{val}}^{(f)}|} \sum_{c \in \mathcal{C}_{\mathrm{val}}^{(f)}} \operatorname{CPC}_c\left(\widehat{\mathbf{T}}_c^{(0,m)}, \mathbf{t}_{c}\right)$$
@@ -433,7 +433,7 @@ During zero-shot target-city inference, target city $c$ provides only permissibl
 | **Calibration strength** | Modulation domain & canonical value | $\mathcal{Q} = [0, 1]$ (canonical $q = 1.0$) | Fixed | Pre-specified analytical default ($M_1$) |
 | **Calibration selection metric**| Calibration parameter rule | Analytical matching ($q = 1.0$; no grid search) | Fixed | Fixed default without test-city tuning |
 | **Alternative distance bins**| Bin granularity sweep | $K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$ | Sensitivity setting | Robustness analysis (Section 4.3) |
-| **Synthetic noise levels** | TV noise magnitude ($\epsilon$) | $\epsilon \in \{0.00, 0.01, 0.02, 0.03, 0.04, 0.05\}$ | Sensitivity setting | Robustness analysis (Section 4.4) |
+| **Synthetic noise levels** | TV noise magnitude ($\epsilon$) | $\epsilon \in \{0.00, 0.01, 0.02, 0.03, 0.04, 0.05\}$ | Sensitivity setting | Sensitivity analysis (Section 4.3) |
 | **Neural model parameters** | Network weights $\theta_m$, dispersion $\log \phi$| Continuous parameter tensors | Learned on training cities | Training partition ($\mathcal{C}_{\mathrm{train}}^{(f)}$) |
 
 *Note: In accordance with the protocol taxonomy, "Fixed" denotes configurations pre-specified before experimentation; "Learned on training cities" denotes quantities optimized strictly on $\mathcal{C}_{\mathrm{train}}^{(f)}$; "Selected on validation cities" denotes model checkpoint choices governed by $\mathcal{C}_{\mathrm{val}}^{(f)}$; and "Sensitivity setting" denotes variations evaluated exclusively in secondary robustness analyses. Test-city flow observations are never used for parameter learning, validation selection, or hyperparameter tuning.*
@@ -442,7 +442,7 @@ During zero-shot target-city inference, target city $c$ provides only permissibl
 
 ### 3.4.8 Target-City Distance-Binned Observation
 
-The distance continuum is partitioned into $K$ intervals $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) using pair-weighted quantiles estimated strictly from training cities ($a_0 = 0, a_K = \infty$). The primary benchmark fixes the number of moving-distance intervals at $K = 8$ a priori (`K_MOVE = 8`). Alternative bin resolutions $K \in \{2, 4, 6, 10, 12, 14, 16, 18, 20\}$ are evaluated exclusively as secondary sensitivity settings in Section 4.3, rather than being selected via validation grid search.
+The distance continuum is partitioned into $K$ intervals $I_b = [a_{b-1}, a_b)$ ($b = 1, \dots, K$) using pair-weighted quantiles estimated using only training cities ($a_0 = 0, a_K = \infty$). The primary benchmark fixes the number of moving-distance intervals at $K = 8$ a priori (`K_MOVE = 8`). Alternative bin resolutions $K \in \{2, 4, 6, 10, 12, 14, 16, 18, 20\}$ are evaluated exclusively as secondary sensitivity settings in Section 4.3, rather than being selected via validation grid search.
 
 For target city $c$, the set of candidate interzonal pairs falling into distance interval $b$ is:
 
@@ -452,7 +452,7 @@ The total observed reference trip volume falling into interval $b$ is $F_{c,b} =
 
 $$\mathbf{Y}_{D,c} = [Y_{D,c,1}, \dots, Y_{D,c,K}]^T \in \Delta^{K-1}, \qquad Y_{D,c,b} = \frac{F_{c,b}}{\sum_{r=1}^K F_{c,r}}, \quad \sum_{b=1}^K Y_{D,c,b} = 1$$
 
-Crucially, $\mathbf{Y}_{D,c}$ is a normalized probability distribution over coarse distance intervals, not a vector of absolute trip volumes. It supplies no individual OD-pair flow quantities. In this benchmark, $\mathbf{Y}_{D,c}$ is extracted directly from target ground-truth flows as an oracle aggregate signal, serving as a controlled probe into the incremental value of aggregate travel patterns. It is supplied strictly at inference time to the calibration operator.
+Crucially, $\mathbf{Y}_{D,c}$ is a normalized probability distribution over coarse distance intervals, not a vector of absolute trip volumes. It supplies no individual OD-pair flow quantities. In this benchmark, $\mathbf{Y}_{D,c}$ is extracted directly from target ground-truth flows as an oracle aggregate signal, serving as a controlled probe into the incremental value of aggregate travel patterns. It is supplied only at inference time to the calibration operator.
 
 ---
 
@@ -553,11 +553,11 @@ where the positive interzonal evaluation domain is formally defined as:
 $$\Omega_{c,\mathrm{inter}}^+ = \left\{ (i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij}\geq1,\ i\neq j,\ d_{c,ij}>0 \right\}.$$
 
 CPC is interpreted here under five evaluation conventions:
-1. **Shared volume proportion**: CPC measures the fraction of travel demand volume jointly shared between the observed ground-truth flow field and the model's predicted intensity surface. It is strictly bounded in $[0, 1]$, where $\operatorname{CPC} = 1$ denotes perfect agreement across all OD pairs and $\operatorname{CPC} = 0$ indicates zero overlap.
-2. **Filtering of intrazonal self-flows and zero-distance pairs**: Intrazonal loops ($i = j$) and pairs with non-positive spatial displacement ($d_{c,ij} \le 0$) are strictly excluded (`pair_o_idx != pair_d_idx` and `dist_km > 0.0`). The benchmark focuses exclusively on displacement flows connecting distinct geographic zones.
+1. **Shared volume proportion**: CPC measures the fraction of travel demand volume jointly shared between the observed ground-truth flow field and the model's predicted intensity surface. It is bounded in $[0, 1]$, where $\operatorname{CPC} = 1$ denotes perfect agreement across all OD pairs and $\operatorname{CPC} = 0$ indicates zero overlap.
+2. **Filtering of intrazonal self-flows and zero-distance pairs**: Intrazonal loops ($i = j$) and pairs with non-positive spatial displacement ($d_{c,ij} \le 0$) are excluded (`pair_o_idx != pair_d_idx` and `dist_km > 0.0`). The benchmark focuses exclusively on displacement flows connecting distinct geographic zones.
 3. **Continuous intensity evaluation**: Model predictions $\widehat{T}_{c,ij} \in (0, \infty)$ represent expected positive intensities under the conditional ZTNB head. Predictions are evaluated as continuous floating-point values without integer discretization or rounding.
 4. **Restriction to positive interzonal support**: CPC is computed over $\Omega_{c,\mathrm{inter}}^+$, evaluating displacement intensity reconstruction conditional on the known positive link support. It does not measure binary classification accuracy or the identification of structural zero-flow pairs.
-5. **Flow normalization and scale preservation**: Zero-shot baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$ are evaluated directly without rescaling to ground-truth total volume $N_c$ (which is unobserved at inference time). The analytical calibration operator strictly preserves the baseline model's total predicted flow volume ($\sum_{(i,j)} \widehat{T}_{c,ij}^{(1)} = \sum_{(i,j)} \widehat{T}_{c,ij}^{(0)}$), so that changes in CPC arise from spatial reallocation across distance intervals rather than changes in total predicted volume.
+5. **Flow normalization and scale preservation**: Zero-shot baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$ are evaluated directly without rescaling to ground-truth total volume $N_c$ (which is unobserved at inference time). The analytical calibration operator preserves the baseline model's total predicted flow volume ($\sum_{(i,j)} \widehat{T}_{c,ij}^{(1)} = \sum_{(i,j)} \widehat{T}_{c,ij}^{(0)}$), so that changes in CPC arise from spatial reallocation across distance intervals rather than changes in total predicted volume.
 
 #### Paired improvement estimand
 For target city $c$, predictor architecture $m$, and model initialization seed $s$, the paired performance change induced by distance calibration is defined as:
@@ -674,7 +674,7 @@ The distance continuum partition is varied across ten granularities:
 
 $$K \in \{2, 4, 6, 8, 10, 12, 14, 16, 18, 20\}$$
 
-For each configuration $K$, bin edges are estimated strictly from training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ using empirical distance quantiles, and the target distribution $\mathbf{Y}_{D,c}^{(K)} \in \Delta^{K-1}$ is extracted. All other components—including frozen baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$, evaluation support $\Omega_{c,\mathrm{inter}}^+$, and ground-truth flows $t_{c,ij}$—remain strictly identical. Distance intervals with zero predicted mass are handled via active support conditioning $\mathcal{A}_c^{(m)}$. Multiple comparisons against the primary anchor ($K = 8$) are adjusted via Holm-Bonferroni correction.
+For each configuration $K$, bin edges are estimated using only training cities $\mathcal{C}_{\mathrm{train}}^{(f)}$ using empirical distance quantiles, and the target distribution $\mathbf{Y}_{D,c}^{(K)} \in \Delta^{K-1}$ is extracted. All other components—including frozen baseline predictions $\widehat{\mathbf{T}}_c^{(0)}$, evaluation support $\Omega_{c,\mathrm{inter}}^+$, and ground-truth flows $t_{c,ij}$—remain unchanged. Distance intervals with zero predicted mass are handled via active support conditioning $\mathcal{A}_c^{(m)}$. Multiple comparisons against the primary anchor ($K = 8$) are adjusted via Holm-Bonferroni correction.
 
 #### Observation-noise robustness
 To determine tolerance to observation inaccuracy, synthetic perturbation is injected into the active target distribution $\mathbf{p}_{\mathrm{active}}$. Perturbations are generated continuously along a random Gaussian vector $\mathbf{z} \in \mathbb{R}^{K_{\mathrm{act}}}$ on the probability simplex using softmax reweighting:
@@ -689,7 +689,7 @@ Evaluations are conducted over a controlled grid of noise magnitudes:
 
 $$\epsilon \in \{0.00, 0.01, 0.02, 0.03, 0.04, 0.05\}$$
 
-This formulation guarantees that perturbed distributions remain valid probability vectors ($p_b \ge 0$, $\sum p_b = 1$) with exact TV displacement. Baseline predictions, evaluation supports, and model parameters are held strictly frozen. The observed empirical crossover threshold is interpreted as a characteristic of the benchmark rather than a universal physical constant.
+This formulation guarantees that perturbed distributions remain valid probability vectors ($p_b \ge 0$, $\sum p_b = 1$) with exact TV displacement. Baseline predictions, evaluation supports, and model parameters are held fixed. The observed empirical crossover threshold is interpreted as a characteristic of the benchmark rather than a universal physical constant.
 
 #### Bin-order permutation
 To test whether calibration depends on the correct association between flow shares and distance intervals, the elements of the active target distribution $\mathbf{p}_{\mathrm{active}}$ are subjected to random permutations across distance bins while keeping distance cutoffs $[a_{b-1}, a_b)$ and baseline predictions unchanged:
@@ -730,7 +730,7 @@ All evaluations are conducted under 5-fold cross-validation across the $N=50$ ev
 
 ## 4.1 Does $Y_D$ improve zero-shot OD reconstruction?
 
-In the primary experiment, incorporating the oracle target-city distance-binned mobility distribution increased the mean interzonal CPC across 50 U.S. cities from 0.71281 for the zero-shot baseline ($M_0$) to 0.71635 after calibration ($M_1$). This corresponds to a mean improvement of $\Delta\mathrm{CPC}=+0.00354$, with a 95% confidence interval of $[+0.0026,+0.0045]$ obtained from the fold-stratified hierarchical bootstrap. Because the entire confidence interval lies above zero, the estimated mean improvement remains positive under the adopted bootstrap procedure.
+In the primary experiment, incorporating the oracle target-city distance-binned mobility distribution increased the mean interzonal CPC across 50 U.S. cities from 0.71281 for the zero-shot baseline ($M_0$) to 0.71635 after calibration ($M_1$). This corresponds to a mean improvement of $\Delta\mathrm{CPC}=+0.00354$, with a 95% confidence interval of $[+0.0026,+0.0045]$ obtained from the fold-stratified city-level nonparametric bootstrap. Because the entire confidence interval lies above zero, the estimated mean improvement remains positive under the adopted bootstrap procedure.
 
 As shown in Figure 2, the improvement was not concentrated in a small subset of cities but was observed across most of the evaluation set. Specifically, CPC increased after calibration in 45 of 50 cities (90.0%). The median city-level change was also positive ($\Delta\mathrm{CPC}=+0.00195$), although the magnitude of improvement varied considerably across cities. The remaining five cities exhibited lower CPC after calibration, indicating that the benefit of target distance information did not occur in every case. Overall, the city-level distribution shows that the improvement was modest in magnitude but broadly consistent across the evaluated cities.
 
@@ -773,7 +773,7 @@ In addition to tests using alternative distributions from other sources, we cond
 
 | Experimental Condition | Mean $\Delta\text{CPC}$ | 95% Fold-Stratified CI | Benefit vs $M_0$ ($p_{\text{2-sided}}$) | Specificity Gain vs Placebo | Specificity 95% CI | Target vs Placebo ($p_{\text{1-sided}}$) | Win Rate ($Target > Placebo$) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1. Oracle Target $Y_D$ (Upper Bound)** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs M0)** |
+| **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs M0)** |
 | **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46 / 50 (92.0%)** |
 | **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47 / 50 (94.0%)** |
 | **4. Raw Test Donors (In-Fold 9-Donor Average, E1)** | **$-0.037721$** | $[-0.04357, -0.03268]$ | $1.78 \times 10^{-15}$ | **$+0.041261$** | $[+0.03641, +0.04688]$ | $8.88 \times 10^{-16}$ | **50 / 50 (100%)** |
@@ -827,7 +827,7 @@ In an exploratory analysis across 11 multi-county metropolitan areas, county-lev
 
 ### 4.3.2 Synthetic observation noise reduces the value of $Y_D$
 
-Having assessed the impact of observational resolution, we next investigate how calibration efficacy depends on the fidelity of $Y_D$. Specifically, we perturb the target city's distance-binned mobility distribution across varying noise levels ($\epsilon \in [0.00, 0.05]$ Total Variation error), while holding the zero-shot baseline model, evaluation test cities, and calibration procedure strictly identical. This design isolates the effect of estimation errors in $Y_D$ from other sources of model variance.
+Having assessed the impact of observational resolution, we next investigate how calibration efficacy depends on the fidelity of $Y_D$. Specifically, we perturb the target city's distance-binned mobility distribution across varying noise levels ($\epsilon \in [0.00, 0.05]$ Total Variation error), while holding the zero-shot baseline model, evaluation cities, and calibration procedure unchanged. This design isolates the effect of estimation errors in $Y_D$ from other sources of model variance.
 
 ---
 
@@ -869,7 +869,7 @@ Deep learning architectures may exhibit variability across training runs due to 
 
 To test this possibility, we evaluate the same 5-fold cross-city protocol across three independent model seeds (Seeds 1, 10, and 100). For each city and seed, the uncalibrated zero-shot baseline $M_0$ is compared directly against its calibrated counterpart $M_1$, after which performance changes are aggregated across seeds. This matched-pairs design directly assesses the impact of $Y_D$ within the same baseline optimization state, isolating the effect of calibration from absolute cross-seed performance variance.
 
-The results in Table 8 demonstrate that the positive performance gain conferred by $Y_D$ is robustly reproduced across all model initializations. Across the three seeds, the mean $\Delta\mathrm{CPC}$ improvement remains consistently positive ($+0.00434$ for Seed 1, $+0.00308$ for Seed 10, and $+0.00320$ for Seed 100), with 95% fold-stratified bootstrap confidence intervals strictly excluding zero in every run ($[+0.00322, +0.00547]$, $[+0.00216, +0.00404]$, and $[+0.00236, +0.00408]$, respectively). City-level win rates remain positive across most cities for all three initializations ($82.0\%$, $88.0\%$, and $88.0\%$). Across all 50 cities, the across-seed standard deviation of mean $\Delta\mathrm{CPC}$ is only $\mathrm{SD} = 0.00070$, and the mean per-city seed variance is $\mathrm{SD}_{\mathrm{city}} = 0.00126$.
+The results in Table 8 demonstrate that the positive calibration gain is reproduced across all three model initializations. Across the three seeds, the mean $\Delta\mathrm{CPC}$ improvement remains consistently positive ($+0.00434$ for Seed 1, $+0.00308$ for Seed 10, and $+0.00320$ for Seed 100), with 95% fold-stratified bootstrap confidence intervals excluding zero in every run ($[+0.00322, +0.00547]$, $[+0.00216, +0.00404]$, and $[+0.00236, +0.00408]$, respectively). City-level win rates remain positive across most cities for all three initializations ($82.0\%$, $88.0\%$, and $88.0\%$). Across all 50 cities, the across-seed standard deviation of mean $\Delta\mathrm{CPC}$ is only $\mathrm{SD} = 0.00070$, and the mean per-city seed variance is $\mathrm{SD}_{\mathrm{city}} = 0.00126$.
 
 ---
 
@@ -1017,7 +1017,7 @@ Because the calibration operator multiplies all predictions within distance bin 
 
 Prior studies demonstrate that low-dimensional aggregate travel statistics can provide valuable structural information for calibrating constrained models. For instance, median travel time can calibrate single-parameter spatial interaction models when sufficient structural network information is known [@merlin2020medians]. The present study differs by employing the full $K$-bin mass proportion vector to directly adjust predicted OD intensities, rather than inferring a single scalar distance parameter.
 
-Across the tested distance-bin granularities ($K\in\{2,4,6,8,10,12,14,16,18,20\}$; Figure 4, Table 6), calibration gain increases with resolution. Even at $K=2$, mean CPC improves by $+0.00098$, rising to $+0.00354$ at $K=8$ (canonical) and $+0.00639$ at $K=20$. However, average gain per bin peaks at $K=4$ ($4.94\times10^{-4}/\text{bin}$) and decreases to $3.19\times10^{-4}/\text{bin}$ at $K=20$. One plausible interpretation is that coarse partitions separate broad mobility regimes, whereas finer intervals impose increasingly localized constraints; this interpretation should be tested directly in future work.
+Across the tested distance-bin granularities ($K\in\{2,4,6,8,10,12,14,16,18,20\}$; Figure 4, Table 6), calibration gain increases with resolution. Even at $K=2$, mean CPC improves by $+0.00098$, rising to $+0.00354$ at $K=8$ (canonical) and $+0.00639$ at $K=20$. The descriptive ratio $\Delta\mathrm{CPC}/K$ is highest at $K=4$ ($4.94\times10^{-4}/\text{bin}$) and declines as $K$ increases (to $3.19\times10^{-4}/\text{bin}$ at $K=20$), suggesting diminishing average gain per added degree of bin resolution. One plausible interpretation is that coarse partitions separate broad mobility regimes, whereas finer intervals impose increasingly localized constraints; this interpretation should be tested directly in future work.
 
 Even at $K=20$, the aggregate observation remains very low-dimensional relative to the number of positive OD pairs ($K / |\Omega_c^+| < 0.1\%$, averaging $\approx 1,757$ positive OD pairs per bin). This result concerns information compression: a low-dimensional summary can still provide structurally useful information for calibration. This dimensionality reduction should not be interpreted as a privacy guarantee. The study does not evaluate re-identification risk, differential privacy, or any release mechanism for $\mathbf{Y}_{D,c}$; therefore, it makes no claim that the aggregate observation is privacy-preserving [@demontjoye2013unique; @houssiau2022differential].
 
