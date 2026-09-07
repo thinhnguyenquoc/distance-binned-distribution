@@ -181,26 +181,36 @@ def generate_figure_s1():
 
     sp_city_map = {row["city"]: row for row in sp_city_data}
 
-    city_gains = []
-    county_gains = []
-    clean_names = []
+    # Sort cities by resolution gain: Delta CPC_res = Delta CPC_county - Delta CPC_city
+    items = []
     for c in mc_cities:
         row = sp_city_map[c]
-        clean_names.append(c.replace("_", " "))
-        city_gains.append(row["delta_cpc_city"])
-        county_gains.append(row["delta_cpc_county"])
+        d_res = row["delta_cpc_county"] - row["delta_cpc_city"]
+        items.append({
+            "name": c.replace("_", " "),
+            "city_gain": row["delta_cpc_city"],
+            "county_gain": row["delta_cpc_county"],
+            "d_res": d_res
+        })
 
-    fig, ax = plt.subplots(figsize=(7.0, 4.0))
+    # Sort descending by d_res (highest gain from county resolution first)
+    items.sort(key=lambda x: x["d_res"], reverse=True)
+
+    clean_names = [it["name"] for it in items]
+    city_gains = [it["city_gain"] for it in items]
+    county_gains = [it["county_gain"] for it in items]
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.2))
     x = np.arange(len(clean_names))
     width = 0.38
-    ax.bar(x - width/2, city_gains, width, label="City-Level $Y_D$", color="#7faed6", edgecolor="#346896", zorder=3)
-    ax.bar(x + width/2, county_gains, width, label="County-Level $Y_D$", color="#1f4e79", edgecolor="#0e2942", zorder=3)
+    ax.bar(x - width/2, city_gains, width, label="City-level", color="#7faed6", edgecolor="#346896", zorder=3)
+    ax.bar(x + width/2, county_gains, width, label="County-level", color="#1f4e79", edgecolor="#0e2942", zorder=3)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(clean_names, rotation=45, ha="right", fontsize=8)
-    ax.set_ylabel("$\\Delta\\mathrm{CPC}$ ($M_1 - M_0$)", fontweight="bold")
-    ax.set_title("Spatial Resolution in Multi-County MSAs ($N=11$)", fontweight="bold", loc="left")
-    ax.legend(loc="upper left", frameon=True)
+    ax.set_xticklabels(clean_names, rotation=45, ha="right", fontsize=8.5)
+    ax.set_ylabel("Calibration gain $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.set_title("City- vs. County-Level Calibration Gain", fontweight="bold")
+    ax.legend(loc="upper right", frameon=True, framealpha=0.9)
     ax.grid(axis="y", linestyle="--", alpha=0.35)
 
     fig.tight_layout()
