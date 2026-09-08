@@ -84,10 +84,8 @@ def compute_pearson_r(t_true, t_pred) -> float:
     t_p = t_pred.detach().cpu().numpy() if isinstance(t_pred, torch.Tensor) else np.asarray(t_pred)
     return compute_pearson_pair(t_t, t_p)
 
-# Training & Experiment
 from src.training.train import train_zero_shot_model, infer_zero_shot
 from src.experiment.run_experiment import run_target_city_experiments
-from src.experiment.compute_qstar import analyze_qstar
 from src.experiment.compute_delta_r import analyze_delta_r
 
 __all__ = [
@@ -131,7 +129,5 @@ __all__ = [
     "train_zero_shot_model",
     "infer_zero_shot",
     "run_target_city_experiments",
-
-    "analyze_qstar",
     "analyze_delta_r",
 ]
