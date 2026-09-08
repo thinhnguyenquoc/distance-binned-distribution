@@ -14,14 +14,13 @@ LOCKED EXPERIMENT CONTRACT
    Do not construct a full zero-filled OD matrix.
 
 2. Target evaluation support:
-   Positive observed interzonal support Omega_c^+:
-       i != j
-       geographic distance > 0
-   All primary CPC claims are on this support.
+   Valid candidate interzonal pairs: P_c = {(i,j) : i != j, dist > 0}
+   Known positive interzonal support Omega_c: {(i,j) in P_c : T_ij >= 1}
+   All primary CPC claims are on Omega_c.
 
 3. Training:
    Current frozen backbone is trained on available positive observed OD pairs.
-   Primary validation/evaluation is interzonal Omega_c^+.
+   Primary validation/evaluation is interzonal Omega_c.
    Do not change training support unless explicitly instructed.
 
 4. Model:
@@ -178,7 +177,7 @@ rather than silently changing the experiment.
 23. Estimand boundary:
    All evaluations are SUPPORT-CONDITIONED.
    The estimand is OD intensity reconstruction conditional on known positive OD support.
-   Formally: predict T_ij > 0 for (i,j) in Omega_c^+.
+   Formally: predict T_ij > 0 for (i,j) in Omega_c.
    This is NOT full N x N matrix reconstruction.
    Do NOT claim "predicts previously unknown OD links" or "reconstructs complete OD matrix."
    Acceptable claim: "support-conditioned OD intensity reconstruction" or

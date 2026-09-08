@@ -97,7 +97,7 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Các biên khoảng được xác định bằng pair-weighted distance quantiles, gộp từ các cặp OD liên vùng của các thành phố huấn luyện trong từng fold; dữ liệu của thành phố kiểm tra không được dùng để xác định biên khoảng. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = [a_{b-1}, a_b)$) được định nghĩa là:
+Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Các biên khoảng được xác định bằng pair-weighted distance quantiles, gộp từ các cặp OD liên vùng của các thành phố huấn luyện trong từng fold; dữ liệu của thành phố kiểm tra không được dùng để xác định biên khoảng. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = (a_{b-1}, a_b]$) được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -641,13 +641,15 @@ $$
 
 2. **Đối chứng Donor Placebo**:
 
-   Training-Mean Donor: Trước hết, phân phối khoảng cách trung bình $\overline{Y}_{D,\mathrm{train}}$ được tính từ toàn bộ các thành phố huấn luyện trong cùng fold. Để bảo đảm so sánh công bằng với điều kiện đặc thù theo thành phố mục tiêu, log-ratio giữa $\overline{Y}_{D,\mathrm{train}}$ và phân phối khoảng cách của baseline được centered và sau đó co giãn để có cùng cường độ can thiệp $D_T$ với target $Y_D$:
-
+   Training-Mean Donor: Trước hết, phân phối khoảng cách trung bình $\overline{Y}_{D,\mathrm{train}}$ được tính từ toàn bộ các thành phố huấn luyện trong cùng fold. Để bảo đảm so sánh công bằng với điều kiện đặc thù theo thành phố mục tiêu, log-ratio giữa $\overline{Y}_{D,\mathrm{train}}$ và phân phối khoảng cách của baseline $\widehat{Y}^{(0)}$ được tính và chuẩn hóa kỳ vọng (centered):
+$$
+\mathbf{r}_M = \log\left(\frac{\overline{Y}_{D,\mathrm{train}}}{\widehat{Y}^{(0)}}\right), \qquad \tilde{\mathbf{r}}_M = \mathbf{r}_M - \frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} r_{M,b}.
+$$
+Vector này sau đó được co giãn để có cùng cường độ can thiệp $D_T$ với target $Y_D$:
 $$
 \tilde{\mathbf{r}}_M^{*} = \tilde{\mathbf{r}}_M \frac{D_T}{D_M},
 $$
-
-   trong đó $D_M = \|\tilde{\mathbf{r}}_M\|_2$ là độ lớn can thiệp ban đầu của Training-Mean. Vector đã dose-match $\tilde{\mathbf{r}}_M^{*}$ sau đó được dùng để xây dựng phân phối hiệu chỉnh theo cùng quy trình như các placebo khác.
+trong đó $D_M = \|\tilde{\mathbf{r}}_M\|_2$ là độ lớn can thiệp ban đầu của Training-Mean và $D_T = \|\tilde{\mathbf{r}}_T\|_2$ là độ lớn can thiệp của target distribution. Vector đã dose-match $\tilde{\mathbf{r}}_M^{*}$ sau đó được dùng để xây dựng phân phối hiệu chỉnh theo cùng quy trình như các placebo khác.
 
 
 
@@ -667,9 +669,9 @@ Tract đích $j$ có thể thuộc cùng county hoặc county khác trong vùng 
 $$
 Y_{c,\ell,b} = \frac{\sum_{(i,j) \in \Omega_{c,\ell}} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_{c,\ell}} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,\ell,b} = 1.
 $$
-Vì dữ liệu đầu vào giới hạn trong tập tract của vùng đô thị do phòng thí nghiệm cung cấp, $\mathbf{Y}_{D,c,\ell}$ mô tả phân phối khoảng cách xuất phát từ các tract thuộc county $\ell$ trong vùng đô thị đó, không đại diện cho toàn bộ di chuyển trên toàn địa bàn county ngoài phạm vi nghiên cứu.
+Vì dữ liệu đầu vào giới hạn trong tập tract của vùng đô thị do phòng thí nghiệm cung cấp, $Y_{D,c,\ell}$ mô tả phân phối khoảng cách xuất phát từ các tract thuộc county $\ell$ trong vùng đô thị đó, không đại diện cho toàn bộ di chuyển trên toàn địa bàn county ngoài phạm vi nghiên cứu.
 
-Mỗi phân phối $\mathbf{Y}_{D,c,\ell}$ được sử dụng để hiệu chỉnh các cặp OD có origin tract thuộc county $\ell$. Sau đó, các dự báo đã hiệu chỉnh từ toàn bộ các nhóm county được tập hợp lại thành dự báo hoàn chỉnh cho vùng đô thị:
+Mỗi phân phối $Y_{D,c,\ell}$ được sử dụng để hiệu chỉnh các cặp OD có origin tract thuộc county $\ell$. Sau đó, các dự báo đã hiệu chỉnh từ toàn bộ các nhóm county được tập hợp lại thành dự báo hoàn chỉnh cho vùng đô thị:
 $$
 \widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \widehat{t}_{c,ij}^{\mathrm{county}} : (i,j) \in \Omega_{c,\ell} \right\},
 $$
@@ -677,7 +679,7 @@ trong đó $\mathcal{G}_c$ là tập hợp các county xuất hiện trong tập
 
 Quan trọng là việc chuyển độ phân giải quan sát từ cấp thành phố sang cấp county không làm thay đổi phạm vi đánh giá: mô hình vẫn tái tạo và được đánh giá trên tập hỗ trợ $\Omega_c$ của vùng đô thị mục tiêu; chỉ có tín hiệu giám sát tổng hợp trong bước hiệu chỉnh trở nên chi tiết hơn theo không gian.
 
-Trong số 50 vùng đô thị của benchmark, có đúng 39 vùng single-county (nơi toàn bộ các tract thuộc cùng một county duy nhất, do đó $\lvert\mathcal{G}_c\rvert = 1$). Với 39 vùng này, phân hoạch theo county hoàn toàn trùng khớp với phân hoạch cấp thành phố, dẫn đến $M1_{\mathrm{county}} \equiv M1_{\mathrm{city}}$ và $\Delta\mathrm{CPC}_{\mathrm{res},c} = 0$ về mặt toán học. Chỉ có 11 vùng đô thị trải rộng qua từ 2 đến 7 county tạo ra phân hoạch mới thực sự.
+Trong số 50 vùng đô thị của benchmark, có đúng 39 vùng single-county (nơi toàn bộ các tract thuộc cùng một county duy nhất, do đó $\lvert\mathcal{G}_c\rvert = 1$). Với 39 vùng này, phân hoạch theo county hoàn toàn trùng khớp với phân hoạch cấp thành phố, dẫn đến $M_{1,\mathrm{county}} \equiv M_{1,\mathrm{city}}$ và $\Delta\mathrm{CPC}_{\mathrm{res},c} = 0$ về mặt toán học. Chỉ có 11 vùng đô thị trải rộng qua từ 2 đến 7 county tạo ra phân hoạch mới thực sự.
 
 ### S7.2. Kết quả
 
@@ -697,9 +699,9 @@ Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-cou
 
 ### Bảng S1: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
 
-*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M1_{\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M1_{\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M1_{\mathrm{county}}) - \operatorname{CPC}(M1_{\mathrm{city}})$. Các giá trị là ước lượng mô tả ở cấp city. Không báo cáo khoảng tin cậy hoặc kiểm định giả thuyết cho subgroup nếu không có artifact bất định riêng đã được xác minh.*
+*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị là ước lượng mô tả ở cấp city. Không báo cáo khoảng tin cậy hoặc kiểm định giả thuyết cho subgroup nếu không có artifact bất định riêng đã được xác minh.*
 
-| Thành phố | Số county gốc | $M_0$ CPC | $M1_{\mathrm{city}}$ CPC | $M1_{\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res}}$ |
+| Thành phố | Số county gốc | $M_0$ CPC | $M_{1,\mathrm{city}}$ CPC | $M_{1,\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res},c}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Kansas City | 3 | 0.721071 | 0.726877 | 0.729612 | +0.005807 | +0.008542 | +0.002735 |
 | New York | 7 | 0.524464 | 0.525775 | 0.527870 | +0.001311 | +0.003407 | +0.002096 |

@@ -94,7 +94,7 @@ The model predicts flow intensities on the positive support $\Omega_c$, and does
 
 ## 3.3. Distance-binned mobility distribution and city-level observation configuration
 
-The main experiments use a single city-level distance-binned mobility distribution. The share of target mobility flow falling in distance interval $b$ ($I_b = [a_{b-1}, a_b)$) is defined as:
+The main experiments use a single city-level distance-binned mobility distribution. The share of target mobility flow falling in distance interval $b$ ($I_b = (a_{b-1}, a_b]$) is defined as:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -630,13 +630,15 @@ $$
 
 2. **Donor placebo control**:
 
-   **Training-Mean Donor:** First, the mean distance distribution $\overline{Y}_{D,\mathrm{train}}$ is computed from all training cities in the same fold. To ensure a fair comparison with the city-specific condition, the log-ratio between $\overline{Y}_{D,\mathrm{train}}$ and the baseline distance distribution is centered and then scaled to have the same intervention magnitude $D_T$ as the target $Y_D$:
-
+   **Training-Mean Donor:** First, the mean distance distribution $\overline{Y}_{D,\mathrm{train}}$ is computed from all training cities in the same fold. To ensure a fair comparison with the city-specific condition, the log-ratio between $\overline{Y}_{D,\mathrm{train}}$ and the baseline distance distribution $\widehat{Y}^{(0)}$ is computed and centered:
+$$
+\mathbf{r}_M = \log\left(\frac{\overline{Y}_{D,\mathrm{train}}}{\widehat{Y}^{(0)}}\right), \qquad \tilde{\mathbf{r}}_M = \mathbf{r}_M - \frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} r_{M,b}.
+$$
+This vector is then scaled to have the same intervention magnitude $D_T$ as the target $Y_D$:
 $$
 \tilde{\mathbf{r}}_M^{*} = \tilde{\mathbf{r}}_M \frac{D_T}{D_M},
 $$
-
-   where $D_M = \|\tilde{\mathbf{r}}_M\|_2$ is the initial intervention magnitude of the Training-Mean donor. The dose-matched vector $\tilde{\mathbf{r}}_M^{*}$ is then used to construct the calibration distribution through the same procedure as the other placebos.
+where $D_M = \|\tilde{\mathbf{r}}_M\|_2$ is the initial intervention magnitude of the Training-Mean donor and $D_T = \|\tilde{\mathbf{r}}_T\|_2$ is the intervention magnitude of the target distribution. The dose-matched vector $\tilde{\mathbf{r}}_M^{*}$ is then used to construct the calibration distribution through the same procedure as the other placebos.
 
 
 ## S7. Exploratory analysis of county-level spatial resolution
@@ -655,9 +657,9 @@ The destination tract $j$ may lie in the same or a different county within the m
 $$
 Y_{c,\ell,b} = \frac{\sum_{(i,j) \in \Omega_{c,\ell}} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_{c,\ell}} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,\ell,b} = 1.
 $$
-Because the inputs are restricted to the tract set of the laboratory-provided metropolitan area, $\mathbf{Y}_{D,c,\ell}$ describes the distance distribution originating from tracts in county $\ell$ within that metropolitan area; it does not represent all movement across the county outside the study scope.
+Because the inputs are restricted to the tract set of the laboratory-provided metropolitan area, $Y_{D,c,\ell}$ describes the distance distribution originating from tracts in county $\ell$ within that metropolitan area; it does not represent all movement across the county outside the study scope.
 
-Each distribution $\mathbf{Y}_{D,c,\ell}$ is used to calibrate OD pairs whose origin tract belongs to county $\ell$. The calibrated predictions from all county groups are then assembled into the complete metropolitan-area prediction:
+Each distribution $Y_{D,c,\ell}$ is used to calibrate OD pairs whose origin tract belongs to county $\ell$. The calibrated predictions from all county groups are then assembled into the complete metropolitan-area prediction:
 $$
 \widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \widehat{t}_{c,ij}^{\mathrm{county}} : (i,j) \in \Omega_{c,\ell} \right\},
 $$
@@ -665,7 +667,7 @@ where $\mathcal{G}_c$ is the set of counties appearing in the data for metropoli
 
 Importantly, changing the observation resolution from city level to county level does not change the evaluation scope: the model still reconstructs and is evaluated on the target metropolitan area's support $\Omega_c$; only the aggregate supervision signal in the calibration step becomes spatially more detailed.
 
-Among the 50 benchmark metropolitan areas, exactly 39 are single-county areas, where all tracts belong to one county and $\lvert\mathcal{G}_c\rvert = 1$. For these 39 areas, the county partition exactly matches the city-level partition, yielding $M1_{\mathrm{county}} \equiv M1_{\mathrm{city}}$ and $\Delta\mathrm{CPC}_{\mathrm{res},c} = 0$ mathematically. Only 11 metropolitan areas spanning 2 to 7 counties produce a genuinely new partition.
+Among the 50 benchmark metropolitan areas, exactly 39 are single-county areas, where all tracts belong to one county and $\lvert\mathcal{G}_c\rvert = 1$. For these 39 areas, the county partition exactly matches the city-level partition, yielding $M_{1,\mathrm{county}} \equiv M_{1,\mathrm{city}}$ and $\Delta\mathrm{CPC}_{\mathrm{res},c} = 0$ mathematically. Only 11 metropolitan areas spanning 2 to 7 counties produce a genuinely new partition.
 
 ### S7.2. Results
 
@@ -683,9 +685,9 @@ For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark,
 
 ### Table S1: Descriptive city-level results for the multi-county spatial-resolution analysis
 
-*The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M1_{\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M1_{\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M1_{\mathrm{county}}) - \operatorname{CPC}(M1_{\mathrm{city}})$. Values are descriptive estimates at the city level. Confidence intervals and hypothesis tests are not reported for the subgroup because no separately verified uncertainty artifact is available.*
+*The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M_{1,\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M_{1,\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Values are descriptive estimates at the city level. Confidence intervals and hypothesis tests are not reported for the subgroup because no separately verified uncertainty artifact is available.*
 
-| City | Number of origin counties | $M_0$ CPC | $M1_{\mathrm{city}}$ CPC | $M1_{\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res}}$ |
+| City | Number of origin counties | $M_0$ CPC | $M_{1,\mathrm{city}}$ CPC | $M_{1,\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res},c}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Kansas City | 3 | 0.721071 | 0.726877 | 0.729612 | +0.005807 | +0.008542 | +0.002735 |
 | New York | 7 | 0.524464 | 0.525775 | 0.527870 | +0.001311 | +0.003407 | +0.002096 |
