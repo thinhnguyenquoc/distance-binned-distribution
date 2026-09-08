@@ -216,7 +216,7 @@ Trong thí nghiệm chính với Urban GNN, hiệu chỉnh bằng $Y_D$ làm CPC
 ![Hình 2](figures/fig2_main_per_city.png)
 **Hình 2: Mức cải thiện CPC liên vùng theo từng thành phố từ hiệu chỉnh khoảng cách mục tiêu.**
 
-Biểu đồ cột thể hiện $\Delta\mathrm{CPC}_c = \operatorname{CPC}(M_{1,c}) - \operatorname{CPC}(M_{0,c})$ trên 50 thành phố, xếp từ thấp đến cao. Đường nét đứt biểu diễn mức cải thiện trung bình và đường chấm biểu diễn trung vị.
+Biểu đồ cột thể hiện $\Delta\mathrm{CPC}_c = \operatorname{CPC}_c(M_1) - \operatorname{CPC}_c(M_0)$ trên 50 thành phố, xếp từ thấp đến cao. Đường nét đứt biểu diễn mức cải thiện trung bình và đường chấm biểu diễn trung vị.
 
 ### Bảng 2: Benchmark chính với Urban GNN ($N=50$, $K=8$)
 
@@ -585,7 +585,7 @@ $$
 \operatorname{RMSE}_{\mathrm{log1p},c} = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl[ \log(1+t_{c,ij}) - \log(1+\widehat{t}_{c,ij}) \bigr]^2 }.
 $$
 
-5. Hệ số tương quan hạng Spearman $\rho_{\mathrm{Spearman},c}$: đo mức độ tương quan đơn điệu giữa các cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị thứ hạng phù hợp hơn.
+5. **Hệ số tương quan hạng Spearman ($\rho_{\mathrm{Spearman}}$)**: đo mức độ tương quan đơn điệu giữa các cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị thứ hạng phù hợp hơn.
 
 6. **Sai số tương đối tổng luồng ($\operatorname{RelError}$)**:
 $$

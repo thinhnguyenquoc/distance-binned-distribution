@@ -54,8 +54,8 @@ This document establishes the locked scientific framing, research questions, hyp
 ### Figure 1: Support-Conditioned Oracle Calibration Framework (Conceptual / Methods)
 - **Panel A (Cross-City Training & Frozen Baseline)**:
   $5\text{ cross-validation folds} \times 35\text{ training cities} \to \text{Frozen } M_0$.
-- **Panel B (Inference on Target Support $\Omega_c^+$)**:
-  Target city features $X_c$ and known positive support $\Omega_c^+$ passed to frozen $M_0 \to \hat{T}^{(0)}$.
+- **Panel B (Inference on Target Support $\Omega_c$)**:
+  Target city features $X_c$ and known positive support $\Omega_c$ passed to frozen $M_0 \to \hat{T}^{(0)}$.
 - **Panel C (Aggregate Target Observation & Intensity Calibration)**:
   Oracle target distance distribution $Y_D$ ($K=8$ bins) $\to$ closed-form mass-preserving scaling operator $s_k \to \hat{T}^{(1)} = s_{b(ij)} \hat{T}^{(0)}$.
 - **Key Visual Message**: Zero parameters trained at inference; support is fixed; calibration strictly rescales intensity across distance bins. The oracle $Y_D$ is derived from target reference flows used for evaluation, not independently collected external telemetry.
@@ -155,5 +155,5 @@ Figures 2--6 are empirical or diagnostic results; Figure 1 is the methods schema
 ## 7. Scope & Boundary Definitions (Non-Negotiable)
 
 1. **Oracle Existence Result**: $Y_D$ is an oracle target observation demonstrating the *information value* of aggregate distance constraints, not an empirical test of a specific real-world sensor.
-2. **Observed Positive Support ($\Omega_c^+$)**: Evaluation is conditioned strictly on observed positive pairs ($i \ne j, D_{ij} > 0, T_{ij} \ge 1$), avoiding sparsity/zero-filling artifacts.
+2. **Known Positive Support ($\Omega_c$)**: Evaluation is conditioned strictly on known positive pairs $\Omega_c = \{(i,j) \in \mathcal{P}_c : T_{ij} \ge 1\}$, where $\mathcal{P}_c$ is the set of all potential candidate pairs, avoiding sparsity/zero-filling artifacts.
 3. **Primary Reported CI**: Duly rounded to 4 decimals everywhere: **$\mathbf{\Delta\text{CPC} = +0.00354 \ [95\%\text{ CI}: +0.0026, +0.0045]}$**.

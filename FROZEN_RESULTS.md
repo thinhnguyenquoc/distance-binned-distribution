@@ -34,7 +34,7 @@ This document serves as the immutable **Single Source of Truth** for all numeric
 ## 2. RQ1: Main Effect (Primary Benchmark)
 
 ### 2.1 Overall Performance ($N=50$ Cities $\times$ 3 Model Seeds, $K=8$)
-- **Domain**: Observed positive interzonal support $\Omega_c^+ = \{(i,j) \in \Omega_c : i \ne j, D_{ij} > 0, T_{ij}^{\text{GT}} \ge 1\}$.
+- **Domain**: Valid candidate interzonal pairs $\mathcal{P}_c = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : i \ne j, D_{ij} > 0\}$; known positive interzonal support $\Omega_c = \{(i,j) \in \mathcal{P}_c : T_{ij}^{\text{GT}} \ge 1\}$.
 - **Cross-City Validation**: 5-fold cross-validation (10 held-out test cities per fold; 35 train / 5 val / 10 test).
 - **Baseline ($M_0$)**: Zero-shot Gravity-Informed Urban GNN: $\text{CPC} = \mathbf{0.71281 \pm 0.04434}$.
 - **Calibrated ($M_1$)**: Target-conditioned inference: $\text{CPC} = \mathbf{0.71635 \pm 0.04454}$.
@@ -89,7 +89,7 @@ This document serves as the immutable **Single Source of Truth** for all numeric
 
 - **Monotonic Total Gain**: $\Delta\text{CPC}$ increases strictly monotonically from $+0.00098$ ($K=2$) to $+0.00639$ ($K=20$).
 - **Marginal Return Profile**: Marginal gain per additional bin increases slightly from $K=2 \to 4$ ($0.000488 \to 0.000494$), then steadily declines beyond $K=4$ down to $0.000319$ at $K=20$.
-- **Aggregation Ratio**: Even at $K=20$, each scalar bin aggregates an average of $\approx 1,757$ OD pairs ($K / |\Omega_c^+| = 0.000569 \ll 1$), maintaining strict macro-level privacy.
+- **Aggregation Ratio**: Even at $K=20$, each scalar bin aggregates an average of $\approx 1,757$ OD pairs ($K / |\Omega_c| = 0.000569 \ll 1$), maintaining strict macro-level privacy.
 
 ---
 
@@ -150,8 +150,8 @@ This document serves as the immutable **Single Source of Truth** for all numeric
 
 ## 7. Mathematical Invariants & Implementation Integrity
 
-1. **Mass Preservation**: Relative error in total predicted interzonal flow $\frac{|\sum_{\Omega_c^+} T_1 - \sum_{\Omega_c^+} T_0|}{\sum_{\Omega_c^+} T_0} \le \mathbf{3.72 \times 10^{-16}}$ across all 50 cities and 3 seeds.
-2. **Support Preservation**: Evaluated support is strictly identical: $\text{supp}(T_1) \equiv \text{supp}(T_0) \equiv \Omega_c^+$. No artificial zero-filling or spurious edge creation.
+1. **Mass Preservation**: Relative error in total predicted interzonal flow $\frac{|\sum_{\Omega_c} T_1 - \sum_{\Omega_c} T_0|}{\sum_{\Omega_c} T_0} \le \mathbf{3.72 \times 10^{-16}}$ across all 50 cities and 3 seeds.
+2. **Support Preservation**: Evaluated support is strictly identical: $\text{supp}(T_1) \equiv \text{supp}(T_0) \equiv \Omega_c$. No artificial zero-filling or spurious edge creation.
 3. **Intra-Bin Rank Invariance**: Because moving-bin scaling applies a strictly positive scalar $s_k > 0$ per distance bin $k$, pair orderings within every bin are mathematically preserved: $\text{Kendall } \tau(T_1|_{\text{bin } k}, T_0|_{\text{bin } k}) = \mathbf{1.00000000}$.
 4. **Calibration Weight Profile**: For all 50 cities, calibration weights satisfy $w_{\min} < 1.0$ (mean $0.7546$, range $[0.224, 0.976]$) and $w_{\max} > 1.0$ (mean $1.3102$, range $[1.017, 3.345]$).
 

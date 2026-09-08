@@ -20,7 +20,7 @@
 ## 1. KẾT QUẢ CHÍNH 50 CITIES (P0)
 
 * **Source file**: `results/5fold_results.json`, `results/e1_canonical_specificity_v2/e1_specificity_results.json`, `results/e1_canonical_specificity_v2/tables/e1_main_table.md`
-* **Field / Function nguồn**: `rq1_delta_r.city`, `summary`, `src.training.evaluate.compute_cpc_pair` trên $\Omega_c^+$
+* **Field / Function nguồn**: `rq1_delta_r.city`, `summary`, `src.training.evaluate.compute_cpc_pair` trên $\Omega_c$
 * **Protocol check**: **PASS**
 
 | Chỉ số / Trường | Giá trị chính xác (Exact Value) | Làm tròn báo cáo | Ghi chú & Đối chiếu |
@@ -34,7 +34,7 @@
 | Win rate | `90.0%` (`45/50`) | `90.0%` | Tỷ lệ thắng áp đảo trên đơn vị đô thị |
 | Mean CPC của `M0` (Baseline) | `0.7128072948832009` | `0.71281 ± 0.04434` | Zero-shot GNN baseline trước hiệu chỉnh |
 | Mean CPC của `M1` (Calibrated) | `0.7163467864335741` | `0.71635 ± 0.04454` | Sau khi hiệu chỉnh với target $Y_D$ |
-| Support đánh giá | $\Omega_c^+ = \{(i,j) : i \ne j, D_{ij} > 0\}$ | $\Omega_c^+$ | Chỉ tính trên các cặp liên vùng quan sát dương |
+| Support đánh giá | $\mathcal{P}_c = \{(i,j) : i \ne j, D_{ij} > 0\}, \ \Omega_c = \{(i,j) \in \mathcal{P}_c : T_{ij} \ge 1\}$ | $\Omega_c$ | Chỉ tính trên các cặp liên vùng quan sát dương |
 
 ### Danh sách các thành phố không cải thiện ($\Delta\text{CPC} \le 0$)
 Trong kết quả seed-averaged chính thức (Urban GNN, $K=8$), có **chính xác 5 thành phố** không cải thiện (tất cả đều có $\Delta\text{CPC} < 0$, không có thành phố nào tie):
@@ -109,7 +109,7 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 * **Overall SD across seeds**:
   - Độ lệch chuẩn của mean $\Delta\text{CPC}$ giữa 3 seeds: **`0.000699`** ($\approx 0.0007$).
   - Mean per-city SD giữa các seeds: **`0.001264`**.
-* **Đồng nhất tập dữ liệu**: Cả 3 seeds đều chạy trên cùng một partition 50 cities (`splits_manifest_v2.json`, SHA256: `7f9afe02725c7798dab018b6a353ed99ceaf6c36a9f77316aa47ea21297ebd14`), cùng tập observed support $\Omega_c^+$.
+* **Đồng nhất tập dữ liệu**: Cả 3 seeds đều chạy trên cùng một partition 50 cities (`splits_manifest_v2.json`, SHA256: `7f9afe02725c7798dab018b6a353ed99ceaf6c36a9f77316aa47ea21297ebd14`), cùng tập observed support $\Omega_c$.
 
 ---
 
@@ -216,7 +216,7 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 
 | Tiêu chí kiểm định | Kết quả kiểm toán thực tế | Trạng thái |
 |---|---|---|
-| Bảo toàn prediction support | 100% giữ nguyên tập index $\Omega_c^+$; chỉ điều chỉnh giá trị flow | **PASS** |
+| Bảo toàn prediction support | 100% giữ nguyên tập index $\Omega_c$; chỉ điều chỉnh giá trị flow | **PASS** |
 | Sinh thêm OD pair mới | Hoàn toàn không sinh thêm bất kỳ OD pair nào | **PASS** |
 | Empty-bin rate ($K=8$) | **`0.0%`** (Tất cả 50 cities đều có đủ $8/8$ active bins) | **PASS** |
 | Số lượng active bins / city | Đúng **`8.0`** trên toàn bộ 50 đô thị | **PASS** |
@@ -235,8 +235,8 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 
 ### Bằng chứng trực tiếp từ Code & Data:
 1. **Missing pair = UNKNOWN**: Dữ liệu nạp từ `data/{city}/pairs/od.csv` chỉ chứa các cặp có ghi nhận luồng thực tế. Ma trận OD không bị zero-filled.
-2. **Evaluation Domain**: Toàn bộ metric chính chỉ tính trên tập observed positive interzonal support:
-   $$\Omega_c^+ = \{(i,j) \in \Omega_c : i \ne j, D_{ij} > 0, T_{ij}^{\text{GT}} \ge 1\}$$
+2. **Evaluation Domain**: Toàn bộ metric chính chỉ tính trên tập observed positive interzonal support $\Omega_c = \{(i,j) \in \mathcal{P}_c : T_{ij}^{\text{GT}} \ge 1\}$, trong đó $\mathcal{P}_c = \{(i,j) : i \ne j, D_{ij} > 0\}$:
+   $$\Omega_c = \{(i,j) : i \ne j, D_{ij} > 0, T_{ij}^{\text{GT}} \ge 1\}$$
 3. **Inference Wiring**: Các mảng `pair_o_idx` và `pair_d_idx` của target city được nạp trực tiếp vào decoder tại thời điểm inference zero-shot. Không có nhầm lẫn thứ tự node hay index.
 4. **Không trộn lẫn zero-negative sampling**: Quá trình kiểm tra Gate 7 và Gate 18 đã xác minh: $100\%$ các cặp trong domain đều có $T_{ij} \ge 1$; intrazonal ($i=j$) và distance $=0$ bị tách biệt nghiêm ngặt.
 5. **Đóng băng Hash**: Toàn bộ 50 file `od.csv` khớp 100% mã SHA256 được khóa tại `results/audit/ordered_support_manifest.json` (Gate 52 PASS).

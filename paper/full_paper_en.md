@@ -205,7 +205,7 @@ In the main experiment with Urban GNN, calibration with $Y_D$ increases cross-ci
 ![Figure 2](figures/fig2_main_per_city.png)
 **Figure 2: Cross-city CPC improvement by city from target-distance calibration.**
 
-The bar chart shows $\Delta\mathrm{CPC}_c = \operatorname{CPC}(M_{1,c}) - \operatorname{CPC}(M_{0,c})$ across 50 cities, ordered from low to high. The dashed line represents the mean improvement and the dotted line represents the median.
+The bar chart shows $\Delta\mathrm{CPC}_c = \operatorname{CPC}_c(M_1) - \operatorname{CPC}_c(M_0)$ across 50 cities, ordered from low to high. The dashed line represents the mean improvement and the dotted line represents the median.
 
 ### Table 2: Main benchmark with Urban GNN ($N=50$, $K=8$)
 
@@ -576,7 +576,7 @@ $$
 \operatorname{RMSE}_{\mathrm{log1p},c} = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl[ \log(1+t_{c,ij}) - \log(1+\widehat{t}_{c,ij}) \bigr]^2 }.
 $$
 
-5. Spearman rank-correlation coefficient $\rho_{\mathrm{Spearman},c}$: measures the monotonic association between observed and predicted intensities on $\Omega_c$. Larger values indicate better rank agreement.
+5. **Spearman rank-correlation coefficient ($\rho_{\mathrm{Spearman}}$)**: measures the monotonic association between observed and predicted intensities on $\Omega_c$. Larger values indicate better rank agreement.
 
 6. **Total-flow relative error ($\operatorname{RelError}$)**:
 $$
