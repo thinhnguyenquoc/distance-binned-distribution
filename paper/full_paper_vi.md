@@ -18,7 +18,7 @@ Nghiên cứu này kiểm tra liệu phân phối di chuyển theo các khoảng
 
 Nghiên cứu tập trung vào hai câu hỏi. Thứ nhất, phân phối di chuyển theo khoảng cách của thành phố mục tiêu có cải thiện tái tạo cường độ OD so với baseline cross-city zero-shot giữ nguyên tham số hay không? Thứ hai, nếu có cải thiện, mức cải thiện đó phụ thuộc như thế nào vào độ phân giải, chất lượng, thứ tự khoảng và tính đặc thù của quan sát mục tiêu?
 
-Trong nghiên cứu này, phân phối được trích xuất từ luồng tham chiếu của chính thành phố mục tiêu và vì vậy được xem là quan sát oracle. Thiết lập này được sử dụng để kiểm tra giá trị thông tin của tín hiệu trước khi xem xét khả năng thu thập hoặc ước lượng nó từ nguồn độc lập.
+Trong nghiên cứu này, thuật ngữ zero-shot chỉ việc mô hình không được cập nhật tham số bằng dữ liệu cường độ OD của thành phố mục tiêu. Tập hỗ trợ liên vùng dương đã biết và quan sát oracle $Y_D$ được sử dụng như các điều kiện đánh giá và can thiệp thông tin riêng biệt, không phải như dữ liệu để huấn luyện lại mô hình.
 
 Nghiên cứu được đánh giá bằng kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị Hoa Kỳ. Mỗi thành phố được đánh giá khi không tham gia huấn luyện, và toàn bộ tham số mô hình được giữ nguyên trước bước hiệu chỉnh.
 
@@ -88,7 +88,7 @@ Trong toàn bài, các cặp ngoài $\Omega_c$ được xem là chưa biết và
 
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = [a_{b-1}, a_b)$) được định nghĩa là:
+Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Các biên khoảng được xác định bằng pair-weighted distance quantiles, gộp từ các cặp OD liên vùng của các thành phố huấn luyện trong từng fold; dữ liệu của thành phố kiểm tra không được dùng để xác định biên khoảng. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = [a_{b-1}, a_b)$) được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -192,7 +192,7 @@ Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được 
 
 ### 3.5.3. Phân tích thống kê và lượng hóa độ bất định
 
-Đối với mỗi thành phố, mức cải thiện được tính từ chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline, sau đó lấy trung bình qua các model seeds và macro-average trên toàn bộ 50 thành phố.
+Đối với mỗi thành phố, mức cải thiện được tính từ chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline, sau đó lấy trung bình qua các model seeds trong từng thành phố và macro-average trên toàn bộ 50 thành phố. Thành phố là đơn vị thống kê ($N=50$); kết quả của ba model seeds được trung bình trước khi thực hiện bootstrap và kiểm định Wilcoxon.
 
 Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold [@efron1993bootstrap]. Các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank hai phía [@wilcoxon1945ranking]. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung. Các phân tích độ nhạy và độ bền tương ứng được trình bày trong Mục 4.
 
@@ -232,14 +232,14 @@ Các đối chứng placebo cho thấy lợi ích của hiệu chỉnh phụ thu
 | **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47 / 50 (94.0%)** |
 | **4. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
 
-Ghi chú: Khoảng tin cậy bootstrap được tính cho mean $\Delta\mathrm{CPC}$, trong khi $p$-value được lấy từ kiểm định Wilcoxon signed-rank trên các chênh lệch ghép cặp cấp thành phố; do đó hai thống kê không kiểm định cùng một đại lượng và không nhất thiết dẫn đến cùng kết luận.
+Ghi chú: Khoảng tin cậy bootstrap được tính cho mean $\Delta\mathrm{CPC}$, trong khi $p$-value trong bảng được lấy từ các kiểm định Wilcoxon signed-rank riêng lẻ trên các chênh lệch ghép cặp cấp thành phố; do đó hai thống kê không kiểm định cùng một đại lượng và không nhất thiết dẫn đến cùng kết luận. Khi diễn giải đồng thời nhiều so sánh, các p-value cần được điều chỉnh Holm–Bonferroni như mô tả trong Phụ lục S5.
 
 
 ## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
 
 Độ phân giải và chất lượng của quan sát $Y_D$ được đánh giá theo ba khía cạnh bổ sung: số lượng khoảng khoảng cách $K$, độ phân giải không gian của tín hiệu tổng hợp, và mức suy giảm chất lượng quan sát do nhiễu. Ba phân tích này đánh giá điều kiện nào chi phối mức thông tin bổ sung mà $Y_D$ cung cấp.
 
-Trước hết, khi tăng số lượng khoảng khoảng cách, mức cải thiện CPC tăng trên toàn bộ dải $K$ được đánh giá. Với phân hoạch thô $K=2$, mean $\Delta\mathrm{CPC}$ chỉ đạt khoảng $+0.00098$, trong khi tại cấu hình chính $K=8$, mức tăng đạt $+0.00354$. Khi tiếp tục tăng độ phân giải đến $K=20$, mean $\Delta\mathrm{CPC}$ đạt $+0.00639$. Tuy nhiên, tốc độ tăng giảm dần khi $K$ lớn hơn, cho thấy lợi ích biên của việc bổ sung thêm độ chi tiết theo khoảng cách có xu hướng suy giảm.
+Trước hết, khi tăng số lượng khoảng khoảng cách, mức cải thiện CPC tăng trên toàn bộ dải $K$ được đánh giá. Với phân hoạch thô $K=2$, mean $\Delta\mathrm{CPC}$ chỉ đạt khoảng $+0.00098$, trong khi tại cấu hình chính $K=8$, mức tăng đạt $+0.00354$. Khi tiếp tục tăng độ phân giải đến $K=20$, mean $\Delta\mathrm{CPC}$ đạt $+0.00639$. Tuy nhiên, sau khoảng $K=4$, lợi ích biên của việc bổ sung thêm độ chi tiết theo khoảng cách có xu hướng giảm dần.
 
 ### Bảng 4: Độ mở rộng của độ phân giải thông tin qua các khoảng khoảng cách
 
@@ -272,7 +272,7 @@ Tách biệt với độ phân giải, chúng tôi tiếp tục đánh giá đ�
 
 $$ \epsilon_{\mathrm{cross}} \approx 4.44\% \text{ TV}, $$
 
-với CI 95% $[4.16\%,\,4.77\%]$. Đây là ngưỡng thực nghiệm riêng cho benchmark và cơ chế gây nhiễu được sử dụng, không nên được diễn giải như một mức dung sai phổ quát.
+với CI 95% $[4.16\%,\,4.77\%]$, được ước lượng từ các hướng nhiễu và phép bootstrap theo giao điểm thực nghiệm của đường mean $\Delta\mathrm{CPC}$ với 0. Đây là ngưỡng riêng cho benchmark và cơ chế gây nhiễu được sử dụng, không nên được diễn giải như một mức dung sai phổ quát.
 
 ![Hình 5](figures/fig4_noise_dose_response.png)
 **Hình 5. Độ nhạy của mức cải thiện theo nhiễu Total Variation.** Điểm biểu diễn mean $\Delta\mathrm{CPC}$ trên 50 thành phố; dải bóng mờ là bootstrap CI 95% phân tầng theo fold. Đường ngang tại $\Delta\mathrm{CPC}=0$ biểu thị mức tương đương baseline, và đường đứt nét đánh dấu điểm giao cắt thực nghiệm $\epsilon_{\mathrm{cross}}\approx4.44\%$.
@@ -340,7 +340,7 @@ Mức cải thiện có độ lớn tuyệt đối nhỏ và nên được hiể
 
 # 7. Tuyên bố về khả năng truy cập dữ liệu và mã nguồn
 
-Bố sung sau
+Bổ sung sau
 
 # 8. Các tuyên bố và cam kết khoa học
 Bổ sung sau
