@@ -26,7 +26,6 @@ This matrix maps every locked architectural and scientific decision from the Int
 | **T20** | Calibration | Soft response: $w_k(q) = (p_k / \hat Y_k)^q$ monotonically bridges $q=0$ to $q=1$ | `test_q_monotonic_soft_response` | `test_kl_calibration.py` | `reference` |
 | **T21** | Calibration | Inactive bin conditioning on moving bins $\{1, 2, 3\}$ when diameter $< 100$ km | `test_inactive_bin_conditioning` | `test_kl_calibration.py` | `reference` |
 | **T22** | $Y_D$ Extraction| $Y_D^{\text{oracle},+}$ interzonal 3-bin distribution on $\Omega_c^+$ (bins $\{1, 2, 3\}$, excluding intrazonal) | `test_yd_moving_oracle_assignment` | `test_yd_and_sampling.py` | `reference` |
-| **T23** | $Y_D$ Extraction| $Y_D^{\text{real},+}$ Meta moving-bin distribution (3 bins, sums to 1.0) | `test_yd_moving_real_meta_sum` | `test_yd_and_sampling.py` | `contract` |
 | **T24** | Distribution | Distributional overlap (Overlap / $CPC_{\text{dist}} = 1 - 0.5 \lVert p - q \rVert_1$) bounded in $[0, 1]$ | `test_distributional_overlap_bounds` | `test_yd_and_sampling.py` | `reference` |
 | **T25** | Sampling | Multinomial sampling produces valid probability distribution | `test_multinomial_sampling_stochastic_validity` | `test_yd_and_sampling.py` | `reference` |
 | **T26** | Sampling | Asymptotic convergence of multinomial sampling to empirical distribution as $m \to \infty$ | `test_multinomial_sampling_asymptotic_convergence` | `test_yd_and_sampling.py` | `reference` |

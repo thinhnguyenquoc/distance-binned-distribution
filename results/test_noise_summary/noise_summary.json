@@ -15,7 +15,7 @@
       "pos_cities": 40,
       "harm_rate": 0.0,
       "mean_degradation": 0.0,
-      "wilcoxon_benefit_raw": 1.2698142947354278e-10,
+      "wilcoxon_benefit_raw": 1.2698142947354283e-10,
       "wilcoxon_degrad_raw": null,
       "relative_effect_pct": 100.0
     },
@@ -31,10 +31,10 @@
       "pos_cities": 40,
       "harm_rate": 0.0,
       "mean_degradation": 0.0075,
-      "wilcoxon_benefit_raw": 1.2698142947354278e-10,
-      "wilcoxon_degrad_raw": 1.2698142947354278e-10,
-      "wilcoxon_benefit_holm": 3.8094428842062835e-10,
-      "wilcoxon_degrad_holm": 3.8094428842062835e-10,
+      "wilcoxon_benefit_raw": 1.2698142947354283e-10,
+      "wilcoxon_degrad_raw": 1.2698142947354283e-10,
+      "wilcoxon_benefit_holm": 3.809442884206285e-10,
+      "wilcoxon_degrad_holm": 3.809442884206285e-10,
       "relative_effect_pct": 85.0
     },
     "0.1": {
@@ -49,10 +49,10 @@
       "pos_cities": 40,
       "harm_rate": 0.0,
       "mean_degradation": 0.015,
-      "wilcoxon_benefit_raw": 1.2698142947354278e-10,
-      "wilcoxon_degrad_raw": 1.2698142947354278e-10,
-      "wilcoxon_benefit_holm": 3.8094428842062835e-10,
-      "wilcoxon_degrad_holm": 3.8094428842062835e-10,
+      "wilcoxon_benefit_raw": 1.2698142947354283e-10,
+      "wilcoxon_degrad_raw": 1.2698142947354283e-10,
+      "wilcoxon_benefit_holm": 3.809442884206285e-10,
+      "wilcoxon_degrad_holm": 3.809442884206285e-10,
       "relative_effect_pct": 70.0
     },
     "0.2": {
@@ -67,10 +67,10 @@
       "pos_cities": 40,
       "harm_rate": 0.0,
       "mean_degradation": 0.03,
-      "wilcoxon_benefit_raw": 1.2698142947354278e-10,
-      "wilcoxon_degrad_raw": 1.2698142947354278e-10,
-      "wilcoxon_benefit_holm": 3.8094428842062835e-10,
-      "wilcoxon_degrad_holm": 3.8094428842062835e-10,
+      "wilcoxon_benefit_raw": 1.2698142947354283e-10,
+      "wilcoxon_degrad_raw": 1.2698142947354283e-10,
+      "wilcoxon_benefit_holm": 3.809442884206285e-10,
+      "wilcoxon_degrad_holm": 3.809442884206285e-10,
       "relative_effect_pct": 40.00000000000001
     }
   }
