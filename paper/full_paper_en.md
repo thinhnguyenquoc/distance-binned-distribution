@@ -62,7 +62,8 @@ Let $c$ be a city and let $\mathcal{V}_c$ be the set of spatial units partitioni
 | $i, j$ | Origin and destination spatial-unit indices | Basic spatial units |
 | $t_{c,ij}$ | Observed mobility-flow intensity ($t_{c,ij} \ge 1$) | Reference data (ground truth) |
 | $d_{c,ij}$ | Distance between the centroids of units $i$ and $j$ (km) | Computed from centroid coordinates (Haversine) |
-| $\Omega_c$ | Known positive interzonal support; see the full definition in Section 3.2. | Known-support assumption |
+| $\mathcal{P}_c$ | Space of all valid interzonal OD pairs ($\mathcal{P}_c = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : i \neq j, d_{c,ij} > 0\}$) | Candidate interzonal pair space |
+| $\Omega_c$ | Known positive interzonal support ($\Omega_c = \{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\}$) | Known-support assumption |
 | $I_b$ | Distance interval $b$ ($b = 1, \dots, K$) | Distance quantile |
 | $K$ | Number of distance intervals ($K = 8$ in the main setting) | Fixed experimental configuration |
 | $Y_{c,b}$ | Target mobility-flow share in interval $b$ ($\sum_{b=1}^K Y_{c,b} = 1$) | Oracle calibration-input data |
@@ -75,13 +76,21 @@ Let $c$ be a city and let $\mathcal{V}_c$ be the set of spatial units partitioni
 
 The experimental data include 50 metropolitan areas in the United States, with tracts as the basic spatial units. Each tract is represented by centroid coordinates and urban features; the data also include distances between tract pairs and observed OD flow intensities. The source and construction process of the benchmark will be fully described according to the original data documentation before submission.
 
-The evaluation scope is restricted to the known positive interzonal support:
+The space of all valid interzonal OD candidate pairs is defined as:
 
 $$
-\Omega_c = \left\{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij} \ge 1,\ i \neq j,\ d_{c,ij} > 0\right\}.
+\mathcal{P}_c = \left\{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : i \neq j,\ d_{c,ij} > 0\right\}.
 $$
 
-Throughout the paper, pairs outside $\Omega_c$ are treated as unknown and are outside the evaluation scope.
+The evaluation scope is strictly restricted to the known positive interzonal support:
+
+$$
+\boxed{
+\Omega_c = \left\{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\right\} = \left\{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij} \ge 1,\ i \neq j,\ d_{c,ij} > 0\right\}.
+}
+$$
+
+The model predicts flow intensities on the positive support $\Omega_c$, and does not address link discovery or zero-flow classification within $\mathcal{P}_c$. Throughout the paper, pairs outside $\Omega_c$ are treated as unknown and are outside the evaluation scope.
 
 ## 3.3. Distance-binned mobility distribution and city-level observation configuration
 
@@ -640,17 +649,17 @@ County boundaries are obtained from the Database of Global Administrative Areas,
 
 Let $g(i)$ be the county assigned to tract $i$. OD pairs are grouped by the **county of the origin tract**:
 $$
-\Omega_{c,\ell}^+ = \left\{(i,j) \in \Omega_c : g(i) = \ell\right\}.
+\Omega_{c,\ell} = \left\{(i,j) \in \Omega_c : g(i) = \ell\right\}.
 $$
 The destination tract $j$ may lie in the same or a different county within the metropolitan area. The distance distribution for origin-county group $\ell$ is defined as:
 $$
-Y_{c,\ell,b} = \frac{\sum_{(i,j) \in \Omega_{c,\ell}^+} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_{c,\ell}^+} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,\ell,b} = 1.
+Y_{c,\ell,b} = \frac{\sum_{(i,j) \in \Omega_{c,\ell}} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_{c,\ell}} t_{c,ij}}, \qquad \sum_{b=1}^K Y_{c,\ell,b} = 1.
 $$
 Because the inputs are restricted to the tract set of the laboratory-provided metropolitan area, $\mathbf{Y}_{D,c,\ell}$ describes the distance distribution originating from tracts in county $\ell$ within that metropolitan area; it does not represent all movement across the county outside the study scope.
 
 Each distribution $\mathbf{Y}_{D,c,\ell}$ is used to calibrate OD pairs whose origin tract belongs to county $\ell$. The calibrated predictions from all county groups are then assembled into the complete metropolitan-area prediction:
 $$
-\widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \widehat{t}_{c,ij}^{\mathrm{county}} : (i,j) \in \Omega_{c,\ell}^+ \right\},
+\widehat{\mathbf{T}}_c^{\mathrm{county}} = \bigcup_{\ell \in \mathcal{G}_c} \left\{ \widehat{t}_{c,ij}^{\mathrm{county}} : (i,j) \in \Omega_{c,\ell} \right\},
 $$
 where $\mathcal{G}_c$ is the set of counties appearing in the data for metropolitan area $c$.
 
