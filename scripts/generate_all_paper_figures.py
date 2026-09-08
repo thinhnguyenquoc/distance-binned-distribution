@@ -89,10 +89,9 @@ def generate_figure2():
                label=f"Median $\\Delta\\mathrm{{CPC}} = +{median_delta:.5f}$", zorder=4)
 
     ax.set_xticks(range(n_cities))
-    ax.set_xticklabels(cities, rotation=90, ha="center", va="top", fontsize=7)
+    ax.set_xticklabels(cities, rotation=90, ha="center", va="top", fontsize=8)
     ax.set_xlim(-0.8, n_cities - 0.2)
-    ax.set_ylabel("$\\Delta\\mathrm{CPC}$ ($M_1 - M_0$)", fontweight="bold")
-    ax.set_title("Zero-Shot OD Reconstruction Gain Across 50 U.S. Metropolitan Areas ($K=8$)", fontweight="bold")
+    ax.set_ylabel(r"$\Delta\mathrm{CPC}$ ($M_1 - M_0$)", fontweight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.35, zorder=1)
     ax.legend(loc="upper left", frameon=True, framealpha=0.9)
 
@@ -100,8 +99,7 @@ def generate_figure2():
     pos_count = np.sum(deltas > 0)
     ax.text(
         0.98, 0.05,
-        f"Positive Gain: {pos_count}/50 ({pos_count/n_cities*100:.0f}%)\n"
-        f"Wilcoxon $p = 1.93 \\times 10^{{-9}}$",
+        f"Positive gain: {pos_count}/50 ({pos_count/n_cities*100:.0f}%)",
         transform=ax.transAxes,
         fontsize=8.5,
         verticalalignment="bottom",
@@ -281,7 +279,6 @@ def generate_figure5():
     ax.set_xticks(range(len(conditions)))
     ax.set_xticklabels(conditions, fontweight="bold")
     ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.set_title("Target Specificity and Bin-Order Controls", fontweight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.35)
 
     # Clean numeric values positioned cleanly above/below the CI error bars
