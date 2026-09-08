@@ -108,12 +108,12 @@ $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố m�
 Ba baseline được đánh giá dưới cùng một giao thức hiệu chỉnh tại thời điểm suy luận. Urban GNN là baseline chính, Pairwise Node MLP là baseline neural bổ sung, và Gravity hai tham số là baseline cổ điển bổ sung để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào kiến trúc mô hình.
 
 
-Urban GNN mã hóa các đặc trưng bối cảnh đô thị của từng tract thông qua một đồ thị không gian, sau đó kết hợp embedding của origin và destination với khoảng cách cặp và một gravity prior để dự báo cường độ luồng OD dương.
+Urban GNN sử dụng hai lớp truyền thông điệp có điều kiện theo khoảng cách với phép tổng hợp trung bình lân cận, LayerNorm, kết nối residual và dropout 0.1. Mỗi tract được biểu diễn bằng 26 đặc trưng đô thị và được chiếu thành embedding 64 chiều. Cường độ OD theo cặp được giải mã từ embedding của origin và destination, log khoảng cách địa lý và gravity prior nội tại hai tham số bằng một MLP $130\!-\!64\!-\!32\!-\!1$. Cần lưu ý quan trọng rằng các hệ số gravity nội tại bên trong kiến trúc neural là các trọng số khả vi được tối ưu hóa đồng thời end-to-end cùng toàn bộ mạng và được lưu trực tiếp trong checkpoint mô hình.
 
 Mô hình được huấn luyện trên các thành phố nguồn của từng fold và toàn bộ tham số được giữ cố định khi suy luận trên thành phố mục tiêu.
 
 
-Một baseline Gravity hai tham số dạng lũy thừa được sử dụng để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào họ mô hình.
+Nghiên cứu cũng xem xét một baseline Gravity hai tham số độc lập (standalone), trong đó cường độ OD tỷ lệ với tích dân số của vùng xuất phát và vùng đích, đồng thời suy giảm theo khoảng cách địa lý. Hệ số quy mô toàn cục và hệ số suy giảm theo khoảng cách của baseline độc lập này được ước lượng riêng biệt trên các thành phố huấn luyện bằng bình phương tối thiểu (OLS) và được giữ cố định trong quá trình suy luận zero-shot, chứ không dùng chung hay lấy từ checkpoint neural. Sau đó, cùng một toán tử hiệu chỉnh giải tích dạng đóng bằng $Y_D$ được áp dụng mà không tái ước lượng mô hình Gravity.
 
 $$
 \widehat{t}^{(0,\mathrm{grav})}_{c,ij} = \exp(G) \frac{P_{c,i} P_{c,j}}{d_{c,ij}^{\alpha}}, \qquad (i,j) \in \Omega_c.
@@ -131,10 +131,10 @@ $$
 d_{c,ij} = \max(\mathrm{dist}_{c,ij}, 0.1\,\text{km}).
 $$
 
-Hai tham số $(G, \alpha)$ được ước lượng bằng pooled log-linear ordinary least squares chỉ trên các thành phố huấn luyện của từng fold và được giữ cố định khi suy luận trên thành phố kiểm tra. Dự báo gravity sau đó được đưa qua cùng toán tử hiệu chỉnh bằng $Y_D$ như các baseline khác.
+Hai tham số $(G, \alpha)$ của baseline cổ điển độc lập này được ước lượng bằng pooled log-linear ordinary least squares chỉ trên các thành phố huấn luyện của từng fold và được giữ cố định khi suy luận trên thành phố kiểm tra. Dự báo gravity sau đó được đưa qua cùng toán tử hiệu chỉnh bằng $Y_D$ như các baseline khác.
 
 
-Pairwise Node MLP được sử dụng để tách ảnh hưởng của cơ chế truyền thông điệp trên đồ thị. Mô hình sử dụng cùng đặc trưng tract, cùng gravity prior và cùng decoder cặp OD như baseline neural chính, nhưng mỗi tract được mã hóa độc lập trước khi dự báo luồng.
+Pairwise Node MLP thay thế hai lớp truyền thông điệp trên đồ thị bằng hai khối MLP residual theo từng node, đồng thời giữ nguyên đầu vào đặc trưng node, embedding 64 chiều, decoder cặp OD, khoảng cách địa lý, gravity prior khả vi được huấn luyện đồng thời, cấu hình tối ưu hóa và tổng số tham số. Do đó, mô hình cô lập đóng góp của cơ chế tổng hợp lân cận dựa trên đồ thị.
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
@@ -436,6 +436,33 @@ Trong quá trình huấn luyện, log-likelihood của ZTNB được tính toán
 * Tham số phân tán được chặn trong không gian log: $\log \phi_{\mathrm{safe}} = \operatorname{clamp}(\log \phi, \text{min}=-10.0, \text{max}=10.0)$, sau đó $\phi = \exp(\log \phi_{\mathrm{safe}})$.
 * Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit; xác suất tại 0 được chuẩn hóa số học qua $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - p_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
 * Gradient của toàn bộ tham số mô hình được cắt theo chuẩn Euclid tối đa: $\|\mathbf{g}\|_2 \le 5.0$ thông qua `torch.nn.utils.clip_grad_norm_`.
+
+### S1.3. Cấu hình siêu tham số kiến trúc và phân tách baseline
+
+Cấu hình siêu tham số chính xác được trích xuất trực tiếp từ các checkpoint mô hình (`results/checkpoints/5fold_*.pt` và `mlp_*.pt`) được tổng hợp trong Bảng S1.
+
+#### Bảng S1: Siêu tham số kiến trúc và huấn luyện của các zero-shot baseline
+| Thành phần | Siêu tham số | Giá trị | Mô tả chi tiết |
+|:---|:---|:---:|:---|
+| **Urban GNN Encoder** | Số chiều đặc trưng đầu vào ($d_{\mathrm{in}}$) | 26 | Đặc trưng nhân khẩu, kinh tế - xã hội của tract |
+| | Số lớp truyền thông điệp (Message passing) | 2 | Khối `GraphConvLayer` có điều kiện khoảng cách |
+| | Cơ chế Attention / Số attention heads | N/A (0) | Tổng hợp lân cận bằng trung bình; không dùng attention |
+| | Chiều ẩn / Chiều đầu ra node embedding | 64 | LayerNorm(64) + ReLU + Dropout |
+| | Xác suất Dropout | 0.1 | Chiếu đầu vào, cập nhật residual, chiếu đầu ra |
+| | Loại đồ thị không gian | Radius graph | Bán kính địa lý $r = 5.0$ km có self-loops |
+| **Pairwise Decoder** | Chiều vector đầu vào | 130 | Ghép $[\mathbf{h}_i \,(64) \parallel \mathbf{h}_j \,(64) \parallel \log(1+d) \,(1) \parallel \log T^{\mathrm{grav}} \,(1)]$ |
+| | Các tầng ẩn | [64, 32] | Tầng 1: 64 (LayerNorm+ReLU+Dropout); Tầng 2: 32 (ReLU+Dropout) |
+| | Tầng đầu ra | 1 | Đầu ra neural residual khởi tạo bằng 0 |
+| | Gravity prior nội tại | $(G, \alpha)$ khả vi | Khởi tạo tại $G_0=0.0, \alpha_0=1.0$; huấn luyện end-to-end qua AdamW |
+| **Tối ưu hóa** | Hàm mục tiêu | ZTNB NLL | Hợp lý Zero-Truncated Negative Binomial |
+| | Thuật toán tối ưu | AdamW | Bước tối ưu city-by-city (city-balanced) |
+| | Tốc độ học ban đầu (Initial LR) | 0.0032 | $3.2 \times 10^{-3}$ |
+| | Hệ số suy giảm trọng số (Weight decay) | 0.0001 | $10^{-4}$ |
+| | Bộ điều chỉnh LR (Scheduler) | ReduceLROnPlateau | Hệ số 0.5, patience 4 epochs, min LR $10^{-5}$ |
+| | Dừng sớm (Early stopping patience) | 16 epochs | Theo dõi trên CPC liên vùng tập validation ($\min \Delta = 10^{-4}$) |
+| | Tổng số tham số mô hình | 33,668 | Giữ đúng số tham số như nhau giữa Urban GNN và Node MLP |
+
+**Ghi chú phân tách tham số:** Hai tham số $(G_{\mathrm{NN}}, \alpha_{\mathrm{NN}})$ của gravity prior nội tại trong các mạng neural là các biến khả vi được tối ưu hóa đồng thời end-to-end cùng toàn bộ mạng qua AdamW và được lưu trữ trực tiếp trong checkpoint. Ngược lại, baseline Gravity hai tham số cổ điển độc lập được ước lượng riêng biệt bằng phương pháp bình phương tối thiểu pooled log-linear OLS trên các thành phố huấn luyện ($G_{\mathrm{OLS}} \approx -8.54, \alpha_{\mathrm{OLS}} \approx 1.66$ trên Fold 1). Hai mô hình này hoàn toàn không dùng chung hay chia sẻ hệ số với nhau.
 
 ## S2. Dạng tổng quát của toán tử hiệu chỉnh giải tích ($q \in [0, 1]$)
 

@@ -102,11 +102,11 @@ $Y_{D,c}$ is aggregated from the ground-truth flow of the target city and used a
 
 Three baselines are evaluated under the same inference-time calibration protocol. Urban GNN is the primary baseline, Pairwise Node MLP is an additional neural baseline, and two-parameter Gravity is an additional classical baseline for assessing the extent to which calibration effectiveness depends on model architecture.
 
-Urban GNN encodes the urban-context features of each tract through a spatial graph, then combines origin and destination embeddings with pairwise distance and a gravity prior to predict positive OD flow intensity.
+The Urban GNN uses two distance-conditioned message-passing layers with mean neighborhood aggregation, LayerNorm, residual connections, and 0.1 dropout. Each tract is represented by 26 urban features projected to a 64-dimensional embedding. Pairwise OD intensity is decoded from the origin and destination embeddings, log geographic distance, and an internal two-parameter gravity prior using a $130\!-\!64\!-\!32\!-\!1$ MLP. Crucially, the internal gravity parameters within the neural architecture are trainable weights optimized end-to-end alongside the network and stored in the model checkpoint.
 
 The model is trained on the source cities of each fold, and all parameters remain fixed when inferring on the target city.
 
-A two-parameter power-law Gravity baseline is used to assess the dependence of calibration effectiveness on the model family.
+We additionally considered a standalone two-parameter classical gravity baseline, in which OD intensity is proportional to the product of origin and destination population and decays with geographic distance. The global scale and distance-decay coefficients for this standalone baseline are estimated on the training cities by ordinary least squares (OLS) and held fixed during zero-shot inference, rather than being shared with the neural checkpoints. The same closed-form $Y_D$ calibration operator was then applied without refitting the gravity model.
 
 $$
 \widehat{t}^{(0,\mathrm{grav})}_{c,ij} = \exp(G) \frac{P_{c,i} P_{c,j}}{d_{c,ij}^{\alpha}}, \qquad (i,j) \in \Omega_c.
@@ -124,9 +124,9 @@ $$
 d_{c,ij} = \max(\mathrm{dist}_{c,ij}, 0.1\,\text{km}).
 $$
 
-The two parameters $(G, \alpha)$ are estimated using pooled log-linear ordinary least squares only on the training cities of each fold and remain fixed when inferring on the test cities. Gravity predictions are then passed through the same $Y_D$ calibration operator as the other baselines.
+The two parameters $(G, \alpha)$ of this standalone classical baseline are estimated using pooled log-linear ordinary least squares only on the training cities of each fold and remain fixed when inferring on the test cities. Gravity predictions are then passed through the same $Y_D$ calibration operator as the other baselines.
 
-Pairwise Node MLP is used to separate the effect of graph message passing. It uses the same tract features, the same gravity prior, and the same pairwise OD decoder as the primary neural baseline, but each tract is encoded independently before flow prediction.
+The MLP control replaces the two graph message-passing layers with two node-wise residual MLP blocks while retaining the same node-feature input, 64-dimensional embeddings, pairwise decoder, geographic distance, trainable gravity prior, optimization settings, and total parameter count. It therefore isolates the contribution of graph-based neighborhood aggregation.
 
 ### 3.4.2. Objective and training configuration
 
@@ -422,6 +422,33 @@ During training, the ZTNB log-likelihood is computed using `torch.lgamma`. To pr
 * The dispersion parameter is bounded in log space: $\log \phi_{\mathrm{safe}} = \operatorname{clamp}(\log \phi, \text{min}=-10.0, \text{max}=10.0)$, followed by $\phi = \exp(\log \phi_{\mathrm{safe}})$.
 * A stabilizing constant $\epsilon = 10^{-8}$ is added to $\mu$ and $\phi$ in logarithmic terms; the probability at 0 is normalized numerically through $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ with an upper bound of $1.0 - 10^{-7}$. When inferring the conditional expectation, the denominator $1 - p_{\mathrm{NB}}(0)$ is lower-bounded by $10^{-6}$.
 * The gradient of all model parameters is clipped to a maximum Euclidean norm of $\|\mathbf{g}\|_2 \le 5.0$ using `torch.nn.utils.clip_grad_norm_`.
+
+### S1.3. Architecture hyperparameters and baseline separation
+
+The exact hyperparameter configuration extracted directly from the trained model checkpoints (`results/checkpoints/5fold_*.pt` and `mlp_*.pt`) is presented in Table S1.
+
+#### Table S1: Architectural and training hyperparameters of zero-shot baselines
+| Component | Hyperparameter | Value | Description |
+|:---|:---|:---:|:---|
+| **Urban GNN Encoder** | Input feature dimension ($d_{\mathrm{in}}$) | 26 | Demographics, socio-economic, and urban features |
+| | Message passing layers | 2 | Distance-conditioned `GraphConvLayer` |
+| | Attention mechanism / heads | N/A (0) | Standard mean aggregation; no attention layers |
+| | Hidden / Output dimension | 64 | LayerNorm(64) + ReLU + Dropout |
+| | Dropout rate | 0.1 | Input projection, residual updates, output |
+| | Spatial graph type | Radius graph | Geographic radius $r = 5.0$ km with self-loops |
+| **Pairwise Decoder** | Input dimension | 130 | Concatenation $[\mathbf{h}_i \,(64) \parallel \mathbf{h}_j \,(64) \parallel \log(1+d) \,(1) \parallel \log T^{\mathrm{grav}} \,(1)]$ |
+| | Hidden layers | [64, 32] | Layer 1: 64 (LayerNorm+ReLU+Dropout); Layer 2: 32 (ReLU+Dropout) |
+| | Output layer | 1 | Zero-initialized neural residual head |
+| | Internal gravity prior | Trainable $(G, \alpha)$ | Initialized at $G_0=0.0, \alpha_0=1.0$; trained end-to-end via AdamW |
+| **Optimization** | Loss objective | ZTNB NLL | Zero-Truncated Negative Binomial likelihood |
+| | Optimizer | AdamW | Macro-averaged city-by-city steps |
+| | Initial learning rate | 0.0032 | $3.2 \times 10^{-3}$ |
+| | Weight decay | 0.0001 | $10^{-4}$ |
+| | Learning rate scheduler | ReduceLROnPlateau | Factor 0.5, patience 4 epochs, min LR $10^{-5}$ |
+| | Early stopping patience | 16 epochs | Monitored on validation interzonal CPC ($\min \Delta = 10^{-4}$) |
+| | Parameter count | 33,668 | Identical parameter count for Urban GNN and Node MLP |
+
+**Parameter separation note:** The two parameters $(G_{\mathrm{NN}}, \alpha_{\mathrm{NN}})$ of the neural gravity prior are internal, trainable variables optimized end-to-end with the network via AdamW and saved inside the checkpoint bundle. Conversely, the standalone Two-Parameter Gravity baseline is fitted independently via pooled log-linear OLS on the training cities ($G_{\mathrm{OLS}} \approx -8.54, \alpha_{\mathrm{OLS}} \approx 1.66$ on Fold 1). The two models do not share coefficients.
 
 ## S2. General form of the analytic calibration operator ($q \in [0, 1]$)
 
