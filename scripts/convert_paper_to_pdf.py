@@ -200,10 +200,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             border: none;
         }}
 
+        img[src*="fig3_structural_validity_placebo"],
+        img[src*="fig4_resolution_sensitivity"],
+        img[src*="fig5_noise_dose_response"],
+        img[src*="fig6_mechanistic_dpre"],
         img[src*="fig5_structural_validity_placebo"],
         img[src*="fig3_resolution_sensitivity"],
-        img[src*="fig4_noise_dose_response"],
-        img[src*="fig6_mechanistic_dpre"] {{
+        img[src*="fig4_noise_dose_response"] {{
             max-width: 75%;
         }}
 

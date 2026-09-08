@@ -237,13 +237,13 @@ Chú thích: CPC được lấy trung bình qua ba seed trong từng thành ph�
 
 ## 4.2. Mức cải thiện có phụ thuộc vào phân phối của đúng thành phố và thứ tự các nhóm khoảng cách hay không?
 
-Để kiểm tra liệu mức cải thiện có phụ thuộc vào phân phối của chính thành phố mục tiêu hay không, nghiên cứu so sánh phân phối này với các phân phối từ thành phố huấn luyện và phân phối trung bình của tập huấn luyện trong cùng fold. Các đối chứng được điều chỉnh về cùng mức độ can thiệp với phân phối mục tiêu (dose-matched; Phụ lục S6). Hiệu chỉnh bằng phân phối đúng thành phố đạt mức tăng CPC trung bình +0.00354, trong khi đối chứng từ các thành phố huấn luyện đạt −0.00009 và đối chứng từ phân phối trung bình đạt +0.00091 (Bảng 3).
+Để kiểm tra liệu mức cải thiện có phụ thuộc vào phân phối của chính thành phố mục tiêu hay không, nghiên cứu so sánh phân phối này với các phân phối từ thành phố huấn luyện và phân phối trung bình của tập huấn luyện trong cùng fold. Các đối chứng được điều chỉnh về cùng mức độ can thiệp với phân phối mục tiêu (dose-matched; Phụ lục S6). Hiệu chỉnh bằng phân phối đúng thành phố đạt mức tăng CPC trung bình +0.00354, trong khi đối chứng từ các thành phố huấn luyện đạt −0.00009 và đối chứng từ phân phối trung bình đạt +0.00091 (Bảng 3). Đáng chú ý, mức cải thiện của đối chứng phân phối trung bình có trung vị sát 0 (+0.00011) và không thể phân biệt được với 0 về mặt thống kê ($p=0.4319$); cận dưới CI bootstrap $+0.00001$ thực chất là 0 về mặt thực tiễn.
 
 Khi so sánh trực tiếp, phân phối đúng thành phố cho CPC cao hơn hai đối chứng trên lần lượt 46/50 và 47/50 thành phố. Chênh lệch CPC trung bình tương ứng là +0.00363 và +0.00263, với cả hai khoảng tin cậy bootstrap 95% đều nằm trên 0. Kết quả này cho thấy lợi ích của phân phối mục tiêu không chỉ đến từ mức độ điều chỉnh dự báo, mà còn phụ thuộc vào thông tin phân bổ luồng theo khoảng cách của chính thành phố đó.
 
 Khi các tỷ trọng trong phân phối mục tiêu bị hoán vị giữa các nhóm khoảng cách, CPC giảm trung bình 0.00696 so với baseline (Hình 3). Phân phối đúng thứ tự cho kết quả cao hơn đối chứng hoán vị trên 49/50 thành phố, với chênh lệch CPC trung bình +0.01050. Như vậy, hiệu chỉnh cần giữ đúng sự tương ứng giữa tỷ trọng lưu lượng và nhóm khoảng cách; việc chỉ giữ các giá trị tỷ trọng nhưng gán chúng sang nhóm khác không duy trì được lợi ích quan sát ở cấu hình chính.
 
-![Hình 3](figures/fig5_structural_validity_placebo.png)
+![Hình 3](figures/fig3_structural_validity_placebo.png)
 **Hình 3. Mức thay đổi CPC khi sử dụng phân phối đúng thành phố và các phân phối đối chứng.**
 
 Các cột biểu diễn mức thay đổi CPC trung bình so với baseline Urban GNN trên 50 thành phố khi sử dụng phân phối oracle của thành phố mục tiêu, phân phối đối chứng từ thành phố huấn luyện đã được điều chỉnh về cùng mức độ can thiệp, và phân phối mục tiêu bị hoán vị tỷ trọng giữa các nhóm khoảng cách. Thanh sai số biểu diễn khoảng tin cậy bootstrap 95% của mức thay đổi trung bình, phân tầng theo fold. Đối chứng sử dụng phân phối trung bình của tập huấn luyện được báo cáo thêm trong Bảng 3.
@@ -254,20 +254,20 @@ Các cột biểu diễn mức thay đổi CPC trung bình so với baseline Urb
 
 | Điều kiện | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Wilcoxon $p$ hai phía |
 |:---|:---:|:---:|:---:|
-| Phân phối oracle đúng thành phố | $+0.003539$ | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ |
-| Đối chứng từ thành phố huấn luyện, dose-matched | $-0.000091$ | $[-0.00089, +0.00071]$ | $0.4097$ |
-| Phân phối trung bình tập huấn luyện, dose-matched | $+0.000914$ | $[+0.00001, +0.00186]$ | $0.4319$ |
-| Phân phối mục tiêu bị hoán vị | $-0.006964$ | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ |
+| Phân phối oracle đúng thành phố | $+0.00354$ | $[+0.0026, +0.0045]$ | $1.93 \times 10^{-9}$ |
+| Đối chứng từ thành phố huấn luyện, dose-matched | $-0.00009$ | $[-0.0009, +0.0007]$ | $0.4097$ |
+| Phân phối trung bình tập huấn luyện, dose-matched | $+0.00091$ | $[+0.0000, +0.0019]$ | $0.4319$ |
+| Phân phối mục tiêu bị hoán vị | $-0.00696$ | $[-0.0091, -0.0051]$ | $1.78 \times 10^{-15}$ |
 
 **Phần B. Chênh lệch CPC giữa phân phối đúng thành phố và từng đối chứng**
 
 | Đối chứng | Chênh lệch CPC trung bình | CI 95% của chênh lệch trung bình | Wilcoxon $p$ một phía | Thành phố có CPC mục tiêu cao hơn đối chứng |
 |:---|:---:|:---:|:---:|:---:|
-| Từ thành phố huấn luyện, dose-matched | $+0.003630$ | $[+0.00287, +0.00445]$ | $2.19 \times 10^{-11}$ | 46/50 |
-| Trung bình tập huấn luyện, dose-matched | $+0.002626$ | $[+0.00197, +0.00336]$ | $4.03 \times 10^{-11}$ | 47/50 |
-| Phân phối mục tiêu bị hoán vị | $+0.010504$ | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | 49/50 |
+| Từ thành phố huấn luyện, dose-matched | $+0.00363$ | $[+0.0029, +0.0045]$ | $2.19 \times 10^{-11}$ | 46/50 |
+| Trung bình tập huấn luyện, dose-matched | $+0.00263$ | $[+0.0020, +0.0034]$ | $4.03 \times 10^{-11}$ | 47/50 |
+| Phân phối mục tiêu bị hoán vị | $+0.01050$ | $[+0.0084, +0.0128]$ | $1.78 \times 10^{-15}$ | 49/50 |
 
-Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh bằng từng phân phối và baseline zero-shot. Ở phần B, chênh lệch được tính bằng CPC khi dùng phân phối đúng thành phố trừ CPC khi dùng phân phối đối chứng; giá trị dương cho biết phân phối đúng thành phố cho kết quả tốt hơn. Đối chứng từ thành phố huấn luyện được lấy trung bình qua 1.000 lượt chọn donor ngẫu nhiên; đối chứng hoán vị được lấy trung bình qua 1.000 lần hoán vị ngẫu nhiên; kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho chênh lệch trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Kiểm định Wilcoxon ở phần A là hai phía; ở phần B là một phía theo giả thuyết phân phối đúng thành phố cho CPC cao hơn đối chứng (các giá trị $p$ được báo cáo là $p$ gốc chưa điều chỉnh nhiều giả thuyết). Khoảng tin cậy bootstrap mô tả độ bất định của chênh lệch trung bình, còn kiểm định Wilcoxon sử dụng thứ hạng của các chênh lệch ghép cặp. Vì vậy, hai kết quả không nhất thiết dẫn đến cùng kết luận; CI dương của đối chứng phân phối trung bình không đồng nghĩa với kiểm định Wilcoxon có ý nghĩa thống kê.
+Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh bằng từng phân phối và baseline zero-shot. Ở phần B, chênh lệch được tính bằng CPC khi dùng phân phối đúng thành phố trừ CPC khi dùng phân phối đối chứng; giá trị dương cho biết phân phối đúng thành phố cho kết quả tốt hơn. Đối chứng từ thành phố huấn luyện được lấy trung bình qua 1.000 lượt chọn donor ngẫu nhiên; đối chứng hoán vị được lấy trung bình qua 1.000 lần hoán vị ngẫu nhiên; kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho chênh lệch trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Kiểm định Wilcoxon ở phần A là hai phía; ở phần B là một phía theo giả thuyết phân phối đúng thành phố cho CPC cao hơn đối chứng (các giá trị $p$ được báo cáo là $p$ gốc chưa điều chỉnh nhiều giả thuyết). Khoảng tin cậy bootstrap mô tả độ bất định của chênh lệch trung bình, còn kiểm định Wilcoxon sử dụng thứ hạng của các chênh lệch ghép cặp. Với đối chứng phân phối trung bình, trung vị mức thay đổi sát 0 (+0.00011) và cận dưới CI (+0.00001) thực chất là 0 về mặt thực tiễn, phản ánh kết quả không phân biệt được với 0 ($p=0.4319$) và không mang lại lợi ích hệ thống. Giá trị CI của phân phối đúng thành phố ở phần A làm tròn 4 chữ số thập phân ($[+0.0026, +0.0045]$) hoàn toàn đồng nhất với khoảng tin cậy chính trong Bảng 2 và Bảng 5.
 
 
 ## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
@@ -280,31 +280,31 @@ Trước hết, khi số nhóm khoảng cách tăng từ $K=2$ đến $K=20$, m�
 
 | Số nhóm $K$ | $\Delta\mathrm{CPC}$ trung bình | Trung vị $\Delta\mathrm{CPC}$ | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện |
 |:---|:---:|:---:|:---:|:---:|
-| $K = 2$ | $+0.00098$ | $+0.00034$ | $[+0.00052, +0.00151]$ | 39/50 (78.0%) |
-| $K = 4$ | $+0.00198$ | $+0.00088$ | $[+0.00125, +0.00279]$ | 39/50 (78.0%) |
-| $K = 6$ | $+0.00289$ | $+0.00152$ | $[+0.00201, +0.00384]$ | 44/50 (88.0%) |
-| **$K = 8$ (cấu hình chính)** | **$+0.00354$** | **$+0.00195$** | **$[+0.00262, +0.00447]$** | **45/50 (90.0%)** |
-| $K = 10$ | $+0.00413$ | $+0.00235$ | $[+0.00311, +0.00514]$ | 45/50 (90.0%) |
-| $K = 12$ | $+0.00480$ | $+0.00288$ | $[+0.00372, +0.00590]$ | 46/50 (92.0%) |
-| $K = 14$ | $+0.00538$ | $+0.00373$ | $[+0.00424, +0.00654]$ | 45/50 (90.0%) |
-| $K = 16$ | $+0.00574$ | $+0.00433$ | $[+0.00455, +0.00694]$ | 46/50 (92.0%) |
-| $K = 18$ | $+0.00603$ | $+0.00458$ | $[+0.00480, +0.00726]$ | 47/50 (94.0%) |
-| $K = 20$ | $+0.00639$ | $+0.00494$ | $[+0.00508, +0.00769]$ | 46/50 (92.0%) |
+| $K = 2$ | $+0.00098$ | $+0.00034$ | $[+0.0005, +0.0015]$ | 39/50 (78.0%) |
+| $K = 4$ | $+0.00198$ | $+0.00088$ | $[+0.0013, +0.0028]$ | 39/50 (78.0%) |
+| $K = 6$ | $+0.00289$ | $+0.00152$ | $[+0.0020, +0.0038]$ | 44/50 (88.0%) |
+| **$K = 8$ (cấu hình chính)** | **$+0.00354$** | **$+0.00195$** | **$[+0.0026, +0.0045]$** | **45/50 (90.0%)** |
+| $K = 10$ | $+0.00413$ | $+0.00235$ | $[+0.0031, +0.0051]$ | 45/50 (90.0%) |
+| $K = 12$ | $+0.00480$ | $+0.00288$ | $[+0.0037, +0.0059]$ | 46/50 (92.0%) |
+| $K = 14$ | $+0.00538$ | $+0.00373$ | $[+0.0042, +0.0065]$ | 45/50 (90.0%) |
+| $K = 16$ | $+0.00574$ | $+0.00433$ | $[+0.0045, +0.0069]$ | 46/50 (92.0%) |
+| $K = 18$ | $+0.00603$ | $+0.00458$ | $[+0.0048, +0.0073]$ | 47/50 (94.0%) |
+| $K = 20$ | $+0.00639$ | $+0.00494$ | $[+0.0051, +0.0077]$ | 46/50 (92.0%) |
 
-Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0.
+Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. Khoảng tin cậy của cấu hình chính $K=8$ ($[+0.0026, +0.0045]$) hoàn toàn đồng nhất với Bảng 2, Bảng 3 và Bảng 5.
 
-![Hình 4](figures/fig3_resolution_sensitivity.png)
+![Hình 4](figures/fig4_resolution_sensitivity.png)
 **Hình 4. Mức thay đổi CPC trung bình theo số nhóm khoảng cách $K$.** Các điểm biểu diễn mức tăng CPC trung bình so với baseline trên 50 thành phố; thanh sai số biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Cấu hình chính $K=8$ được đánh dấu bằng đường gióng.
 
 Mức cải thiện tăng trên toàn bộ dải $K$, cho thấy việc chia khoảng cách thành nhiều nhóm hơn tiếp tục cung cấp thêm thông tin cho mô hình, dù mức đóng góp của mỗi lần tăng độ phân giải khác nhau tùy theo khoảng khảo sát (Hình 4).
 
 Ngoài độ phân giải theo khoảng cách, phân tích thăm dò về độ phân giải không gian cho thấy khi áp dụng phân phối theo từng county xuất phát trên 11 vùng đô thị có nhiều county, CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 9/11 trường hợp, với mức tăng trung bình trong nhóm này là +0.00063. Khi tính gộp trên toàn bộ 50 thành phố (trong đó 39 vùng đơn county có mức chênh lệch bằng 0 theo cấu trúc), mức tăng bổ sung trung bình là +0.00014. Kết quả này bước đầu cho thấy độ phân giải không gian chi tiết hơn có thể mang lại thêm thông tin ở những vùng đô thị đa trung tâm, nhưng cần được kiểm chứng thêm trên tập dữ liệu có nhiều đơn vị không gian hơn.
 
-Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng trung bình giảm từ +0.00354 ở mức không nhiễu xuống +0.00201 tại mức nhiễu 2% TV và +0.00070 tại mức 4% TV. Điểm cắt thực nghiệm—nơi mức cải thiện trung bình giảm về 0 qua phép nội suy tuyến tính giữa các mức nhiễu liền kề—nằm tại khoảng $\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV (khoảng tin cậy bootstrap 95%: $[4.16\%, 4.77\%]$).
+Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng trung bình giảm từ +0.00354 ở mức không nhiễu xuống +0.00282 tại mức nhiễu 2% TV và +0.00070 tại mức 4% TV. Điểm cắt thực nghiệm—nơi mức cải thiện trung bình giảm về 0 qua phép nội suy tuyến tính giữa các mức nhiễu liền kề—nằm tại khoảng $\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV (khoảng tin cậy bootstrap 95%: $[4.16\%, 4.77\%]$).
 
-Cần lưu ý rằng ngưỡng 4.44% là điểm mức cải thiện trung bình về 0, không phải ngưỡng mà kết quả mất ý nghĩa thống kê; ở mức nhiễu 4% TV, dù mức cải thiện trung bình vẫn dương (+0.00070), sự khác biệt so với baseline đã không còn ý nghĩa thống kê ở mức $\alpha=0.05$ (Wilcoxon $p=0.4847$). Ngưỡng này phụ thuộc vào phân bố dữ liệu và cách tạo nhiễu trong thí nghiệm, không phải một hằng số cố định cho mọi bài toán.
+Cần phân biệt rõ hai ngưỡng: ngưỡng mà lợi ích hiệu chỉnh còn duy trì ý nghĩa thống kê ($\epsilon^* = 3\%$ TV, với $p_{\mathrm{raw}}=0.0149$ và $p_{\mathrm{Holm}}=0.0446 < 0.05$) và ngưỡng điểm cắt thực nghiệm nơi mức cải thiện trung bình giảm về 0 ($\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV). Tại mức nhiễu 4% TV, dù mức cải thiện trung bình vẫn dương (+0.00070), sự khác biệt so với baseline đã không còn ý nghĩa thống kê ở mức $\alpha=0.05$ (kiểm định Wilcoxon một phía có $p_{\mathrm{raw}}=0.4847$, $p_{\mathrm{Holm}}=0.9695$). Các ngưỡng này phụ thuộc vào phân bố dữ liệu và cách tạo nhiễu trong thí nghiệm, không phải một hằng số cố định cho mọi bài toán.
 
-![Hình 5](figures/fig4_noise_dose_response.png)
+![Hình 5](figures/fig5_noise_dose_response.png)
 **Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt thực nghiệm tại $\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
 
 Nhìn chung, các kết quả trong mục này cho thấy giá trị của phân phối khoảng cách phụ thuộc vào cả độ chi tiết và độ chính xác của quan sát: tăng số nhóm khoảng cách giúp cải thiện kết quả, nhưng tín hiệu này cần đủ chính xác để mang lại lợi ích thực tế.
@@ -339,13 +339,13 @@ Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng 
 
 # 5. Thảo luận
 
-### 5.1. Giá trị bổ sung của phân phối khoảng cách trong dự báo liên thành phố
+## 5.1. Giá trị bổ sung của phân phối khoảng cách trong dự báo liên thành phố
 
 Việc phân phối di chuyển theo khoảng cách của thành phố mục tiêu vẫn giúp cải thiện dự báo cho thấy các baseline được đánh giá chưa phản ánh đầy đủ cách lưu lượng tại thành phố đó được phân bổ giữa các nhóm khoảng cách. Mặc dù mô hình đã khai thác đặc điểm đô thị và khoảng cách địa lý, các quy luật học được từ thành phố nguồn vẫn có thể chưa phù hợp hoàn toàn với phân bố luồng tại một thành phố mới. Vì vậy, quan sát tổng hợp của chính thành phố mục tiêu có thể bổ sung thông tin hữu ích cho việc hiệu chỉnh dự báo.
 
 Các mô hình như Deep Gravity và UGNN khai thác dữ liệu nguồn để học các quy luật di chuyển có khả năng chuyển giao giữa các thành phố [@guo2025ugnn; @simini2021deepgravity]. Nghiên cứu này bổ sung cho hướng tiếp cận đó bằng cách đánh giá phần cải thiện khi cung cấp thêm phân phối khoảng cách của thành phố mục tiêu cho một mô hình đã được huấn luyện. Do tham số mô hình được giữ nguyên, phần cải thiện được ghi nhận đến từ bước hiệu chỉnh đầu ra bằng quan sát tổng hợp, không kèm theo việc huấn luyện lại mô hình.
 
-### 5.2. Khả năng và giới hạn của phép hiệu chỉnh khoảng cách
+## 5.2. Khả năng và giới hạn của phép hiệu chỉnh khoảng cách
 
 Phân phối khoảng cách chỉ cho biết tỷ trọng lưu lượng thuộc từng nhóm, nên phép hiệu chỉnh điều chỉnh cách lưu lượng được phân bổ giữa các nhóm này. Trong cùng một nhóm, các cặp OD được nhân với cùng một hệ số, vì vậy tỷ lệ và thứ hạng giữa các luồng vẫn do baseline quyết định. Đồng thời, tổng lưu lượng dự báo được giữ nguyên, nên phép hiệu chỉnh không xử lý sai lệch về tổng lưu lượng của baseline. Những giới hạn này giúp lý giải vì sao mức cải thiện có thể nhỏ ngay cả khi phân phối khoảng cách được cung cấp chính xác.
 
@@ -353,13 +353,15 @@ Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và m�
 
 Độ phân giải và chất lượng quan sát ảnh hưởng đến hiệu quả hiệu chỉnh theo những cách khác nhau. Tăng số nhóm khoảng cách cung cấp thêm chi tiết để điều chỉnh lưu lượng giữa các dải cự ly, trong khi sai lệch trong tỷ trọng quan sát có thể làm dự báo sau hiệu chỉnh kém chính xác hơn. Các đối chứng ở mục 4.2 còn cho thấy lợi ích phụ thuộc vào việc sử dụng phân phối của đúng thành phố và giữ đúng sự tương ứng giữa tỷ trọng lưu lượng với các nhóm khoảng cách. Vì vậy, đánh giá một nguồn quan sát cần xem xét cả mức độ chi tiết lẫn độ chính xác của phân phối. Tuy nhiên, các thí nghiệm hiện tại chưa xác định số nhóm khoảng cách phù hợp nhất cho từng mức nhiễu.
 
-### 5.3. Giới hạn nghiên cứu và hướng kiểm chứng tiếp theo
+## 5.3. Giới hạn nghiên cứu và hướng kiểm chứng tiếp theo
 
 Giới hạn chính của nghiên cứu là phân phối khoảng cách được tổng hợp từ chính dữ liệu OD tham chiếu của thành phố mục tiêu. Thiết lập oracle cho phép đánh giá lợi ích khi có phân phối chính xác trên tập hỗ trợ đã chọn, nhưng chưa xác nhận hiệu quả với một nguồn quan sát được thu thập độc lập. Các thí nghiệm gây nhiễu cũng chưa bao quát đầy đủ những sai lệch có thể xuất hiện trong dữ liệu thực tế, như hạn chế về độ phủ, tính đại diện và khác biệt về thời gian thu thập [@gallotti2024distorted; @pappalardo2023future]. Vì vậy, bước kiểm chứng tiếp theo là đánh giá các nguồn quan sát độc lập và mức độ tương thích của chúng với phạm vi không gian, thời gian và tập hỗ trợ dùng để tái tạo OD.
 
 Ngoài ra, nghiên cứu chỉ tái tạo cường độ trên các cặp OD liên vùng đã biết có luồng dương, nên chưa đánh giá khả năng xác định cặp có luồng hoặc tái tạo toàn bộ ma trận OD. Các kết quả được ghi nhận trên 50 vùng đô thị Hoa Kỳ và các baseline đã khảo sát; khả năng khái quát sang những bối cảnh khác vẫn cần được kiểm tra. Phân tích theo origin-county cũng chỉ mang tính thăm dò vì chỉ 11 vùng đô thị có nhiều county, còn 39 trường hợp còn lại không tạo ra thay đổi về cách tổng hợp so với cấp thành phố. Hơn nữa, ranh giới county là ranh giới hành chính và có thể không phù hợp với các vùng di chuyển chức năng. Do đó, cần đánh giá thêm các cách phân chia không gian trước khi kết luận về lợi ích của quan sát chi tiết hơn theo địa bàn.
 
-Một hướng mở rộng khác là kết hợp phân phối khoảng cách với tổng luồng đi hoặc tổng luồng đến của từng vùng. Các ràng buộc này đã được sử dụng trong mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family] và có thể bổ sung thông tin theo vùng mà phân phối khoảng cách chưa cung cấp. Nghiên cứu tiếp theo cần kiểm tra liệu việc kết hợp các quan sát này có tạo thêm cải thiện khi cùng áp dụng cho một baseline được giữ cố định hay không. Bên cạnh đó, việc tổng hợp dữ liệu không tự bảo đảm quyền riêng tư; nghiên cứu hiện tại chưa đánh giá khía cạnh này.
+Một hướng mở rộng khác là kết hợp phân phối khoảng cách với tổng luồng đi hoặc tổng luồng đến của từng vùng. Các ràng buộc này đã được sử dụng trong mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family] và có thể bổ sung thông tin theo vùng mà phân phối khoảng cách chưa cung cấp. Nghiên cứu tiếp theo cần kiểm tra liệu việc kết hợp các quan sát này có tạo thêm cải thiện khi cùng áp dụng cho một baseline được giữ cố định hay không.
+
+Về mặt quyền riêng tư, việc giảm độ phân giải hoặc tổng hợp dữ liệu thành phân phối vĩ mô không đồng nghĩa với việc tự động bảo đảm an toàn thông tin cá nhân. Các vết tích di chuyển vẫn có thể chứa lượng lớn thông tin nhận dạng ngay cả sau khi làm thô [@demontjoye2013unique], và việc thiết lập bảo đảm quyền riêng tư vi sai (differential privacy) cấp người dùng cho dữ liệu vị trí tổng hợp vẫn là thách thức lớn trong thực tiễn [@houssiau2022differential]. Nghiên cứu này chỉ xem $Y_D$ là một dạng quan sát tổng hợp số chiều thấp hỗ trợ hiệu chỉnh vĩ mô, chứ không đánh giá hay tuyên bố $Y_D$ như một cơ chế bảo toàn quyền riêng tư đã được chứng minh.
 
 # 6. Kết luận
 
@@ -382,43 +384,43 @@ Bổ sung sau
 
 2. **de Montjoye, Y.-A., Hidalgo, C. A., Verleysen, M., & Blondel, V. D.** (2013). Unique in the crowd: The privacy bounds of human mobility. *Scientific Reports*, 3, 1376. [https://doi.org/10.1038/srep01376](https://doi.org/10.1038/srep01376)
 
-3. **Enaya, A., Zhong, C., Batty, M., Morphet, R., & Lopane, F. D.** (2026). TransGM: Transferable gravity models for cross-city policy transfer. *Computers, Environment and Urban Systems*, 128, 102455. [https://doi.org/10.1016/j.compenvurbsys.2026.102455](https://doi.org/10.1016/j.compenvurbsys.2026.102455)
+3. **Efron, B., & Tibshirani, R. J.** (1993). *An introduction to the bootstrap*. Chapman & Hall.
 
-4. **GADM.** (n.d.). *GADM database of global administrative areas (Version 4.1)* [Data set]. Retrieved September 2, 2026, from [https://gadm.org/data.html](https://gadm.org/data.html)
+4. **Enaya, A., Zhong, C., Batty, M., Morphet, R., & Lopane, F. D.** (2026). TransGM: Transferable gravity models for cross-city policy transfer. *Computers, Environment and Urban Systems*, 128, 102455. [https://doi.org/10.1016/j.compenvurbsys.2026.102455](https://doi.org/10.1016/j.compenvurbsys.2026.102455)
 
-5. **Gallotti, R., Maniscalco, D., Barthelemy, M., & De Domenico, M.** (2024). Distorted insights from human mobility data. *Communications Physics*, 7, 421. [https://doi.org/10.1038/s42005-024-01909-x](https://doi.org/10.1038/s42005-024-01909-x)
+5. **GADM.** (n.d.). *GADM database of global administrative areas (Version 4.1)* [Data set]. Retrieved September 2, 2026, from [https://gadm.org/data.html](https://gadm.org/data.html)
 
-6. **Grogger, J. T., & Carson, R. T.** (1991). Models for truncated counts. *Journal of Applied Econometrics*, 6(3), 225–238. [https://doi.org/10.1002/jae.3950060302](https://doi.org/10.1002/jae.3950060302)
+6. **Gallotti, R., Maniscalco, D., Barthelemy, M., & De Domenico, M.** (2024). Distorted insights from human mobility data. *Communications Physics*, 7, 421. [https://doi.org/10.1038/s42005-024-01909-x](https://doi.org/10.1038/s42005-024-01909-x)
 
-7. **Guo, J., Bai, S., Li, X., Xian, K., Liu, E., Ding, W., & Ma, X.** (2025). A universal geography neural network for mobility flow prediction in planning scenarios. *Computer-Aided Civil and Infrastructure Engineering*, 40, 5769–5789. [https://doi.org/10.1111/mice.13398](https://doi.org/10.1111/mice.13398)
+7. **Grogger, J. T., & Carson, R. T.** (1991). Models for truncated counts. *Journal of Applied Econometrics*, 6(3), 225–238. [https://doi.org/10.1002/jae.3950060302](https://doi.org/10.1002/jae.3950060302)
 
-8. **Houssiau, F., Rocher, L., & de Montjoye, Y.-A.** (2022). On the difficulty of achieving differential privacy in practice: User-level guarantees in aggregate location data. *Nature Communications*, 13, 29. [https://doi.org/10.1038/s41467-021-27566-0](https://doi.org/10.1038/s41467-021-27566-0)
+8. **Guo, J., Bai, S., Li, X., Xian, K., Liu, E., Ding, W., & Ma, X.** (2025). A universal geography neural network for mobility flow prediction in planning scenarios. *Computer-Aided Civil and Infrastructure Engineering*, 40, 5769–5789. [https://doi.org/10.1111/mice.13398](https://doi.org/10.1111/mice.13398)
 
-9. **Hyman, G. M.** (1969). The calibration of trip distribution models. *Environment and Planning A*, 1(1), 105–112. [https://doi.org/10.1068/a010105](https://doi.org/10.1068/a010105)
+9. **Holm, S.** (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. [https://www.jstor.org/stable/4615733](https://www.jstor.org/stable/4615733)
 
-10. **Lenormand, M., Bassolas, A., & Ramasco, J. J.** (2016). Systematic comparison of trip distribution laws and models. *Journal of Transport Geography*, 51, 158–169. [https://doi.org/10.1016/j.jtrangeo.2015.12.008](https://doi.org/10.1016/j.jtrangeo.2015.12.008)
+10. **Houssiau, F., Rocher, L., & de Montjoye, Y.-A.** (2022). On the difficulty of achieving differential privacy in practice: User-level guarantees in aggregate location data. *Nature Communications*, 13, 29. [https://doi.org/10.1038/s41467-021-27566-0](https://doi.org/10.1038/s41467-021-27566-0)
 
-11. **Merlin, L. A.** (2020). A new method using medians to calibrate single-parameter spatial interaction models. *Journal of Transport and Land Use*, 13(1), 49–70. [https://doi.org/10.5198/jtlu.2020.1614](https://doi.org/10.5198/jtlu.2020.1614)
+11. **Hyman, G. M.** (1969). The calibration of trip distribution models. *Environment and Planning A*, 1(1), 105–112. [https://doi.org/10.1068/a010105](https://doi.org/10.1068/a010105)
 
-12. **Ortúzar, J. de D., & Willumsen, L. G.** (2011). *Modelling transport* (4th ed.). John Wiley & Sons. [https://doi.org/10.1002/9781119993308](https://doi.org/10.1002/9781119993308)
+12. **Lenormand, M., Bassolas, A., & Ramasco, J. J.** (2016). Systematic comparison of trip distribution laws and models. *Journal of Transport Geography*, 51, 158–169. [https://doi.org/10.1016/j.jtrangeo.2015.12.008](https://doi.org/10.1016/j.jtrangeo.2015.12.008)
 
-13. **Pappalardo, L., Manley, E., Sekara, V., & Alessandretti, L.** (2023). Future directions in human mobility science. *Nature Computational Science*, 3, 588–600. [https://doi.org/10.1038/s43588-023-00469-4](https://doi.org/10.1038/s43588-023-00469-4)
+13. **Loshchilov, I., & Hutter, F.** (2019). Decoupled weight decay regularization. In *International Conference on Learning Representations (ICLR)*. [https://openreview.net/forum?id=Bkg6RiCqY7](https://openreview.net/forum?id=Bkg6RiCqY7)
 
-14. **Simini, F., Barlacchi, G., Luca, M., & Pappalardo, L.** (2021). A Deep Gravity model for mobility flows generation. *Nature Communications*, 12, 6576. [https://doi.org/10.1038/s41467-021-26752-4](https://doi.org/10.1038/s41467-021-26752-4)
+14. **Merlin, L. A.** (2020). A new method using medians to calibrate single-parameter spatial interaction models. *Journal of Transport and Land Use*, 13(1), 49–70. [https://doi.org/10.5198/jtlu.2020.1614](https://doi.org/10.5198/jtlu.2020.1614)
 
-15. **Verma, R., & Ukkusuri, S. V.** (2025). What determines travel time and distance decay in spatial interaction and accessibility? *Journal of Transport Geography*, 122, 104061. [https://doi.org/10.1016/j.jtrangeo.2024.104061](https://doi.org/10.1016/j.jtrangeo.2024.104061)
+15. **Ortúzar, J. de D., & Willumsen, L. G.** (2011). *Modelling transport* (4th ed.). John Wiley & Sons. [https://doi.org/10.1002/9781119993308](https://doi.org/10.1002/9781119993308)
 
-16. **Wilson, A. G.** (1971). A family of spatial interaction models, and associated developments. *Environment and Planning A*, 3(1), 1–32. [https://doi.org/10.1068/a030001](https://doi.org/10.1068/a030001)
+16. **Pappalardo, L., Manley, E., Sekara, V., & Alessandretti, L.** (2023). Future directions in human mobility science. *Nature Computational Science*, 3, 588–600. [https://doi.org/10.1038/s43588-023-00469-4](https://doi.org/10.1038/s43588-023-00469-4)
 
-17. **Yang, Y., Herrera, C., Eagle, N., & González, M. C.** (2014). Limits of predictability in commuting flows in the absence of data for calibration. *Scientific Reports*, 4, 5662. [https://doi.org/10.1038/srep05662](https://doi.org/10.1038/srep05662)
+17. **Simini, F., Barlacchi, G., Luca, M., & Pappalardo, L.** (2021). A Deep Gravity model for mobility flows generation. *Nature Communications*, 12, 6576. [https://doi.org/10.1038/s41467-021-26752-4](https://doi.org/10.1038/s41467-021-26752-4)
 
-18. **Efron, B., & Tibshirani, R. J.** (1993). *An introduction to the bootstrap*. Chapman & Hall.
+18. **Verma, R., & Ukkusuri, S. V.** (2025). What determines travel time and distance decay in spatial interaction and accessibility? *Journal of Transport Geography*, 122, 104061. [https://doi.org/10.1016/j.jtrangeo.2024.104061](https://doi.org/10.1016/j.jtrangeo.2024.104061)
 
-19. **Holm, S.** (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. [https://www.jstor.org/stable/4615733](https://www.jstor.org/stable/4615733)
+19. **Wilcoxon, F.** (1945). Individual comparisons by ranking methods. *Biometrics Bulletin*, 1(6), 80–83. [https://doi.org/10.2307/3001968](https://doi.org/10.2307/3001968)
 
-20. **Loshchilov, I., & Hutter, F.** (2019). Decoupled weight decay regularization. In *International Conference on Learning Representations (ICLR)*. [https://openreview.net/forum?id=Bkg6RiCqY7](https://openreview.net/forum?id=Bkg6RiCqY7)
+20. **Wilson, A. G.** (1971). A family of spatial interaction models, and associated developments. *Environment and Planning A*, 3(1), 1–32. [https://doi.org/10.1068/a030001](https://doi.org/10.1068/a030001)
 
-21. **Wilcoxon, F.** (1945). Individual comparisons by ranking methods. *Biometrics Bulletin*, 1(6), 80–83. [https://doi.org/10.2307/3001968](https://doi.org/10.2307/3001968)
+21. **Yang, Y., Herrera, C., Eagle, N., & González, M. C.** (2014). Limits of predictability in commuting flows in the absence of data for calibration. *Scientific Reports*, 4, 5662. [https://doi.org/10.1038/srep05662](https://doi.org/10.1038/srep05662)
 
 
 # Phụ lục phương pháp bổ sung (Supplementary Methods)
@@ -660,17 +662,26 @@ $$
 \operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
 $$
 
-2. **Đối chứng Donor Placebo**:
+2. **Đối chứng Placebo và chuẩn hóa liều can thiệp (Dose-Matched Controls)**:
 
-   Training-Mean Donor: Trước hết, phân phối khoảng cách trung bình $\overline{Y}_{D,\mathrm{train}}$ được tính từ toàn bộ các thành phố huấn luyện trong cùng fold. Để bảo đảm so sánh công bằng với điều kiện đặc thù theo thành phố mục tiêu, log-ratio giữa $\overline{Y}_{D,\mathrm{train}}$ và phân phối khoảng cách của baseline $\widehat{Y}^{(0)}$ được tính và chuẩn hóa kỳ vọng (centered):
+   Để phân lập chính xác giá trị thông tin của phân phối khoảng cách thành phố mục tiêu khỏi ảnh hưởng thuần túy của độ lớn can thiệp hiệu chỉnh, các đối chứng được chuẩn hóa về cùng độ lớn log-ratio với phân phối mục tiêu $Y_D^{\mathrm{target}}$. Với mỗi thành phố đánh giá, gọi $\widehat{Y}^{(0)}$ là phân phối khoảng cách do mô hình zero-shot $M_0$ dự báo trên các bin hoạt động ($b = 1, \dots, K_{\mathrm{act}}$). Vector log-ratio của phân phối mục tiêu và độ lệch chuẩn tâm (liều can thiệp mục tiêu $D_T$) được xác định bởi:
 $$
-\mathbf{r}_M = \log\left(\frac{\overline{Y}_{D,\mathrm{train}}}{\widehat{Y}^{(0)}}\right), \qquad \tilde{\mathbf{r}}_M = \mathbf{r}_M - \frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} r_{M,b}.
+r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{T,b}^2}.
 $$
-Vector này sau đó được co giãn để có cùng cường độ can thiệp $D_T$ với target $Y_D$:
+
+   * **Đối chứng từ thành phố huấn luyện (Wrong-City Donors, Dose-Matched)**: Với mỗi lượt rút donor ngẫu nhiên từ tập huấn luyện trong cùng fold ($B_{\mathrm{draw}} = 1.000$), gọi $Y_D^{\mathrm{donor}}$ là phân phối của thành phố donor. Log-ratio ban đầu và liều can thiệp donor $D_D$ được tính qua:
 $$
-\tilde{\mathbf{r}}_M^{*} = \tilde{\mathbf{r}}_M \frac{D_T}{D_M},
+r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{D,b}^2}.
 $$
-trong đó $D_M = \|\tilde{\mathbf{r}}_M\|_2$ là độ lớn can thiệp ban đầu của Training-Mean và $D_T = \|\tilde{\mathbf{r}}_T\|_2$ là độ lớn can thiệp của target distribution. Vector đã dose-match $\tilde{\mathbf{r}}_M^{*}$ sau đó được dùng để xây dựng phân phối hiệu chỉnh theo cùng quy trình như các placebo khác.
+     Nếu $D_D > 0$, vector log-ratio được co giãn chính xác về liều $D_T$: $\tilde{r}_{D,b}^* = \tilde{r}_{D,b} \cdot (D_T / D_D)$. Phân phối đối chứng chuẩn hóa liều $p_D^*$ sau đó được tái lập qua $p_{D,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)$ với $\sum_{b=1}^{K_{\mathrm{act}}} p_{D,b}^* = 1$, trước khi đưa vào toán tử hiệu chỉnh.
+
+   * **Đối chứng trung bình tập huấn luyện (Training-Mean Donor, Dose-Matched)**: Phân phối trung bình $\overline{Y}_{D,\mathrm{train}}$ được tính gộp từ toàn bộ các thành phố trong tập huấn luyện của fold tương ứng. Log-ratio và liều can thiệp $D_M$ được tính qua:
+$$
+r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{M,b}^2}.
+$$
+     Vector log-ratio sau đó được co giãn về cùng liều $D_T$: $\tilde{r}_{M,b}^* = \tilde{r}_{M,b} \cdot (D_T / D_M)$, và phân phối chuẩn hóa liều $p_M^*$ được tái lập qua $p_{M,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)$ với $\sum_{b=1}^{K_{\mathrm{act}}} p_{M,b}^* = 1$.
+
+   * **Đối chứng hoán vị nhóm khoảng cách (Permuted Target $Y_D$)**: Nhằm kiểm tra vai trò của trật tự không gian giữa tỷ trọng luồng và nhóm cự ly, vector sai lệch đã chuẩn tâm $\tilde{\mathbf{r}}_T$ được hoán vị ngẫu nhiên vị trí giữa các bin hoạt động ($B_{\mathrm{perm}} = 1.000$ lần hoán vị độc lập): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, trong đó $\pi$ là một hoán vị ngẫu nhiên trên $\{1, \dots, K_{\mathrm{act}}\}$. Vì phép hoán vị bảo toàn hoàn toàn chuẩn $\ell_2$ ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = D_T$), điều kiện này tự động bảo toàn đúng liều can thiệp $D_T$ của phân phối mục tiêu nhưng phá vỡ hoàn toàn liên hệ ngữ nghĩa giữa cự ly và lưu lượng. Phân phối hoán vị sau đó được tái lập tương tự qua $p_{P,b} \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})$ với $\sum_{b=1}^{K_{\mathrm{act}}} p_{P,b} = 1$.
 
 
 
@@ -713,12 +724,12 @@ $$
 
 Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-county có mức tăng bằng 0 tuyệt đối theo cấu trúc.
 
-Đối với nhóm 11 vùng đô thị multi-county (chiếm 22% tập benchmark), hiệu chỉnh cấp county đạt mức cải thiện tại 9/11 vùng, với mức tăng bổ sung trung bình là $+0.00063$ (Bảng S1 và Hình S1).
+Đối với nhóm 11 vùng đô thị multi-county (chiếm 22% tập benchmark), hiệu chỉnh cấp county đạt mức cải thiện tại 9/11 vùng, với mức tăng bổ sung trung bình là $+0.00063$ (Bảng S2 và Hình S1).
 
 ![Hình S1](figures/fig_s1_spatial_resolution.png)
 **Hình S1. So sánh mức tăng CPC của hiệu chỉnh cấp thành phố và cấp county trên 11 vùng đô thị multi-county. Phân tích mang tính thăm dò; 39 vùng single-county không được hiển thị vì hai cách phân nhóm tương đương về mặt toán học.**
 
-### Bảng S1: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
+### Bảng S2: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
 
 *Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị là ước lượng mô tả ở cấp city. Không báo cáo khoảng tin cậy hoặc kiểm định giả thuyết cho subgroup nếu không có artifact bất định riêng đã được xác minh.*
 

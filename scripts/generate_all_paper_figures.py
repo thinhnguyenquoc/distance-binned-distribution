@@ -3,9 +3,9 @@ Master script to generate five publication-ready empirical figures for Section 4
 
 Outputs saved to paper/figures/ in both PNG (300 DPI) and vector PDF formats:
 - fig2_main_per_city.png / .pdf
-- fig3_resolution_sensitivity.png / .pdf
-- fig4_noise_dose_response.png / .pdf
-- fig5_structural_validity_placebo.png / .pdf
+- fig3_structural_validity_placebo.png / .pdf
+- fig4_resolution_sensitivity.png / .pdf
+- fig5_noise_dose_response.png / .pdf
 - fig6_mechanistic_dpre.png / .pdf
 """
 
@@ -114,7 +114,42 @@ def generate_figure2():
 
 
 def generate_figure3():
-    """Figure 3 (Hinh 4): Calibration Gain vs. Distance-Bin Resolution (K sweep)."""
+    """Figure 3 / Hình 3: Target Specificity and Bin-Order Controls (Target Y_D vs Dose-Matched Donor vs Permuted Y_D)."""
+    conditions = ["Target $Y_D$", "Dose-matched donor", "Permuted $Y_D$"]
+    means = [+0.003539, -0.000091, -0.006964]
+    ci_low = [+0.00260, -0.00089, -0.00914]
+    ci_high = [+0.00450, +0.00071, -0.00512]
+
+    yerr_low = np.array(means) - np.array(ci_low)
+    yerr_high = np.array(ci_high) - np.array(means)
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.2))
+
+    colors = [PRIMARY_BLUE, GRAY, MUTED_RED]
+    bars = ax.bar(range(len(conditions)), means, color=colors, width=0.55, edgecolor="#222222", linewidth=0.6, zorder=3)
+    ax.errorbar(range(len(conditions)), means, yerr=[yerr_low, yerr_high], fmt="none", ecolor="#222222", capsize=5, elinewidth=1.3, zorder=4)
+
+    ax.axhline(0, color="#333333", linewidth=0.9, linestyle="-", zorder=2)
+    ax.set_xticks(range(len(conditions)))
+    ax.set_xticklabels(conditions, fontweight="bold")
+    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.grid(axis="y", linestyle="--", alpha=0.35)
+
+    # Clean numeric values positioned cleanly above/below the CI error bars
+    ax.text(0, ci_high[0] + 0.0006, f"{means[0]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=PRIMARY_BLUE)
+    ax.text(1, ci_high[1] + 0.0006, f"{means[1]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color="#555555")
+    ax.text(2, ci_low[2] - 0.0011, f"{means[2]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=MUTED_RED)
+
+    ax.set_ylim(-0.0125, +0.0075)
+    fig.tight_layout()
+    fig.savefig(FIGURES_DIR / "fig3_structural_validity_placebo.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig3_structural_validity_placebo.pdf")
+    plt.close(fig)
+    print("Generated Figure 3 (Placebo controls)")
+
+
+def generate_figure4():
+    """Figure 4 / Hình 4: Calibration Gain vs. Distance-Bin Resolution (K sweep)."""
     k_json = Path("results/k_sensitivity_v1/k_sensitivity_summary.json")
     with open(k_json, "r") as f:
         k_data = json.load(f)
@@ -159,10 +194,50 @@ def generate_figure3():
 
     ax.set_ylim(+0.0000, +0.0085)
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig3_resolution_sensitivity.pdf")
+    fig.savefig(FIGURES_DIR / "fig4_resolution_sensitivity.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig4_resolution_sensitivity.pdf")
     plt.close(fig)
-    print("Generated Figure 3 (K-sensitivity)")
+    print("Generated Figure 4 (K-sensitivity)")
+
+
+def generate_figure5():
+    """Figure 5 / Hình 5: Noise dose-response & TV crossover."""
+    json_path = Path("results/noise_robustness_fine_v1/noise_summary.json")
+    with open(json_path, "r") as f:
+        data = json.load(f)
+
+    res = data["results_by_eps"]
+    eps_cross = data.get("eps_cross_zero_dCPC", 0.0444)
+
+    epsilons = [0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    eps_pct = [e * 100 for e in epsilons]
+
+    means = [res[str(e)]["mean_delta_cpc"] for e in epsilons]
+    ci_lowers = [res[str(e)]["ci_lower"] for e in epsilons]
+    ci_uppers = [res[str(e)]["ci_upper"] for e in epsilons]
+
+    fig, ax = plt.subplots(figsize=(6.4, 4.0))
+
+    ax.plot(eps_pct, means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=4, label="Mean $\\Delta\\mathrm{CPC}$")
+    ax.fill_between(eps_pct, ci_lowers, ci_uppers, color=PRIMARY_BLUE, alpha=0.18, zorder=2, label="95% bootstrap CI")
+
+    ax.axhline(0, color="#333333", linestyle="-", linewidth=0.9, zorder=2)
+    ax.axvline(eps_cross * 100, color=MUTED_RED, linestyle="--", linewidth=1.2, zorder=3)
+
+    # Direct annotation for crossover threshold
+    ax.text(eps_cross * 100 + 0.12, 0.0002, f"$\\epsilon_{{\\mathrm{{cross}}}} \\approx {eps_cross*100:.2f}\\%$",
+            color=MUTED_RED, fontsize=9.5, fontweight="bold", verticalalignment="bottom")
+
+    ax.set_xlabel("TV noise $\\epsilon$ (%)", fontweight="bold")
+    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.grid(True, linestyle="--", alpha=0.35)
+    ax.legend(loc="upper right", frameon=True, framealpha=0.9)
+
+    fig.tight_layout()
+    fig.savefig(FIGURES_DIR / "fig5_noise_dose_response.png", dpi=300)
+    fig.savefig(FIGURES_DIR / "fig5_noise_dose_response.pdf")
+    plt.close(fig)
+    print("Generated Figure 5 (Noise dose-response)")
 
 
 def generate_figure_s1():
@@ -216,81 +291,6 @@ def generate_figure_s1():
     print("Generated Figure S1 (Spatial resolution standalone)")
 
 
-def generate_figure4():
-    """Figure 4: Noise dose-response."""
-    json_path = Path("results/noise_robustness_fine_v1/noise_summary.json")
-    with open(json_path, "r") as f:
-        data = json.load(f)
-
-    res = data["results_by_eps"]
-    eps_cross = data.get("eps_cross_zero_dCPC", 0.0444)
-
-    epsilons = [0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
-    eps_pct = [e * 100 for e in epsilons]
-
-    means = [res[str(e)]["mean_delta_cpc"] for e in epsilons]
-    ci_lowers = [res[str(e)]["ci_lower"] for e in epsilons]
-    ci_uppers = [res[str(e)]["ci_upper"] for e in epsilons]
-
-    fig, ax = plt.subplots(figsize=(6.4, 4.0))
-
-    ax.plot(eps_pct, means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=4, label="Mean $\\Delta\\mathrm{CPC}$")
-    ax.fill_between(eps_pct, ci_lowers, ci_uppers, color=PRIMARY_BLUE, alpha=0.18, zorder=2, label="95% bootstrap CI")
-
-    ax.axhline(0, color="#333333", linestyle="-", linewidth=0.9, zorder=2)
-    ax.axvline(eps_cross * 100, color=MUTED_RED, linestyle="--", linewidth=1.2, zorder=3)
-
-    # Direct annotation for crossover threshold
-    ax.text(eps_cross * 100 + 0.12, 0.0002, f"$\\epsilon_{{\\mathrm{{cross}}}} \\approx {eps_cross*100:.2f}\\%$",
-            color=MUTED_RED, fontsize=9.5, fontweight="bold", verticalalignment="bottom")
-
-    ax.set_xlabel("TV noise $\\epsilon$ (%)", fontweight="bold")
-    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.grid(True, linestyle="--", alpha=0.35)
-    ax.legend(loc="upper right", frameon=True, framealpha=0.9)
-
-    fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig4_noise_dose_response.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig4_noise_dose_response.pdf")
-    plt.close(fig)
-    print("Generated Figure 4")
-
-
-def generate_figure5():
-    """Figure 5 / Hinh 3: Target Specificity and Bin-Order Controls (Target Y_D vs Dose-Matched Donor vs Permuted Y_D)."""
-    conditions = ["Target $Y_D$", "Dose-matched donor", "Permuted $Y_D$"]
-    means = [+0.003539, -0.000091, -0.006964]
-    ci_low = [+0.00260, -0.00089, -0.00914]
-    ci_high = [+0.00450, +0.00071, -0.00512]
-
-    yerr_low = np.array(means) - np.array(ci_low)
-    yerr_high = np.array(ci_high) - np.array(means)
-
-    fig, ax = plt.subplots(figsize=(6.5, 4.2))
-
-    colors = [PRIMARY_BLUE, GRAY, MUTED_RED]
-    bars = ax.bar(range(len(conditions)), means, color=colors, width=0.55, edgecolor="#222222", linewidth=0.6, zorder=3)
-    ax.errorbar(range(len(conditions)), means, yerr=[yerr_low, yerr_high], fmt="none", ecolor="#222222", capsize=5, elinewidth=1.3, zorder=4)
-
-    ax.axhline(0, color="#333333", linewidth=0.9, linestyle="-", zorder=2)
-    ax.set_xticks(range(len(conditions)))
-    ax.set_xticklabels(conditions, fontweight="bold")
-    ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.grid(axis="y", linestyle="--", alpha=0.35)
-
-    # Clean numeric values positioned cleanly above/below the CI error bars
-    ax.text(0, ci_high[0] + 0.0006, f"{means[0]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=PRIMARY_BLUE)
-    ax.text(1, ci_high[1] + 0.0006, f"{means[1]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color="#555555")
-    ax.text(2, ci_low[2] - 0.0011, f"{means[2]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=MUTED_RED)
-
-    ax.set_ylim(-0.0125, +0.0075)
-    fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig5_structural_validity_placebo.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig5_structural_validity_placebo.pdf")
-    plt.close(fig)
-    print("Generated Figure 5")
-
-
 def generate_figure6():
     """Figure 6: Mechanistic Diagnostic - Baseline Distance Misalignment d_pre vs Delta CPC."""
     csv_path = Path("results/audit/dpre_mechanism_data.csv")
@@ -326,8 +326,8 @@ def generate_figure6():
 if __name__ == "__main__":
     generate_figure2()
     generate_figure3()
-    generate_figure_s1()
     generate_figure4()
     generate_figure5()
     generate_figure6()
+    generate_figure_s1()
     print("All empirical figures and Figure S1 successfully generated in paper/figures/")

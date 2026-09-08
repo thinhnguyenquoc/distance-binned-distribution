@@ -218,7 +218,7 @@ The bar chart shows $\Delta\mathrm{CPC}_c = \operatorname{CPC}_c(M_1) - \operato
 
 Placebo controls show that the benefit of calibration depends on target-city-specific information: the $Y_D$ of the correct target city produces a larger improvement than dose-matched donor distributions. When the bin order is permuted, the benefit no longer persists and performance decreases, indicating that calibration benefit depends on preserving the correct association between flow shares and distance intervals.
 
-![Figure 3](figures/fig5_structural_validity_placebo.png)
+![Figure 3](figures/fig3_structural_validity_placebo.png)
 **Figure 3. Controls for target specificity and distance structure.** The figure compares target $Y_D$, dose-matched training-donor placebo, and permuted target $Y_D$ across 50 cities. Error bars represent stratified 95% bootstrap CIs by fold.
 
 ### Table 3: Target specificity and placebo controls ($N=50$)
@@ -236,7 +236,7 @@ Note: Bootstrap confidence intervals are computed for mean $\Delta\mathrm{CPC}$,
 
 The resolution and quality of the $Y_D$ observation are evaluated along three complementary dimensions: the number of distance intervals $K$, the spatial resolution of the aggregate signal, and observation-quality degradation due to noise. These three analyses evaluate which conditions govern the additional information supplied by $Y_D$.
 
-First, as the number of distance intervals increases, CPC improvement increases across the evaluated range of $K$. With the coarse partition $K=2$, mean $\Delta\mathrm{CPC}$ is only about $+0.00098$, whereas at the main configuration $K=8$, the increase reaches $+0.00354$. When resolution is further increased to $K=20$, mean $\Delta\mathrm{CPC}$ reaches $+0.00639$. However, the rate of increase gradually declines at larger $K$, indicating diminishing marginal benefit from adding further distance detail.
+First, as the number of distance intervals increases from $K=2$ to $K=20$, mean $\Delta\mathrm{CPC}$ increases from $+0.00098$ to $+0.00639$ (Table 4). At the main configuration $K=8$, the increase reaches $+0.00354$, with 45/50 cities improved over the baseline. Winning-city rates remain consistently high, ranging between 78% ($K=2$) and 94% ($K=18$) across all evaluated resolutions. The largest step increase occurs when moving from $K=2$ to $K=4$ (an additional gain of roughly 0.00100). Thereafter, marginal gains between successive resolution steps fluctuate between 0.0003 and 0.0009; for example, the step from $K=10$ to $K=12$ (+0.00067) is larger than that from $K=8$ to $K=10$ (+0.00059).
 
 ### Table 4: Scaling information resolution through distance intervals
 
@@ -254,10 +254,10 @@ First, as the number of distance intervals increases, CPC improvement increases 
 | **$K = 18$** | $0.71884 \pm 0.04460$ | $0.72230$ | **$+0.00603$** | $+0.00458$ | $[+0.00480, +0.00726]$ | **47 / 50 (94.0%)** |
 | **$K = 20$** | $0.71920 \pm 0.04462$ | $0.72266$ | **$+0.00639$** | $+0.00494$ | $[+0.00508, +0.00769]$ | **46 / 50 (92.0%)** |
 
-![Figure 4](figures/fig3_resolution_sensitivity.png)
+![Figure 4](figures/fig4_resolution_sensitivity.png)
 **Figure 4. Sensitivity of improvement to the number of distance intervals $K$.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities and error bars show stratified 95% bootstrap CIs by fold. $K=8$ is the main configuration of the study.
 
-These results show that a substantial part of the additional value of $Y_D$ appears at relatively coarse resolutions, while more detailed partitions continue to provide benefits with progressively smaller marginal increases.
+These results indicate that finer distance partitions continue to supply additional informative constraints across the entire range of $K$, although the magnitude of additional gain varies across resolution intervals (Figure 4).
 
 In addition to distance resolution, we conducted an exploratory analysis of the spatial resolution of the observation. Across 11 metropolitan areas spanning multiple counties, calibration using an origin-county-level $Y_D$ distribution improved over city-level calibration in 9/11 cases. However, the pooled additional increase across all 50 metropolitan areas was only
 
@@ -271,10 +271,10 @@ $$ \epsilon_{\mathrm{cross}} \approx 4.44\% \text{ TV}, $$
 
 with 95% CI $[4.16\%,\,4.77\%]$. This is an empirical threshold specific to the benchmark and noise mechanism used and should not be interpreted as a universal tolerance level.
 
-![Figure 5](figures/fig4_noise_dose_response.png)
+![Figure 5](figures/fig5_noise_dose_response.png)
 **Figure 5. Sensitivity of improvement to Total Variation noise.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities; the shaded band is the stratified 95% bootstrap CI by fold. The horizontal line at $\Delta\mathrm{CPC}=0$ indicates baseline-equivalent performance, and the dashed line marks the empirical crossing point $\epsilon_{\mathrm{cross}}\approx4.44\%$.
 
-Overall, the results show that the value of $Y_D$ depends on two distinct properties: the amount of structure retained in the observation and the accuracy of that structure. Increasing resolution can enrich distance information, but additional benefits diminish; conversely, when observation quality is degraded, the calibration benefit decreases and eventually disappears. The county-level analysis further suggests that spatial detail may provide additional information in some cities, but this evidence is currently exploratory.
+Overall, the results show that the value of $Y_D$ depends on both the granularity and the accuracy of the observation: increasing the number of distance intervals improves results, but the signal must remain sufficiently accurate to yield practical benefits. The county-level analysis further suggests that spatial detail may provide additional information in some cities, but this evidence is currently exploratory.
 
 ## 4.4. Robustness across initialization and baseline architecture
 
@@ -301,7 +301,7 @@ The baseline's initial distance-distribution bias is strongly associated with im
 
 # 5. Discussion
 
-### 5.1. Information value, calibration mechanism, and methodological meaning
+## 5.1. Information value, calibration mechanism, and methodological meaning
 
 The fact that $Y_D$ continues to improve predictions after the baseline has used urban context and distances between spatial pairs indicates that these inputs do not fully infer how each target city's total mobility volume is distributed by distance. Because baseline parameters are not updated during calibration, this improvement is interpreted as the additional information value of $Y_D$, rather than a benefit from fine-tuning or retraining.
 
@@ -311,7 +311,7 @@ Therefore, $Y_D$ is primarily able to correct between-bin biases, where the base
 
 This mechanism also clarifies the methodological meaning of the result. Models such as Deep Gravity and UGNN show that neural networks can learn transferable mobility patterns from source data [@simini2021deepgravity; @guo2025ugnn]. The result of this study adds that an aggregate target-domain observation can provide a calibration signal for a trained cross-city model without updating its parameters. However, this does not demonstrate deployment feasibility, because $Y_D$ here is an oracle and the calibration operates only on the known positive interzonal support $\Omega_c$.
 
-### 5.2. Conditions governing the value of $Y_D$
+## 5.2. Conditions governing the value of $Y_D$
 
 The results show that the value of $Y_D$ depends on two distinct properties: the amount of structure retained by the observation and the accuracy of that structure. Increasing resolution is useful only when the additional information remains reliable; conversely, a high-resolution but biased distribution can eliminate the calibration benefit. Placebo and permutation analyses further show that the useful signal lies not merely in the general shape of the vector, but in correctly matching flow shares to distances and the target city.
 
@@ -347,43 +347,44 @@ To be added later
 
 2. **de Montjoye, Y.-A., Hidalgo, C. A., Verleysen, M., & Blondel, V. D.** (2013). Unique in the crowd: The privacy bounds of human mobility. *Scientific Reports*, 3, 1376. [https://doi.org/10.1038/srep01376](https://doi.org/10.1038/srep01376)
 
-3. **Enaya, A., Zhong, C., Batty, M., Morphet, R., & Lopane, F. D.** (2026). TransGM: Transferable gravity models for cross-city policy transfer. *Computers, Environment and Urban Systems*, 128, 102455. [https://doi.org/10.1016/j.compenvurbsys.2026.102455](https://doi.org/10.1016/j.compenvurbsys.2026.102455)
+3. **Efron, B., & Tibshirani, R. J.** (1993). *An introduction to the bootstrap*. Chapman & Hall.
 
-4. **GADM.** (n.d.). *GADM database of global administrative areas (Version 4.1)* [Data set]. Retrieved September 2, 2026, from [https://gadm.org/data.html](https://gadm.org/data.html)
+4. **Enaya, A., Zhong, C., Batty, M., Morphet, R., & Lopane, F. D.** (2026). TransGM: Transferable gravity models for cross-city policy transfer. *Computers, Environment and Urban Systems*, 128, 102455. [https://doi.org/10.1016/j.compenvurbsys.2026.102455](https://doi.org/10.1016/j.compenvurbsys.2026.102455)
 
-5. **Gallotti, R., Maniscalco, D., Barthelemy, M., & De Domenico, M.** (2024). Distorted insights from human mobility data. *Communications Physics*, 7, 421. [https://doi.org/10.1038/s42005-024-01909-x](https://doi.org/10.1038/s42005-024-01909-x)
+5. **GADM.** (n.d.). *GADM database of global administrative areas (Version 4.1)* [Data set]. Retrieved September 2, 2026, from [https://gadm.org/data.html](https://gadm.org/data.html)
 
-6. **Grogger, J. T., & Carson, R. T.** (1991). Models for truncated counts. *Journal of Applied Econometrics*, 6(3), 225–238. [https://doi.org/10.1002/jae.3950060302](https://doi.org/10.1002/jae.3950060302)
+6. **Gallotti, R., Maniscalco, D., Barthelemy, M., & De Domenico, M.** (2024). Distorted insights from human mobility data. *Communications Physics*, 7, 421. [https://doi.org/10.1038/s42005-024-01909-x](https://doi.org/10.1038/s42005-024-01909-x)
 
-7. **Guo, J., Bai, S., Li, X., Xian, K., Liu, E., Ding, W., & Ma, X.** (2025). A universal geography neural network for mobility flow prediction in planning scenarios. *Computer-Aided Civil and Infrastructure Engineering*, 40, 5769–5789. [https://doi.org/10.1111/mice.13398](https://doi.org/10.1111/mice.13398)
+7. **Grogger, J. T., & Carson, R. T.** (1991). Models for truncated counts. *Journal of Applied Econometrics*, 6(3), 225–238. [https://doi.org/10.1002/jae.3950060302](https://doi.org/10.1002/jae.3950060302)
 
-8. **Houssiau, F., Rocher, L., & de Montjoye, Y.-A.** (2022). On the difficulty of achieving differential privacy in practice: User-level guarantees in aggregate location data. *Nature Communications*, 13, 29. [https://doi.org/10.1038/s41467-021-27566-0](https://doi.org/10.1038/s41467-021-27566-0)
+8. **Guo, J., Bai, S., Li, X., Xian, K., Liu, E., Ding, W., & Ma, X.** (2025). A universal geography neural network for mobility flow prediction in planning scenarios. *Computer-Aided Civil and Infrastructure Engineering*, 40, 5769–5789. [https://doi.org/10.1111/mice.13398](https://doi.org/10.1111/mice.13398)
 
-9. **Hyman, G. M.** (1969). The calibration of trip distribution models. *Environment and Planning A*, 1(1), 105–112. [https://doi.org/10.1068/a010105](https://doi.org/10.1068/a010105)
+9. **Holm, S.** (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. [https://www.jstor.org/stable/4615733](https://www.jstor.org/stable/4615733)
 
-10. **Lenormand, M., Bassolas, A., & Ramasco, J. J.** (2016). Systematic comparison of trip distribution laws and models. *Journal of Transport Geography*, 51, 158–169. [https://doi.org/10.1016/j.jtrangeo.2015.12.008](https://doi.org/10.1016/j.jtrangeo.2015.12.008)
+10. **Houssiau, F., Rocher, L., & de Montjoye, Y.-A.** (2022). On the difficulty of achieving differential privacy in practice: User-level guarantees in aggregate location data. *Nature Communications*, 13, 29. [https://doi.org/10.1038/s41467-021-27566-0](https://doi.org/10.1038/s41467-021-27566-0)
 
-11. **Merlin, L. A.** (2020). A new method using medians to calibrate single-parameter spatial interaction models. *Journal of Transport and Land Use*, 13(1), 49–70. [https://doi.org/10.5198/jtlu.2020.1614](https://doi.org/10.5198/jtlu.2020.1614)
+11. **Hyman, G. M.** (1969). The calibration of trip distribution models. *Environment and Planning A*, 1(1), 105–112. [https://doi.org/10.1068/a010105](https://doi.org/10.1068/a010105)
 
-12. **Ortúzar, J. de D., & Willumsen, L. G.** (2011). *Modelling transport* (4th ed.). John Wiley & Sons. [https://doi.org/10.1002/9781119993308](https://doi.org/10.1002/9781119993308)
+12. **Lenormand, M., Bassolas, A., & Ramasco, J. J.** (2016). Systematic comparison of trip distribution laws and models. *Journal of Transport Geography*, 51, 158–169. [https://doi.org/10.1016/j.jtrangeo.2015.12.008](https://doi.org/10.1016/j.jtrangeo.2015.12.008)
 
-13. **Pappalardo, L., Manley, E., Sekara, V., & Alessandretti, L.** (2023). Future directions in human mobility science. *Nature Computational Science*, 3, 588–600. [https://doi.org/10.1038/s43588-023-00469-4](https://doi.org/10.1038/s43588-023-00469-4)
+13. **Loshchilov, I., & Hutter, F.** (2019). Decoupled weight decay regularization. In *International Conference on Learning Representations (ICLR)*. [https://openreview.net/forum?id=Bkg6RiCqY7](https://openreview.net/forum?id=Bkg6RiCqY7)
 
-14. **Simini, F., Barlacchi, G., Luca, M., & Pappalardo, L.** (2021). A Deep Gravity model for mobility flows generation. *Nature Communications*, 12, 6576. [https://doi.org/10.1038/s41467-021-26752-4](https://doi.org/10.1038/s41467-021-26752-4)
+14. **Merlin, L. A.** (2020). A new method using medians to calibrate single-parameter spatial interaction models. *Journal of Transport and Land Use*, 13(1), 49–70. [https://doi.org/10.5198/jtlu.2020.1614](https://doi.org/10.5198/jtlu.2020.1614)
 
-15. **Verma, R., & Ukkusuri, S. V.** (2025). What determines travel time and distance decay in spatial interaction and accessibility? *Journal of Transport Geography*, 122, 104061. [https://doi.org/10.1016/j.jtrangeo.2024.104061](https://doi.org/10.1016/j.jtrangeo.2024.104061)
+15. **Ortúzar, J. de D., & Willumsen, L. G.** (2011). *Modelling transport* (4th ed.). John Wiley & Sons. [https://doi.org/10.1002/9781119993308](https://doi.org/10.1002/9781119993308)
 
-16. **Wilson, A. G.** (1971). A family of spatial interaction models, and associated developments. *Environment and Planning A*, 3(1), 1–32. [https://doi.org/10.1068/a030001](https://doi.org/10.1068/a030001)
+16. **Pappalardo, L., Manley, E., Sekara, V., & Alessandretti, L.** (2023). Future directions in human mobility science. *Nature Computational Science*, 3, 588–600. [https://doi.org/10.1038/s43588-023-00469-4](https://doi.org/10.1038/s43588-023-00469-4)
 
-17. **Yang, Y., Herrera, C., Eagle, N., & González, M. C.** (2014). Limits of predictability in commuting flows in the absence of data for calibration. *Scientific Reports*, 4, 5662. [https://doi.org/10.1038/srep05662](https://doi.org/10.1038/srep05662)
+17. **Simini, F., Barlacchi, G., Luca, M., & Pappalardo, L.** (2021). A Deep Gravity model for mobility flows generation. *Nature Communications*, 12, 6576. [https://doi.org/10.1038/s41467-021-26752-4](https://doi.org/10.1038/s41467-021-26752-4)
 
-18. **Efron, B., & Tibshirani, R. J.** (1993). *An introduction to the bootstrap*. Chapman & Hall.
+18. **Verma, R., & Ukkusuri, S. V.** (2025). What determines travel time and distance decay in spatial interaction and accessibility? *Journal of Transport Geography*, 122, 104061. [https://doi.org/10.1016/j.jtrangeo.2024.104061](https://doi.org/10.1016/j.jtrangeo.2024.104061)
 
-19. **Holm, S.** (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics*, 6(2), 65–70. [https://www.jstor.org/stable/4615733](https://www.jstor.org/stable/4615733)
+19. **Wilcoxon, F.** (1945). Individual comparisons by ranking methods. *Biometrics Bulletin*, 1(6), 80–83. [https://doi.org/10.2307/3001968](https://doi.org/10.2307/3001968)
 
-20. **Loshchilov, I., & Hutter, F.** (2019). Decoupled weight decay regularization. In *International Conference on Learning Representations (ICLR)*. [https://openreview.net/forum?id=Bkg6RiCqY7](https://openreview.net/forum?id=Bkg6RiCqY7)
+20. **Wilson, A. G.** (1971). A family of spatial interaction models, and associated developments. *Environment and Planning A*, 3(1), 1–32. [https://doi.org/10.1068/a030001](https://doi.org/10.1068/a030001)
 
-21. **Wilcoxon, F.** (1945). Individual comparisons by ranking methods. *Biometrics Bulletin*, 1(6), 80–83. [https://doi.org/10.2307/3001968](https://doi.org/10.2307/3001968)
+21. **Yang, Y., Herrera, C., Eagle, N., & González, M. C.** (2014). Limits of predictability in commuting flows in the absence of data for calibration. *Scientific Reports*, 4, 5662. [https://doi.org/10.1038/srep05662](https://doi.org/10.1038/srep05662)
+
 
 # Supplementary Methods
 
@@ -628,17 +629,26 @@ $$
 \operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
 $$
 
-2. **Donor placebo control**:
+2. **Placebo controls and intervention dose matching (Dose-Matched Controls)**:
 
-   **Training-Mean Donor:** First, the mean distance distribution $\overline{Y}_{D,\mathrm{train}}$ is computed from all training cities in the same fold. To ensure a fair comparison with the city-specific condition, the log-ratio between $\overline{Y}_{D,\mathrm{train}}$ and the baseline distance distribution $\widehat{Y}^{(0)}$ is computed and centered:
+   To isolate the specific informative value of the target-city distance distribution from the pure effect of intervention magnitude, control distributions are normalized to match the log-ratio norm of the target distribution $Y_D^{\mathrm{target}}$. For each evaluated city, let $\widehat{Y}^{(0)}$ denote the distance distribution predicted by the zero-shot baseline $M_0$ over active bins ($b = 1, \dots, K_{\mathrm{act}}$). The log-ratio vector of the target distribution and its centered root-mean-square intervention magnitude $D_T$ are given by:
 $$
-\mathbf{r}_M = \log\left(\frac{\overline{Y}_{D,\mathrm{train}}}{\widehat{Y}^{(0)}}\right), \qquad \tilde{\mathbf{r}}_M = \mathbf{r}_M - \frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} r_{M,b}.
+r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{T,b}^2}.
 $$
-This vector is then scaled to have the same intervention magnitude $D_T$ as the target $Y_D$:
+
+   * **Training-city donor control (Wrong-City Donors, Dose-Matched)**: For each random donor draw from training cities within the same fold ($B_{\mathrm{draw}} = 1,000$), let $Y_D^{\mathrm{donor}}$ be the donor distribution. The raw log-ratio and donor intervention magnitude $D_D$ are computed as:
 $$
-\tilde{\mathbf{r}}_M^{*} = \tilde{\mathbf{r}}_M \frac{D_T}{D_M},
+r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{D,b}^2}.
 $$
-where $D_M = \|\tilde{\mathbf{r}}_M\|_2$ is the initial intervention magnitude of the Training-Mean donor and $D_T = \|\tilde{\mathbf{r}}_T\|_2$ is the intervention magnitude of the target distribution. The dose-matched vector $\tilde{\mathbf{r}}_M^{*}$ is then used to construct the calibration distribution through the same procedure as the other placebos.
+     If $D_D > 0$, the log-ratio vector is scaled exactly to match $D_T$: $\tilde{r}_{D,b}^* = \tilde{r}_{D,b} \cdot (D_T / D_D)$. The dose-matched control distribution $p_D^*$ is then reconstructed via $p_{D,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{D,b}^* = 1$ before entering the calibration operator.
+
+   * **Fold training-mean donor control (Training-Mean Donor, Dose-Matched)**: The pooled mean distribution $\overline{Y}_{D,\mathrm{train}}$ is computed across all training cities in the corresponding fold. Its log-ratio and initial intervention magnitude $D_M$ are:
+$$
+r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{M,b}^2}.
+$$
+     The vector is scaled to match $D_T$: $\tilde{r}_{M,b}^* = \tilde{r}_{M,b} \cdot (D_T / D_M)$, and the dose-matched distribution is reconstructed via $p_{M,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{M,b}^* = 1$.
+
+   * **Permuted distance-interval control (Permuted Target $Y_D$)**: To verify whether the physical ordering between flow shares and distance bins matters, the centered log-ratio vector $\tilde{\mathbf{r}}_T$ is randomly permuted across active bins ($B_{\mathrm{perm}} = 1,000$ independent random permutations): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, where $\pi$ is a uniform permutation over $\{1, \dots, K_{\mathrm{act}}\}$. Because permutation preserves the exact $\ell_2$ norm ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = D_T$), this control strictly maintains the intervention dose $D_T$ of the target distribution while completely severing the semantic association between distance and flow volume. The permuted distribution is reconstructed via $p_{P,b} \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{P,b} = 1$.
 
 
 ## S7. Exploratory analysis of county-level spatial resolution
@@ -678,12 +688,12 @@ $$
 
 This modest pooled increase is driven by the 39 single-county areas, whose increase is exactly zero by construction.
 
-For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark, county-level calibration improves performance in 9/11 areas, with a mean additional increase of $+0.00063$ (Table S1 and Figure S1).
+For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark, county-level calibration improves performance in 9/11 areas, with a mean additional increase of $+0.00063$ (Table S2 and Figure S1).
 
 ![Figure S1](figures/fig_s1_spatial_resolution.png)
 **Figure S1. Comparison of CPC gains from city-level and county-level calibration across 11 multi-county metropolitan areas. The analysis is exploratory; the 39 single-county areas are omitted because the two groupings are mathematically equivalent.**
 
-### Table S1: Descriptive city-level results for the multi-county spatial-resolution analysis
+### Table S2: Descriptive city-level results for the multi-county spatial-resolution analysis
 
 *The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M_{1,\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M_{1,\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Values are descriptive estimates at the city level. Confidence intervals and hypothesis tests are not reported for the subgroup because no separately verified uncertainty artifact is available.*
 
