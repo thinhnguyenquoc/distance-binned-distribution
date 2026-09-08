@@ -155,7 +155,6 @@ def generate_figure3():
     ax.set_xticklabels([f"{k}" for k in k_vals])
     ax.set_xlabel("Distance bins ($K$)", fontweight="bold")
     ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.set_title("Calibration Gain vs. Distance-Bin Resolution", fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.35)
 
     ax.set_ylim(+0.0000, +0.0085)
@@ -207,7 +206,6 @@ def generate_figure_s1():
     ax.set_xticks(x)
     ax.set_xticklabels(clean_names, rotation=45, ha="right", fontsize=8.5)
     ax.set_ylabel("Calibration gain $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.set_title("City- vs. County-Level Calibration Gain", fontweight="bold")
     ax.legend(loc="upper right", frameon=True, framealpha=0.9)
     ax.grid(axis="y", linestyle="--", alpha=0.35)
 
@@ -248,7 +246,6 @@ def generate_figure4():
 
     ax.set_xlabel("TV noise $\\epsilon$ (%)", fontweight="bold")
     ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.set_title("Calibration Gain vs. Observation Noise", fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.35)
     ax.legend(loc="upper right", frameon=True, framealpha=0.9)
 
@@ -316,18 +313,7 @@ def generate_figure6():
     ax.axhline(0, color="#333333", linewidth=0.8, linestyle="--", alpha=0.5, zorder=2)
     ax.set_xlabel("Baseline distance mismatch $d_{\\mathrm{pre}}$", fontweight="bold")
     ax.set_ylabel("Calibration gain $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.set_title("Baseline Distance Mismatch vs. Calibration Gain", fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.35)
-
-    # Clean text box with only partial correlation
-    ax.text(
-        0.05, 0.92,
-        "Partial $r = 0.795$\n$p = 5.35 \\times 10^{-12}$",
-        transform=ax.transAxes,
-        fontsize=9.0,
-        verticalalignment="top",
-        bbox=dict(boxstyle="round,pad=0.4", facecolor="#f9f9f9", edgecolor="#cccccc", alpha=0.95)
-    )
     ax.legend(loc="lower right", frameon=True, framealpha=0.9)
 
     fig.tight_layout()
