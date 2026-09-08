@@ -47,7 +47,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ## 2. Bảng số liệu (Tables 1 - 8)
 
 ### Table 1: Primary Benchmark ($K=8, N=50$)
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L30-L38`](section4_results.md#L30-L38) | [`paper/full_paper_en.md:L439-L446`](full_paper_en.md#L439-L446)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L439-L446`](full_paper_en.md#L439-L446)
 * **File dữ liệu nguồn:**
   1. [`results/5fold_results.json`](../results/5fold_results.json)
   2. [`results/audit/dpre_mechanism_data.csv`](../results/audit/dpre_mechanism_data.csv)
@@ -60,7 +60,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ---
 
 ### Table 2: Target Specificity & Placebo Controls
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L62-L76`](section4_results.md#L62-L76) | [`paper/full_paper_en.md:L470-L484`](full_paper_en.md#L470-L484)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L470-L484`](full_paper_en.md#L470-L484)
 * **File dữ liệu nguồn:**
   1. [`results/e1_canonical_specificity_v2/e1_specificity_results.json`](../results/e1_canonical_specificity_v2/e1_specificity_results.json)
   2. [`results/placebo_matched_v2/matched_placebo_per_city.csv`](../results/placebo_matched_v2/matched_placebo_per_city.csv)
@@ -75,7 +75,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ---
 
 ### Table 3: Distance-Bin Resolution Scaling ($K \in \{2, 4, \dots, 20\}$)
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L93-L110`](section4_results.md#L93-L110) | [`paper/full_paper_en.md:L501-L518`](full_paper_en.md#L501-L518)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L501-L518`](full_paper_en.md#L501-L518)
 * **File dữ liệu nguồn:**
   1. [`results/k_sensitivity_v1/k_sensitivity_summary.json`](../results/k_sensitivity_v1/k_sensitivity_summary.json)
   2. [`results/k_sensitivity_v1/k_sensitivity_per_city.csv`](../results/k_sensitivity_v1/k_sensitivity_per_city.csv)
@@ -89,7 +89,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ---
 
 ### Table 4: Noise Sensitivity & TV Crossover
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L154-L166`](section4_results.md#L154-L166) | [`paper/full_paper_en.md:L562-L574`](full_paper_en.md#L562-L574)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L562-L574`](full_paper_en.md#L562-L574)
 * **File dữ liệu nguồn:**
   1. [`results/noise_robustness_fine_v1/noise_summary.json`](../results/noise_robustness_fine_v1/noise_summary.json)
   2. [`results/noise_robustness_fine_v1/noise_per_city.csv`](../results/noise_robustness_fine_v1/noise_per_city.csv)
@@ -107,7 +107,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ---
 
 ### Table 5: Model Initialization Robustness (Seeds 1, 10, 100)
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L193-L203`](section4_results.md#L193-L203) | [`paper/full_paper_en.md:L601-L611`](full_paper_en.md#L601-L611)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L601-L611`](full_paper_en.md#L601-L611)
 * **File dữ liệu nguồn:**
   1. [`results/k_sensitivity_v1/k_sensitivity_per_seed.csv`](../results/k_sensitivity_v1/k_sensitivity_per_seed.csv)
   2. [`results/sampling_robustness_v1/sampling_per_seed.csv`](../results/sampling_robustness_v1/sampling_per_seed.csv)
@@ -120,7 +120,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ---
 
 ### Table 6: Backbone Architecture Generality
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L218-L227`](section4_results.md#L218-L227) | [`paper/full_paper_en.md:L626-L635`](full_paper_en.md#L626-L635)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L626-L635`](full_paper_en.md#L626-L635)
 * **File dữ liệu nguồn:**
   1. [`results/backbone_robustness_results.json`](../results/backbone_robustness_results.json)
   2. [`results/mlp_backbone_results.json`](../results/mlp_backbone_results.json)
@@ -133,7 +133,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ---
 
 ### Table 7: Direct-OD Observations Comparison (OD-FE)
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L246-L260`](section4_results.md#L246-L260) | [`paper/full_paper_en.md:L654-L668`](full_paper_en.md#L654-L668)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L654-L668`](full_paper_en.md#L654-L668)
 * **File dữ liệu nguồn:**
   1. [`results/direct_od_equivalence_v1/combined/summary.json`](../results/direct_od_equivalence_v1/combined/summary.json)
   2. [`results/partial_od_equivalence_v2/combined/summary.json`](../results/partial_od_equivalence_v2/combined/summary.json)
@@ -146,7 +146,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 ---
 
 ### Table 8: Mechanistic Regression & Partial Correlation ($d_{\text{pre}}$)
-* **Vị trí trong bài báo:** [`paper/section4_results.md:L305-L317`](section4_results.md#L305-L317) | [`paper/full_paper_en.md:L713-L725`](full_paper_en.md#L713-L725)
+* **Vị trí trong bài báo:** [`full_paper_en.md:L713-L725`](full_paper_en.md#L713-L725)
 * **File dữ liệu nguồn:**
   1. [`results/audit/dpre_mechanism_data.csv`](../results/audit/dpre_mechanism_data.csv)
   2. [`results/audit/dpre_mechanism_summary.json`](../results/audit/dpre_mechanism_summary.json)
