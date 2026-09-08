@@ -61,12 +61,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         @page {{
             size: A4;
             margin: 22mm 18mm 22mm 18mm;
-            @bottom-center {{
-                content: counter(page);
-                font-family: 'Times New Roman', 'Cambria', serif;
-                font-size: 9pt;
-                color: #555;
-            }}
         }}
 
         body {{
@@ -204,6 +198,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         img[src$=".svg"] {{
             border: none;
+        }}
+
+        img[src*="fig5_structural_validity_placebo"],
+        img[src*="fig3_resolution_sensitivity"],
+        img[src*="fig4_noise_dose_response"],
+        img[src*="fig6_mechanistic_dpre"] {{
+            max-width: 75%;
         }}
 
         figcaption, .caption {{
@@ -502,7 +503,7 @@ def render_html_to_pdf_playwright(html_path: Path, output_pdf_path: Path) -> Non
             header_template="<div></div>",
             footer_template=(
                 '<div style="font-family: \'Cambria\', serif; font-size: 8.5pt; width: 100%; '
-                'text-align: center; color: #666;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>'
+                'text-align: center; color: #666;"><span class="pageNumber"></span></div>'
             ),
         )
 
