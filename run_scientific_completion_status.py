@@ -51,9 +51,6 @@ def _check_5fold(path: Path | None) -> tuple[str, str]:
 
 def _check_e1_specificity(path: Path | None) -> tuple[str, str]:
     if path is None or not path.exists():
-        smoke = Path("results/e1_canonical_specificity_v2_smoke/e1_specificity_results.json")
-        if smoke.exists():
-            return "smoke-only", "smoke artifact exists; full 50-city canonical specificity output missing"
         return "missing", "full canonical 9-donor specificity output missing"
     payload = _json(path)
     summary = payload.get("summary", {})

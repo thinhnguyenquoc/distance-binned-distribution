@@ -632,7 +632,7 @@ if __name__ == "__main__":
     parser.add_argument("--b", "--replicates", dest="b", type=int, default=1000)
     parser.add_argument("--grid", type=str, choices=["fine", "coarse"], default="fine", help="Grid: 'fine' [0..0.05] or 'coarse' [0..0.20]")
     parser.add_argument("--output_dir", "--output-dir", dest="output_dir", type=str, default=None)
-    parser.add_argument("--checkpoint_dir", "--checkpoint-dir", dest="checkpoint_dir", type=str, default="tmp/frozen_checkpoints")
+    parser.add_argument("--checkpoint_dir", "--checkpoint-dir", dest="checkpoint_dir", type=str, default="results/checkpoints")
     parser.add_argument("--split_manifest", "--split-manifest", dest="split_manifest", type=str, default="results/e1/splits_manifest_v2.json")
     parser.add_argument("--fold", type=int, default=None, help="Specific fold to run (1-5)")
     parser.add_argument("--noise_seed", "--noise-seed", dest="noise_seed", type=int, default=20260822)

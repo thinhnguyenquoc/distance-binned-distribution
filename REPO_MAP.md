@@ -12,11 +12,6 @@
 Paper-critical experiment runners belong under `src/experiment/`, even when their
 results are used only in a supplementary or comparison section.
 
-## Archived or exploratory work
-
-- `related_work/`: pilots, legacy implementations, and superseded experiment variants.
-- `results/test_noise_summary/`: exploratory noise pilot; the canonical noise result is under `results/noise_robustness_fine_v1/`.
-
 ## External reference project
 
 - `NeuroGravity/`: separate upstream project and research codebase. It is not part of
