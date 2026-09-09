@@ -509,13 +509,13 @@ The general calibration procedure is performed as follows:
 
 ### S2.1. Set of active intervals
 
-The set of active intervals $\mathcal A_c$ is determined directly by the presence of OD pairs in the support:
+The set of active intervals $\mathcal A_c$ is determined directly by the presence of OD pairs in the support $\Omega_c$:
 $$
 \mathcal A_c = \left\{ b \in \{1, \dots, K\} : \exists(i,j) \in \Omega_c,\ d_{c,ij} \in I_b \right\},
 $$
-with $K_{\mathrm{act},c} = |\mathcal A_c|$. Because zero-shot predictions $\widehat{t}_{c,ij}^{(0)}$ are strictly positive on $\Omega_c$, this is mathematically equivalent to:
+with $K_{\mathrm{act},c} = |\mathcal A_c|$. In the calibration codebase (`src/calibration/bin_calibration.py`), this corresponds to testing whether any OD pair falls in the interval (`in_bin.any()`); in the placebo/robustness pipeline (`run_unified_placebo.py`), it is represented by the numerical threshold $\mathcal A_c = \{ b \in \{1, \dots, K\} : Y_{c,b} > 10^{-8} \}$. Because the support $\Omega_c$ contains only pairs with positive integer flow ($t_{c,ij} \ge 1$), any interval containing an OD pair satisfies $Y_{c,b} \ge 1/T_{\mathrm{total}} \ge 10^{-6} \gg 10^{-8}$. Furthermore, because zero-shot ZTNB predictions $\widehat{t}_{c,ij}^{(0)}$ are strictly positive on $\Omega_c$, these definitions are mathematically equivalent:
 $$
-\mathcal A_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}.
+\mathcal A_c = \{ b : \exists (i,j)\in\Omega_c, d_{c,ij}\in I_b \} = \{ b : Y_{c,b} > 10^{-8} \} = \{ b : \widehat{Y}_{c,b}^{(0)} > 0 \}.
 $$
 
 ### S2.2. Conditional target distribution over active intervals

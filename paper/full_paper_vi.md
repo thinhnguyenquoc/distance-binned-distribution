@@ -534,13 +534,13 @@ Tham số cường độ hiệu chỉnh $q \in [0, 1]$ điều khiển mức đ�
 Quy trình hiệu chỉnh tổng quát được thực hiện qua các bước:
 
 ### S2.1. Tập các khoảng hoạt động
-Tập các khoảng hoạt động $\mathcal A_c$ được xác định trực tiếp từ sự tồn tại của các cặp OD thuộc tập hỗ trợ:
+Tập các khoảng hoạt động $\mathcal A_c$ được xác định trực tiếp từ sự tồn tại của các cặp OD thuộc tập hỗ trợ $\Omega_c$:
 $$
 \mathcal A_c = \left\{ b \in \{1, \dots, K\} : \exists(i,j) \in \Omega_c,\ d_{c,ij} \in I_b \right\},
 $$
-với $K_{\mathrm{act},c} = |\mathcal A_c|$. Do dự báo baseline $\widehat{t}_{c,ij}^{(0)}$ luôn dương trên $\Omega_c$, định nghĩa này tương đương với:
+với $K_{\mathrm{act},c} = |\mathcal A_c|$. Trong mã nguồn thực nghiệm (`src/calibration/bin_calibration.py`), tiêu chí này tương ứng với việc kiểm tra sự tồn tại của cặp OD trong khoảng (`in_bin.any()`); trong pipeline kiểm tra robustness (`run_unified_placebo.py`), điều này được biểu diễn qua ngưỡng số học $\mathcal A_c = \{ b \in \{1, \dots, K\} : Y_{c,b} > 10^{-8} \}$. Do tập hỗ trợ $\Omega_c$ chỉ gồm các cặp có lưu lượng nguyên dương ($t_{c,ij} \ge 1$), bất kỳ khoảng nào có cặp OD đều thỏa mãn $Y_{c,b} \ge 1/T_{\mathrm{total}} \ge 10^{-6} \gg 10^{-8}$, và do dự báo ZTNB $\widehat{t}_{c,ij}^{(0)}$ luôn dương trên $\Omega_c$, các định nghĩa này hoàn toàn tương đương:
 $$
-\mathcal A_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}.
+\mathcal A_c = \{ b : \exists (i,j)\in\Omega_c, d_{c,ij}\in I_b \} = \{ b : Y_{c,b} > 10^{-8} \} = \{ b : \widehat{Y}_{c,b}^{(0)} > 0 \}.
 $$
 
 ### S2.2. Phân phối mục tiêu điều kiện trên các khoảng hoạt động
