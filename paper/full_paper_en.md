@@ -2,9 +2,9 @@
 
 ## Abstract
 
-Origin–destination (OD) matrices are important inputs for transportation analysis and urban planning, but detailed data on target-city OD flow intensity are often difficult to collect. Studies using urban context and geographic distance have developed cross-city zero-shot baselines capable of predicting mobility flows without using observed target-city OD intensity data. This study examines whether the target city's distance-binned mobility distribution can improve interzonal OD flow-intensity reconstruction on the known positive interzonal support by calibrating the output of a frozen-parameter zero-shot baseline. Crucially, the evaluation adopts an oracle setting: the distance distribution is aggregated directly from the target city's ground-truth OD flows on the exact positive interzonal support used for evaluation, isolating the theoretical information value of the signal.
+Origin–destination (OD) flow intensity estimation for an unobserved target city remains challenging. Although zero-shot models leverage urban context and geographic distance for this task, the supplementary value that the distance-binned mobility distribution can provide to these models remains unclarified. This study uses the target city's distance-binned mobility distribution to calibrate the output of a frozen-parameter zero-shot baseline on the known positive interzonal support. The distribution is computed directly from reference OD flows on the exact evaluation support, establishing an oracle setting to assess the benefits of accurate aggregate information.
 
-In the main experiment, the method is evaluated using a 5-fold cross-validation protocol across 50 U.S. metropolitan areas. For the Urban GNN baseline, city-level oracle calibration increases mean CPC by 0.00354, with 45/50 cities improved. Dose-matched placebo controls show that the target city's own distribution yields higher CPC than training-city donor distributions and permuted controls. This provides evidence that the observed benefit relates to target-city-specific information and the correspondence between the calibration signal and distance intervals. Within the surveyed range, mean improvement increases with more distance intervals and decreases when the observation is corrupted by noise. However, the findings are strictly bounded by this oracle setup on known positive support, leaving link discovery and evaluation with independently sourced observations to future work.
+Across 50 U.S. metropolitan areas under 5-fold cross-city validation, city-level oracle calibration with Urban GNN increases mean CPC by 0.00354, with 45/50 cities improved. Relative to intervention-magnitude-matched controls, the target-city distribution performs better, supporting the role of city-specific information and the correspondence between the calibration signal and distance intervals. Within the surveyed range, mean improvement increases with more distance intervals and decreases when the observation is corrupted by noise. Conclusions are bounded to intensity reconstruction on known positive interzonal support with oracle distribution; efficacy with independently sourced observations requires further verification.
 
 **Keywords:** origin–destination matrix; OD intensity reconstruction; distance-binned mobility distribution; zero-shot; cross-city transfer learning; aggregate observations; spatial mobility.
 
@@ -16,7 +16,7 @@ Recent mobility models have combined urban context and distance to predict flows
 
 This study tests whether the target city's distribution of mobility across distance intervals provides additional information for a trained cross-city baseline. This distribution describes only the share of total flow by distance interval and is used at inference time to calibrate predictions, while all model parameters remain fixed. The calibration is used as an experimental tool to quantify the information value of the additional mobility distribution.
 
-The study focuses on two questions. First, does the target city's distance-binned mobility distribution improve OD intensity reconstruction relative to a frozen-parameter cross-city zero-shot baseline? Second, if it does, how does the improvement depend on the resolution, quality, distance-bin ordering, and specificity of the target observation?
+The study focuses on two questions. First, does the target city's distance-binned mobility distribution improve OD intensity reconstruction relative to a frozen-parameter cross-city zero-shot baseline? Second, if it does, how does the improvement depend on the resolution and quality of the observed distribution? Controls are used to examine the role of city-specific information and the correspondence between the calibration signal and distance intervals.
 
 In this study, the distribution is extracted from the reference flows of the target city itself and is therefore treated as an oracle observation. This setting is used to test the information value of the signal before considering whether it can be collected or estimated from an independent source.
 
@@ -34,7 +34,7 @@ Classical calibration methods show that aggregate trip-distance statistics can b
 
 Comparative studies also show that distance-decay laws are not fixed across datasets and urban contexts. Empirical decay patterns may vary by travel mode, trip purpose, degree of urbanization, and socioeconomic conditions [@verma2025distance].
 
-These findings indicate that distance structure is context-specific. Methodologically, the binned multiplicative adjustment operator is closely rooted in Iterative Proportional Fitting (IPF) and Furness algorithms in classical transportation planning [@ortuzar2011modelling], originating from Deming and Stephan's contingency table adjustments and Wilson's maximum entropy formulation [@wilson1971family]. When constraints are imposed exclusively on one-dimensional distance bins without simultaneous origin–destination margin matching, the formulation reduces to a single-step, closed-form proportional scaling. Rather than re-solving a classical doubly-constrained matrix balancing problem from scratch, the present study adapts this principle as a post-hoc inference-time calibration operator applied directly to the complex representations of frozen zero-shot neural networks.
+These findings indicate that distance structure is context-specific. Methodologically, binned multiplicative scaling is related to Iterative Proportional Fitting (IPF) or Furness algorithms in classical transportation planning [@ortuzar2011modelling], rooted in Deming and Stephan's contingency table adjustments and Wilson's maximum entropy framework [@wilson1971family]. When adjusting total volume across discrete distance bins only, the calibration step is performed directly via a single scaling factor for each bin. This study uses binned scaling to calibrate the output of a frozen cross-city baseline at inference time, while preserving all model parameters.
 
 ## 2.2. Cross-city machine-learning models and aggregate observations
 
@@ -332,7 +332,7 @@ After controlling for baseline CPC, tract count, OD pair count, and mean geograp
 
 ## 5.1. Information value, calibration mechanism, and methodological meaning
 
-The fact that $Y_D$ continues to improve predictions after the baseline has used urban context and distances between spatial pairs indicates that these inputs do not fully infer how each target city's total mobility volume is distributed by distance. Because baseline parameters are not updated during calibration, this improvement is interpreted as the additional information value of $Y_D$, rather than a benefit from fine-tuning or retraining.
+Pairwise distances between spatial units and the mobility distribution across distance intervals provide two distinct types of information. Pairwise distances describe geographic relationships between spatial units, whereas the target distribution indicates how actual flow volume is allocated across distance bands. That calibration still improves CPC indicates that, across evaluated baselines, this aggregate observation supplements relationships learned from urban context and geographic distances.
 
 The calibration structure also clearly limits the type of bias that $Y_D$ can address. The signal provides information about how total flow volume should be distributed across distance bands, but it provides no additional information for distinguishing OD pairs within the same distance interval.
 
@@ -342,11 +342,13 @@ This mechanism also clarifies the methodological meaning of the result. Models s
 
 ## 5.2. Conditions governing the value of $Y_D$
 
-The results show that the value of $Y_D$ depends on two distinct properties: the amount of structure retained by the observation and the accuracy of that structure. Increasing resolution is useful only when the additional information remains reliable; conversely, a high-resolution but biased distribution can eliminate the calibration benefit. Placebo and permutation analyses further show that the useful signal lies not merely in the general shape of the vector, but in correctly matching flow shares to distances and the target city.
+Controls indicate that providing an arbitrary aggregate distribution does not yield benefits equivalent to the target city's distribution. When intervention magnitudes are matched by RMS log-ratio, the correspondence between the calibration signal and distance intervals remains relevant to the outcome. Thus, the value of the observation depends on the informational content it conveys, beyond the scale of the adjustment itself.
+
+Increasing the number of distance intervals provides finer detail to adjust flows across distance ranges, but this experiment uses an oracle distribution. For independently collected observations, both the level of detail and the error of the distribution must be assessed concurrently. Current experiments do not identify the most suitable number of bins for each noise level.
 
 ## 5.3. Limitations and future research
 
-Mobility datasets may contain biases in coverage, representativeness, and preprocessing [@gallotti2024distorted; @pappalardo2023future]. In addition, reducing resolution or aggregating data does not automatically create privacy guarantees. Mobility traces may still contain substantial identifying information after coarsening [@demontjoye2013unique], and providing user-level differential-privacy guarantees for aggregate location data remains practically difficult [@houssiau2022differential]. The present study does not perform a privacy analysis of $Y_D$; therefore, $Y_D$ should be called only a low-dimensional aggregate observation, not a demonstrated privacy-preserving mechanism.
+This study evaluates the predictive value of aggregate observations, rather than privacy guarantees. Aggregating data into a distance distribution does not inherently constitute a privacy guarantee.
 
 The county-level analysis is exploratory. Only 11 metropolitan areas in the benchmark produce a genuinely multi-county partition, while the remaining 39 cases are equivalent to city-level calibration. Moreover, counties are administrative boundaries and may not accurately represent functional mobility areas. Therefore, this result does not support a general conclusion that finer spatial resolution improves performance.
 
@@ -357,9 +359,7 @@ These limitations also define several natural directions for future research. On
 
 # 6. Conclusion
 
-This study examines whether the target city's distance-binned mobility distribution provides additional information for a frozen-parameter cross-city zero-shot baseline. The calibration uses $Y_D$ only at inference time and does not update model parameters.
-
-Across 50 U.S. cities, calibration with $Y_D$ increases CPC by an average of $+0.00354$, with 45/50 cities improving over the baseline. This result shows that the target city's distance distribution contains a small but relatively consistent amount of additional information that the zero-shot baseline does not fully capture. Sensitivity analyses show that this value depends on the resolution and quality of the observation, and that the benefit depends on preserving the correct association between the target city's flow shares and distance intervals.
+In an oracle setting across 50 U.S. metropolitan areas, the target city's distance-binned mobility distribution improves OD intensity reconstruction from a frozen-parameter zero-shot baseline. For Urban GNN, CPC increases by an average of +0.00354, with 45/50 cities improved. This indicates that the target distribution provides useful supplementary information even when the baseline already incorporates urban context and geographic distances.
 
 The improvement is small in absolute magnitude and should be understood as an additional calibration rather than a replacement for detailed OD data. The conclusions are limited to intensity reconstruction on known positive interzonal support with oracle $Y_D$; the study does not evaluate link discovery, full-matrix reconstruction, or the use of independently collected $Y_D$ in real-world deployment.
 
