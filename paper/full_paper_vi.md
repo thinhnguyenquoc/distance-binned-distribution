@@ -85,7 +85,8 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ được định nghĩa là:
+
+Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện theo quy trình ở mục 3.3. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -291,7 +292,7 @@ Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự b�
 
 Phần này đánh giá độ nhạy của mức cải thiện theo ba khía cạnh: số nhóm khoảng cách $K$, độ phân giải không gian của phân phối, và độ chính xác của quan sát dưới tác động của nhiễu.
 
-Trước hết, khi số nhóm khoảng cách tăng từ $K=2$ đến $K=20$, mức tăng CPC trung bình tăng từ +0.00098 lên +0.00639 (Bảng 4). Tại cấu hình chính $K=8$, mức tăng đạt +0.00354 với 45/50 thành phố được cải thiện so với baseline. Tỷ lệ thành phố cải thiện duy trì từ 78% ($K=2$) đến 94% ($K=18$) trên toàn bộ các giá trị $K$ được khảo sát. Bước nhảy lớn nhất xuất hiện khi chuyển từ $K=2$ lên $K=4$ (mức tăng thêm khoảng 0.00100). Sau đó, mức tăng thêm giữa các bước phân giải kế tiếp dao động trong khoảng 0.0003–0.0009; chẳng hạn bước từ $K=10$ lên $K=12$ (+0.00067) lớn hơn bước từ $K=8$ lên $K=10$ (+0.00059).
+Trước hết, khi số nhóm khoảng cách tăng từ $K=2$ lên $K=20$, mức tăng CPC trung bình tăng từ +0.00098 lên +0.00639 (Bảng 4 và Hình 4). Tại cấu hình chính $K=8$, mức tăng đạt +0.00354, với 45/50 thành phố được cải thiện. Mức tăng trung bình tăng trên toàn bộ các cấu hình được khảo sát, trong khi số thành phố cải thiện dao động từ 39 đến 47 trên tổng số 50 thành phố. Đây là kết quả của các cấu hình phân nhóm được đánh giá; nghiên cứu chưa xác định số nhóm tối ưu khi quan sát có nhiễu.
 
 ### Bảng 4. Mức thay đổi CPC theo số nhóm khoảng cách $K$ trên 50 thành phố.
 
@@ -317,14 +318,14 @@ Mức cải thiện trung bình tăng trên toàn bộ dải $K$ được khảo
 
 Ngoài độ phân giải theo khoảng cách, phân tích thăm dò về độ phân giải không gian cho thấy khi áp dụng phân phối theo từng county xuất phát trên 11 vùng đô thị có nhiều county, CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 9/11 trường hợp, với mức tăng trung bình trong nhóm này là +0.00063. Khi tính gộp trên toàn bộ 50 thành phố (trong đó 39 vùng đơn county có mức chênh lệch bằng 0 theo cấu trúc), mức tăng bổ sung trung bình là +0.00014. Kết quả này bước đầu cho thấy việc phân nhóm quan sát theo county xuất phát có thể bổ sung thông tin tại một số vùng đô thị có nhiều county trong benchmark. Khả năng khái quát của kết quả cần được kiểm tra trên tập dữ liệu có nhiều vùng đô thị multi-county hơn.
 
-Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng trung bình lần lượt là +0.0035395, +0.0033591, +0.0028220, +0.0019327, +0.0006977 và -0.0008740 tại $\epsilon=0\%$, 1%, 2%, 3%, 4% và 5% TV. Nội suy tuyến tính giữa hai mức nhiễu liền kề có mức thay đổi CPC trung bình trái dấu cho điểm cắt mô tả khoảng 4.44% TV. Trong 10.000 đường cong bootstrap, 9.546 đường có điểm cắt trong miền khảo sát 0–5%; 454 đường còn lại vẫn dương tại mức nhiễu 5% và được ghi nhận là kiểm duyệt phải tại giới hạn khảo sát. Nghiên cứu không báo cáo khoảng tin cậy cho vị trí điểm cắt.
+Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng CPC trung bình giảm từ +0.00354 khi không thêm nhiễu xuống +0.00070 tại 4% TV và chuyển sang âm tại 5% TV (−0.00087; Hình 5). Nội suy tuyến tính giữa hai mức nhiễu liền kề có mức thay đổi CPC trung bình trái dấu cho điểm cắt mô tả khoảng 4.44% TV. Trong 10.000 đường cong bootstrap, 9.546 đường có điểm cắt trong miền khảo sát 0–5%; 454 đường còn lại vẫn dương tại mức nhiễu 5% và được ghi nhận là kiểm duyệt phải tại giới hạn khảo sát. Nghiên cứu không báo cáo khoảng tin cậy cho vị trí điểm cắt.
 
-Cần phân biệt rõ hai ngưỡng: ngưỡng mà lợi ích hiệu chỉnh còn duy trì ý nghĩa thống kê ($\epsilon^* = 3\%$ TV, với $p_{\mathrm{raw}}=0.0148637$ và $p_{\mathrm{Holm}}=0.0445910 < 0.05$) và ngưỡng điểm cắt mô tả nơi mức cải thiện trung bình giảm về 0 ($\epsilon_{\mathrm{cross}}=4.44\%$ TV). Trong các mức nhiễu được khảo sát, $\epsilon=3\%$ là mức lớn nhất tại đó kiểm định Wilcoxon một phía còn đạt tiêu chí $\alpha=0.05$ sau hiệu chỉnh Holm. Tại mức nhiễu 4% TV, mức cải thiện trung bình vẫn dương (+0.00070) nhưng không còn đạt tiêu chí này ($p_{\mathrm{raw}}=0.4847371$, $p_{\mathrm{Holm}}=0.9694742$). Các kết quả này phụ thuộc vào phân bố dữ liệu và cách tạo nhiễu trong thí nghiệm.
+Trong năm mức nhiễu dương được khảo sát, 3% TV là mức lớn nhất mà kiểm định Wilcoxon một phía còn có ý nghĩa sau hiệu chỉnh Holm ($p_{\mathrm{Holm}}=0.0446$). Tại 4% TV, mức tăng CPC trung bình vẫn dương (+0.00070), nhưng kiểm định không đạt tiêu chí này ($p_{\mathrm{Holm}}=0.9695$). Kết quả kiểm định và điểm cắt của đường trung bình mô tả hai khía cạnh khác nhau; mức 3% TV không được xem là một ngưỡng bảo đảm hiệu quả áp dụng.
 
 ![Hình 5](figures/fig5_noise_dose_response.png)
 **Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% giữa các thành phố, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt mô tả tại $\epsilon_{\mathrm{cross}}=4.44\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
 
-Nhìn chung, các kết quả trong mục này cho thấy giá trị của phân phối khoảng cách phụ thuộc vào cả độ chi tiết và độ chính xác của quan sát: tăng số nhóm khoảng cách giúp cải thiện kết quả, nhưng tín hiệu này cần đủ chính xác để mang lại lợi ích thực tế.
+Trong các cấu hình oracle được khảo sát, tăng số nhóm khoảng cách giúp tăng mức cải thiện trung bình. Khi phân phối bị nhiễu theo cơ chế đã xét, lợi ích này suy giảm và có thể chuyển thành mức giảm CPC.
 
 ## 4.4. Tính ổn định của mức cải thiện theo khởi tạo và kiến trúc baseline
 
@@ -688,7 +689,7 @@ $$
 \operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
 $$
 
-   Thí nghiệm dùng $K=8$, seeds mô hình $\{1,10,100\}$, năm fold, 50 thành phố, một replicate tại $\epsilon=0$ và 1,000 replicate tại mỗi mức dương. Các lượt lặp được trung bình trước seeds, seeds được trung bình trước suy luận cấp thành phố. Các khoảng tin cậy bootstrap phản ánh biến thiên giữa các thành phố đánh giá, có điều kiện trên cách chia fold, checkpoint và pipeline đã cố định; chúng không bao quát biến thiên do huấn luyện lại mô hình hoặc chia lại fold.
+   Mức nhiễu TV đo độ sai khác giữa hai phân phối tỷ trọng; không biểu thị tỷ lệ chuyến đi bị đo sai hay tỷ lệ sai số của từng cặp OD. Thí nghiệm dùng $K=8$, seeds mô hình $\{1,10,100\}$, năm fold, 50 thành phố, một replicate tại $\epsilon=0$ và 1,000 replicate tại mỗi mức dương. Các lượt lặp được trung bình trước seeds, seeds được trung bình trước suy luận cấp thành phố. Các khoảng tin cậy bootstrap phản ánh biến thiên giữa các thành phố đánh giá, có điều kiện trên cách chia fold, checkpoint và pipeline đã cố định; chúng không bao quát biến thiên do huấn luyện lại mô hình hoặc chia lại fold.
 
 2. **Đối chứng Placebo và chuẩn hóa liều can thiệp (Dose-Matched Controls)**:
 
