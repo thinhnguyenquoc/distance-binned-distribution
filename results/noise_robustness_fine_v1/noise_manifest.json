@@ -1,7 +1,43 @@
 {
-  "noise_definition": "multiplicative compositional noise on active bins, TV distance matching via bisection",
-  "timestamp": "2026-08-25T07:27:51.382729",
-  "B_noise": 1000,
+  "experiment_version": "noise_robustness_frozen_v1",
+  "git_commit": "014efe159cf84c41e58114de33007948794c0290",
+  "source_fold_outputs": "results\\noise_robustness_frozen_v1_staging",
+  "checkpoint_sha256": {
+    "5fold_fold1_seed1.pt": "33565d20ae13244a636c64bb4ce2913631bd1b125e603f6c23b7b512288402d4",
+    "5fold_fold1_seed10.pt": "943adb27b62fdd2490b849fadcc2cd731e86a6d81481854a33c80bf13445750a",
+    "5fold_fold1_seed100.pt": "a335fad284b38275e2b300ef47e7bdf23b1c63837cdb00ef02470261d8b3237f",
+    "5fold_fold2_seed1.pt": "1405940f95e1ade2bd0a4cf54d29de2536be709bc95c256ab803035ea677dfd0",
+    "5fold_fold2_seed10.pt": "587f3d1ba7aeaad80dd3448e3cda3b183b1fe5af3d475f6e33bcb3ff7761c11e",
+    "5fold_fold2_seed100.pt": "f837134d9a903ee0472a44057e505ddd4bc17d8c073f530b795d9b1216925c10",
+    "5fold_fold3_seed1.pt": "8a9e3fd013111ebdd80bad575e7c06623e69fc5b75997f1e3d148d385ac7067c",
+    "5fold_fold3_seed10.pt": "32fefdfc7115fac52259958cc4fa57c0d2e993eaae27dbbe6a52cfb9e6dc326b",
+    "5fold_fold3_seed100.pt": "97a95390ed316d7436bba96c1f7bf13d0bd60fef4474ee106efbf488109b866e",
+    "5fold_fold4_seed1.pt": "6aab98abbd829cb8980220f75dfc78543a9fe0cf7995c5782ae8f8be2f83cb27",
+    "5fold_fold4_seed10.pt": "d30b83bb2ad3d6d7db239bc09b1d9aedb3dfe901bbd9248f1b2ef2d36e18b614",
+    "5fold_fold4_seed100.pt": "b6bd205f07192baaeee7a9d81f9a81c088dba51cce6fd05b98cea46eff3e4c83",
+    "5fold_fold5_seed1.pt": "ff55d23aa544c48f2a79d66d5399928ed7de215fc913f3fa524bad86c3243695",
+    "5fold_fold5_seed10.pt": "22882a042663c43e6492608259f14809f1a5fda867270c5a069931cee39e3873",
+    "5fold_fold5_seed100.pt": "68e7d163b9f2aaedb355882eea33d97f9fe346410ea58e87009297350fbdc2df"
+  },
+  "split_manifest": "results/e1/splits_manifest_v2.json",
+  "split_manifest_sha256": "96a09089574c37dbcf13112b5bcd20c738327df3c08f5915fdcb2a9f15110543",
+  "split_manifest_content_sha256": "7f9afe02725c7798dab018b6a353ed99ceaf6c36a9f77316aa47ea21297ebd14",
+  "data_root": "data",
+  "data_version": "repository data/ snapshot used by the frozen five-fold run",
+  "K": 8,
+  "folds": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "cities": 50,
+  "model_seeds": [
+    1,
+    10,
+    100
+  ],
   "epsilons": [
     0.0,
     0.01,
@@ -10,6 +46,11 @@
     0.04,
     0.05
   ],
-  "eps_cross": 0.044439113700770264,
-  "eps_star": 0.03
+  "noise_seed": 20260822,
+  "replicates_at_epsilon_zero": 1,
+  "replicates_at_positive_epsilon": 1000,
+  "support_definition": "active target Y_D bins only; support unchanged",
+  "noise_definition": "multiplicative compositional noise with exact TV matching by bisection",
+  "aggregation_order": "replicate -> model seed -> city -> macro mean",
+  "no_post_hoc_offset_or_reconciliation": true
 }

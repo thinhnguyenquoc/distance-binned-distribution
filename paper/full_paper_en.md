@@ -196,6 +196,8 @@ For each city, the improvement is computed as the CPC difference between the pos
 
 The 95% confidence interval is estimated using a city-level paired nonparametric bootstrap, stratified by fold [@efron1993bootstrap]. Paired differences are evaluated using a two-sided Wilcoxon signed-rank test [@wilcoxon1945ranking]. The proportion of cities with $\Delta\mathrm{CPC} > 0$ is reported as an additional descriptive statistic. Corresponding sensitivity and robustness analyses are presented in Section 4.
 
+For the noise stress test, the five positive levels $\epsilon\in\{0.01,0.02,0.03,0.04,0.05\}$ form one Holm family; $\epsilon=0$ is descriptive and is excluded from that family. A one-sided Wilcoxon test is used for the benefit hypothesis ($\Delta\mathrm{CPC}>0$). Noise replicates are averaged within city and seed before averaging the three model seeds; the resulting 50 city-level values are the inferential units. Crossing uncertainty uses fold-stratified bootstrap with the same resampled cities retained across the full noise curve, conditional on the fixed folds, frozen checkpoints, and pipeline.
+
 In addition to the primary tests, an exploratory mechanism analysis evaluates the relationship between the baseline's distance-distribution bias and improvement after calibration. The initial bias $d_{\mathrm{pre}}$ is computed as the Total Variation between the baseline-predicted distance distribution and the reference distribution. Pearson and partial correlations are reported; the partial correlation controls for baseline accuracy ($M_0$ CPC) and city spatial-size characteristics, including $\log N_{\mathrm{tracts}}$, $\log N_{\mathrm{pairs}}$, and mean geographic distance.
 
 # 4. Experimental Results
@@ -269,14 +271,14 @@ $$ \Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, $$
 
 because 39 single-county areas produce mathematically equivalent partitions and therefore have $\Delta\mathrm{CPC}_{\mathrm{res}}=0$ by construction. For the group of 11 multi-county areas alone, the mean additional increase was about $+0.00063$. Thus, this result is treated only as exploratory evidence that finer spatial resolution may provide additional information in some urban structures, rather than as general evidence that increasing spatial resolution always improves performance.
 
-Separately from resolution, we further assessed sensitivity to the quality of the $Y_D$ observation itself. Noise was added to the target-city distribution at specified Total Variation error levels while keeping the baseline, evaluation cities, and calibration operator unchanged. As noise increased, mean $\Delta\mathrm{CPC}$ decreased monotonically and crossed baseline-equivalent performance at approximately
+Separately from resolution, we further assessed sensitivity to the quality of the $Y_D$ observation itself. Noise was added to the target-city distribution at specified Total Variation error levels while keeping the baseline, evaluation cities, and calibration operator unchanged. Mean $\Delta\mathrm{CPC}$ was $+0.0035395$, $+0.0033591$, $+0.0028220$, $+0.0019327$, $+0.0006977$, and $-0.0008740$ at $\epsilon=0\%$, 1%, 2%, 3%, 4%, and 5% TV, respectively. As noise increased, the curve crossed baseline-equivalent performance at approximately
 
-$$ \epsilon_{\mathrm{cross}} \approx 4.44\% \text{ TV}, $$
+$$ \epsilon_{\mathrm{cross}} = 4.4439\% \text{ TV}, $$
 
-with 95% CI $[4.16\%,\,4.77\%]$. This is an empirical threshold specific to the benchmark and noise mechanism used and should not be interpreted as a universal tolerance level.
+with city-bootstrap 95% CI $[3.80\%,\,4.92\%]$ (9,546 valid crossings out of 10,000; 454 had no crossing; none had multiple crossings). In the surveyed grid, $\epsilon=3\%$ was the largest level whose one-sided Wilcoxon test remained below $\alpha=0.05$ after Holm correction ($p_{\mathrm{raw}}=0.0148637$, $p_{\mathrm{Holm}}=0.0445910$). This descriptive crossing is specific to the benchmark and noise mechanism used.
 
 ![Figure 5](figures/fig5_noise_dose_response.png)
-**Figure 5. Sensitivity of improvement to Total Variation noise.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities; the shaded band is the stratified 95% bootstrap CI by fold. The horizontal line at $\Delta\mathrm{CPC}=0$ indicates baseline-equivalent performance, and the dashed line marks the empirical crossing point $\epsilon_{\mathrm{cross}}\approx4.44\%$.
+**Figure 5. Sensitivity of improvement to Total Variation noise.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities; the shaded band is the city-bootstrap 95% CI, stratified by fold. The horizontal line at $\Delta\mathrm{CPC}=0$ indicates baseline-equivalent performance, and the dashed line marks the descriptive crossing point $\epsilon_{\mathrm{cross}}=4.4439\%$.
 
 Overall, the results show that the value of $Y_D$ depends on both the granularity and the accuracy of the observation: increasing the number of distance intervals improves results, but the signal must remain sufficiently accurate to yield practical benefits. The county-level analysis further suggests that spatial detail may provide additional information in some cities, but this evidence is currently exploratory.
 
@@ -619,6 +621,8 @@ p_{(k)} \leq \frac{\alpha}{M - k + 1}, \qquad k = 1, \dots, M.
 $$
    The $p$-values are sorted in ascending order. The step-down procedure stops at the first hypothesis that does not satisfy the rejection condition.
 
+5. **Noise-test family**: The five positive levels $\epsilon=0.01,0.02,0.03,0.04,0.05$ share one Holm family and use one-sided Wilcoxon tests on 50 city-level values; $\epsilon=0$ is excluded from the family. Crossing bootstrap resamples cities within each fold, retains the same sampled city indices across all noise levels, and re-interpolates the crossing for each replicate.
+
 
 ## S6. Technical details of robustness stress tests
 
@@ -635,6 +639,8 @@ $$
 $$
 \operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
 $$
+
+   The experiment uses $K=8$, model seeds $\{1,10,100\}$, five folds, 50 cities, one replicate at $\epsilon=0$, and 1,000 replicates at each positive level. Replicates are averaged before seeds, and seeds before city-level inference. Bootstrap intervals reflect variation among evaluated cities conditional on the fixed folds, checkpoints, and pipeline; they do not include variation from retraining models or re-splitting folds.
 
 2. **Placebo controls and intervention dose matching (Dose-Matched Controls)**:
 

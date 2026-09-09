@@ -123,6 +123,43 @@ def fold_stratified_bootstrap(city_df: pd.DataFrame, metric_col: str, eps: float
     return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
 
 
+def bootstrap_crossing(city_df: pd.DataFrame, epsilons: List[float], evaluated_folds: List[int], n_boot: int = 10000, seed: int = 42) -> Dict[str, Any]:
+    rng = np.random.RandomState(seed)
+    fold_matrices = []
+    for fold in evaluated_folds:
+        fold_df = city_df[city_df.fold == fold]
+        matrix = fold_df.pivot(index="target_city", columns="epsilon", values="delta_cpc_mean")
+        fold_matrices.append(matrix.reindex(columns=epsilons).to_numpy(dtype=float))
+    crossings: List[float] = []
+    no_crossing = 0
+    multiple_crossings = 0
+    for _ in range(n_boot):
+        fold_means = [matrix[rng.randint(0, len(matrix), size=len(matrix))].mean(axis=0) for matrix in fold_matrices]
+        means = np.mean(fold_means, axis=0)
+        candidates = []
+        for idx, (left, right) in enumerate(zip(epsilons[:-1], epsilons[1:])):
+            v_left, v_right = float(means[idx]), float(means[idx + 1])
+            if v_left >= 0 and v_right < 0:
+                candidates.append(left + v_left / (v_left - v_right) * (right - left))
+            elif v_left > 0 and v_right == 0:
+                candidates.append(right)
+        if not candidates:
+            no_crossing += 1
+        else:
+            if len(candidates) > 1:
+                multiple_crossings += 1
+            crossings.append(float(candidates[0]))
+    return {
+        "n_bootstrap": n_boot,
+        "n_valid": len(crossings),
+        "n_no_crossing": no_crossing,
+        "n_multiple_crossings": multiple_crossings,
+        "multiple_crossing_rule": "use the first crossing in ascending epsilon order",
+        "ci_lower": float(np.percentile(crossings, 2.5)) if crossings else None,
+        "ci_upper": float(np.percentile(crossings, 97.5)) if crossings else None,
+    }
+
+
 def fast_cal_metrics(
     yd_tgt: np.ndarray, 
     eps_req: float, 
@@ -212,7 +249,9 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
     logger = logging.getLogger(__name__)
     
     noise_seed = getattr(args, "noise_seed", 20260822)
+    device = getattr(args, "device", "cpu")
     checkpoint_dir = Path(getattr(args, "checkpoint_dir", None) or "results/checkpoints")
+    split_manifest_path = Path(getattr(args, "split_manifest", None) or "results/e1/splits_manifest_v2.json")
     nonzero_epsilons = [e for e in epsilons if e > 0]
     
     # Safely define parameters without mutating globals
@@ -223,7 +262,7 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
     else:
         folds_to_run = [1, 2, 3, 4, 5] if not args.smoke else [2]
         
-    splits = generate_35_5_10_splits(data_root=data_root)
+    splits = load_splits_manifest_v2(str(split_manifest_path), data_root=data_root)
     raw_results: List[Dict[str, Any]] = []
     
     for fold_id in folds_to_run:
@@ -279,11 +318,11 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
                 ckpt_path = checkpoint_dir / f"5fold_fold{fold_id}_seed{m_seed}.pt"
                 if not ckpt_path.exists():
                     raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}. Protocol requires all 3 model seeds.")
-                model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
+                model, scaler, _ = load_checkpoint(ckpt_path, device_str=device)
                 model.eval()
                 
                 city_data = load_city(tc, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
-                t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device="cpu")
+                t_pred_zs_tensor = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device)
                 t_pred_zs = t_pred_zs_tensor.numpy().astype(np.float64)
                 
                 t0_inter = t_pred_zs[inter_mask]
@@ -491,6 +530,7 @@ def generate_summary(
         "n_evaluation_cities": int(len(eval_df) // len(epsilons)),
         "eps_cross_zero_dCPC": eps_cross,
         "eps_star_significant_benefit": float(eps_star),
+        "crossing_bootstrap": bootstrap_crossing(eval_df, epsilons, evaluation_folds),
         "results_by_eps": results
     }
     
@@ -590,12 +630,14 @@ def generate_summary(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--b", type=int, default=1000)
+    parser.add_argument("--b", "--replicates", dest="b", type=int, default=1000)
     parser.add_argument("--grid", type=str, choices=["fine", "coarse"], default="fine", help="Grid: 'fine' [0..0.05] or 'coarse' [0..0.20]")
-    parser.add_argument("--output_dir", type=str, default=None)
-    parser.add_argument("--checkpoint_dir", type=str, default="tmp/frozen_checkpoints")
+    parser.add_argument("--output_dir", "--output-dir", dest="output_dir", type=str, default=None)
+    parser.add_argument("--checkpoint_dir", "--checkpoint-dir", dest="checkpoint_dir", type=str, default="tmp/frozen_checkpoints")
+    parser.add_argument("--split_manifest", "--split-manifest", dest="split_manifest", type=str, default="results/e1/splits_manifest_v2.json")
     parser.add_argument("--fold", type=int, default=None, help="Specific fold to run (1-5)")
-    parser.add_argument("--noise_seed", type=int, default=20260822)
+    parser.add_argument("--noise_seed", "--noise-seed", dest="noise_seed", type=int, default=20260822)
+    parser.add_argument("--device", type=str, default="cpu", choices=["cpu", "cuda"])
     parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
     run_noise_robustness(args)

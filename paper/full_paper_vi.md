@@ -213,6 +213,8 @@ Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được 
 
 Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold [@efron1993bootstrap]. Các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank hai phía [@wilcoxon1945ranking]. Khoảng tin cậy bootstrap được tính cho mức chênh lệch CPC trung bình giữa các thành phố. Kiểm định Wilcoxon signed-rank sử dụng dấu và thứ hạng của các chênh lệch ghép cặp, do đó đánh giá một khía cạnh khác của phân bố chênh lệch và không được diễn giải như một kiểm định trực tiếp đối với giá trị trung bình. Vì vậy, khoảng tin cậy bootstrap và kết quả Wilcoxon được báo cáo song song như hai mô tả bổ sung. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung. Các phân tích độ nhạy và độ bền tương ứng được trình bày trong Mục 4.
 
+Trong stress-test nhiễu, năm mức dương $\epsilon\in\{0.01,0.02,0.03,0.04,0.05\}$ thuộc cùng một họ Holm; mức $\epsilon=0$ chỉ là mốc mô tả và không thuộc họ này. Kiểm định Wilcoxon một phía được dùng cho giả thuyết lợi ích ($\Delta\mathrm{CPC}>0$). Các lượt lặp nhiễu được lấy trung bình trước qua ba model seeds, sau đó giữ 50 giá trị cấp thành phố làm đơn vị suy luận. Khoảng tin cậy crossing dùng bootstrap phân tầng theo fold và giữ cùng các thành phố được lấy mẫu lại trên toàn bộ đường cong nhiễu; mọi khoảng tin cậy đều có điều kiện trên folds, frozen checkpoints và pipeline đã cố định.
+
 Ngoài các kiểm định chính, một phân tích cơ chế thăm dò đánh giá mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện sau hiệu chỉnh. Sai lệch ban đầu $d_{\mathrm{pre}}$ được tính bằng Total Variation giữa phân phối khoảng cách dự báo của baseline và phân phối tham chiếu. Tương quan Pearson và tương quan từng phần được báo cáo; tương quan từng phần kiểm soát độ chính xác baseline ($M_0$ CPC) và các đặc trưng quy mô không gian của thành phố gồm $\log N_{\mathrm{tracts}}$, $\log N_{\mathrm{pairs}}$ và khoảng cách địa lý trung bình.
 
 # 4. Kết quả thực nghiệm
@@ -304,12 +306,12 @@ Mức cải thiện trung bình tăng trên toàn bộ dải $K$ được khảo
 
 Ngoài độ phân giải theo khoảng cách, phân tích thăm dò về độ phân giải không gian cho thấy khi áp dụng phân phối theo từng county xuất phát trên 11 vùng đô thị có nhiều county, CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 9/11 trường hợp, với mức tăng trung bình trong nhóm này là +0.00063. Khi tính gộp trên toàn bộ 50 thành phố (trong đó 39 vùng đơn county có mức chênh lệch bằng 0 theo cấu trúc), mức tăng bổ sung trung bình là +0.00014. Kết quả này bước đầu cho thấy độ phân giải không gian chi tiết hơn có thể mang lại thêm thông tin ở những vùng đô thị đa trung tâm, nhưng cần được kiểm chứng thêm trên tập dữ liệu có nhiều đơn vị không gian hơn.
 
-Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng trung bình giảm từ +0.00354 ở mức không nhiễu xuống +0.00282 tại mức nhiễu 2% TV và +0.00070 tại mức 4% TV. Điểm cắt thực nghiệm—nơi mức cải thiện trung bình giảm về 0 qua phép nội suy tuyến tính giữa các mức nhiễu liền kề—nằm tại khoảng $\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV (khoảng tin cậy bootstrap 95%: $[4.16\%, 4.77\%]$).
+Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng trung bình lần lượt là +0.0035395, +0.0033591, +0.0028220, +0.0019327, +0.0006977 và -0.0008740 tại $\epsilon=0\%$, 1%, 2%, 3%, 4% và 5% TV. Điểm cắt mô tả, được nội suy tuyến tính giữa hai mức nhiễu liền kề nơi mức thay đổi CPC trung bình đổi dấu, nằm tại khoảng $\epsilon_{\mathrm{cross}}=4.4439\%$ TV (khoảng tin cậy bootstrap 95% qua các thành phố, có điều kiện trên fold và checkpoint đã cố định: $[3.8008\%, 4.9239\%]$). Bootstrap có 9,546 crossing hợp lệ trên 10,000 replicate; 454 replicate không có crossing và không có crossing bội.
 
-Cần phân biệt rõ hai ngưỡng: ngưỡng mà lợi ích hiệu chỉnh còn duy trì ý nghĩa thống kê ($\epsilon^* = 3\%$ TV, với $p_{\mathrm{raw}}=0.0149$ và $p_{\mathrm{Holm}}=0.0446 < 0.05$) và ngưỡng điểm cắt thực nghiệm nơi mức cải thiện trung bình giảm về 0 ($\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV). Tại mức nhiễu 4% TV, dù mức cải thiện trung bình vẫn dương (+0.00070), sự khác biệt so với baseline đã không còn ý nghĩa thống kê ở mức $\alpha=0.05$ (kiểm định Wilcoxon một phía có $p_{\mathrm{raw}}=0.4847$, $p_{\mathrm{Holm}}=0.9695$). Các ngưỡng này phụ thuộc vào phân bố dữ liệu và cách tạo nhiễu trong thí nghiệm, không phải một hằng số cố định cho mọi bài toán.
+Cần phân biệt rõ hai ngưỡng: ngưỡng mà lợi ích hiệu chỉnh còn duy trì ý nghĩa thống kê ($\epsilon^* = 3\%$ TV, với $p_{\mathrm{raw}}=0.0148637$ và $p_{\mathrm{Holm}}=0.0445910 < 0.05$) và ngưỡng điểm cắt mô tả nơi mức cải thiện trung bình giảm về 0 ($\epsilon_{\mathrm{cross}}=4.44\%$ TV). Trong các mức nhiễu được khảo sát, $\epsilon=3\%$ là mức lớn nhất tại đó kiểm định Wilcoxon một phía còn đạt tiêu chí $\alpha=0.05$ sau hiệu chỉnh Holm. Tại mức nhiễu 4% TV, mức cải thiện trung bình vẫn dương (+0.00070) nhưng không còn đạt tiêu chí này ($p_{\mathrm{raw}}=0.4847371$, $p_{\mathrm{Holm}}=0.9694742$). Các kết quả này phụ thuộc vào phân bố dữ liệu và cách tạo nhiễu trong thí nghiệm.
 
 ![Hình 5](figures/fig5_noise_dose_response.png)
-**Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt thực nghiệm tại $\epsilon_{\mathrm{cross}} \approx 4.44\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
+**Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% giữa các thành phố, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt mô tả tại $\epsilon_{\mathrm{cross}}=4.4439\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
 
 Nhìn chung, các kết quả trong mục này cho thấy giá trị của phân phối khoảng cách phụ thuộc vào cả độ chi tiết và độ chính xác của quan sát: tăng số nhóm khoảng cách giúp cải thiện kết quả, nhưng tín hiệu này cần đủ chính xác để mang lại lợi ích thực tế.
 
@@ -651,6 +653,8 @@ p_{(k)} \leq \frac{\alpha}{M - k + 1}, \qquad k = 1, \dots, M.
 $$
    Các $p$-value được sắp xếp tăng dần. Quy trình step-down dừng tại giả thuyết đầu tiên không thỏa điều kiện bác bỏ.
 
+5. **Họ kiểm định của stress-test nhiễu**: Năm mức dương $\epsilon=0.01,0.02,0.03,0.04,0.05$ dùng cùng một hiệu chỉnh Holm và kiểm định Wilcoxon một phía với đơn vị là 50 giá trị cấp thành phố. $\epsilon=0$ không thuộc họ Holm. Crossing bootstrap lấy mẫu lại thành phố riêng trong từng fold, dùng cùng chỉ số thành phố được lấy mẫu ở mọi mức nhiễu, rồi nội suy lại crossing trên từng đường cong.
+
 
 
 ## S6. Chi tiết kỹ thuật các stress-test độ bền
@@ -668,6 +672,8 @@ $$
 $$
 \operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
 $$
+
+   Thí nghiệm dùng $K=8$, seeds mô hình $\{1,10,100\}$, năm fold, 50 thành phố, một replicate tại $\epsilon=0$ và 1,000 replicate tại mỗi mức dương. Các lượt lặp được trung bình trước seeds, seeds được trung bình trước suy luận cấp thành phố. Các khoảng tin cậy bootstrap phản ánh biến thiên giữa các thành phố đánh giá, có điều kiện trên cách chia fold, checkpoint và pipeline đã cố định; chúng không bao quát biến thiên do huấn luyện lại mô hình hoặc chia lại fold.
 
 2. **Đối chứng Placebo và chuẩn hóa liều can thiệp (Dose-Matched Controls)**:
 
