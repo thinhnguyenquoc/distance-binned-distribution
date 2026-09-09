@@ -305,13 +305,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
-def load_bibliography(bib_path: Path) -> dict[str, int]:
-    """Loads BibTeX entries from file and returns mapping from key to 1-based index."""
+def load_bibliography(bib_path: Path, cited_keys: set[str] | None = None) -> dict[str, int]:
+    """Loads BibTeX entries from file and returns mapping from key to 1-based index for cited entries."""
     if not bib_path.exists():
         return {}
     bib_text = bib_path.read_text(encoding="utf-8")
     keys = re.findall(r"@\w+\s*\{\s*([^,]+),", bib_text)
-    return {k.strip(): idx for idx, k in enumerate(keys, 1)}
+    clean_keys = [k.strip() for k in keys]
+    if cited_keys is not None:
+        ordered_cited = [k for k in clean_keys if k in cited_keys]
+        return {k: idx for idx, k in enumerate(ordered_cited, 1)}
+    return {k: idx for idx, k in enumerate(clean_keys, 1)}
 
 
 def preprocess_markdown_citations_and_references(md_text: str, key_to_idx: dict[str, int]) -> str:
