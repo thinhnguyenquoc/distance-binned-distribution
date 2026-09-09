@@ -211,13 +211,17 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
                         handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
     logger = logging.getLogger(__name__)
     
-    noise_seed = 20260822
+    noise_seed = getattr(args, "noise_seed", 20260822)
+    checkpoint_dir = Path(getattr(args, "checkpoint_dir", None) or "results/checkpoints")
     nonzero_epsilons = [e for e in epsilons if e > 0]
     
     # Safely define parameters without mutating globals
     model_seeds_to_use = [1, 10, 100] if not args.smoke else [1, 10]
     B_noise = args.b if not args.smoke else 20
-    folds_to_run = [1, 2, 3, 4, 5] if not args.smoke else [2]
+    if getattr(args, "fold", None) is not None:
+        folds_to_run = [args.fold]
+    else:
+        folds_to_run = [1, 2, 3, 4, 5] if not args.smoke else [2]
         
     splits = generate_35_5_10_splits(data_root=data_root)
     raw_results: List[Dict[str, Any]] = []
@@ -272,7 +276,7 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
             
             for m_seed in model_seeds_to_use:
                 logger.info(f"    Evaluating seed {m_seed}...")
-                ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
+                ckpt_path = checkpoint_dir / f"5fold_fold{fold_id}_seed{m_seed}.pt"
                 if not ckpt_path.exists():
                     raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}. Protocol requires all 3 model seeds.")
                 model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
@@ -589,6 +593,9 @@ if __name__ == "__main__":
     parser.add_argument("--b", type=int, default=1000)
     parser.add_argument("--grid", type=str, choices=["fine", "coarse"], default="fine", help="Grid: 'fine' [0..0.05] or 'coarse' [0..0.20]")
     parser.add_argument("--output_dir", type=str, default=None)
+    parser.add_argument("--checkpoint_dir", type=str, default="tmp/frozen_checkpoints")
+    parser.add_argument("--fold", type=int, default=None, help="Specific fold to run (1-5)")
+    parser.add_argument("--noise_seed", type=int, default=20260822)
     parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
     run_noise_robustness(args)
