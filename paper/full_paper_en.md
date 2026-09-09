@@ -94,7 +94,7 @@ The model predicts flow intensities on the positive support $\Omega_c$, and does
 
 ## 3.3. Distance-binned mobility distribution and city-level observation configuration
 
-The main experiments use a single city-level distance-binned mobility distribution. The share of target mobility flow falling in distance interval $b$ ($I_b = (a_{b-1}, a_b]$) is defined as:
+The main experiments use a single city-level distance-binned mobility distribution. In each fold, $K-1$ interior bin edges are determined from the $b/K$ quantiles ($b=1,\ldots,K-1$) of interzonal OD pair distances across the 35 training cities. Each pair contributes a single distance value with equal weight; thus, edges are defined on a pair-weighted basis. Validation and test cities are strictly excluded from edge construction. The two outer boundaries are fixed at $a_0 = 0$ and $a_K = +\infty$, forming intervals $I_b = (a_{b-1}, a_b]$ that completely cover all pairs with $d_{c,ij} > 0$. The share of target mobility flow falling in distance interval $b$ is defined as:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -102,6 +102,8 @@ $$
 
 The shares are normalized so that: $\sum_{b=1}^K Y_{c,b} = 1$.
 The full distance-distribution vector of city $c$ is denoted by $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$. In the interpretation, $Y_D$ is used as shorthand for this type of observation.
+
+Because bin edges are determined jointly from the training fold, certain long-distance intervals may contain zero OD pairs in cities with smaller geographic diameters. Let $\mathcal A_c$ denote the set of intervals containing at least one pair in $\Omega_c$, with $K_{\mathrm{act},c} = |\mathcal A_c|$ representing the number of active intervals for city $c$. Empty bins carry zero mass and are excluded from calculations; all operator quantities are evaluated over the active set (detailed in Supplementary Section S2).
 
 $Y_{D,c}$ is aggregated from the ground-truth flow of the target city and used as an oracle observation at calibration time. An exploratory variant using an origin-county distribution is evaluated on multi-county metropolitan areas; the setup and limitations of this analysis are presented in Supplementary Section S7.
 
@@ -254,10 +256,12 @@ First, as the number of distance intervals increases from $K=2$ to $K=20$, mean 
 | **$K = 18$** | $0.71884 \pm 0.04460$ | $0.72230$ | **$+0.00603$** | $+0.00458$ | $[+0.00480, +0.00726]$ | **47 / 50 (94.0%)** |
 | **$K = 20$** | $0.71920 \pm 0.04462$ | $0.72266$ | **$+0.00639$** | $+0.00494$ | $[+0.00508, +0.00769]$ | **46 / 50 (92.0%)** |
 
+Note: $K$ is the nominal number of distance intervals determined from the training fold. The number of active intervals $K_{\mathrm{act},c}$ may be smaller than $K$ for cities lacking OD pairs in long-distance intervals.
+
 ![Figure 4](figures/fig4_resolution_sensitivity.png)
 **Figure 4. Sensitivity of improvement to the number of distance intervals $K$.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities and error bars show stratified 95% bootstrap CIs by fold. $K=8$ is the main configuration of the study.
 
-These results indicate that finer distance partitions continue to supply additional informative constraints across the entire range of $K$, although the magnitude of additional gain varies across resolution intervals (Figure 4).
+Mean improvement increases across the entire evaluated range of $K$. This indicates that a higher nominal resolution can provide additional calibration information, although the number of truly active intervals depends on each city's geographic distance extent.
 
 In addition to distance resolution, we conducted an exploratory analysis of the spatial resolution of the observation. Across 11 metropolitan areas spanning multiple counties, calibration using an origin-county-level $Y_D$ distribution improved over city-level calibration in 9/11 cases. However, the pooled additional increase across all 50 metropolitan areas was only
 
@@ -465,19 +469,24 @@ The exact hyperparameter configuration extracted directly from the trained model
 ## S2. General form of the analytic calibration operator ($q \in [0, 1]$)
 
 The calibration-intensity parameter $q \in [0, 1]$ controls the degree of intervention from target-distance information:
-* $q = 0$: retain the baseline's initial prediction ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$);
-* $q = 1$: fully match flow shares by distance interval;
-* the main study fixes $q = 1$.
 
-At the main configuration $K=8$, all intervals are active across the 50 evaluation cities.
+- $q = 0$: retain the baseline's initial prediction ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$).
+- $q = 1$: fully match flow shares across active distance intervals.
+- The main study fixes $q = 1$.
+
+At the main configuration $K=8$, 40/50 cities have all eight intervals active; in the remaining 10 cities, one or more long-distance intervals contain zero OD pairs, leading to $K_{\mathrm{act},c}\in[5,7]$. The algorithm operates strictly over the active set $\mathcal A_c$.
 
 The general calibration procedure is performed as follows:
 
 ### S2.1. Set of active intervals
 
-The set of distance intervals with positive baseline predictions is defined by:
+The set of active intervals $\mathcal A_c$ is determined directly by the presence of OD pairs in the support:
 $$
-A_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}.
+\mathcal A_c = \left\{ b \in \{1, \dots, K\} : \exists(i,j) \in \Omega_c,\ d_{c,ij} \in I_b \right\},
+$$
+with $K_{\mathrm{act},c} = |\mathcal A_c|$. Because zero-shot predictions $\widehat{t}_{c,ij}^{(0)}$ are strictly positive on $\Omega_c$, this is mathematically equivalent to:
+$$
+\mathcal A_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}.
 $$
 
 ### S2.2. Conditional target distribution over active intervals
@@ -589,18 +598,19 @@ $$
 
 ## S5. Fold-stratified bootstrap protocol and statistical testing
 
-1. **Fold-stratified paired nonparametric bootstrap**:
-   * The resampling unit is the city.
-   * Sampling with replacement is performed separately within each fold.
-   * Each fold resamples 10 cities from its original 10 test cities.
-   * $M_0$ and $M_1$ are always kept paired.
-   * OD pairs are not sampled independently.
-   * Let $\mathcal{C}^{*(r)}$ be the multiset of 50 cities resampled in bootstrap replicate $r$ ($r = 1, \dots, B$ with $B = 10{,}000$ and $C = 50$):
+1. **Stratified paired nonparametric bootstrap by fold**:
+   - The resampling unit is the city.
+   - Resampling with replacement is conducted separately within each fold.
+   - Each fold resamples 10 cities from its 10 original test cities.
+   - The two conditions $M_0$ and $M_1$ are strictly paired.
+   - OD pairs are not resampled independently.
+
+   Let $\mathcal{C}^{*(r)}$ be the multiset of 50 resampled cities in bootstrap replicate $r$ ($r = 1, \dots, B$ with $B = 10{,}000$ and $C = 50$):
 $$
 \overline{\Delta}^{*(r)} = \frac{1}{C} \sum_{c\in\mathcal{C}^{*(r)}} \Delta_c, \qquad r = 1, \dots, B.
 $$
 
-2. **95% percentile confidence interval**:
+2. **95% bootstrap confidence interval**:
 $$
 \mathrm{CI}_{95\%} = \bigl[ Q_{0.025}\bigl(\overline{\Delta}^*\bigr), Q_{0.975}\bigl(\overline{\Delta}^*\bigr) \bigr].
 $$
@@ -633,24 +643,57 @@ $$
 
 2. **Placebo controls and intervention dose matching (Dose-Matched Controls)**:
 
-   To isolate the specific informative value of the target-city distance distribution from the pure effect of intervention magnitude, control distributions are normalized to match the log-ratio norm of the target distribution $Y_D^{\mathrm{target}}$. For each evaluated city, let $\widehat{Y}^{(0)}$ denote the distance distribution predicted by the zero-shot baseline $M_0$ over active bins ($b = 1, \dots, K_{\mathrm{act}}$). The log-ratio vector of the target distribution and its centered root-mean-square intervention magnitude $D_T$ (equivalent to Euclidean norm scaled by $\sqrt{K_{\mathrm{act}}}$) are given by:
+   To isolate the specific informative value of the target-city distance distribution from the pure effect of intervention magnitude, control distributions are normalized to match the log-ratio norm of the target distribution $Y_D^{\mathrm{target}}$. For each evaluated city, let $\widehat{Y}^{(0)}$ denote the distance distribution predicted by the zero-shot baseline $M_0$ over active intervals ($b \in \mathcal A_c$). The log-ratio vector of the target distribution and its centered root-mean-square intervention magnitude $D_T$ ($D_T = \|\tilde{\mathbf{r}}_T\|_2 / \sqrt{K_{\mathrm{act}}}$) are given by:
+
 $$
-r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{T,b}^2}.
+r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{T,b}^2}.
 $$
 
-   * **Training-city donor control (Wrong-City Donors, Dose-Matched)**: For each random donor draw from training cities within the same fold ($B_{\mathrm{draw}} = 1,000$), let $Y_D^{\mathrm{donor}}$ be the donor distribution. The raw log-ratio and donor intervention magnitude $D_D$ are computed as:
-$$
-r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{D,b}^2}.
-$$
-     If $D_D > 0$, the log-ratio vector is scaled exactly to match $D_T$: $\tilde{r}_{D,b}^* = \tilde{r}_{D,b} \cdot (D_T / D_D)$. The dose-matched control distribution $p_D^*$ is then reconstructed via $p_{D,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{D,b}^* = 1$ before entering the calibration operator.
+   - **Training-city donor control (Wrong-City Donors, Dose-Matched)**: For each random donor draw from training cities within the same fold ($B_{\mathrm{draw}} = 1,000$), let $Y_D^{\mathrm{donor}}$ be the donor distribution. The raw log-ratio and donor intervention magnitude $D_D$ are computed as:
 
-   * **Fold training-mean donor control (Training-Mean Donor, Dose-Matched)**: The pooled mean distribution $\overline{Y}_{D,\mathrm{train}}$ is computed across all training cities in the corresponding fold. Its log-ratio and initial intervention magnitude $D_M$ are:
 $$
-r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{M,b}^2}.
+r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{D,b}^2}.
 $$
-     The vector is scaled to match $D_T$: $\tilde{r}_{M,b}^* = \tilde{r}_{M,b} \cdot (D_T / D_M)$, and the dose-matched distribution is reconstructed via $p_{M,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{M,b}^* = 1$.
 
-   * **Permuted distance-interval control (Permuted Target $Y_D$)**: To verify whether the physical ordering between flow shares and distance bins matters, the centered log-ratio vector $\tilde{\mathbf{r}}_T$ is randomly permuted across active bins ($B_{\mathrm{perm}} = 1,000$ independent random permutations; for cities with small active bin counts, exhaustive unique permutations are used): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, where $\pi$ is a uniform permutation over $\{1, \dots, K_{\mathrm{act}}\}$. Because permutation strictly preserves the centered $\ell_2$ and RMS norms ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), this control strictly maintains the intervention dose $D_T$ of the target distribution while completely severing the semantic association between distance and flow volume. The permuted distribution is reconstructed via $p_{P,b} \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{P,b} = 1$.
+   If $D_D > 0$, the log-ratio vector of the donor is scaled to match the target intervention dose:
+
+$$
+\tilde{r}_{D,b}^* = \tilde{r}_{D,b} \frac{D_T}{D_D}.
+$$
+
+   The dose-matched donor control distribution is then reconstructed via:
+
+$$
+p_{D,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{D,m}^*)}, \qquad b \in \mathcal A_c.
+$$
+
+   In the degenerate case $D_D < 10^{-12}$ (where the donor distribution happens to perfectly match the baseline prediction), no perturbation direction can be scaled; the implementation directly assigns the target benchmark gain ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$).
+
+   - **Fold training-mean donor control (Training-Mean Donor, Dose-Matched)**: The pooled mean distribution $\overline{Y}_{D,\mathrm{train}}$ is computed across all training cities in the corresponding fold. Its log-ratio and initial intervention magnitude $D_M$ are:
+
+$$
+r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{M,b}^2}.
+$$
+
+   If $D_M > 0$, the vector is scaled to match $D_T$:
+
+$$
+\tilde{r}_{M,b}^* = \tilde{r}_{M,b} \frac{D_T}{D_M}.
+$$
+
+   The dose-matched training-mean distribution is then reconstructed via:
+
+$$
+p_{M,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{M,m}^*)}, \qquad b \in \mathcal A_c.
+$$
+
+   If $D_M < 10^{-12}$, the code directly assigns $\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$.
+
+   - **Permuted distance-interval control (Permuted Target $Y_D$)**: To verify whether the physical ordering between flow shares and distance bins matters, the centered log-ratio vector $\tilde{\mathbf{r}}_T$ is randomly permuted across active bins ($B_{\mathrm{perm}} = 1,000$ independent random permutations; for cities with small active bin counts, exhaustive unique permutations are used): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, where $\pi$ is a uniform permutation over $\mathcal A_c$. Because permutation strictly preserves the centered $\ell_2$ and RMS norms ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), this control strictly maintains the intervention dose $D_T$ of the target distribution while completely severing the semantic association between distance and flow volume. The permuted distribution is reconstructed via:
+
+$$
+p_{P,b} = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{P,m}^*)}, \qquad b \in \mathcal A_c.
+$$
 
 
 ## S7. Exploratory analysis of county-level spatial resolution
@@ -685,7 +728,7 @@ Among the 50 benchmark metropolitan areas, exactly 39 are single-county areas, w
 
 Across all 50 metropolitan areas, the pooled additional increase from county-level calibration over city-level calibration is very small:
 $$
-\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95\% CI } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
+\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95% CI } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
 $$
 
 This modest pooled increase is driven by the 39 single-county areas, whose increase is exactly zero by construction.

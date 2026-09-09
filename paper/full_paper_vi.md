@@ -85,7 +85,7 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách duy nhất ở cấp thành phố. Các biên khoảng được xác định bằng pair-weighted distance quantiles, gộp từ các cặp OD liên vùng của các thành phố huấn luyện trong từng fold; dữ liệu của thành phố kiểm tra không được dùng để xác định biên khoảng. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ ($I_b = (a_{b-1}, a_b]$) được định nghĩa là:
+Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -93,6 +93,8 @@ $$
 
 Các tỷ trọng được chuẩn hóa để: $\sum_{b=1}^K Y_{c,b} = 1$.
 Toàn bộ vector phân phối khoảng cách của thành phố $c$ được ký hiệu là $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$. Trong phần diễn giải, $Y_D$ được dùng như tên viết gọn cho loại quan sát này.
+
+Do các biên được xác định chung từ tập huấn luyện, một số khoảng cự ly xa có thể không chứa cặp OD tại những thành phố có phạm vi địa lý nhỏ. Gọi $\mathcal A_c$ là tập các khoảng có ít nhất một cặp thuộc $\Omega_c$, và $K_{\mathrm{act},c}=|\mathcal A_c|$ là số khoảng hoạt động của thành phố $c$. Các khoảng rỗng có tỷ trọng bằng 0 và được loại khỏi phép tính; các đại lượng của toán tử được biểu diễn trên tập khoảng hoạt động (chi tiết quy trình chuẩn hóa và co giãn được trình bày trong Phụ lục S2).
 
 $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố mục tiêu và được sử dụng như một quan sát oracle tại thời điểm hiệu chỉnh. Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county, thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
 
@@ -293,12 +295,12 @@ Trước hết, khi số nhóm khoảng cách tăng từ $K=2$ đến $K=20$, m�
 | $K = 18$ | $+0.00603$ | $+0.00458$ | $[+0.0048, +0.0073]$ | 47/50 (94.0%) |
 | $K = 20$ | $+0.00639$ | $+0.00494$ | $[+0.0051, +0.0077]$ | 46/50 (92.0%) |
 
-Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. Khoảng tin cậy của cấu hình chính $K=8$ ($[+0.0026, +0.0045]$) hoàn toàn đồng nhất với Bảng 2, Bảng 3 và Bảng 5.
+Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. Khoảng tin cậy của cấu hình chính $K=8$ ($[+0.0026, +0.0045]$) hoàn toàn đồng nhất với Bảng 2, Bảng 3 và Bảng 5. $K$ là số khoảng danh nghĩa được xác định từ tập huấn luyện. Số khoảng hoạt động $K_{\mathrm{act},c}$ có thể nhỏ hơn $K$ tại những thành phố không có cặp OD trong một số khoảng cự ly xa.
 
 ![Hình 4](figures/fig4_resolution_sensitivity.png)
 **Hình 4. Mức thay đổi CPC trung bình theo số nhóm khoảng cách $K$.** Các điểm biểu diễn mức tăng CPC trung bình so với baseline trên 50 thành phố; thanh sai số biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Cấu hình chính $K=8$ được đánh dấu bằng đường gióng.
 
-Mức cải thiện tăng trên toàn bộ dải $K$, cho thấy việc chia khoảng cách thành nhiều nhóm hơn tiếp tục cung cấp thêm thông tin cho mô hình, dù mức đóng góp của mỗi lần tăng độ phân giải khác nhau tùy theo khoảng khảo sát (Hình 4).
+Mức cải thiện trung bình tăng trên toàn bộ dải $K$ được khảo sát. Kết quả này cho thấy độ phân giải danh nghĩa cao hơn có thể cung cấp thêm thông tin hiệu chỉnh, mặc dù số khoảng thực sự hoạt động còn phụ thuộc vào phạm vi khoảng cách của từng thành phố.
 
 Ngoài độ phân giải theo khoảng cách, phân tích thăm dò về độ phân giải không gian cho thấy khi áp dụng phân phối theo từng county xuất phát trên 11 vùng đô thị có nhiều county, CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 9/11 trường hợp, với mức tăng trung bình trong nhóm này là +0.00063. Khi tính gộp trên toàn bộ 50 thành phố (trong đó 39 vùng đơn county có mức chênh lệch bằng 0 theo cấu trúc), mức tăng bổ sung trung bình là +0.00014. Kết quả này bước đầu cho thấy độ phân giải không gian chi tiết hơn có thể mang lại thêm thông tin ở những vùng đô thị đa trung tâm, nhưng cần được kiểm chứng thêm trên tập dữ liệu có nhiều đơn vị không gian hơn.
 
@@ -503,18 +505,23 @@ Cấu hình siêu tham số chính xác được trích xuất trực tiếp t�
 ## S2. Dạng tổng quát của toán tử hiệu chỉnh giải tích ($q \in [0, 1]$)
 
 Tham số cường độ hiệu chỉnh $q \in [0, 1]$ điều khiển mức độ can thiệp của thông tin khoảng cách mục tiêu:
-* $q = 0$: giữ nguyên dự báo ban đầu của baseline ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$);
-* $q = 1$: khớp đầy đủ tỷ trọng luồng theo từng khoảng khoảng cách;
-* Nghiên cứu chính cố định $q = 1$.
 
-Ở cấu hình chính $K=8$, tất cả các khoảng đều hoạt động trên 50 thành phố đánh giá.
+- $q = 0$: giữ nguyên dự báo ban đầu của baseline ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$).
+- $q = 1$: khớp đầy đủ tỷ trọng luồng theo từng khoảng khoảng cách hoạt động.
+- Thiết lập chính cố định $q = 1$.
+
+Ở cấu hình chính $K=8$, 40/50 thành phố có đủ tám khoảng hoạt động; tại 10 thành phố còn lại, một hoặc nhiều khoảng cự ly xa không chứa cặp OD, dẫn đến $K_{\mathrm{act},c}\in[5,7]$. Thuật toán chỉ thực hiện hiệu chỉnh trên tập khoảng hoạt động $\mathcal A_c$.
 
 Quy trình hiệu chỉnh tổng quát được thực hiện qua các bước:
 
 ### S2.1. Tập các khoảng hoạt động
-Tập các khoảng cự ly có dự báo baseline dương được xác định bởi:
+Tập các khoảng hoạt động $\mathcal A_c$ được xác định trực tiếp từ sự tồn tại của các cặp OD thuộc tập hỗ trợ:
 $$
-A_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}.
+\mathcal A_c = \left\{ b \in \{1, \dots, K\} : \exists(i,j) \in \Omega_c,\ d_{c,ij} \in I_b \right\},
+$$
+với $K_{\mathrm{act},c} = |\mathcal A_c|$. Do dự báo baseline $\widehat{t}_{c,ij}^{(0)}$ luôn dương trên $\Omega_c$, định nghĩa này tương đương với:
+$$
+\mathcal A_c = \{ b \in \{1, \dots, K\} : \widehat{Y}_{c,b}^{(0)} > 0 \}.
 $$
 
 ### S2.2. Phân phối mục tiêu điều kiện trên các khoảng hoạt động
@@ -623,18 +630,19 @@ $$
 
 ## S5. Giao thức Bootstrap phân tầng theo fold và kiểm định thống kê
 
-1. **Paired Nonparametric Bootstrap phân tầng theo fold**:
-   * Đơn vị lấy mẫu lại là thành phố.
-   * Lấy mẫu có hoàn lại riêng trong từng fold.
-   * Mỗi fold lấy lại 10 thành phố từ 10 thành phố kiểm tra ban đầu.
-   * $M_0$ và $M_1$ luôn được giữ ghép cặp.
-   * Không lấy mẫu độc lập các cặp OD.
-   * Gọi $\mathcal{C}^{*(r)}$ là multiset gồm 50 thành phố được lấy lại ở bootstrap replicate $r$ ($r = 1, \dots, B$ với $B = 10{,}000$ và $C = 50$):
+1. **Giao thức Bootstrap phân tầng theo fold**:
+   - Đơn vị lấy mẫu lại là thành phố.
+   - Việc lấy mẫu có hoàn lại được thực hiện riêng trong từng fold.
+   - Mỗi fold lấy lại 10 thành phố từ 10 thành phố kiểm tra ban đầu.
+   - Hai điều kiện $M_0$ và $M_1$ luôn được giữ ghép cặp.
+   - Các cặp OD không được lấy mẫu lại độc lập.
+
+   Gọi $\mathcal{C}^{*(r)}$ là multiset gồm 50 thành phố được lấy lại ở bootstrap replicate $r$ ($r = 1, \dots, B$ với $B = 10{,}000$ và $C = 50$):
 $$
 \overline{\Delta}^{*(r)} = \frac{1}{C} \sum_{c\in\mathcal{C}^{*(r)}} \Delta_c, \qquad r = 1, \dots, B.
 $$
 
-2. **Khoảng tin cậy percentile 95%**:
+2. **Khoảng tin cậy bootstrap 95%**:
 $$
 \mathrm{CI}_{95\%} = \bigl[ Q_{0.025}\bigl(\overline{\Delta}^*\bigr), Q_{0.975}\bigl(\overline{\Delta}^*\bigr) \bigr].
 $$
@@ -668,26 +676,57 @@ $$
 
 2. **Đối chứng Placebo và chuẩn hóa liều can thiệp (Dose-Matched Controls)**:
 
-   Để phân lập chính xác giá trị thông tin của phân phối khoảng cách thành phố mục tiêu khỏi ảnh hưởng thuần túy của độ lớn can thiệp hiệu chỉnh, các đối chứng được chuẩn hóa về cùng độ lớn log-ratio với phân phối mục tiêu $Y_D^{\mathrm{target}}$. Với mỗi thành phố đánh giá, gọi $\widehat{Y}^{(0)}$ là phân phối khoảng cách do mô hình zero-shot $M_0$ dự báo trên các bin hoạt động ($b = 1, \dots, K_{\mathrm{act}}$). Vector log-ratio của phân phối mục tiêu và độ lệch chuẩn tâm (liều can thiệp mục tiêu $D_T$, tính theo chuẩn root-mean-square đã khử kỳ vọng, tương đương chuẩn Euclid chia cho $\sqrt{K_{\mathrm{act}}}$) được xác định bởi:
-   $$
-   r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{T,b}^2}.
-   $$
+   Để phân lập chính xác giá trị thông tin của phân phối khoảng cách thành phố mục tiêu khỏi ảnh hưởng thuần túy của độ lớn can thiệp hiệu chỉnh, các đối chứng được chuẩn hóa về cùng độ lớn log-ratio với phân phối mục tiêu $Y_D^{\mathrm{target}}$. Với mỗi thành phố đánh giá, gọi $\widehat{Y}^{(0)}$ là phân phối khoảng cách do mô hình zero-shot $M_0$ dự báo trên các khoảng hoạt động ($b \in \mathcal A_c$). Vector log-ratio của phân phối mục tiêu và liều can thiệp mục tiêu $D_T$ (được định nghĩa bằng chuẩn root-mean-square đã khử kỳ vọng, $D_T = \|\tilde{\mathbf{r}}_T\|_2 / \sqrt{K_{\mathrm{act}}}$) được xác định bởi:
 
-   * **Đối chứng từ thành phố huấn luyện (Wrong-City Donors, Dose-Matched)**: Với mỗi lượt rút donor ngẫu nhiên từ tập huấn luyện trong cùng fold ($B_{\mathrm{draw}} = 1,000$), gọi $Y_D^{\mathrm{donor}}$ là phân phối của thành phố donor. Log-ratio ban đầu và liều can thiệp donor $D_D$ được tính qua:
-   $$
-   r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{D,b}^2}.
-   $$
+$$
+r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{T,b}^2}.
+$$
 
-   Nếu $D_D > 0$, vector log-ratio được co giãn chính xác về liều $D_T$: $\tilde{r}_{D,b}^* = \tilde{r}_{D,b} \cdot (D_T / D_D)$. Phân phối đối chứng chuẩn hóa liều $p_D^*$ sau đó được tái lập qua $p_{D,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)$ với $\sum_{b=1}^{K_{\mathrm{act}}} p_{D,b}^* = 1$, trước khi đưa vào toán tử hiệu chỉnh.
+   - **Đối chứng từ thành phố huấn luyện (Wrong-City Donors, Dose-Matched)**: Với mỗi lượt rút donor ngẫu nhiên từ tập huấn luyện trong cùng fold ($B_{\mathrm{draw}} = 1,000$), gọi $Y_D^{\mathrm{donor}}$ là phân phối của thành phố donor. Log-ratio ban đầu và liều can thiệp donor $D_D$ được tính qua:
 
-   * **Đối chứng trung bình tập huấn luyện (Training-Mean Donor, Dose-Matched)**: Phân phối trung bình $\overline{Y}_{D,\mathrm{train}}$ được tính gộp từ toàn bộ các thành phố trong tập huấn luyện của fold tương ứng. Log-ratio và liều can thiệp $D_M$ được tính qua:
-   $$
-   r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{M,b}^2}.
-   $$
+$$
+r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{D,b}^2}.
+$$
 
-   Vector log-ratio sau đó được co giãn về cùng liều $D_T$: $\tilde{r}_{M,b}^* = \tilde{r}_{M,b} \cdot (D_T / D_M)$, và phân phối chuẩn hóa liều $p_M^*$ được tái lập qua $p_{M,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)$ với $\sum_{b=1}^{K_{\mathrm{act}}} p_{M,b}^* = 1$.
+   Nếu $D_D > 0$, vector log-ratio của donor được co giãn về cùng liều với phân phối mục tiêu:
 
-   * **Đối chứng hoán vị nhóm khoảng cách (Permuted Target $Y_D$)**: Nhằm kiểm tra vai trò của trật tự không gian giữa tỷ trọng luồng và nhóm cự ly, vector sai lệch đã chuẩn tâm $\tilde{\mathbf{r}}_T$ được hoán vị ngẫu nhiên vị trí giữa các bin hoạt động ($B_{\mathrm{perm}} = 1,000$ lần hoán vị độc lập; với các thành phố có ít bin hoạt động, vét cạn toàn bộ không gian hoán vị không lặp): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, trong đó $\pi$ là một hoán vị ngẫu nhiên trên $\{1, \dots, K_{\mathrm{act}}\}$. Vì phép hoán vị bảo toàn hoàn toàn chuẩn $\ell_2$ và RMS ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), điều kiện này tự động bảo toàn đúng liều can thiệp $D_T$ của phân phối mục tiêu nhưng phá vỡ hoàn toàn liên hệ ngữ nghĩa giữa cự ly và lưu lượng. Phân phối hoán vị sau đó được tái lập tương tự qua $p_{P,b} \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})$ với $\sum_{b=1}^{K_{\mathrm{act}}} p_{P,b} = 1$.
+$$
+\tilde{r}_{D,b}^* = \tilde{r}_{D,b} \frac{D_T}{D_D}.
+$$
+
+   Phân phối donor sau khi chuẩn hóa liều được tái tạo bởi:
+
+$$
+p_{D,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{D,m}^*)}, \qquad b \in \mathcal A_c.
+$$
+
+   Trong trường hợp hiếm gặp $D_D < 10^{-12}$ (donor trùng khớp hoàn hảo với phân phối dự báo của baseline), vector co giãn không xác định được hướng chuẩn hóa liều; khi đó mã nguồn gán trực tiếp mức chênh lệch bằng kết quả của target ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$).
+
+   - **Đối chứng trung bình tập huấn luyện (Training-Mean Donor, Dose-Matched)**: Phân phối trung bình $\overline{Y}_{D,\mathrm{train}}$ được tính gộp từ toàn bộ các thành phố trong tập huấn luyện của fold tương ứng. Log-ratio và liều can thiệp $D_M$ được tính qua:
+
+$$
+r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{M,b}^2}.
+$$
+
+   Nếu $D_M > 0$, vector log-ratio được co giãn về cùng liều $D_T$:
+
+$$
+\tilde{r}_{M,b}^* = \tilde{r}_{M,b} \frac{D_T}{D_M}.
+$$
+
+   Phân phối sau khi chuẩn hóa liều được tái tạo bởi:
+
+$$
+p_{M,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{M,m}^*)}, \qquad b \in \mathcal A_c.
+$$
+
+   Nếu $D_M < 10^{-12}$, mã nguồn gán trực tiếp $\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$.
+
+   - **Đối chứng hoán vị nhóm khoảng cách (Permuted Target $Y_D$)**: Nhằm kiểm tra vai trò của trật tự không gian giữa tỷ trọng luồng và nhóm cự ly, vector sai lệch đã chuẩn tâm $\tilde{\mathbf{r}}_T$ được hoán vị ngẫu nhiên vị trí giữa các khoảng hoạt động ($B_{\mathrm{perm}} = 1,000$ lần hoán vị độc lập; với các thành phố có ít khoảng hoạt động, vét cạn toàn bộ không gian hoán vị không lặp): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, trong đó $\pi$ là một hoán vị ngẫu nhiên trên $\mathcal A_c$. Vì phép hoán vị bảo toàn hoàn toàn chuẩn $\ell_2$ và RMS ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), điều kiện này tự động bảo toàn đúng liều can thiệp $D_T$ của phân phối mục tiêu nhưng phá vỡ hoàn toàn liên hệ ngữ nghĩa giữa cự ly và lưu lượng. Phân phối hoán vị sau đó được tái tạo tương tự qua:
+
+$$
+p_{P,b} = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{P,m}^*)}, \qquad b \in \mathcal A_c.
+$$
 
 
 
@@ -724,7 +763,7 @@ Trong số 50 vùng đô thị của benchmark, có đúng 39 vùng single-count
 Trên toàn bộ 50 vùng đô thị, mức tăng bổ sung pooled từ hiệu chỉnh cấp county so với hiệu chỉnh cấp thành phố là rất nhỏ:
 
 $$
-\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95\% CI } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
+\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{CI 95\% } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
 $$
 
 
