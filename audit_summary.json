@@ -1,0 +1,452 @@
+[
+  {
+    "city": "Albuquerque",
+    "n_od": 13222,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 13222,
+    "valid_unique": 13107
+  },
+  {
+    "city": "Arlington",
+    "n_od": 4624,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 4624,
+    "valid_unique": 4556
+  },
+  {
+    "city": "Atlanta",
+    "n_od": 15814,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 15814,
+    "valid_unique": 15688
+  },
+  {
+    "city": "Austin",
+    "n_od": 28534,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 28534,
+    "valid_unique": 28365
+  },
+  {
+    "city": "Baltimore",
+    "n_od": 39732,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 39732,
+    "valid_unique": 39532
+  },
+  {
+    "city": "Boston",
+    "n_od": 31101,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 31101,
+    "valid_unique": 30924
+  },
+  {
+    "city": "Charlotte",
+    "n_od": 34048,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 34048,
+    "valid_unique": 33863
+  },
+  {
+    "city": "Chicago",
+    "n_od": 528714,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 528714,
+    "valid_unique": 527934
+  },
+  {
+    "city": "Colorado_Springs",
+    "n_od": 8464,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 8464,
+    "valid_unique": 8372
+  },
+  {
+    "city": "Columbus",
+    "n_od": 33368,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 33368,
+    "valid_unique": 33185
+  },
+  {
+    "city": "Dallas",
+    "n_od": 161129,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 161129,
+    "valid_unique": 160695
+  },
+  {
+    "city": "Denver",
+    "n_od": 20703,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 20703,
+    "valid_unique": 20559
+  },
+  {
+    "city": "Detroit",
+    "n_od": 85793,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 85793,
+    "valid_unique": 85496
+  },
+  {
+    "city": "El_Paso",
+    "n_od": 16384,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 16384,
+    "valid_unique": 16256
+  },
+  {
+    "city": "Fort_Worth",
+    "n_od": 19288,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 19288,
+    "valid_unique": 19149
+  },
+  {
+    "city": "Fresno",
+    "n_od": 10000,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 10000,
+    "valid_unique": 9900
+  },
+  {
+    "city": "Houston",
+    "n_od": 206950,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 206950,
+    "valid_unique": 206487
+  },
+  {
+    "city": "Indianapolis",
+    "n_od": 41165,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 41165,
+    "valid_unique": 40962
+  },
+  {
+    "city": "Jacksonville",
+    "n_od": 26547,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 26547,
+    "valid_unique": 26384
+  },
+  {
+    "city": "Kansas_City",
+    "n_od": 20685,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 20685,
+    "valid_unique": 20541
+  },
+  {
+    "city": "Las_Vegas",
+    "n_od": 19527,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 19527,
+    "valid_unique": 19387
+  },
+  {
+    "city": "Long_Beach",
+    "n_od": 10598,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 10598,
+    "valid_unique": 10495
+  },
+  {
+    "city": "Los_Angeles",
+    "n_od": 786365,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 786365,
+    "valid_unique": 785372
+  },
+  {
+    "city": "Louisville",
+    "n_od": 5625,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 5625,
+    "valid_unique": 5550
+  },
+  {
+    "city": "Memphis",
+    "n_od": 29875,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 29875,
+    "valid_unique": 29702
+  },
+  {
+    "city": "Mesa",
+    "n_od": 11015,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 11015,
+    "valid_unique": 10910
+  },
+  {
+    "city": "Miami",
+    "n_od": 9397,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 9397,
+    "valid_unique": 9300
+  },
+  {
+    "city": "Milwaukee",
+    "n_od": 42706,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 42706,
+    "valid_unique": 42499
+  },
+  {
+    "city": "Minneapolis",
+    "n_od": 12976,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 12976,
+    "valid_unique": 12862
+  },
+  {
+    "city": "Nashville",
+    "n_od": 23059,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 23059,
+    "valid_unique": 22907
+  },
+  {
+    "city": "New_York",
+    "n_od": 3097336,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 3097336,
+    "valid_unique": 3095249
+  },
+  {
+    "city": "Oakland",
+    "n_od": 12757,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 12757,
+    "valid_unique": 12644
+  },
+  {
+    "city": "Oklahoma_City",
+    "n_od": 27466,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 27466,
+    "valid_unique": 27300
+  },
+  {
+    "city": "Omaha",
+    "n_od": 14158,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 14158,
+    "valid_unique": 14039
+  },
+  {
+    "city": "Philadelphia",
+    "n_od": 145279,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 145279,
+    "valid_unique": 144895
+  },
+  {
+    "city": "Phoenix",
+    "n_od": 117474,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 117474,
+    "valid_unique": 117126
+  },
+  {
+    "city": "Portland",
+    "n_od": 19871,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 19871,
+    "valid_unique": 19730
+  },
+  {
+    "city": "Raleigh",
+    "n_od": 5328,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 5328,
+    "valid_unique": 5255
+  },
+  {
+    "city": "Sacramento",
+    "n_od": 9994,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 9994,
+    "valid_unique": 9894
+  },
+  {
+    "city": "San_Antonio",
+    "n_od": 77821,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 77821,
+    "valid_unique": 77541
+  },
+  {
+    "city": "San_Diego",
+    "n_od": 75503,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 75503,
+    "valid_unique": 75226
+  },
+  {
+    "city": "San_Francisco",
+    "n_od": 37109,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 37109,
+    "valid_unique": 36916
+  },
+  {
+    "city": "San_Jose",
+    "n_od": 33445,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 33445,
+    "valid_unique": 33262
+  },
+  {
+    "city": "Seattle",
+    "n_od": 17383,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 17383,
+    "valid_unique": 17251
+  },
+  {
+    "city": "Tampa",
+    "n_od": 9357,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 9357,
+    "valid_unique": 9260
+  },
+  {
+    "city": "Tucson",
+    "n_od": 13685,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 13685,
+    "valid_unique": 13568
+  },
+  {
+    "city": "Tulsa",
+    "n_od": 14639,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 14639,
+    "valid_unique": 14518
+  },
+  {
+    "city": "Virginia_Beach",
+    "n_od": 9993,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 9993,
+    "valid_unique": 9893
+  },
+  {
+    "city": "Washington_DC",
+    "n_od": 31892,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 31892,
+    "valid_unique": 31713
+  },
+  {
+    "city": "Wichita",
+    "n_od": 9216,
+    "od_dups": 0,
+    "dist_dups": 0,
+    "od_missing_dist": 0,
+    "joined": 9216,
+    "valid_unique": 9120
+  }
+]
