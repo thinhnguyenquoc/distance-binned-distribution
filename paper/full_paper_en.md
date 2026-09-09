@@ -186,7 +186,7 @@ $$
 
 CPC lies in $[0, 1]$, with larger values indicating greater overlap between predicted and observed intensity.
 
-Additional error and ranking metrics are reported as robustness checks; their full definitions are provided in Supplementary Section S4.
+Three supplementary metrics—NRMSE, log-scale RMSE ($\operatorname{RMSE}_{\mathrm{log1p}}$), and Spearman rank correlation—are reported in Supplementary Section S4 as descriptive checks of outcome consistency. CPC remains the primary evaluation metric and the basis for statistical inference.
 
 In addition, the aggregated post-calibration distance distribution is compared with $Y_D$ as an internal mechanism diagnostic to confirm that the algorithm has reallocated mass as designed. All three model families (GNN, MLP, Gravity) are evaluated on the same support using the same CPC metric.
 
@@ -564,36 +564,31 @@ $$
 $$
 Because $S_c^{(0)}$ is exactly the total predicted mass before calibration, the operator preserves the baseline's total predicted mass.
 
-## S4. Mathematical definitions of supplementary error metrics
+## S4. Supplementary Evaluation Metrics
 
-All supplementary error metrics are computed on the same known positive interzonal support $\Omega_c$. CPC remains the primary metric; the metrics below serve only as robustness checks.
+In addition to CPC, the study reports three supplementary evaluation metrics on the same positive interzonal support $\Omega_c$. These metrics serve as descriptive checks of whether the post-calibration improvement holds when examining error magnitudes and flow ranks. CPC remains the primary evaluation metric; no additional hypothesis tests are conducted for the supplementary metrics.
 
-1. **Mean absolute error (MAE)**:
+1. **Normalized RMSE (NRMSE)**:
 $$
-\operatorname{MAE}_c = \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \lvert t_{c,ij} - \widehat{t}_{c,ij} \rvert.
-$$
-
-2. **Root mean squared error (RMSE)**:
-$$
-\operatorname{RMSE}_c = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl( t_{c,ij} - \widehat{t}_{c,ij} \bigr)^2 }.
+\overline{t}_c = \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} t_{c,ij}, \qquad \operatorname{NRMSE}_c = \frac{\sqrt{\frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} (t_{c,ij} - \widehat{t}_{c,ij})^2}}{\overline{t}_c}.
 $$
 
-3. **Normalized RMSE (NRMSE)**:
-$$
-\overline{t}_c = \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} t_{c,ij}, \qquad \operatorname{NRMSE}_c = \frac{\operatorname{RMSE}_c}{\overline{t}_c}.
-$$
-
-4. **Log-scale RMSE ($\operatorname{RMSE}_{\mathrm{log1p}}$)**:
+2. **Log-scale RMSE ($\operatorname{RMSE}_{\mathrm{log1p}}$)**:
 $$
 \operatorname{RMSE}_{\mathrm{log1p},c} = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl[ \log(1+t_{c,ij}) - \log(1+\widehat{t}_{c,ij}) \bigr]^2 }.
 $$
 
-5. **Spearman rank-correlation coefficient ($\rho_{\mathrm{Spearman}}$)**: measures the monotonic association between observed and predicted intensities on $\Omega_c$. Larger values indicate better rank agreement.
+3. **Spearman rank-correlation coefficient ($\rho_{\mathrm{Spearman}}$)**: Spearman rank correlation is computed between the observed and predicted intensity vectors on $\Omega_c$. Larger values indicate better agreement in OD-pair rankings.
 
-6. **Total-flow relative error ($\operatorname{RelError}$)**:
-$$
-\operatorname{RelError}_c = \frac{ \left\lvert \sum_{(i,j)\in\Omega_c} \widehat{t}_{c,ij} - \sum_{(i,j)\in\Omega_c} t_{c,ij} \right\rvert }{ \sum_{(i,j)\in\Omega_c} t_{c,ij} }.
-$$
+### Table S2: Supplementary evaluation metrics for Urban GNN with $K=8$.
+
+| Metric | Baseline $M_0$ | Post-calibration $M_1$ | Mean Change | Median Change | Improved Cities |
+|:---|---:|---:|---:|---:|---:|
+| NRMSE $\downarrow$ | 1.58647 | 1.58146 | −0.00502 | −0.00466 | 32/50 |
+| $\operatorname{RMSE}_{\mathrm{log1p}}$ $\downarrow$ | 0.92586 | 0.90050 | −0.02536 | −0.01158 | 35/50 |
+| Spearman $\rho$ $\uparrow$ | 0.76913 | 0.77167 | +0.00253 | +0.00119 | 38/50 |
+
+Note: Values are computed on support $\Omega_c$. For each city, results are averaged across three model seeds prior to macro-averaging across 50 cities. Arrows indicate the favorable direction for each metric. "Improved Cities" denotes the number of cities with a decrease in NRMSE and $\operatorname{RMSE}_{\mathrm{log1p}}$, or an increase in Spearman $\rho$. These results serve as supplementary descriptive checks; the primary confidence intervals and hypothesis tests of the study are based on CPC. Log-scale RMSE also decreases, indicating that the improvement persists when the influence of very high-intensity flows is attenuated.
 
 
 ## S5. Fold-stratified bootstrap protocol and statistical testing
@@ -733,12 +728,12 @@ $$
 
 This modest pooled increase is driven by the 39 single-county areas, whose increase is exactly zero by construction.
 
-For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark, county-level calibration improves performance in 9/11 areas, with a mean additional increase of $+0.00063$ (Table S2 and Figure S1).
+For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark, county-level calibration improves performance in 9/11 areas, with a mean additional increase of $+0.00063$ (Table S3 and Figure S1).
 
 ![Figure S1](figures/fig_s1_spatial_resolution.png)
 **Figure S1. Comparison of CPC gains from city-level and county-level calibration across 11 multi-county metropolitan areas. The analysis is exploratory; the 39 single-county areas are omitted because the two groupings are mathematically equivalent.**
 
-### Table S2: Descriptive city-level results for the multi-county spatial-resolution analysis
+### Table S3: Descriptive city-level results for the multi-county spatial-resolution analysis
 
 *The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M_{1,\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M_{1,\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Values are descriptive estimates at the city level. Confidence intervals and hypothesis tests are not reported for the subgroup because no separately verified uncertainty artifact is available.*
 

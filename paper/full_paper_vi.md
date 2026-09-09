@@ -203,7 +203,7 @@ $$
 
 CPC nằm trong $[0, 1]$, với giá trị lớn hơn biểu thị mức chồng lấp lớn hơn giữa cường độ dự báo và quan sát.
 
-Các thước đo sai số và xếp hạng bổ sung được báo cáo như kiểm tra độ bền; định nghĩa đầy đủ được trình bày trong Phụ lục S4.
+Ba thước đo bổ sung—NRMSE, RMSE trên thang $\log(1+x)$ và tương quan hạng Spearman—được báo cáo trong Phụ lục S4 như các kiểm tra mô tả về mức độ nhất quán của kết quả. CPC vẫn là thước đo đánh giá chính và là cơ sở cho các phân tích suy luận thống kê.
 
 Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được đối chiếu với $Y_D$ như một chẩn đoán cơ chế nội bộ nhằm xác nhận thuật toán đã tái phân bổ khối lượng đúng thiết kế. Cả ba họ mô hình (GNN, MLP, Gravity) được đánh giá trên cùng tập hỗ trợ bằng cùng thước đo CPC.
 
@@ -595,36 +595,31 @@ Vì $S_c^{(0)}$ chính là tổng khối lượng dự báo trước hiệu ch�
 
 
 
-## S4. Định nghĩa toán học các thước đo sai số phụ
+## S4. Các thước đo đánh giá bổ sung
 
-Tất cả các thước đo sai số phụ được tính trên cùng tập hỗ trợ liên vùng dương đã biết $\Omega_c$. CPC vẫn là thước đo chính; các metric dưới đây chỉ phục vụ kiểm tra độ bền của kết quả.
+Ngoài CPC, nghiên cứu báo cáo ba thước đo bổ sung trên cùng tập hỗ trợ liên vùng dương $\Omega_c$. Các thước đo này được sử dụng để kiểm tra mô tả liệu hướng thay đổi sau hiệu chỉnh có được duy trì khi xem xét độ lớn sai số và thứ hạng của các luồng hay không. CPC vẫn là thước đo chính; không thực hiện thêm kiểm định giả thuyết cho các thước đo bổ sung.
 
-1. **Sai số tuyệt đối trung bình (MAE)**:
+1. **RMSE chuẩn hóa (NRMSE)**:
 $$
-\operatorname{MAE}_c = \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \lvert t_{c,ij} - \widehat{t}_{c,ij} \rvert.
-$$
-
-2. **Căn bậc hai sai số bình phương trung bình (RMSE)**:
-$$
-\operatorname{RMSE}_c = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl( t_{c,ij} - \widehat{t}_{c,ij} \bigr)^2 }.
+\overline{t}_c = \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} t_{c,ij}, \qquad \operatorname{NRMSE}_c = \frac{\sqrt{\frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} (t_{c,ij} - \widehat{t}_{c,ij})^2}}{\overline{t}_c}.
 $$
 
-3. **RMSE chuẩn hóa (NRMSE)**:
-$$
-\overline{t}_c = \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} t_{c,ij}, \qquad \operatorname{NRMSE}_c = \frac{\operatorname{RMSE}_c}{\overline{t}_c}.
-$$
-
-4. **RMSE trên thang log ($\operatorname{RMSE}_{\mathrm{log1p}}$)**:
+2. **RMSE trên thang log ($\operatorname{RMSE}_{\mathrm{log1p}}$)**:
 $$
 \operatorname{RMSE}_{\mathrm{log1p},c} = \sqrt{ \frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j)\in\Omega_c} \bigl[ \log(1+t_{c,ij}) - \log(1+\widehat{t}_{c,ij}) \bigr]^2 }.
 $$
 
-5. **Hệ số tương quan hạng Spearman ($\rho_{\mathrm{Spearman}}$)**: đo mức độ tương quan đơn điệu giữa các cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị thứ hạng phù hợp hơn.
+3. **Hệ số tương quan hạng Spearman ($\rho_{\mathrm{Spearman}}$)**: Tương quan hạng Spearman được tính giữa các vector cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị mức độ phù hợp cao hơn về thứ hạng giữa các cặp OD.
 
-6. **Sai số tương đối tổng luồng ($\operatorname{RelError}$)**:
-$$
-\operatorname{RelError}_c = \frac{ \left\lvert \sum_{(i,j)\in\Omega_c} \widehat{t}_{c,ij} - \sum_{(i,j)\in\Omega_c} t_{c,ij} \right\rvert }{ \sum_{(i,j)\in\Omega_c} t_{c,ij} }.
-$$
+### Bảng S2: Các thước đo đánh giá bổ sung cho Urban GNN với $K=8$.
+
+| Thước đo | Baseline $M_0$ | Sau hiệu chỉnh $M_1$ | Thay đổi trung bình | Trung vị thay đổi | Thành phố cải thiện |
+|:---|---:|---:|---:|---:|---:|
+| NRMSE $\downarrow$ | 1.58647 | 1.58146 | −0.00502 | −0.00466 | 32/50 |
+| $\operatorname{RMSE}_{\mathrm{log1p}}$ $\downarrow$ | 0.92586 | 0.90050 | −0.02536 | −0.01158 | 35/50 |
+| Spearman $\rho$ $\uparrow$ | 0.76913 | 0.77167 | +0.00253 | +0.00119 | 38/50 |
+
+Chú thích: Các giá trị được tính trên tập hỗ trợ $\Omega_c$. Với mỗi thành phố, kết quả được lấy trung bình qua ba model seeds trước khi macro-average trên 50 thành phố. Mũi tên chỉ hướng tốt hơn của từng thước đo. “Thành phố cải thiện” được xác định bằng mức giảm đối với NRMSE và $\operatorname{RMSE}_{\mathrm{log1p}}$, và mức tăng đối với Spearman. Các kết quả này mang tính mô tả bổ sung; các khoảng tin cậy và kiểm định giả thuyết chính của nghiên cứu dựa trên CPC. RMSE trên thang $\log(1+x)$ cũng giảm, cho thấy mức cải thiện vẫn xuất hiện khi ảnh hưởng của các luồng cường độ rất lớn được giảm bớt.
 
 
 
@@ -769,12 +764,12 @@ $$
 
 Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-county có mức tăng bằng 0 tuyệt đối theo cấu trúc.
 
-Đối với nhóm 11 vùng đô thị multi-county (chiếm 22% tập benchmark), hiệu chỉnh cấp county đạt mức cải thiện tại 9/11 vùng, với mức tăng bổ sung trung bình là $+0.00063$ (Bảng S2 và Hình S1).
+Đối với nhóm 11 vùng đô thị multi-county (chiếm 22% tập benchmark), hiệu chỉnh cấp county đạt mức cải thiện tại 9/11 vùng, với mức tăng bổ sung trung bình là $+0.00063$ (Bảng S3 và Hình S1).
 
 ![Hình S1](figures/fig_s1_spatial_resolution.png)
 **Hình S1. So sánh mức tăng CPC của hiệu chỉnh cấp thành phố và cấp county trên 11 vùng đô thị multi-county. Phân tích mang tính thăm dò; 39 vùng single-county không được hiển thị vì hai cách phân nhóm tương đương về mặt toán học.**
 
-### Bảng S2: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
+### Bảng S3: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
 
 *Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị là ước lượng mô tả ở cấp city. Không báo cáo khoảng tin cậy hoặc kiểm định giả thuyết cho subgroup nếu không có artifact bất định riêng đã được xác minh.*
 
