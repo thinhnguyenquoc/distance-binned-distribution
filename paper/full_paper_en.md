@@ -500,35 +500,32 @@ The exact hyperparameter configuration extracted directly from the trained model
 The calibration-intensity parameter $q \in [0, 1]$ controls the degree of intervention from target-distance information:
 
 - $q = 0$: retain the baseline's initial prediction ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$).
-- $q = 1$: fully match flow shares across active distance intervals.
+- $q = 1$: fully match flow shares across active distance bins.
 - The main study fixes $q = 1$.
 
-At the main configuration $K=8$, 40/50 cities have all eight intervals active; in the remaining 10 cities, one or more long-distance intervals contain zero OD pairs, leading to $K_{\mathrm{act},c}\in[5,7]$. The algorithm operates strictly over the active set $\mathcal A_c$.
+At the main configuration $K=8$, 40/50 cities have all eight bins active; in the remaining 10 cities, one or more long-distance bins contain zero OD pairs, leading to $K_{\mathrm{act},c}\in[5,7]$. The algorithm operates strictly over the active set $\mathcal A_c$.
 
 The general calibration procedure is performed as follows:
 
-### S2.1. Set of active intervals
+### S2.1. Set of active bins
 
-The set of active intervals $\mathcal A_c$ is determined directly by the presence of OD pairs in the support $\Omega_c$:
+The set of active bins $\mathcal A_c$ is determined directly by the presence of OD pairs in the support $\Omega_c$:
 $$
 \mathcal A_c = \left\{ b \in \{1, \dots, K\} : \exists(i,j) \in \Omega_c,\ d_{c,ij} \in I_b \right\},
 $$
-with $K_{\mathrm{act},c} = |\mathcal A_c|$. In the calibration codebase (`src/calibration/bin_calibration.py`), this corresponds to testing whether any OD pair falls in the interval (`in_bin.any()`); in the placebo/robustness pipeline (`run_unified_placebo.py`), it is represented by the numerical threshold $\mathcal A_c = \{ b \in \{1, \dots, K\} : Y_{c,b} > 10^{-8} \}$. Because the support $\Omega_c$ contains only pairs with positive integer flow ($t_{c,ij} \ge 1$), any interval containing an OD pair satisfies $Y_{c,b} \ge 1/T_{\mathrm{total}} \ge 10^{-6} \gg 10^{-8}$. Furthermore, because zero-shot ZTNB predictions $\widehat{t}_{c,ij}^{(0)}$ are strictly positive on $\Omega_c$, these definitions are mathematically equivalent:
-$$
-\mathcal A_c = \{ b : \exists (i,j)\in\Omega_c, d_{c,ij}\in I_b \} = \{ b : Y_{c,b} > 10^{-8} \} = \{ b : \widehat{Y}_{c,b}^{(0)} > 0 \}.
-$$
+with $K_{\mathrm{act},c} = |\mathcal A_c|$. On positive support, any bin containing at least one OD pair has a positive oracle share. Because baseline predictions are also positive on the support, that bin has a positive predicted share. In the placebo pipeline, active bins are identified using the numerical threshold $Y_{c,b} > 10^{-8}$. Verification across 50 cities confirms that the bin set identified by this threshold coincides with the bin set determined from the presence of OD pairs.
 
-### S2.2. Conditional target distribution over active intervals
+### S2.2. Conditional target distribution over active bins
 
-The target shares are conditioned on the active intervals as follows:
+The target shares are conditioned on the active bins as follows:
 $$
 p_{c,b}^{\mathrm{cond}} = \frac{Y_{c,b} \mathbf{1}(b \in A_c)}{\sum_{r \in A_c} Y_{c,r}}.
 $$
-Conditioning ensures that the shares over active intervals sum to 1.
+Conditioning ensures that the shares over active bins sum to 1.
 
 ### S2.3. Soft calibration weights
 
-For each active interval $b \in A_c$, the soft scaling ratio is computed as:
+For each active bin $b \in A_c$, the soft scaling ratio is computed as:
 $$
 w_{c,b}(q) = \biggl( \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{c,b}^{(0)}} \biggr)^q, \qquad b \in A_c.
 $$
@@ -546,25 +543,26 @@ The calibrated predicted flow intensity for pair $(i,j)$ is defined by:
 $$
 \widehat{t}_{c,ij}^{(1)} = s_{c,b(i,j)}(q) \widehat{t}_{c,ij}^{(0)},
 $$
-where $b(i,j)$ is the distance interval containing pair $(i,j)$.
+where $b(i,j)$ is the distance bin containing pair $(i,j)$.
 
 ### S2.6. Main case $q = 1$
 
-When all distance intervals are active:
+In the primary oracle setting, bins outside $A_c$ contain no OD pairs from the support and thus have a target share of zero. Therefore, on active bins, $p^{\mathrm{cond}}_{c,b} = Y_{c,b}$. With $q = 1$, the normalization coefficient equals 1 and the calibration factor becomes:
 $$
-A_c = \{1, \dots, K\},
+Z_c(1) = 1,
+\qquad
+s_{c,b}(1) = \frac{Y_{c,b}}{\widehat{Y}_{c,b}^{(0)}},
+\qquad b \in A_c.
 $$
-we have:
-$$
-p_{c,b}^{\mathrm{cond}} = Y_{c,b}, \qquad Z_c(1) = 1, \qquad s_{c,b}(1) = \frac{Y_{c,b}}{\widehat{Y}_{c,b}^{(0)}}.
-$$
-The general form then reduces exactly to the simplified calibration operator used in the main text.
+This result does not require all $K$ bins to be active and recovers the calibration operator presented in Section 3.4.3.
 
 ## S3. Analytic proofs of invariant properties
 
+The proofs below consider positive baseline predictions on $\Omega_c$ and positive target shares on all active bins. These conditions are satisfied in the primary oracle setting.
+
 ### S3.1. Support preservation
 
-Because $s_{c,b}(q) > 0$ on every active interval, a positive prediction before calibration remains positive afterward. The operator acts only on $\Omega_c$, so it does not create links outside the known support:
+Because $s_{c,b}(q) > 0$ on every active bin, a positive prediction before calibration remains positive afterward. The operator acts only on $\Omega_c$, so it does not create links outside the known support:
 $$
 \widehat{t}_{c,ij}^{(1)} > 0 \quad \Longleftrightarrow \quad \widehat{t}_{c,ij}^{(0)} > 0, \qquad (i,j) \in \Omega_c.
 $$
@@ -789,12 +787,11 @@ For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark,
 
 ### S7.3. Interpretive limitations
 
-The county-level analysis should be interpreted under the following strict limitations:
+The analysis includes only 11 multi-county metropolitan areas and is reported descriptively. The results are insufficient to generalize the benefits of increased spatial resolution to other metropolitan regions.
 
-1. **Small sample and descriptive evidence**: The analysis is based on only 11 multi-county metropolitan areas. Because no separately stratified uncertainty estimate is available for this subset, the 9/11 improvement result is an empirical descriptive finding and is insufficient to establish a general statistical regularity.
-2. **Administrative versus functional boundaries**: Counties are historical administrative boundaries, not boundaries designed around commuting sheds, transportation corridors, or functional urban zones. County grouping therefore need not accurately represent heterogeneity in mobility behavior.
-3. **Incomplete spatial scope**: County groups include only tracts within the laboratory-provided metropolitan-area boundaries and do not represent all movement across the full territory of those counties.
-4. **No causal or practical guarantee**: Assigning tract centroids geometrically and using an oracle distribution does not reflect real linkage errors. The experiment does not show that increasing spatial resolution generally or always improves OD-matrix reconstruction in practical applications.
+Counties are administrative units that do not necessarily correspond to functional mobility regions. Observation groups include only tracts within the benchmark scope, without representing total mobility across the entire county territory.
+
+The distribution is constructed under an oracle setting. Its effectiveness with independently collected observations, including binning errors and differences in coverage, requires further evaluation.
 
 
 

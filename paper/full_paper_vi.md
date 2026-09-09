@@ -123,7 +123,7 @@ Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
-Do bộ dữ liệu chỉ giữ các cặp OD có luồng quan sát dương, đáp ứng thỏa $t_{c,ij}\in\{1,2,\ldots\}$. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Phân phối NB nền dùng tham số hóa mean--shape:
+Dữ liệu huấn luyện gồm các cặp OD có lưu lượng quan sát nguyên dương, $t_{c,ij}\in\{1,2,\ldots\}$. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Phân phối NB nền được tham số hóa bằng trung bình $\mu$ và tham số phân tán $\phi$:
 
 $$
 p_{\mathrm{NB}}(t\mid\mu,\phi)
@@ -144,7 +144,7 @@ p_+(t\mid\mu,\phi)
 \qquad t=1,2,\ldots
 $$
 
-Trong đó, $\mu>0$ là mean của NB nền trước khi điều kiện hóa, không phải conditional mean sau truncation; $\phi>0$ là shape/dispersion parameter. Hàm mất mát được tính bằng âm log-hợp lý trung bình trên các cặp OD của từng thành phố:
+Trong đó, $\mu>0$ là trung bình của phân phối NB nền trước khi điều kiện hóa; $\phi>0$ là tham số phân tán. Hàm mất mát được tính bằng âm log-hợp lý trung bình trên các cặp OD của từng thành phố:
 
 $$
 \mathcal L_c
@@ -156,7 +156,7 @@ $$
 
 Trong quá trình huấn luyện, mỗi bước cập nhật sử dụng một thành phố và hàm mất mát trung bình trên các cặp OD của thành phố đó.
 
-Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Tham số phân tán $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp OD trong mỗi mô hình. Các phép biến đổi bảo đảm tham số dương và các biện pháp ổn định số học được trình bày trong Phụ lục S1. Khi suy luận, cường độ luồng dự báo là conditional mean của phân phối ZTNB:
+Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Tham số phân tán $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp OD trong mỗi mô hình. Các phép biến đổi bảo đảm tham số dương và các biện pháp ổn định số học được trình bày trong Phụ lục S1. Khi suy luận, cường độ luồng dự báo là kỳ vọng có điều kiện của phân phối ZTNB:
 
 $$
 \hat t_{c,ij}^{(0)}
@@ -528,32 +528,29 @@ Cấu hình siêu tham số chính xác được trích xuất trực tiếp t�
 Tham số cường độ hiệu chỉnh $q \in [0, 1]$ điều khiển mức độ can thiệp của thông tin khoảng cách mục tiêu:
 
 - $q = 0$: giữ nguyên dự báo ban đầu của baseline ($\widehat{t}^{(1)} \equiv \widehat{t}^{(0)}$).
-- $q = 1$: khớp đầy đủ tỷ trọng luồng theo từng khoảng khoảng cách hoạt động.
+- $q = 1$: khớp đầy đủ tỷ trọng luồng theo từng nhóm khoảng cách hoạt động.
 - Thiết lập chính cố định $q = 1$.
 
-Ở cấu hình chính $K=8$, 40/50 thành phố có đủ tám khoảng hoạt động; tại 10 thành phố còn lại, một hoặc nhiều khoảng cự ly xa không chứa cặp OD, dẫn đến $K_{\mathrm{act},c}\in[5,7]$. Thuật toán chỉ thực hiện hiệu chỉnh trên tập khoảng hoạt động $\mathcal A_c$.
+Ở cấu hình chính $K=8$, 40/50 thành phố có đủ tám nhóm hoạt động; tại 10 thành phố còn lại, một hoặc nhiều nhóm cự ly xa không chứa cặp OD, dẫn đến $K_{\mathrm{act},c}\in[5,7]$. Thuật toán chỉ thực hiện hiệu chỉnh trên tập nhóm hoạt động $\mathcal A_c$.
 
 Quy trình hiệu chỉnh tổng quát được thực hiện qua các bước:
 
-### S2.1. Tập các khoảng hoạt động
-Tập các khoảng hoạt động $\mathcal A_c$ được xác định trực tiếp từ sự tồn tại của các cặp OD thuộc tập hỗ trợ $\Omega_c$:
+### S2.1. Tập các nhóm hoạt động
+Tập các nhóm hoạt động $\mathcal A_c$ được xác định trực tiếp từ sự tồn tại của các cặp OD thuộc tập hỗ trợ $\Omega_c$:
 $$
 \mathcal A_c = \left\{ b \in \{1, \dots, K\} : \exists(i,j) \in \Omega_c,\ d_{c,ij} \in I_b \right\},
 $$
-với $K_{\mathrm{act},c} = |\mathcal A_c|$. Trong mã nguồn thực nghiệm (`src/calibration/bin_calibration.py`), tiêu chí này tương ứng với việc kiểm tra sự tồn tại của cặp OD trong khoảng (`in_bin.any()`); trong pipeline kiểm tra robustness (`run_unified_placebo.py`), điều này được biểu diễn qua ngưỡng số học $\mathcal A_c = \{ b \in \{1, \dots, K\} : Y_{c,b} > 10^{-8} \}$. Do tập hỗ trợ $\Omega_c$ chỉ gồm các cặp có lưu lượng nguyên dương ($t_{c,ij} \ge 1$), bất kỳ khoảng nào có cặp OD đều thỏa mãn $Y_{c,b} \ge 1/T_{\mathrm{total}} \ge 10^{-6} \gg 10^{-8}$, và do dự báo ZTNB $\widehat{t}_{c,ij}^{(0)}$ luôn dương trên $\Omega_c$, các định nghĩa này hoàn toàn tương đương:
-$$
-\mathcal A_c = \{ b : \exists (i,j)\in\Omega_c, d_{c,ij}\in I_b \} = \{ b : Y_{c,b} > 10^{-8} \} = \{ b : \widehat{Y}_{c,b}^{(0)} > 0 \}.
-$$
+với $K_{\mathrm{act},c} = |\mathcal A_c|$. Trên tập hỗ trợ dương, nhóm có ít nhất một cặp OD có tỷ trọng oracle dương. Do dự báo baseline cũng dương trên tập hỗ trợ, nhóm đó có tỷ trọng dự báo dương. Trong pipeline placebo, nhóm hoạt động được xác định bằng ngưỡng số học $Y_{c,b} > 10^{-8}$. Kiểm tra trên 50 thành phố cho thấy tập nhóm thu được bằng ngưỡng này trùng với tập nhóm xác định từ sự tồn tại của cặp OD.
 
-### S2.2. Phân phối mục tiêu điều kiện trên các khoảng hoạt động
-Tỷ trọng mục tiêu được điều kiện hóa trên các khoảng hoạt động theo:
+### S2.2. Phân phối mục tiêu điều kiện trên các nhóm hoạt động
+Tỷ trọng mục tiêu được điều kiện hóa trên các nhóm hoạt động theo:
 $$
 p_{c,b}^{\mathrm{cond}} = \frac{Y_{c,b} \mathbf{1}(b \in A_c)}{\sum_{r \in A_c} Y_{c,r}}.
 $$
-Việc điều kiện hóa bảo đảm tổng tỷ trọng trên các khoảng hoạt động bằng 1.
+Việc điều kiện hóa bảo đảm tổng tỷ trọng trên các nhóm hoạt động bằng 1.
 
 ### S2.3. Trọng số hiệu chỉnh mềm
-Với mỗi khoảng hoạt động $b \in A_c$, tỷ lệ co giãn mềm được tính theo:
+Với mỗi nhóm hoạt động $b \in A_c$, tỷ lệ co giãn mềm được tính theo:
 $$
 w_{c,b}(q) = \biggl( \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{c,b}^{(0)}} \biggr)^q, \qquad b \in A_c.
 $$
@@ -569,25 +566,28 @@ Cường độ luồng dự báo sau hiệu chỉnh cho cặp $(i,j)$ được x
 $$
 \widehat{t}_{c,ij}^{(1)} = s_{c,b(i,j)}(q) \widehat{t}_{c,ij}^{(0)},
 $$
-trong đó $b(i,j)$ là khoảng cự ly chứa cặp $(i,j)$.
+trong đó $b(i,j)$ là nhóm cự ly chứa cặp $(i,j)$.
 
 ### S2.6. Trường hợp chính $q = 1$
-Khi tất cả các khoảng khoảng cách đều hoạt động:
+Trong cấu hình oracle chính, các nhóm ngoài $A_c$ không chứa cặp OD thuộc tập hỗ trợ nên có tỷ trọng mục tiêu bằng 0. Vì vậy, trên các nhóm hoạt động, $p^{\mathrm{cond}}_{c,b}=Y_{c,b}$. Với $q=1$, hệ số chuẩn hóa bằng 1 và hệ số hiệu chỉnh trở thành:
 $$
-A_c = \{1, \dots, K\},
+Z_c(1)=1,
+\qquad
+s_{c,b}(1)
+=
+\frac{Y_{c,b}}{\widehat Y_{c,b}^{(0)}},
+\qquad b\in A_c.
 $$
-ta có:
-$$
-p_{c,b}^{\mathrm{cond}} = Y_{c,b}, \qquad Z_c(1) = 1, \qquad s_{c,b}(1) = \frac{Y_{c,b}}{\widehat{Y}_{c,b}^{(0)}}.
-$$
-Khi đó, dạng tổng quát thu về đúng toán tử hiệu chỉnh rút gọn được sử dụng trong thân bài.
+Kết quả này không yêu cầu tất cả $K$ nhóm đều hoạt động và thu về toán tử hiệu chỉnh trình bày ở mục 3.4.3.
 
 
 
 ## S3. Chứng minh giải tích các đặc tính bất biến
 
+Các chứng minh dưới đây xét dự báo baseline dương trên $\Omega_c$ và tỷ trọng mục tiêu dương trên mọi nhóm hoạt động. Các điều kiện này được thỏa mãn trong cấu hình oracle chính.
+
 ### S3.1. Bảo toàn tập hỗ trợ
-Vì $s_{c,b}(q) > 0$ trên mọi khoảng hoạt động, một dự báo dương trước hiệu chỉnh vẫn dương sau hiệu chỉnh. Toán tử chỉ hoạt động trên $\Omega_c$, nên không tạo thêm liên kết bên ngoài tập hỗ trợ đã biết:
+Vì $s_{c,b}(q) > 0$ trên mọi nhóm hoạt động, một dự báo dương trước hiệu chỉnh vẫn dương sau hiệu chỉnh. Toán tử chỉ hoạt động trên $\Omega_c$, nên không tạo thêm liên kết bên ngoài tập hỗ trợ đã biết:
 $$
 \widehat{t}_{c,ij}^{(1)} > 0 \quad \Longleftrightarrow \quad \widehat{t}_{c,ij}^{(0)} > 0, \qquad (i,j) \in \Omega_c.
 $$
@@ -817,9 +817,8 @@ Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-cou
 
 ### S7.3. Giới hạn diễn giải
 
-Kết quả phân tích cấp county cần được diễn giải với các giới hạn nghiêm ngặt sau:
+Phân tích chỉ gồm 11 vùng đô thị có nhiều county và được báo cáo ở mức mô tả. Kết quả chưa đủ để khái quát lợi ích của việc tăng độ phân giải không gian sang các vùng đô thị khác.
 
-1. **Quy mô mẫu nhỏ và bằng chứng mô tả**: Phân tích chỉ dựa trên 11 vùng đô thị multi-county. Do không có ước lượng bất định phân tầng riêng cho tập con này, kết quả 9/11 vùng cải thiện chỉ mang tính chất mô tả thực nghiệm, không đủ cơ sở để khẳng định tính quy luật thống kê tổng quát.
-2. **Ranh giới hành chính so với ranh giới chức năng**: County (đơn vị hành chính cấp hạt) là ranh giới quản lý hành chính lịch sử, không được thiết kế dựa trên lưu vực đi lại, hành lang giao thông hay cấu trúc phân vùng chức năng đô thị. Vì vậy, việc phân nhóm theo county không nhất thiết phản ánh đúng tính không đồng nhất của hành vi di chuyển.
-3. **Phạm vi không gian không đầy đủ**: Các nhóm county chỉ bao gồm các tract nằm trong ranh giới vùng đô thị do phòng thí nghiệm cung cấp, không đại diện cho toàn bộ luồng di chuyển trên toàn diện tích địa giới của các county đó.
-4. **Không chứng minh quan hệ nhân quả hay bảo đảm thực tế**: Việc gán tâm tract bằng phương pháp hình học và sử dụng phân phối oracle không phản ánh các sai số ghép nối thực tế. Thí nghiệm không chứng minh rằng tăng độ phân giải không gian nói chung sẽ luôn cải thiện việc tái tạo ma trận OD trong các ứng dụng thực tế.
+County là đơn vị hành chính và không nhất thiết tương ứng với các vùng di chuyển chức năng. Các nhóm quan sát chỉ bao gồm những tract thuộc phạm vi benchmark, không đại diện cho toàn bộ lưu lượng trên địa bàn county.
+
+Phân phối được xây dựng theo thiết lập oracle. Hiệu quả với quan sát thu thập độc lập, bao gồm sai số phân nhóm và khác biệt về độ phủ, cần được đánh giá thêm.

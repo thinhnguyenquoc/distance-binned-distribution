@@ -369,7 +369,15 @@ def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
         Path("paper/references.bib"),
     ]
     bib_path = next((p for p in bib_candidates if p.exists()), None)
-    key_to_idx = load_bibliography(bib_path) if bib_path else {}
+    # Extract keys actually cited in md_text
+    cited_keys = set()
+    for match in re.findall(r"\[@([^\]]+)\]", md_text):
+        for k in match.split(";"):
+            k = k.strip().lstrip("@").strip()
+            if k:
+                cited_keys.add(k)
+
+    key_to_idx = load_bibliography(bib_path, cited_keys=cited_keys) if bib_path else {}
 
     protected = preprocess_markdown_citations_and_references(md_text, key_to_idx)
 
