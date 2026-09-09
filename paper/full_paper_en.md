@@ -4,7 +4,7 @@
 
 Origin–destination (OD) matrices are important inputs for transportation analysis and urban planning, but detailed data on target-city OD flow intensity are often difficult to collect. Studies using urban context and geographic distance have developed cross-city zero-shot baselines capable of predicting mobility flows without using observed target-city OD intensity data. This study examines whether the target city's distance-binned mobility distribution can improve interzonal OD flow-intensity reconstruction on the known positive interzonal support by calibrating the output of a frozen-parameter zero-shot baseline. Crucially, the evaluation adopts an oracle setting: the distance distribution is aggregated directly from the target city's ground-truth OD flows on the exact positive interzonal support used for evaluation, isolating the theoretical information value of the signal.
 
-In the main experiment, the method is evaluated using a 5-fold cross-validation protocol across 50 U.S. metropolitan areas. City-level calibration produces a consistent improvement: mean CPC increases from a baseline of $0.71281$ to $0.71635$ ($\Delta\mathrm{CPC} = +0.00354$, $\sim 0.5\%$ relative gain; 95% CI: $[+0.0026, +0.0045]$, $p = 1.93 \times 10^{-9}$), with 45/50 cities improved. Dose-matched placebo controls establish structural target-specificity: donor distributions from training cities and randomly permuted distributions eliminate the benefit ($\Delta\mathrm{CPC} \le 0$), proving that improvements depend on the authentic distribution of the target city. The benefit diminishes as the observation resolution coarsens or quality degrades under noise. However, the findings are strictly bounded by this oracle setup on known positive support, leaving link discovery and evaluation with independently sourced observations to future work.
+In the main experiment, the method is evaluated using a 5-fold cross-validation protocol across 50 U.S. metropolitan areas. For the Urban GNN baseline, city-level oracle calibration increases mean CPC by 0.00354, with 45/50 cities improved. Dose-matched placebo controls show that the target city's own distribution yields higher CPC than training-city donor distributions and permuted controls. This provides evidence that the observed benefit relates to target-city-specific information and the correspondence between the calibration signal and distance intervals. Within the surveyed range, mean improvement increases with more distance intervals and decreases when the observation is corrupted by noise. However, the findings are strictly bounded by this oracle setup on known positive support, leaving link discovery and evaluation with independently sourced observations to future work.
 
 **Keywords:** origin–destination matrix; OD intensity reconstruction; distance-binned mobility distribution; zero-shot; cross-city transfer learning; aggregate observations; spatial mobility.
 
@@ -241,10 +241,10 @@ The bar chart shows $\Delta\mathrm{CPC}_c = \operatorname{CPC}_c(M_1) - \operato
 
 ## 4.2. Is the improvement target-city-specific and structurally meaningful?
 
-Placebo controls show that the benefit of calibration depends on target-city-specific information: the $Y_D$ of the correct target city produces a larger improvement than dose-matched donor distributions. When evaluating the dose-matched fold training-mean control, the mean gain is $+0.00091$ with a 95% stratified bootstrap CI of $[+0.00001, +0.00186]$, but the city-level shift is inconsistent (median $+0.00007$, 27/50 positive cities, two-sided Wilcoxon $p=0.4319$). When the intervention log-ratio vector is randomly permuted across distance intervals (preserving intervention dose while breaking spatial ordering; Supplementary S6), the benefit no longer persists and performance decreases ($\Delta\mathrm{CPC} = -0.00696$, with true target outperforming permuted controls in 49/50 cities by $+0.01050$). This indicates that calibration benefit depends on preserving the correct association between flow shares and distance intervals, rather than merely applying an equally strong perturbation.
+Placebo controls show that the benefit of calibration depends on target-city-specific information: the $Y_D$ of the correct target city produces a larger improvement than dose-matched donor distributions. When evaluating the dose-matched fold training-mean control, the mean gain is $+0.00091$ with a 95% stratified bootstrap CI of $[+0.00001, +0.00186]$, but the city-level shift is inconsistent (median $+0.00007$, 27/50 positive cities, two-sided Wilcoxon $p=0.4319$). When the components of the centered intervention log-ratio vector are permuted across distance intervals, performance decreases by $-0.00696$ on average relative to baseline (Figure 3). Target-distribution calibration yields higher CPC than the permuted control in 49/50 cities, with a mean pairwise difference of $+0.01050$. This result demonstrates that calibration effectiveness depends on the correspondence between the adjustment signal and the distance intervals.
 
 ![Figure 3](figures/fig3_structural_validity_placebo.png)
-**Figure 3. Controls for target specificity and distance structure.** The figure compares target $Y_D$, dose-matched training-donor placebo, and permuted intervention log-ratio $Y_D$ across 50 cities. Error bars represent stratified 95% bootstrap CIs by fold.
+**Figure 3. Controls for target specificity and distance structure.** The figure compares target $Y_D$, dose-matched training-donor placebo, and permuted calibration log-ratio control across 50 cities. Error bars represent stratified 95% bootstrap CIs by fold.
 
 ### Table 3: Target specificity and placebo controls ($N=50$)
 
@@ -253,9 +253,9 @@ Placebo controls show that the benefit of calibration depends on target-city-spe
 | **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45/50 (vs $M_0$)** |
 | **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46/50 (92.0%)** |
 | **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47/50 (94.0%)** |
-| **4. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49/50 (98.0%)** |
+| **4. Permuted Calibration Log-Ratio Control ($B_{\text{draw}}=1000$)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49/50 (98.0%)** |
 
-Note: Bootstrap confidence intervals are computed for mean $\Delta\mathrm{CPC}$, while $p$-values are obtained from the Wilcoxon signed-rank test on city-level paired differences; therefore, the two statistics do not test the same quantity and need not lead to the same conclusion. Donor placebos are averaged over 1,000 random donor draws; permutation placebos are averaged over 1,000 random permutations of the centered intervention log-ratio vector (with exhaustive permutations for cities with small active bin counts). Results across three model seeds are averaged prior to 50-city aggregation.
+Note: Bootstrap confidence intervals are computed for mean $\Delta\mathrm{CPC}$, while $p$-values are obtained from the Wilcoxon signed-rank test on city-level paired differences; therefore, the two statistics do not test the same quantity and need not lead to the same conclusion. Donor placebos are averaged over 1,000 random donor draws; permutation placebos are averaged over 1,000 random permutations or exhaustive permutations when the exhaustive branch applies; results across three model seeds are averaged prior to 50-city aggregation.
 
 ## 4.3. How does the additional value of $Y_D$ depend on observation resolution and quality?
 
@@ -292,14 +292,10 @@ $$ \Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, $$
 
 because 39 single-county areas produce mathematically equivalent partitions and therefore have $\Delta\mathrm{CPC}_{\mathrm{res}}=0$ by construction. For the group of 11 multi-county areas alone, the mean additional increase was about $+0.00063$. Thus, this result is treated only as exploratory evidence that finer spatial resolution may provide additional information in some urban structures, rather than as general evidence that increasing spatial resolution always improves performance.
 
-Separately from resolution, we further assessed sensitivity to the quality of the $Y_D$ observation itself. Noise was added to the target-city distribution at specified Total Variation error levels while keeping the baseline, evaluation cities, and calibration operator unchanged. Mean $\Delta\mathrm{CPC}$ was $+0.0035395$, $+0.0033591$, $+0.0028220$, $+0.0019327$, $+0.0006977$, and $-0.0008740$ at $\epsilon=0\%$, 1%, 2%, 3%, 4%, and 5% TV, respectively. As noise increased, the curve crossed baseline-equivalent performance at approximately
-
-$$ \epsilon_{\mathrm{cross}} = 4.4439\% \text{ TV}, $$
-
-In the 10,000 bootstrap curves, 9,546 had an observed crossing within 0–5%; 454 had no observed crossing and all remained positive at $\epsilon=0.05$, so they are right-censored above the surveyed range. No crossing CI is computed by dropping those 454 curves. In the surveyed grid, $\epsilon=3\%$ was the largest level whose one-sided Wilcoxon test remained below $\alpha=0.05$ after Holm correction ($p_{\mathrm{raw}}=0.0148637$, $p_{\mathrm{Holm}}=0.0445910$). This descriptive crossing is specific to the benchmark and noise mechanism used.
+Separately from resolution, we further assessed sensitivity to the quality of the $Y_D$ observation itself. Noise was added to the target-city distribution at specified Total Variation error levels while keeping the baseline, evaluation cities, and calibration operator unchanged. Mean $\Delta\mathrm{CPC}$ was $+0.0035395$, $+0.0033591$, $+0.0028220$, $+0.0019327$, $+0.0006977$, and $-0.0008740$ at $\epsilon=0%$, 1%, 2%, 3%, 4%, and 5% TV, respectively. Linear interpolation between the two adjacent noise levels with opposite-sign mean CPC changes yields a descriptive crossing point of approximately 4.44% TV. In the 10,000 bootstrap curves, 9,546 had a crossing within the 0–5% surveyed range; the remaining 454 curves remained positive at the 5% noise level and are recorded as right-censored at the boundary of the surveyed range. We do not report a confidence interval for the crossing location. In the surveyed grid, $\epsilon=3\%$ was the largest level whose one-sided Wilcoxon test remained below $\alpha=0.05$ after Holm correction ($p_{\mathrm{raw}}=0.0148637$, $p_{\mathrm{Holm}}=0.0445910$). This descriptive crossing is specific to the benchmark and noise mechanism used.
 
 ![Figure 5](figures/fig5_noise_dose_response.png)
-**Figure 5. Sensitivity of improvement to Total Variation noise.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities; the shaded band is the city-bootstrap 95% CI, stratified by fold. The horizontal line at $\Delta\mathrm{CPC}=0$ indicates baseline-equivalent performance, and the dashed line marks the descriptive crossing point $\epsilon_{\mathrm{cross}}=4.4439\%$.
+**Figure 5. Sensitivity of improvement to Total Variation noise.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities; the shaded band is the city-bootstrap 95% CI, stratified by fold. The horizontal line at $\Delta\mathrm{CPC}=0$ indicates baseline-equivalent performance, and the dashed line marks the descriptive crossing point $\epsilon_{\mathrm{cross}}=4.44\%$.
 
 Overall, the results show that the value of $Y_D$ depends on both the granularity and the accuracy of the observation: increasing the number of distance intervals improves results, but the signal must remain sufficiently accurate to yield practical benefits. The county-level analysis further suggests that spatial detail may provide additional information in some cities, but this evidence is currently exploratory.
 
@@ -352,7 +348,6 @@ Two direct limitations of the design are that $Y_D$ is extracted from the target
 
 These limitations also define several natural directions for future research. One natural extension is to combine $Y_D$ with other aggregate constraints, such as total outflow by origin or total inflow by destination. Classical spatial interaction models provide a foundation for jointly applying production, attraction, and impedance constraints [@wilson1971family; @ortuzar2011modelling]. Recent discussions of the future of mobility science also emphasize the need for models that are both generalizable and more interpretable and connected to mobility mechanisms [@pappalardo2023future]. Future research could evaluate independent aggregate-observation sources, different geographic units, and real collection conditions; the present study does not use an external observation source.
 
-The effectiveness of calibration varies across baseline architectures. Consistent CPC gains appear in most cities for the two neural baselines, but in only 22/50 cities for the Two-Parameter Gravity model. This indicates that the practical benefit of $Y_D$ depends on the initial prediction structure of the baseline.
 
 # 6. Conclusion
 
@@ -648,7 +643,7 @@ p_{(k)} \leq \frac{\alpha}{M - k + 1}, \qquad k = 1, \dots, M.
 $$
    The $p$-values are sorted in ascending order. The step-down procedure stops at the first hypothesis that does not satisfy the rejection condition.
 
-5. **Noise-test family**: The five positive levels $\epsilon=0.01,0.02,0.03,0.04,0.05$ share one Holm family and use one-sided Wilcoxon tests on 50 city-level values; $\epsilon=0$ is excluded from the family. Crossing bootstrap resamples cities within each fold, retains the same sampled city indices across all noise levels, and counts crossings within 0–5%; non-crossing curves are right-censored and are not dropped to construct a crossing CI.
+5. **Noise-test family**: The five positive levels $\epsilon=0.01,0.02,0.03,0.04,0.05$ share one Holm family and use one-sided Wilcoxon tests on 50 city-level values; $\epsilon=0$ is excluded from the family. Crossing bootstrap resamples cities within each fold, retains the same sampled city indices across all noise levels, and counts crossings within 0–5%. In the reported bootstrap results, curves without a crossing in the surveyed domain remained positive at the 5% noise level and are recorded as right-censored at this limit. No confidence interval is computed for the crossing point from only the subset of curves with an observed crossing.
 
 
 ## S6. Technical details of robustness stress tests
@@ -677,13 +672,13 @@ $$
 r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{T,b}^2}.
 $$
 
-   - **Training-city donor control (Wrong-City Donors, Dose-Matched)**: For each random donor draw from training cities within the same fold ($B_{\mathrm{draw}} = 1,000$), let $Y_D^{\mathrm{donor}}$ be the donor distribution. The raw log-ratio and donor intervention magnitude $D_D$ are computed as:
+   - **Training-city donor control (Wrong-City Donors, Dose-Matched)**: For each random donor draw from training cities within the same fold ($B_{\mathrm{draw}} = 1,000$), let $Y_D^{\mathrm{donor}}$ be the donor distribution. Prior to computing the log-ratio, the donor distribution is restricted to the active intervals of the target city, lower-bounded at $\delta = 10^{-12}$ if any interval mass falls below this threshold, and re-normalized so that its sum over the active intervals equals 1. The initial log-ratio and donor intervention magnitude $D_D$ are computed as:
 
 $$
 r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{D,b}^2}.
 $$
 
-   If $D_D > 0$, the log-ratio vector of the donor is scaled to match the target intervention dose:
+   When $D_D \ge 10^{-12}$, the log-ratio vector of the donor is scaled to match the target intervention dose:
 
 $$
 \tilde{r}_{D,b}^* = \tilde{r}_{D,b} \frac{D_T}{D_D}.
@@ -695,15 +690,15 @@ $$
 p_{D,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{D,m}^*)}, \qquad b \in \mathcal A_c.
 $$
 
-   In the degenerate case $D_D < 10^{-12}$ (where the donor distribution happens to perfectly match the baseline prediction), no perturbation direction can be scaled; the implementation directly assigns the target benchmark gain ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$).
+   When $D_D < 10^{-12}$, the centered log-ratio vector is below the numerical precision threshold and the scaling direction is considered degenerate; in this case, the implementation assigns the benchmark target gain ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$). This degenerate fallback branch was not triggered in any reported experiment.
 
-   - **Fold training-mean donor control (Training-Mean Donor, Dose-Matched)**: The pooled mean distribution $\overline{Y}_{D,\mathrm{train}}$ is computed across all training cities in the corresponding fold. Its log-ratio and initial intervention magnitude $D_M$ are:
+   - **Fold training-mean donor control (Training-Mean Donor, Dose-Matched)**: The control distribution is computed as the unweighted arithmetic mean of the normalized distance distributions across the 35 training cities in the corresponding fold, giving equal weight to each city. Prior to computing the log-ratio, this distribution is restricted to the active intervals $\mathcal A_c$ of the target city, lower-bounded at $\delta = 10^{-12}$, and re-normalized so that total mass equals 1 (in practice, the mean across 35 cities is strictly positive across all active intervals). Its log-ratio and initial intervention magnitude $D_M$ are:
 
 $$
 r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{M,b}^2}.
 $$
 
-   If $D_M > 0$, the vector is scaled to match $D_T$:
+   When $D_M \ge 10^{-12}$, the vector is scaled to match $D_T$:
 
 $$
 \tilde{r}_{M,b}^* = \tilde{r}_{M,b} \frac{D_T}{D_M}.
@@ -715,12 +710,12 @@ $$
 p_{M,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{M,m}^*)}, \qquad b \in \mathcal A_c.
 $$
 
-   If $D_M < 10^{-12}$, the code directly assigns $\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$.
+   When $D_M < 10^{-12}$, the centered log-ratio vector is below the numerical threshold and the code assigns $\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$. This degenerate fallback branch was not triggered in any reported experiment.
 
-   - **Permuted distance-interval control (Permuted Target $Y_D$)**: To verify whether the physical ordering between flow shares and distance bins matters, the centered log-ratio vector $\tilde{\mathbf{r}}_T$ is randomly permuted across active bins ($B_{\mathrm{perm}} = 1,000$ independent random permutations; for cities with small active bin counts, exhaustive unique permutations are used): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, where $\pi$ is a uniform permutation over $\mathcal A_c$. Because permutation strictly preserves the centered $\ell_2$ and RMS norms ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), this control strictly maintains the intervention dose $D_T$ of the target distribution while completely severing the semantic association between distance and flow volume. The permuted distribution is reconstructed via:
+   - **Permuted calibration log-ratio control**: To test the role of the correspondence between the calibration signal and distance intervals, the components of the centered target log-ratio vector are randomly permuted across active intervals ($B_{\mathrm{perm}} = 1,000$ independent random permutations; for cities with small active bin counts where $K_{\mathrm{act}}! \le 40,320$, the implementation performs exhaustive unique non-identity permutations, explicitly excluding the identity permutation $\pi = \mathrm{id}$ to ensure genuine perturbation): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, where $\pi$ is a permutation over $\mathcal A_c$. Permutation preserves the Euclidean and RMS norms of the centered log-ratio vector ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), while randomizing the correspondence between the components of this vector and the distance intervals. The permuted distribution is then reconstructed via:
 
 $$
-p_{P,b} = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{P,m}^*)}, \qquad b \in \mathcal A_c.
+p_{P,b} = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{P,m})}, \qquad b \in \mathcal A_c.
 $$
 
 
@@ -768,7 +763,7 @@ For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark,
 
 ### Table S3: Descriptive city-level results for the multi-county spatial-resolution analysis
 
-*The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M_{1,\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M_{1,\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Values are descriptive estimates at the city level. Confidence intervals and hypothesis tests are not reported for the subgroup because no separately verified uncertainty artifact is available.*
+*The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M_{1,\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M_{1,\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Values are summarized at the city level. Results for the 11 multi-county metropolitan areas are reported descriptively; separate confidence intervals and hypothesis tests are not presented for this subgroup.*
 
 | City | Number of origin counties | $M_0$ CPC | $M_{1,\mathrm{city}}$ CPC | $M_{1,\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res},c}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|

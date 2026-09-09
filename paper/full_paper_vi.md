@@ -4,7 +4,7 @@
 
 Việc ước lượng cường độ luồng OD cho một thành phố mới chưa có quan sát về luồng giao thông vẫn là một thách thức. Mặc dù các mô hình zero-shot đã khai thác đặc điểm đô thị và khoảng cách địa lý để thực hiện nhiệm vụ này, giá trị bổ sung mà phân phối di chuyển theo khoảng cách có thể mang lại cho các mô hình đó vẫn chưa được làm rõ. Để làm rõ vấn đề này, nghiên cứu sử dụng phân phối di chuyển theo khoảng cách của thành phố mục tiêu để hiệu chỉnh cường độ luồng OD dự báo trên tập hỗ trợ dương liên vùng đã biết. Cần lưu ý rằng phân phối này được xây dựng theo thiết lập oracle—tức được tính gộp trực tiếp từ chính dữ liệu luồng OD thực nghiệm (ground-truth) của thành phố mục tiêu trên đúng tập hỗ trợ dùng để đánh giá—nhằm phân lập giá trị thông tin lý tưởng và hiệu chỉnh đầu ra của mô hình zero-shot được giữ cố định.
 
-Nghiên cứu áp dụng quy trình kiểm định chéo liên thành phố 5 lượt (5-fold cross-validation) trên 50 thành phố ở Hoa Kỳ. Kết quả thực nghiệm cho thấy hiệu chỉnh ở cấp thành phố làm CPC trung bình tăng từ mức nền $0.71281$ lên $0.71635$ (tức $\Delta\mathrm{CPC} = +0.00354$, tăng tương đối $\sim 0.5\%$; CI 95%: $[+0.0026, +0.0045]$, $p = 1.93 \times 10^{-9}$), với 45/50 thành phố được cải thiện. Các đối chứng được chuẩn hóa theo độ lớn can thiệp cho thấy phân phối đúng thành phố mục tiêu mang lại CPC cao hơn so với các phân phối từ tập huấn luyện và đối chứng hoán vị. Kết quả này cung cấp bằng chứng rằng lợi ích quan sát được liên quan đến thông tin đặc thù của thành phố mục tiêu và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Mức cải thiện giảm dần khi phân phối quan sát có độ phân giải thấp hơn hoặc bị suy thoái bởi nhiễu. Tuy nhiên, các kết luận này giới hạn nghiêm ngặt ở bài toán tái tạo cường độ luồng với phân phối oracle trên tập hỗ trợ liên vùng đã biết, chưa đánh giá việc phát hiện liên kết mới hay khả năng triển khai với nguồn quan sát thu thập độc lập.
+Nghiên cứu áp dụng kiểm định chéo liên thành phố 5 lượt trên 50 vùng đô thị Hoa Kỳ. Với baseline Urban GNN, hiệu chỉnh oracle cấp thành phố làm CPC tăng trung bình 0.00354, với 45/50 thành phố được cải thiện. Các đối chứng được chuẩn hóa theo độ lớn can thiệp cho thấy phân phối đúng thành phố mục tiêu mang lại CPC cao hơn so với các phân phối từ tập huấn luyện và đối chứng hoán vị. Kết quả này cung cấp bằng chứng rằng lợi ích quan sát được liên quan đến thông tin đặc thù của thành phố mục tiêu và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Trong phạm vi khảo sát, mức cải thiện trung bình tăng khi sử dụng nhiều nhóm khoảng cách hơn và giảm khi phân phối quan sát bị nhiễu. Tuy nhiên, các kết luận này giới hạn nghiêm ngặt ở bài toán tái tạo cường độ luồng với phân phối oracle trên tập hỗ trợ liên vùng đã biết, chưa đánh giá việc phát hiện liên kết mới hay khả năng triển khai với nguồn quan sát thu thập độc lập.
 
 **Từ khóa:** ma trận nguồn–đích; tái tạo cường độ OD; phân phối di chuyển theo khoảng cách; zero-shot; học chuyển giao giữa các thành phố; quan sát tổng hợp; di chuyển không gian.
 
@@ -258,7 +258,7 @@ Chú thích: CPC được lấy trung bình qua ba seed trong từng thành ph�
 
 Khi so sánh trực tiếp, phân phối đúng thành phố cho CPC cao hơn đối chứng từ thành phố huấn luyện và đối chứng phân phối trung bình tại lần lượt 46/50 và 47/50 thành phố. Chênh lệch CPC trung bình tương ứng là $+0.00363$ và $+0.00263$, với cả hai khoảng tin cậy bootstrap 95% nằm hoàn toàn trên 0. Trong phạm vi các đối chứng được khảo sát, kết quả này cho thấy mức cải thiện của phân phối đúng thành phố không thể được giải thích chỉ bằng độ lớn của can thiệp hiệu chỉnh; thông tin phân bổ luồng theo khoảng cách của thành phố mục tiêu cung cấp giá trị bổ sung so với các phân phối đối chứng.
 
-Khi các tỷ trọng trong phân phối mục tiêu bị hoán vị giữa các nhóm khoảng cách, CPC giảm trung bình 0.00696 so với baseline (Hình 3). Phân phối đúng thứ tự cho kết quả cao hơn đối chứng hoán vị trên 49/50 thành phố, với chênh lệch CPC trung bình +0.01050. Trong cấu hình chính, đối chứng hoán vị không duy trì được lợi ích của phân phối đúng thành phố. Kết quả này cho thấy hiệu quả hiệu chỉnh phụ thuộc vào việc tín hiệu điều chỉnh được gán đúng cho các nhóm khoảng cách.
+Khi các thành phần của vector log-ratio hiệu chỉnh đã trừ trung bình được hoán vị giữa các nhóm khoảng cách, CPC giảm trung bình 0.00696 so với baseline (Hình 3). Hiệu chỉnh bằng phân phối mục tiêu cho CPC cao hơn đối chứng hoán vị tại 49/50 thành phố, với chênh lệch trung bình +0.01050. Kết quả này cho thấy hiệu quả hiệu chỉnh phụ thuộc vào sự tương ứng giữa tín hiệu điều chỉnh và các nhóm khoảng cách.
 
 ![Hình 3](figures/fig3_structural_validity_placebo.png)
 **Hình 3. Mức thay đổi CPC khi sử dụng phân phối đúng thành phố và các phân phối đối chứng giả dược (placebo controls).**
@@ -273,8 +273,8 @@ Các cột biểu diễn mức thay đổi CPC trung bình so với baseline Urb
 |:---|:---:|:---:|:---:|
 | Phân phối oracle đúng thành phố | $+0.00354$ | $[+0.0026, +0.0045]$ | $1.93 \times 10^{-9}$ |
 | Đối chứng từ thành phố huấn luyện, dose-matched | $-0.00009$ | $[-0.0009, +0.0007]$ | $0.4097$ |
-| Phân phối trung bình tập huấn luyện, dose-matched | $+0.00091$ | $[+0.0000, +0.0019]$ | $0.4319$ |
-| Phân phối mục tiêu bị hoán vị | $-0.00696$ | $[-0.0091, -0.0051]$ | $1.78 \times 10^{-15}$ |
+| Phân phối trung bình tập huấn luyện, dose-matched | $+0.00091$ | $[+0.00001, +0.00186]$ | $0.4319$ |
+| Đối chứng hoán vị log-ratio hiệu chỉnh | $-0.00696$ | $[-0.0091, -0.0051]$ | $1.78 \times 10^{-15}$ |
 
 **Phần B. Chênh lệch CPC giữa phân phối đúng thành phố và từng đối chứng**
 
@@ -282,9 +282,9 @@ Các cột biểu diễn mức thay đổi CPC trung bình so với baseline Urb
 |:---|:---:|:---:|:---:|:---:|
 | Từ thành phố huấn luyện, dose-matched | $+0.00363$ | $[+0.0029, +0.0044]$ | $2.19 \times 10^{-11}$ | 46/50 |
 | Trung bình tập huấn luyện, dose-matched | $+0.00263$ | $[+0.0020, +0.0034]$ | $4.03 \times 10^{-11}$ | 47/50 |
-| Phân phối mục tiêu bị hoán vị | $+0.01050$ | $[+0.0084, +0.0128]$ | $1.78 \times 10^{-15}$ | 49/50 |
+| Đối chứng hoán vị log-ratio hiệu chỉnh | $+0.01050$ | $[+0.0084, +0.0128]$ | $1.78 \times 10^{-15}$ | 49/50 |
 
-Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh bằng từng phân phối và baseline zero-shot. Ở phần B, chênh lệch được tính bằng CPC khi dùng phân phối đúng thành phố trừ CPC khi dùng phân phối đối chứng; giá trị dương cho biết phân phối đúng thành phố cho kết quả tốt hơn. Đối chứng từ thành phố huấn luyện được lấy trung bình qua 1,000 lượt chọn donor ngẫu nhiên; đối chứng hoán vị được lấy trung bình qua 1,000 lần hoán vị ngẫu nhiên; kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho chênh lệch trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Kiểm định Wilcoxon ở phần A là hai phía; ở phần B là một phía theo giả thuyết phân phối đúng thành phố cho CPC cao hơn đối chứng (các giá trị $p$ được báo cáo là $p$ gốc chưa điều chỉnh nhiều giả thuyết). Đối với đối chứng sử dụng phân phối trung bình của tập huấn luyện, mức thay đổi CPC trung bình là $+0.00091$, trung vị là $+0.00007$, và 27/50 thành phố có thay đổi dương. Khoảng tin cậy bootstrap mô tả độ bất định của mức thay đổi trung bình, trong khi kiểm định Wilcoxon sử dụng dấu và thứ hạng của các chênh lệch ghép cặp. Vì vậy, hai kết quả phản ánh những đặc điểm khác nhau của phân bố chênh lệch giữa các thành phố. Giá trị CI của phân phối đúng thành phố ở phần A ($[+0.00260, +0.00450]$) hoàn toàn đồng nhất với khoảng tin cậy chính trong Bảng 2 và Bảng 5.
+Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh bằng từng phân phối và baseline zero-shot. Ở phần B, chênh lệch được tính bằng CPC khi dùng phân phối đúng thành phố trừ CPC khi dùng phân phối đối chứng; giá trị dương cho biết phân phối đúng thành phố cho kết quả tốt hơn. Đối chứng từ thành phố huấn luyện được lấy trung bình qua 1,000 lượt chọn donor ngẫu nhiên; đối chứng hoán vị được lấy trung bình qua 1.000 lượt hoán vị ngẫu nhiên hoặc toàn bộ các hoán vị khi áp dụng nhánh vét cạn; kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho chênh lệch trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Kiểm định Wilcoxon ở phần A là hai phía; ở phần B là một phía theo giả thuyết phân phối đúng thành phố cho CPC cao hơn đối chứng (các giá trị $p$ được báo cáo là $p$ gốc chưa điều chỉnh nhiều giả thuyết). Đối với đối chứng sử dụng phân phối trung bình của tập huấn luyện, mức thay đổi CPC trung bình là $+0.00091$, trung vị là $+0.00007$, và 27/50 thành phố có thay đổi dương. Khoảng tin cậy bootstrap mô tả độ bất định của mức thay đổi trung bình, trong khi kiểm định Wilcoxon sử dụng dấu và thứ hạng của các chênh lệch ghép cặp. Vì vậy, hai kết quả phản ánh những đặc điểm khác nhau của phân bố chênh lệch giữa các thành phố.
 
 
 ## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
@@ -308,21 +308,21 @@ Trước hết, khi số nhóm khoảng cách tăng từ $K=2$ đến $K=20$, m�
 | $K = 18$ | $+0.00603$ | $+0.00458$ | $[+0.0048, +0.0073]$ | 47/50 (94.0%) |
 | $K = 20$ | $+0.00639$ | $+0.00494$ | $[+0.0051, +0.0077]$ | 46/50 (92.0%) |
 
-Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. Khoảng tin cậy của cấu hình chính $K=8$ ($[+0.0026, +0.0045]$) hoàn toàn đồng nhất với Bảng 2, Bảng 3 và Bảng 5. $K$ là số khoảng danh nghĩa được xác định từ tập huấn luyện. Số khoảng hoạt động $K_{\mathrm{act},c}$ có thể nhỏ hơn $K$ tại những thành phố không có cặp OD trong một số khoảng cự ly xa.
+Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. $K$ là số khoảng danh nghĩa được xác định từ tập huấn luyện. Số khoảng hoạt động $K_{\mathrm{act},c}$ có thể nhỏ hơn $K$ tại những thành phố không có cặp OD trong một số khoảng cự ly xa.
 
 ![Hình 4](figures/fig4_resolution_sensitivity.png)
 **Hình 4. Mức thay đổi CPC trung bình theo số nhóm khoảng cách $K$.** Các điểm biểu diễn mức tăng CPC trung bình so với baseline trên 50 thành phố; thanh sai số biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Cấu hình chính $K=8$ được đánh dấu bằng đường gióng.
 
 Mức cải thiện trung bình tăng trên toàn bộ dải $K$ được khảo sát. Kết quả này cho thấy độ phân giải danh nghĩa cao hơn có thể cung cấp thêm thông tin hiệu chỉnh, mặc dù số khoảng thực sự hoạt động còn phụ thuộc vào phạm vi khoảng cách của từng thành phố.
 
-Ngoài độ phân giải theo khoảng cách, phân tích thăm dò về độ phân giải không gian cho thấy khi áp dụng phân phối theo từng county xuất phát trên 11 vùng đô thị có nhiều county, CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 9/11 trường hợp, với mức tăng trung bình trong nhóm này là +0.00063. Khi tính gộp trên toàn bộ 50 thành phố (trong đó 39 vùng đơn county có mức chênh lệch bằng 0 theo cấu trúc), mức tăng bổ sung trung bình là +0.00014. Kết quả này bước đầu cho thấy độ phân giải không gian chi tiết hơn có thể mang lại thêm thông tin ở những vùng đô thị đa trung tâm, nhưng cần được kiểm chứng thêm trên tập dữ liệu có nhiều đơn vị không gian hơn.
+Ngoài độ phân giải theo khoảng cách, phân tích thăm dò về độ phân giải không gian cho thấy khi áp dụng phân phối theo từng county xuất phát trên 11 vùng đô thị có nhiều county, CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 9/11 trường hợp, với mức tăng trung bình trong nhóm này là +0.00063. Khi tính gộp trên toàn bộ 50 thành phố (trong đó 39 vùng đơn county có mức chênh lệch bằng 0 theo cấu trúc), mức tăng bổ sung trung bình là +0.00014. Kết quả này bước đầu cho thấy việc phân nhóm quan sát theo county xuất phát có thể bổ sung thông tin tại một số vùng đô thị có nhiều county trong benchmark. Khả năng khái quát của kết quả cần được kiểm tra trên tập dữ liệu có nhiều vùng đô thị multi-county hơn.
 
-Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng trung bình lần lượt là +0.0035395, +0.0033591, +0.0028220, +0.0019327, +0.0006977 và -0.0008740 tại $\epsilon=0\%$, 1%, 2%, 3%, 4% và 5% TV. Điểm cắt mô tả, được nội suy tuyến tính giữa hai mức nhiễu liền kề nơi mức thay đổi CPC trung bình đổi dấu, nằm tại $\epsilon_{\mathrm{cross}}=4.4439\%$ TV. Trong 10,000 đường cong bootstrap, 9,546 có crossing quan sát được trong miền 0–5%; 454 đường cong không có crossing trong miền này và đều còn dương tại $\epsilon=0.05$, nên được xem là bị kiểm duyệt phải phía trên. Không tính CI crossing bằng cách loại 454 đường cong này.
+Về chất lượng của quan sát, khi thêm nhiễu Total Variation vào phân phối của thành phố mục tiêu, mức cải thiện CPC giảm dần theo mức nhiễu (Hình 5). Mức tăng trung bình lần lượt là +0.0035395, +0.0033591, +0.0028220, +0.0019327, +0.0006977 và -0.0008740 tại $\epsilon=0\%$, 1%, 2%, 3%, 4% và 5% TV. Nội suy tuyến tính giữa hai mức nhiễu liền kề có mức thay đổi CPC trung bình trái dấu cho điểm cắt mô tả khoảng 4.44% TV. Trong 10.000 đường cong bootstrap, 9.546 đường có điểm cắt trong miền khảo sát 0–5%; 454 đường còn lại vẫn dương tại mức nhiễu 5% và được ghi nhận là kiểm duyệt phải tại giới hạn khảo sát. Nghiên cứu không báo cáo khoảng tin cậy cho vị trí điểm cắt.
 
 Cần phân biệt rõ hai ngưỡng: ngưỡng mà lợi ích hiệu chỉnh còn duy trì ý nghĩa thống kê ($\epsilon^* = 3\%$ TV, với $p_{\mathrm{raw}}=0.0148637$ và $p_{\mathrm{Holm}}=0.0445910 < 0.05$) và ngưỡng điểm cắt mô tả nơi mức cải thiện trung bình giảm về 0 ($\epsilon_{\mathrm{cross}}=4.44\%$ TV). Trong các mức nhiễu được khảo sát, $\epsilon=3\%$ là mức lớn nhất tại đó kiểm định Wilcoxon một phía còn đạt tiêu chí $\alpha=0.05$ sau hiệu chỉnh Holm. Tại mức nhiễu 4% TV, mức cải thiện trung bình vẫn dương (+0.00070) nhưng không còn đạt tiêu chí này ($p_{\mathrm{raw}}=0.4847371$, $p_{\mathrm{Holm}}=0.9694742$). Các kết quả này phụ thuộc vào phân bố dữ liệu và cách tạo nhiễu trong thí nghiệm.
 
 ![Hình 5](figures/fig5_noise_dose_response.png)
-**Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% giữa các thành phố, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt mô tả tại $\epsilon_{\mathrm{cross}}=4.4439\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
+**Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% giữa các thành phố, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt mô tả tại $\epsilon_{\mathrm{cross}}=4.44\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
 
 Nhìn chung, các kết quả trong mục này cho thấy giá trị của phân phối khoảng cách phụ thuộc vào cả độ chi tiết và độ chính xác của quan sát: tăng số nhóm khoảng cách giúp cải thiện kết quả, nhưng tín hiệu này cần đủ chính xác để mang lại lợi ích thực tế.
 
@@ -377,8 +377,6 @@ Giới hạn chính của nghiên cứu là phân phối khoảng cách được
 Ngoài ra, nghiên cứu chỉ tái tạo cường độ trên các cặp OD liên vùng đã biết có luồng dương, nên chưa đánh giá khả năng xác định cặp có luồng hoặc tái tạo toàn bộ ma trận OD. Các kết quả được ghi nhận trên 50 vùng đô thị Hoa Kỳ và các baseline đã khảo sát; khả năng khái quát sang những bối cảnh khác vẫn cần được kiểm tra. Phân tích theo origin-county cũng chỉ mang tính thăm dò vì chỉ 11 vùng đô thị có nhiều county, còn 39 trường hợp còn lại không tạo ra thay đổi về cách tổng hợp so với cấp thành phố. Hơn nữa, ranh giới county là ranh giới hành chính và có thể không phù hợp với các vùng di chuyển chức năng. Do đó, cần đánh giá thêm các cách phân chia không gian trước khi kết luận về lợi ích của quan sát chi tiết hơn theo địa bàn.
 
 Một hướng mở rộng khác là kết hợp phân phối khoảng cách với tổng luồng đi hoặc tổng luồng đến của từng vùng. Các ràng buộc này đã được sử dụng trong mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family] và có thể bổ sung thông tin theo vùng mà phân phối khoảng cách chưa cung cấp. Nghiên cứu tiếp theo cần kiểm tra liệu việc kết hợp các quan sát này có tạo thêm cải thiện khi cùng áp dụng cho một baseline được giữ cố định hay không.
-
-Hiệu quả của phép hiệu chỉnh không đồng đều giữa các baseline. Mức tăng CPC xuất hiện ở phần lớn thành phố với hai baseline neural, nhưng chỉ xuất hiện ở 22/50 thành phố với Gravity hai tham số. Kết quả này cho thấy lợi ích của $Y_D$ còn phụ thuộc vào cấu trúc dự báo ban đầu của baseline.
 
 Về mặt quyền riêng tư, việc giảm độ phân giải hoặc tổng hợp dữ liệu thành phân phối vĩ mô không đồng nghĩa với việc tự động bảo đảm an toàn thông tin cá nhân. Các vết tích di chuyển vẫn có thể chứa lượng lớn thông tin nhận dạng ngay cả sau khi làm thô [@demontjoye2013unique], và việc thiết lập bảo đảm quyền riêng tư vi sai (differential privacy) cấp người dùng cho dữ liệu vị trí tổng hợp vẫn là thách thức lớn trong thực tiễn [@houssiau2022differential]. Nghiên cứu này chỉ xem $Y_D$ là một dạng quan sát tổng hợp số chiều thấp hỗ trợ hiệu chỉnh vĩ mô, chứ không đánh giá hay tuyên bố $Y_D$ như một cơ chế bảo toàn quyền riêng tư đã được chứng minh.
 
@@ -670,7 +668,7 @@ p_{(k)} \leq \frac{\alpha}{M - k + 1}, \qquad k = 1, \dots, M.
 $$
    Các $p$-value được sắp xếp tăng dần. Quy trình step-down dừng tại giả thuyết đầu tiên không thỏa điều kiện bác bỏ.
 
-5. **Họ kiểm định của stress-test nhiễu**: Năm mức dương $\epsilon=0.01,0.02,0.03,0.04,0.05$ dùng cùng một hiệu chỉnh Holm và kiểm định Wilcoxon một phía với đơn vị là 50 giá trị cấp thành phố. $\epsilon=0$ không thuộc họ Holm. Crossing bootstrap lấy mẫu lại thành phố riêng trong từng fold, dùng cùng chỉ số thành phố được lấy mẫu ở mọi mức nhiễu, rồi đếm crossing trong miền 0–5%; các đường cong không crossing được xem là right-censored và không bị loại để tính CI.
+5. **Họ kiểm định của stress-test nhiễu**: Năm mức dương $\epsilon=0.01,0.02,0.03,0.04,0.05$ dùng cùng một hiệu chỉnh Holm và kiểm định Wilcoxon một phía với đơn vị là 50 giá trị cấp thành phố. $\epsilon=0$ không thuộc họ Holm. Crossing bootstrap lấy mẫu lại thành phố riêng trong từng fold, dùng cùng chỉ số thành phố được lấy mẫu ở mọi mức nhiễu, rồi đếm crossing trong miền 0–5%. Trong kết quả bootstrap được báo cáo, các đường cong không có điểm cắt trong miền khảo sát đều còn dương tại mức nhiễu 5% và được ghi nhận là kiểm duyệt phải tại giới hạn này. Không tính khoảng tin cậy cho vị trí điểm cắt từ riêng tập đường cong có điểm cắt quan sát được.
 
 
 
@@ -700,13 +698,13 @@ $$
 r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{T,b}^2}.
 $$
 
-   - **Đối chứng từ thành phố huấn luyện (Wrong-City Donors, Dose-Matched)**: Với mỗi lượt rút donor ngẫu nhiên từ tập huấn luyện trong cùng fold ($B_{\mathrm{draw}} = 1,000$), gọi $Y_D^{\mathrm{donor}}$ là phân phối của thành phố donor. Log-ratio ban đầu và liều can thiệp donor $D_D$ được tính qua:
+   - **Đối chứng từ thành phố huấn luyện (Wrong-City Donors, Dose-Matched)**: Với mỗi lượt rút donor ngẫu nhiên từ tập huấn luyện trong cùng fold ($B_{\mathrm{draw}} = 1.000$), gọi $Y_D^{\mathrm{donor}}$ là phân phối của thành phố donor. Trước khi tính log-ratio, phân phối donor được giới hạn trên các nhóm hoạt động của thành phố mục tiêu, chặn dưới tại $\delta = 10^{-12}$ nếu có tỷ trọng nhỏ hơn ngưỡng này, và chuẩn hóa lại để tổng tỷ trọng trên tập nhóm hoạt động bằng 1. Log-ratio ban đầu và liều can thiệp donor $D_D$ được tính qua:
 
 $$
 r_{D,b} = \log\left(\frac{Y_{D,b}^{\mathrm{donor}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{D,b} = r_{D,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{D,m}, \qquad D_D = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{D,b}^2}.
 $$
 
-   Nếu $D_D > 0$, vector log-ratio của donor được co giãn về cùng liều với phân phối mục tiêu:
+   Khi $D_D \ge 10^{-12}$, vector log-ratio của donor được co giãn về cùng độ lớn RMS với vector mục tiêu:
 
 $$
 \tilde{r}_{D,b}^* = \tilde{r}_{D,b} \frac{D_T}{D_D}.
@@ -718,15 +716,15 @@ $$
 p_{D,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{D,m}^*)}, \qquad b \in \mathcal A_c.
 $$
 
-   Trong trường hợp hiếm gặp $D_D < 10^{-12}$ (donor trùng khớp hoàn hảo với phân phối dự báo của baseline), vector co giãn không xác định được hướng chuẩn hóa liều; khi đó mã nguồn gán trực tiếp mức chênh lệch bằng kết quả của target ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$).
+   Khi $D_D < 10^{-12}$, vector log-ratio đã trừ trung bình có độ lớn dưới ngưỡng số học và hướng co giãn được xem là suy biến; khi đó mã nguồn gán mức chênh lệch bằng kết quả của target ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$). Nhánh xử lý suy biến không được kích hoạt trong các thí nghiệm được báo cáo.
 
-   - **Đối chứng trung bình tập huấn luyện (Training-Mean Donor, Dose-Matched)**: Phân phối trung bình $\overline{Y}_{D,\mathrm{train}}$ được tính gộp từ toàn bộ các thành phố trong tập huấn luyện của fold tương ứng. Log-ratio và liều can thiệp $D_M$ được tính qua:
+   - **Đối chứng trung bình tập huấn luyện (Training-Mean Donor, Dose-Matched)**: Phân phối đối chứng được tính bằng trung bình cộng các phân phối khoảng cách đã chuẩn hóa của 35 thành phố huấn luyện trong fold tương ứng, với trọng số bằng nhau cho mỗi thành phố. Trước khi tính log-ratio, phân phối này được giới hạn trên các nhóm hoạt động $\mathcal A_c$ của thành phố mục tiêu, chặn dưới tại $\delta = 10^{-12}$ và chuẩn hóa lại để tổng tỷ trọng bằng 1 (trong thực tế, trung bình cộng từ 35 thành phố luôn mang giá trị dương trên mọi nhóm hoạt động). Log-ratio và liều can thiệp $D_M$ được tính qua:
 
 $$
 r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{M,b} = r_{M,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m\in\mathcal A_c} r_{M,m}, \qquad D_M = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b\in\mathcal A_c} \tilde{r}_{M,b}^2}.
 $$
 
-   Nếu $D_M > 0$, vector log-ratio được co giãn về cùng liều $D_T$:
+   Khi $D_M \ge 10^{-12}$, vector log-ratio được co giãn về cùng liều $D_T$:
 
 $$
 \tilde{r}_{M,b}^* = \tilde{r}_{M,b} \frac{D_T}{D_M}.
@@ -738,12 +736,12 @@ $$
 p_{M,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{M,m}^*)}, \qquad b \in \mathcal A_c.
 $$
 
-   Nếu $D_M < 10^{-12}$, mã nguồn gán trực tiếp $\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$.
+   Khi $D_M < 10^{-12}$, vector log-ratio đã trừ trung bình có độ lớn dưới ngưỡng số học và mã nguồn gán $\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$. Nhánh xử lý suy biến không được kích hoạt trong các thí nghiệm được báo cáo.
 
-   - **Đối chứng hoán vị nhóm khoảng cách (Permuted Target $Y_D$)**: Nhằm kiểm tra vai trò của trật tự không gian giữa tỷ trọng luồng và nhóm cự ly, vector sai lệch đã chuẩn tâm $\tilde{\mathbf{r}}_T$ được hoán vị ngẫu nhiên vị trí giữa các khoảng hoạt động ($B_{\mathrm{perm}} = 1,000$ lần hoán vị độc lập; với các thành phố có ít khoảng hoạt động, vét cạn toàn bộ không gian hoán vị không lặp): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, trong đó $\pi$ là một hoán vị ngẫu nhiên trên $\mathcal A_c$. Vì phép hoán vị bảo toàn hoàn toàn chuẩn $\ell_2$ và RMS ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), điều kiện này tự động bảo toàn đúng liều can thiệp $D_T$ của phân phối mục tiêu nhưng phá vỡ hoàn toàn liên hệ ngữ nghĩa giữa cự ly và lưu lượng. Phân phối hoán vị sau đó được tái tạo tương tự qua:
+   - **Đối chứng hoán vị log-ratio hiệu chỉnh**: Để kiểm tra vai trò của sự tương ứng giữa tín hiệu hiệu chỉnh và các nhóm khoảng cách, nghiên cứu hoán vị các thành phần của vector log-ratio mục tiêu đã trừ trung bình trên tập nhóm hoạt động ($B_{\mathrm{perm}} = 1.000$ lần hoán vị độc lập; với các thành phố có ít khoảng hoạt động khi $K_{\mathrm{act}}! \le 40.320$, mã nguồn vét cạn toàn bộ không gian hoán vị không đồng nhất, loại bỏ hoán vị đồng nhất ban đầu $\pi = \mathrm{id}$ để bảo đảm tính ngẫu nhiên thực sự): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, trong đó $\pi$ là hoán vị trên $\mathcal A_c$. Phép hoán vị bảo toàn chuẩn Euclid và RMS của vector log-ratio đã trừ trung bình ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), đồng thời làm ngẫu nhiên sự tương ứng giữa các thành phần của vector này và các nhóm khoảng cách. Phân phối hoán vị sau đó được tái tạo qua:
 
 $$
-p_{P,b} = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{P,m}^*)}, \qquad b \in \mathcal A_c.
+p_{P,b} = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{P,m})}, \qquad b \in \mathcal A_c.
 $$
 
 
@@ -781,7 +779,7 @@ Trong số 50 vùng đô thị của benchmark, có đúng 39 vùng single-count
 Trên toàn bộ 50 vùng đô thị, mức tăng bổ sung pooled từ hiệu chỉnh cấp county so với hiệu chỉnh cấp thành phố là rất nhỏ:
 
 $$
-\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{CI 95\% } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
+\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{CI 95% } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
 $$
 
 
@@ -794,7 +792,7 @@ Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-cou
 
 ### Bảng S3: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
 
-*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị là ước lượng mô tả ở cấp city. Không báo cáo khoảng tin cậy hoặc kiểm định giả thuyết cho subgroup nếu không có artifact bất định riêng đã được xác minh.*
+*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị được tổng hợp ở cấp thành phố. Kết quả của nhóm 11 vùng đô thị được báo cáo ở mức mô tả; không trình bày khoảng tin cậy hoặc kiểm định giả thuyết riêng cho nhóm này.*
 
 | Thành phố | Số county gốc | $M_0$ CPC | $M_{1,\mathrm{city}}$ CPC | $M_{1,\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res},c}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|
