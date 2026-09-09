@@ -156,7 +156,7 @@ Các phân tích sau được trình bày trực tiếp trong lời văn và đ�
   2. [`results/noise_robustness_fine_v1/noise_per_city.csv`](../results/noise_robustness_fine_v1/noise_per_city.csv)
   3. [`results/noise_robustness_fine_v1/noise_raw.csv`](../results/noise_robustness_fine_v1/noise_raw.csv)
 * **Mapping chi tiết:**
-  - `noise_summary.json -> eps_cross_zero_dCPC`: Ngưỡng crossover thực nghiệm $= 0.044439$ ($4.44\%$, CI: $[4.16\%, 4.77\%]$).
+  - `noise_summary.json -> eps_cross_zero_dCPC`: Điểm cắt mô tả $= 0.0444391142$ ($4.4439\%$). Có 9,546/10,000 đường cong bootstrap có crossing trong miền 0–5%; 454 đường cong không có crossing quan sát được trong miền này và bị kiểm duyệt phải phía trên.
   - Ngưỡng còn ý nghĩa thống kê: $\epsilon^* = 0.03$ ($3.0\%$ TV, $p_{\mathrm{raw}}=0.0149$, $p_{\mathrm{Holm}}=0.0446 < 0.05$).
   - Liều-đáp ứng theo $\epsilon$:
     - $\epsilon=0.00$: Mean $+0.00354$, Positives: $45/50$

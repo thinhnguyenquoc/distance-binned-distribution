@@ -155,10 +155,10 @@ Các phân tích sau được trình bày trực tiếp trong lời văn và đ�
   with summary [`results/noise_robustness_fine_v1/noise_summary.json`](results/noise_robustness_fine_v1/noise_summary.json) and city-level table [`results/noise_robustness_fine_v1/noise_per_city.csv`](results/noise_robustness_fine_v1/noise_per_city.csv).
 * **Checkpoint family:** Frozen manuscript checkpoints with mean baseline CPC `0.7128072948832009`; no post-hoc offset, anchor, or reconciliation was applied. The checkpoint manifest is [`results/noise_robustness_fine_v1/noise_manifest.json`](results/noise_robustness_fine_v1/noise_manifest.json).
 * **Statistical unit:** City, $N=50$, after averaging 1,000 noise repetitions and then three model seeds. The five positive levels form one Holm family; $\epsilon=0$ is excluded.
-* **Crossing uncertainty:** Fold-stratified city bootstrap using the same resampled cities across all epsilon levels, conditional on frozen folds and checkpoints.
+* **Crossing audit:** Fold-stratified city bootstrap using the same resampled cities across all epsilon levels. Of 10,000 curves, 9,546 had an observed crossing within 0–5%; 454 had no observed crossing and remained positive at epsilon=0.05, so they are right-censored above the surveyed range. No crossing CI was computed by dropping those curves.
 * **SHA256:** raw CSV `97ba3114647900d9f8c78ce00a69ddb1bbb0fd9ed1b993c68d8631c89acf031b`; per-city CSV `96efa12bb89ccdd822b1551be2e498bdaaad54342ee9c472e1ac4a89e5e7a12a`; summary JSON `41da76a92968e656958c52704bb8d7fc495ab866c47fa65a4c862912303dc93b`; checkpoint manifest `0ddab32db12819b5739491e01eef16673730df0f911ee4aed06012229f15dd51`; split manifest file `96a09089574c37dbcf13112b5bcd20c738327df3c08f5915fdcb2a9f15110543` (protocol content hash `7f9afe02725c7798dab018b6a353ed99ceaf6c36a9f77316aa47ea21297ebd14`).
 * **Mapping chi tiết:**
-  - `noise_summary.json -> eps_cross_zero_dCPC`: Điểm cắt mô tả $= 0.0444391142$ ($4.44\%$, city-bootstrap CI: $[3.80\%, 4.92\%]$; 9,546/10,000 crossing hợp lệ).
+  - `noise_summary.json -> eps_cross_zero_dCPC`: Điểm cắt mô tả $= 0.0444391142$ ($4.4439\%$). Có 9,546/10,000 đường cong bootstrap có crossing quan sát được trong miền 0–5%; 454 đường cong không có crossing quan sát được trong miền này và bị kiểm duyệt phải phía trên.
   - Mức lớn nhất còn đạt tiêu chí Holm: $\epsilon^* = 0.03$ ($3.0\%$ TV, $p_{\mathrm{raw}}=0.0148637$, $p_{\mathrm{Holm}}=0.0445910 < 0.05$).
   - Liều-đáp ứng theo $\epsilon$:
     - $\epsilon=0.00$: Mean $+0.0035395$, Positives: $45/50$

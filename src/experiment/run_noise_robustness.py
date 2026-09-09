@@ -155,8 +155,7 @@ def bootstrap_crossing(city_df: pd.DataFrame, epsilons: List[float], evaluated_f
         "n_no_crossing": no_crossing,
         "n_multiple_crossings": multiple_crossings,
         "multiple_crossing_rule": "use the first crossing in ascending epsilon order",
-        "ci_lower": float(np.percentile(crossings, 2.5)) if crossings else None,
-        "ci_upper": float(np.percentile(crossings, 97.5)) if crossings else None,
+        "uncertainty_status": "No crossing CI computed; non-crossing curves are right-censored above epsilon=0.05.",
     }
 
 

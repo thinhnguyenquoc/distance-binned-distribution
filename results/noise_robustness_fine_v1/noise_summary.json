@@ -8,8 +8,7 @@
     "n_no_crossing": 454,
     "n_multiple_crossings": 0,
     "multiple_crossing_rule": "use the first crossing in ascending epsilon order",
-    "ci_lower": 0.0380075880135382,
-    "ci_upper": 0.04923874614509005
+    "uncertainty_status": "No crossing CI computed; non-crossing curves are right-censored above epsilon=0.05."
   },
   "results_by_eps": {
     "0.0": {
