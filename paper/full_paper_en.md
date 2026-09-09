@@ -20,9 +20,7 @@ The study focuses on two questions. First, does the target city's distance-binne
 
 In this study, the distribution is extracted from the reference flows of the target city itself and is therefore treated as an oracle observation. This setting is used to test the information value of the signal before considering whether it can be collected or estimated from an independent source.
 
-The study is evaluated using 5-fold cross-city validation on 50 U.S. metropolitan areas. Each city is evaluated when it is not included in training, and all model parameters remain fixed before the calibration step.
-
-The study contributes by quantifying the additional information value of the target city's distance-binned mobility distribution, identifying observational conditions that govern the improvement, and examining the mechanism and robustness of the effect across multiple initializations and baseline architectures.
+The study is evaluated using 5-fold cross-city validation on 50 U.S. metropolitan areas. Each city is evaluated when it is not included in training, and all model parameters remain fixed before the calibration step. Experiments across multiple random initializations and baseline architectures are used to examine the stability of the findings.
 
 # 2. Related Work
 
@@ -34,7 +32,7 @@ Classical calibration methods show that aggregate trip-distance statistics can b
 
 Comparative studies also show that distance-decay laws are not fixed across datasets and urban contexts. Empirical decay patterns may vary by travel mode, trip purpose, degree of urbanization, and socioeconomic conditions [@verma2025distance].
 
-These findings indicate that distance structure is context-specific. Methodologically, binned multiplicative scaling is related to Iterative Proportional Fitting (IPF) or Furness algorithms in classical transportation planning [@ortuzar2011modelling], rooted in Deming and Stephan's contingency table adjustments and Wilson's maximum entropy framework [@wilson1971family]. When adjusting total volume across discrete distance bins only, the calibration step is performed directly via a single scaling factor for each bin. This study uses binned scaling to calibrate the output of a frozen cross-city baseline at inference time, while preserving all model parameters.
+These findings indicate that distance structure is context-specific. Methodologically, binned multiplicative scaling is related to Iterative Proportional Fitting (IPF) or Furness algorithms in classical transportation planning [@ortuzar2011modelling], rooted in Deming and Stephan's contingency table adjustments and Wilson's maximum entropy framework [@wilson1971family]. When redistributing predicted flow across disjoint distance bins, calibration can be performed directly using one scaling factor per bin. This study applies this operation to the output of a cross-city baseline at inference time, with model parameters held fixed.
 
 ## 2.2. Cross-city machine-learning models and aggregate observations
 
@@ -44,9 +42,7 @@ In this context, aggregate observations from the target domain provide an interm
 
 Unlike approaches that mainly calibrate one or a small number of parameters, this study directly uses a vector of flow shares across distance intervals, allowing the value of the signal to be evaluated at multiple resolutions through the number of intervals $K$. $Y_D$ also differs from origin/destination margins or directly observed OD pairs: it constrains only how total flow volume is distributed across distance bands, without determining how that volume is distributed among origin–destination pairs within the same band.
 
-Previous studies have clarified the role of distance and constraints in spatial interaction models [@ortuzar2011modelling; @wilson1971family], while also demonstrating the generalization ability of flow-prediction models and their limitations when local calibration information is absent [@guo2025ugnn; @simini2021deepgravity; @yang2014limits]. However, it remains unclear how much additional value is provided by the target city's own distance-binned mobility distribution after a cross-city model has learned from urban context and pairwise distance, and under what observation conditions that value persists.
-
-The present study differs from these directions in that the aggregate observation is not used to train or re-estimate the model, but to directly measure the additional information value of a target-city-specific signal after the cross-city baseline has been trained.
+Previous studies have clarified the role of distance and constraints in spatial interaction models [@ortuzar2011modelling; @wilson1971family], while also demonstrating the generalization ability of flow-prediction models and their limitations when local calibration information is absent [@guo2025ugnn; @simini2021deepgravity; @yang2014limits]. However, it remains unclear how much additional value is provided by the target city's own distance-binned mobility distribution after a cross-city model has learned from urban context and pairwise distance, and under what observation conditions that value persists. This study addresses that gap by measuring the improvement when providing the target distance distribution to calibrate the output of a cross-city baseline whose parameters are held fixed.
 
 # 3. Data Sources, Spatial Units, and Methodology
 
@@ -342,7 +338,7 @@ This mechanism also clarifies the methodological meaning of the result. Models s
 
 ## 5.2. Conditions governing the value of $Y_D$
 
-Controls indicate that providing an arbitrary aggregate distribution does not yield benefits equivalent to the target city's distribution. When intervention magnitudes are matched by RMS log-ratio, the correspondence between the calibration signal and distance intervals remains relevant to the outcome. Thus, the value of the observation depends on the informational content it conveys, beyond the scale of the adjustment itself.
+Among the evaluated controls, the target-city distribution yields a higher mean CPC than the control distributions. When intervention magnitudes are matched by RMS log-ratio, the correspondence between the calibration signal and distance intervals remains relevant to the outcome. Thus, the value of the observation depends on the informational content it conveys, beyond the scale of the adjustment itself.
 
 Increasing the number of distance intervals provides finer detail to adjust flows across distance ranges, but this experiment uses an oracle distribution. For independently collected observations, both the level of detail and the error of the distribution must be assessed concurrently. Current experiments do not identify the most suitable number of bins for each noise level.
 
