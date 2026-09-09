@@ -4,6 +4,16 @@ Tài liệu này cung cấp bản đồ đối chứng toàn diện (provenance 
 
 Mỗi mục đều có đường dẫn có thể nhấp trực tiếp (direct links), cấu trúc key/cột dữ liệu, script sinh kết quả và lệnh Python 1 dòng để kiểm tra đối chiếu tức thì.
 
+## Audit triển khai mô hình và dữ liệu
+
+- **ZTNB/NB:** `src/loss/ztnb.py` (`nb_log_prob`, `ztnb_nll`, `compute_conditional_mean`) dùng NB mean--shape với $E[T]=\mu$, $\operatorname{Var}(T)=\mu+\mu^2/\phi$ và chuẩn hóa zero-truncation bằng $1-p_{\mathrm{NB}}(0)$. `src/models/zero_shot_model.py` lưu một scalar trainable `log_phi` cho mỗi checkpoint; `src/models/decoder.py` tạo $\mu$ bằng `softplus(...)+1e-4`, còn prediction dùng conditional mean.
+- **Features/scaler:** thứ tự 26 cột nằm trong `src/data/dataset.py` (`CENSUS_COLS`, `POI_COLS`, `ROAD_COLS`, `NODE_FEATURE_COLUMNS`). `load_cities()` fit `StandardScaler` trên 35 training cities của từng fold; target/validation chỉ transform. Checkpoint lưu scaler statistics, nhưng các frozen bundles được audit không lưu trường provenance tên feature columns, nên tên cột được đối chứng từ source code.
+- **Correction:** `src/calibration/bin_calibration.py::calibrate_kbins` condition target mass trên active bins, dùng positive per-bin multipliers, giữ tổng mass liên vùng và chỉ hoạt động trên known support $\Omega_c$. Support claim vì vậy chỉ áp dụng trong cấu hình positive-support này; within-bin ordering được giữ, global ordering giữa các bins không được bảo đảm.
+- **Gravity:** `src/models/gravity.py::GravityPrior` là neural prior với $G_{\mathrm{NN}}$ và $\alpha_{\mathrm{NN}}$ trainable, shared within a checkpoint and initialized at $(0,1)$; `src/experiment/run_backbone_robustness.py::fit_gravity_parameters` là pooled log-linear OLS riêng cho classical Gravity trên training cities mỗi fold.
+- **Graph:** `src/data/urban_graph.py::build_radius_graph` dùng tract centroids từ `meta.csv`, Haversine 6371 km, radius 5 km, self-loops, symmetrization hai chiều và nearest-neighbor fallback cho node cô lập; edge attribute là khoảng cách km.
+- **Data audit:** toàn bộ 50 thư mục city có `6,077,114` observations; `t\le0=0`, non-integer `=0`, NaN/Inf `=0`, range `[1,319838]`. Full frozen inference produced `18,231,342` predictions with `prediction\le0=0`, NaN/Inf `=0`, observed range `[1.0140197,6338.7148]`.
+- **Numerical audit:** 210 code-equivalent NB log-PMF cases matched an independent float64 calculation with maximum absolute error `1.78e-15`. Summation through `t=100000` left at most approximately `3.0e-7` numerical discrepancy from the epsilon-stabilized implementation; conditional-mean summation agreed within `1.5e-5` in the tested range.
+
 ---
 
 ## Mục lục tra cứu nhanh

@@ -120,7 +120,18 @@ Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
-Do dữ liệu huấn luyện chỉ gồm các cặp OD có luồng dương trên tập hỗ trợ đã biết, hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Phân phối này mô tả số lượt di chuyển với điều kiện giá trị quan sát lớn hơn 0:
+Do bộ dữ liệu chỉ giữ các cặp OD có luồng quan sát dương, đáp ứng thỏa $t_{c,ij}\in\{1,2,\ldots\}$. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Phân phối NB nền dùng tham số hóa mean--shape:
+
+$$
+p_{\mathrm{NB}}(t\mid\mu,\phi)
+=
+\frac{\Gamma(t+\phi)}{\Gamma(\phi)\Gamma(t+1)}
+\left(\frac{\phi}{\phi+\mu}\right)^{\phi}
+\left(\frac{\mu}{\phi+\mu}\right)^t,
+\qquad t=0,1,2,\ldots
+$$
+
+Theo quy ước này, $E[T]=\mu$, $\operatorname{Var}(T)=\mu+\mu^2/\phi$, và $p_{\mathrm{NB}}(0)=\left(\phi/(\phi+\mu)\right)^\phi$. Phân phối ZTNB là phân phối có điều kiện trên giá trị quan sát lớn hơn 0:
 
 $$
 p_+(t\mid\mu,\phi)
@@ -130,7 +141,7 @@ p_+(t\mid\mu,\phi)
 \qquad t=1,2,\ldots
 $$
 
-Trong đó, $\mu>0$ là tham số trung bình của phân phối NB trước khi điều kiện hóa và $\phi>0$ là tham số phân tán. Hàm mất mát được tính bằng âm log-hợp lý trung bình trên các cặp OD của từng thành phố:
+Trong đó, $\mu>0$ là mean của NB nền trước khi điều kiện hóa, không phải conditional mean sau truncation; $\phi>0$ là shape/dispersion parameter. Hàm mất mát được tính bằng âm log-hợp lý trung bình trên các cặp OD của từng thành phố:
 
 $$
 \mathcal L_c
@@ -140,7 +151,7 @@ $$
 \log p_+(t_{c,ij}\mid\mu_{c,ij},\phi).
 $$
 
-Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Khi suy luận, cường độ luồng dự báo được tính bằng kỳ vọng của phân phối ZTNB:
+Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Trong mỗi checkpoint, $\phi$ là một scalar trainable dùng chung cho toàn bộ model/checkpoint, không được sinh riêng theo city, node hay OD pair. Mô hình lưu $\log\phi$; trong loss và prediction code, giá trị này được clamp trong $[-10,10]$ rồi exponentiate, nên $\phi>0$. Decoder tạo $\mu$ bằng $\operatorname{softplus}(\log T^{\mathrm{grav}}+\mathrm{residual})+10^{-4}$. Khi suy luận, cường độ luồng dự báo là conditional mean của phân phối ZTNB:
 
 $$
 \hat t_{c,ij}^{(0)}
@@ -168,19 +179,19 @@ $$
 }.
 $$
 
-Nghiên cứu sử dụng tỷ số giữa tỷ trọng quan sát $Y_{c,b}$ và tỷ trọng dự báo $\hat Y_{c,b}^{(0)}$ để hiệu chỉnh cường độ luồng trong từng nhóm:
+Nghiên cứu sử dụng tỷ số giữa tỷ trọng mục tiêu sau khi điều kiện hóa trên nhóm hoạt động $p_{c,b}^{\mathrm{cond}}$ và tỷ trọng dự báo $\hat Y_{c,b}^{(0)}$ để hiệu chỉnh cường độ luồng trong từng nhóm:
 
 $$
 \hat t_{c,ij}^{(1)}
 =
 \hat t_{c,ij}^{(0)}
-\frac{Y_{c,b(i,j)}}{\hat Y_{c,b(i,j)}^{(0)}},
+\frac{p_{c,b(i,j)}^{\mathrm{cond}}}{\hat Y_{c,b(i,j)}^{(0)}},
 \qquad (i,j)\in\Omega_c,
 $$
 
-trong đó $b(i,j)$ là nhóm chứa khoảng cách $d_{c,ij}$. Các cặp OD trong cùng một nhóm được nhân với cùng một hệ số: lưu lượng tăng nếu tỷ trọng dự báo thấp hơn quan sát và giảm trong trường hợp ngược lại. Phép hiệu chỉnh chỉ áp dụng cho các nhóm có cặp OD thuộc $\Omega_c$; với dự báo ban đầu dương, mẫu số trong tỷ số này luôn dương.
+trong đó $b(i,j)$ là nhóm chứa khoảng cách $d_{c,ij}$. Các cặp OD trong cùng một nhóm được nhân với cùng một hệ số: lưu lượng tăng nếu tỷ trọng dự báo thấp hơn quan sát và giảm trong trường hợp ngược lại. Phép hiệu chỉnh chỉ áp dụng cho các nhóm hoạt động $\mathcal A_c$; target được điều kiện hóa trên các nhóm này trước khi tính tỷ số. Với mỗi nhóm hoạt động, target mass dương trong cấu hình oracle được đánh giá và dự báo ZTNB dương, nên hệ số hiệu chỉnh dương.
 
-Sau hiệu chỉnh, tỷ trọng lưu lượng của từng nhóm khớp với phân phối quan sát, trong khi tổng lưu lượng dự báo của thành phố được giữ nguyên. Trong thiết lập oracle trên cùng tập hỗ trợ dương, các hệ số hiệu chỉnh cũng dương, nên phép hiệu chỉnh giữ nguyên tập hỗ trợ và tỷ lệ giữa các luồng trong cùng một nhóm, do đó không làm thay đổi thứ hạng nội nhóm. Như vậy, thông tin khoảng cách điều chỉnh cách lưu lượng được phân bổ giữa các nhóm, còn cách phân bổ giữa các cặp OD trong mỗi nhóm vẫn do baseline quyết định. Các chứng minh được trình bày trong Phụ lục S3; dạng hiệu chỉnh tổng quát với mức độ điều chỉnh $q\in[0,1]$ được trình bày trong Phụ lục S2, với công thức trên tương ứng với thiết lập chính $q=1$.
+Sau hiệu chỉnh, tỷ trọng lưu lượng trên các nhóm hoạt động khớp với phân phối mục tiêu đã điều kiện hóa, trong khi tổng lưu lượng dự báo liên vùng được giữ nguyên. Phát biểu bảo toàn support chỉ áp dụng cho cấu hình này trên $\Omega_c$ và các nhóm hoạt động: vì mọi dự báo ban đầu và hệ số đều dương, phép nhân không tạo hoặc loại bỏ cặp OD trong support đã biết; code không thực hiện link discovery ngoài $\Omega_c$. Vì mọi dự đoán trong cùng một bin được nhân với cùng một hệ số dương, tỷ số giữa hai dự đoán bất kỳ trong bin đó không đổi; do đó thứ tự nội bộ của các cặp OD trong từng bin được bảo toàn. Thứ tự toàn cục giữa các bin không nhất thiết được bảo toàn. Các chứng minh được trình bày trong Phụ lục S3; dạng hiệu chỉnh tổng quát với mức độ điều chỉnh $q\in[0,1]$ được trình bày trong Phụ lục S2, với công thức trên tương ứng với thiết lập chính $q=1$.
 
 ![Hình 1](figures/fig1_oracle_calibration_framework.png)
 **Hình 1. Khung hiệu chỉnh oracle tại thời điểm suy luận.** Baseline $M_0$ được huấn luyện liên thành phố và giữ nguyên tham số trên thành phố mục tiêu. Phân phối khoảng cách oracle $Y_D$, được trích từ luồng tham chiếu của thành phố mục tiêu, dùng để tái phân bổ khối lượng giữa các khoảng và tạo $\widehat{\mathbf{T}}_c^{(1)}$ trên cùng tập hỗ trợ $\Omega_c$.
@@ -477,7 +488,13 @@ Trong quá trình huấn luyện, log-likelihood của ZTNB được tính toán
 * Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit; xác suất tại 0 được chuẩn hóa số học qua $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - p_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
 * Gradient của toàn bộ tham số mô hình được cắt theo chuẩn Euclid tối đa: $\|\mathbf{g}\|_2 \le 5.0$ thông qua `torch.nn.utils.clip_grad_norm_`.
 
-### S1.3. Cấu hình siêu tham số kiến trúc và phân tách baseline
+### S1.3. Danh sách 26 đặc trưng và đồ thị không gian
+
+Theo thứ tự cột trong `src.data.dataset.NODE_FEATURE_COLUMNS`, 26 đặc trưng gồm 13 Census: `total_population`, `median_age`, `median_income`, `per_capita_income`, `employment_rate`, `unemployment_rate`, `commute_transit_pct`, `commute_active_pct`, `commute_wfh_pct`, `zero_vehicle_pct`, `avg_vehicles_per_household`, `higher_education_pct`, `homeownership_rate`; 8 POI: `office`, `office_density`, `industrial`, `industrial_density`, `commercial`, `commercial_density`, `education_primary`, `education_primary_density`; và 5 Road: `road_length_total`, `road_density`, `road_count`, `motorway_length`, `primary_length`. CSV thiếu giá trị được đọc như 0; NaN/Inf được thay bằng 0. Code không áp dụng log transform cho các cột này. Trong mỗi fold, `load_cities()` fit một `StandardScaler` trên node features gộp của 35 thành phố huấn luyện; validation và target chỉ gọi `transform`, và scaler statistics được lưu trong checkpoint.
+
+Đồ thị dùng node là tract và tọa độ centroid `(lon, lat)` từ `meta.csv`. Khoảng cách là Haversine với bán kính Trái Đất 6371 km. Cấu hình frozen chính dùng radius graph 5.0 km, self-loop, cạnh hai chiều sau bước symmetrize; nếu một node không có hàng xóm khác trong bán kính, code nối nó với node gần nhất. Edge attribute là khoảng cách địa lý theo km. Đồ thị chỉ dùng geography quan sát được, không dùng OD flows.
+
+### S1.4. Cấu hình siêu tham số kiến trúc và phân tách baseline
 
 Cấu hình siêu tham số chính xác được trích xuất trực tiếp từ các checkpoint mô hình (`results/checkpoints/5fold_*.pt` và `mlp_*.pt`) được tổng hợp trong Bảng S1.
 
@@ -578,7 +595,7 @@ Với hai cặp $(i,j)$ và $(u,v)$ cùng thuộc khoảng $b$, ta có:
 $$
 \frac{\widehat{t}_{c,ij}^{(1)}}{\widehat{t}_{c,uv}^{(1)}} = \frac{s_{c,b}(q) \widehat{t}_{c,ij}^{(0)}}{s_{c,b}(q) \widehat{t}_{c,uv}^{(0)}} = \frac{\widehat{t}_{c,ij}^{(0)}}{\widehat{t}_{c,uv}^{(0)}}.
 $$
-Do đó, thứ tự tương đối của các cặp trong cùng một khoảng không thay đổi ($\tau = 1$).
+Do đó, tỷ số giữa hai dự đoán trong cùng một khoảng không đổi và thứ tự nội bộ của các cặp trong khoảng đó được bảo toàn; kết luận này không mở rộng thành bảo toàn thứ hạng toàn thành phố.
 
 ### S3.3. Bảo toàn tổng khối lượng dự báo
 Gọi $S_c^{(0)}$ là tổng khối lượng dự báo của baseline:

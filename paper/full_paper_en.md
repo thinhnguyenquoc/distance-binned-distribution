@@ -141,15 +141,36 @@ The MLP control replaces the two graph message-passing layers with two node-wise
 
 ### 3.4.2. Objective and training configuration
 
-Because the modeling scope in this study considers only positive flows on the known support, the two neural baselines are trained with a Zero-Truncated Negative Binomial (ZTNB) likelihood, a conditional negative-binomial count model that excludes value 0 [@grogger1991truncated].
+Because the dataset retains only OD pairs with positive observed flow, the response satisfies $t_{c,ij}\in\{1,2,\ldots\}$. The two neural baselines are trained with a Zero-Truncated Negative Binomial (ZTNB) likelihood [@grogger1991truncated]. The underlying NB uses the mean--shape parameterization:
+
+$$
+p_{\mathrm{NB}}(t\mid\mu,\phi)
+=
+\frac{\Gamma(t+\phi)}{\Gamma(\phi)\Gamma(t+1)}
+\left(\frac{\phi}{\phi+\mu}\right)^{\phi}
+\left(\frac{\mu}{\phi+\mu}\right)^t,
+\qquad t=0,1,2,\ldots
+$$
+
+Under this convention, $E[T]=\mu$, $\operatorname{Var}(T)=\mu+\mu^2/\phi$, and $p_{\mathrm{NB}}(0)=\left(\phi/(\phi+\mu)\right)^\phi$. The ZTNB is the distribution conditional on an observed value greater than zero:
 
 $$
 p_+(t \mid \mu, \phi) = \frac{p_{\mathrm{NB}}(t \mid \mu, \phi)}{1 - p_{\mathrm{NB}}(0 \mid \mu, \phi)}, \qquad \mathcal{L}_c = -\frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j) \in \Omega_c} \log p_+(t_{c,ij} \mid \mu_{c,ij}, \phi).
 $$
 
-The loss is averaged over pairs $(i,j) \in \Omega_c$ for each city to prevent cities with many OD pairs from dominating optimization.
+Here $\mu>0$ is the mean of the base NB before truncation, not the conditional mean after truncation, and $\phi>0$ is its shape/dispersion parameter. The loss is averaged over pairs $(i,j) \in \Omega_c$ for each city to prevent cities with many OD pairs from dominating optimization.
 
-Both neural baselines use the same training protocol with the AdamW optimization algorithm [@loshchilov2019adamw], select checkpoints by validation CPC, and are repeated over three model seeds. After checkpoint selection, all parameters remain fixed on target cities. Training-hyperparameter details are provided in the Appendix.
+At inference, the reported flow is the conditional expectation rather than the base parameter:
+
+$$
+\widehat{t}_{c,ij}^{(0)}
+=
+E[T_{c,ij}\mid T_{c,ij}\ge 1]
+=
+\frac{\mu_{c,ij}}{1-p_{\mathrm{NB}}(0\mid\mu_{c,ij},\phi)}.
+$$
+
+Both neural baselines use the same training protocol with the AdamW optimization algorithm [@loshchilov2019adamw], select checkpoints by validation CPC, and are repeated over three model seeds. In each checkpoint, $\phi$ is one trainable scalar shared across the whole model/checkpoint, not a city-, node-, or OD-specific output. The model stores $\log\phi$; the loss and prediction code clamp it to $[-10,10]$ and exponentiate it, ensuring $\phi>0$. The decoder produces $\mu$ as $\operatorname{softplus}(\log T^{\mathrm{grav}}+\mathrm{residual})+10^{-4}$. After checkpoint selection, all parameters remain fixed on target cities. Training-hyperparameter details are provided in the Appendix.
 
 ### 3.4.3. Inference-time distance calibration operator
 
@@ -162,10 +183,10 @@ $$
 The analytic calibration operator reallocates flow mass according to the closed-form solution:
 
 $$
-\widehat{t}_{c,ij}^{(1)} = \widehat{t}_{c,ij}^{(0)} \frac{Y_{c,b(i,j)}}{\widehat{Y}_{c,b(i,j)}^{(0)}}.
+\widehat{t}_{c,ij}^{(1)} = \widehat{t}_{c,ij}^{(0)} \frac{p_{c,b(i,j)}^{\mathrm{cond}}}{\widehat{Y}_{c,b(i,j)}^{(0)}}.
 $$
 
-Here, $b(i,j)$ is the interval containing $d_{c,ij}$. Every OD pair in the same interval is multiplied by the same coefficient. Calibration does not update model parameters. The main setting fixes $q = 1$; the general form $q \in [0, 1]$ is presented in Supplementary Section S2. Because the calibration coefficients are positive and constant within each interval, the operator preserves the support, within-interval ranking, and total predicted mass; proofs are presented in Supplementary Section S3.
+Here, $b(i,j)$ is the interval containing $d_{c,ij}$. In implementation, target shares are first conditioned on active intervals $\mathcal A_c$, and the coefficient is applied only to those active intervals. Every OD pair in the same interval is multiplied by the same positive coefficient. Calibration does not update model parameters. The main setting fixes $q = 1$; the general form $q \in [0, 1]$ is presented in Supplementary Section S2. In the evaluated positive-support setting, the operator preserves the known support within $\Omega_c$, within-interval ranking, and total predicted interzonal mass; it does not perform link discovery outside $\Omega_c$. Global ordering across different intervals need not be preserved. Proofs are presented in Supplementary Section S3.
 
 ![Figure 1](figures/fig1_oracle_calibration_framework.png)
 **Figure 1. Inference-time oracle calibration framework.** Baseline $M_0$ is trained cross-city and kept frozen on the target city. The oracle distance distribution $Y_D$, extracted from the target city's reference flow, reallocates mass between intervals and creates $\widehat{\mathbf{T}}_c^{(1)}$ on the same support $\Omega_c$.
@@ -441,7 +462,13 @@ During training, the ZTNB log-likelihood is computed using `torch.lgamma`. To pr
 * A stabilizing constant $\epsilon = 10^{-8}$ is added to $\mu$ and $\phi$ in logarithmic terms; the probability at 0 is normalized numerically through $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ with an upper bound of $1.0 - 10^{-7}$. When inferring the conditional expectation, the denominator $1 - p_{\mathrm{NB}}(0)$ is lower-bounded by $10^{-6}$.
 * The gradient of all model parameters is clipped to a maximum Euclidean norm of $\|\mathbf{g}\|_2 \le 5.0$ using `torch.nn.utils.clip_grad_norm_`.
 
-### S1.3. Architecture hyperparameters and baseline separation
+### S1.3. The 26 features and spatial graph
+
+In the order defined by `src.data.dataset.NODE_FEATURE_COLUMNS`, the 26 features are 13 Census features: `total_population`, `median_age`, `median_income`, `per_capita_income`, `employment_rate`, `unemployment_rate`, `commute_transit_pct`, `commute_active_pct`, `commute_wfh_pct`, `zero_vehicle_pct`, `avg_vehicles_per_household`, `higher_education_pct`, `homeownership_rate`; 8 POI features: `office`, `office_density`, `industrial`, `industrial_density`, `commercial`, `commercial_density`, `education_primary`, `education_primary_density`; and 5 Road features: `road_length_total`, `road_density`, `road_count`, `motorway_length`, `primary_length`. Missing CSV values are read as 0, and NaN/Inf values are replaced by 0. No log transform is applied to these columns in the loader. Within each fold, `load_cities()` fits one `StandardScaler` on concatenated node features from the 35 training cities; validation and target cities use `transform` only, and scaler statistics are stored in the checkpoint.
+
+Nodes are tracts with centroid coordinates `(lon, lat)` from `meta.csv`. Distances are Haversine distances using Earth radius 6371 km. The frozen main configuration uses a 5.0 km radius graph with self-loops and symmetric edges; if a node has no other node within the radius, the nearest node is added as a fallback. Edge attributes are geographic distances in km. The graph uses observable geography only and never OD flows.
+
+### S1.4. Architecture hyperparameters and baseline separation
 
 The exact hyperparameter configuration extracted directly from the trained model checkpoints (`results/checkpoints/5fold_*.pt` and `mlp_*.pt`) is presented in Table S1.
 
@@ -548,7 +575,7 @@ For two pairs $(i,j)$ and $(u,v)$ in the same interval $b$, we have:
 $$
 \frac{\widehat{t}_{c,ij}^{(1)}}{\widehat{t}_{c,uv}^{(1)}} = \frac{s_{c,b}(q) \widehat{t}_{c,ij}^{(0)}}{s_{c,b}(q) \widehat{t}_{c,uv}^{(0)}} = \frac{\widehat{t}_{c,ij}^{(0)}}{\widehat{t}_{c,uv}^{(0)}}.
 $$
-Therefore, the relative ordering of pairs within the same interval does not change ($\tau = 1$).
+Therefore, the ratio between any two predictions within the same interval is unchanged and their within-interval ordering is preserved; this does not imply preservation of the global ranking across intervals.
 
 ### S3.3. Preservation of total predicted mass
 
