@@ -78,20 +78,30 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 * **Vị trí trong bài báo:** 
   - Tiếng Việt: [`full_paper_vi.md:L251-L270`](full_paper_vi.md#L251-L270) (Bảng 3)
   - Tiếng Anh: [`full_paper_en.md:L224-L234`](full_paper_en.md#L224-L234) (Table 3)
-* **File dữ liệu nguồn:**
-  1. [`results/e1_canonical_specificity_v2/e1_specificity_results.json`](../results/e1_canonical_specificity_v2/e1_specificity_results.json)
-  2. [`results/placebo_matched_v2/matched_placebo_per_city.csv`](../results/placebo_matched_v2/matched_placebo_per_city.csv)
-  3. [`results/placebo_matched_v2/matched_placebo_raw.csv`](../results/placebo_matched_v2/matched_placebo_raw.csv)
-* **Mapping chi tiết:**
-  - **Phần A / Row 1 (Oracle Target $Y_D$):** `e1_specificity_results.json -> summary.delta_cpc_target_mean` ($+0.003539$), `ci_l` ($0.002607$), `ci_h` ($0.004483$), Win rate $45/50$, Wilcoxon 2-sided $p=1.93\times 10^{-9}$.
-  - **Phần A / Row 2 (Dose-Matched Training Donors):** `matched_placebo_per_city.csv -> wrong_delta_mean` (Mean: $-0.000091$, CI $[-0.00089, +0.00071]$, Wilcoxon 2-sided $p=0.4097$).
-  - **Phần A / Row 3 (Dose-Matched Train-Mean):** `matched_placebo_per_city.csv -> trainmean_delta_mean` ($+0.000914$, CI $[+0.00001, +0.00186]$, Wilcoxon 2-sided $p=0.4319$, Median $+0.00011$).
-  - **Phần A / Row 4 (Permuted Target $Y_D$):** `matched_placebo_per_city.csv -> permuted_delta_mean` ($-0.006964$, CI $[-0.00914, -0.00512]$, Wilcoxon 2-sided $p=1.78\times 10^{-15}$).
-  - **Phần B / Specificity contrasts:**
-    - vs Training Donors: `specificity_wrong_mean` ($+0.003630$), CI $[+0.00287, +0.00445]$, Wilcoxon 1-sided $p=2.19\times 10^{-11}$, Win: $46/50$ ($92.0\%$).
-    - vs Fold Train-Mean: `specificity_trainmean_mean` ($+0.002626$), CI $[+0.00197, +0.00336]$, Wilcoxon 1-sided $p=4.03\times 10^{-11}$, Win: $47/50$ ($94.0\%$).
-    - vs Permuted Target: `specificity_permuted_mean` ($+0.010504$), CI $[+0.00843, +0.01279]$, Wilcoxon 1-sided $p=1.78\times 10^{-15}$, Win: $49/50$ ($98.0\%$).
-  - **Raw Test Donors (In-Fold, kiểm tra đối chiếu):** `e1_specificity_results.json -> summary.delta_cpc_wrong_mean` ($-0.037721$), `delta_specificity_mean` ($+0.041261$), $p=8.88\times 10^{-16}$, Win: $50/50$.
+* **File dữ liệu nguồn chuẩn duy nhất:**
+  - [`../results/unified_placebo_v1/unified_placebo_per_city.csv`](../results/unified_placebo_v1/unified_placebo_per_city.csv)
+  - [`../results/unified_placebo_v1/unified_placebo_reconciled_summary.json`](../results/unified_placebo_v1/unified_placebo_reconciled_summary.json)
+* **Thông tin provenance & Checkpoint hash:**
+  - **Frozen run checkpoint**: Được tạo tại commit `a780b1d` (2026-08-24).
+  - **Checkpoint SHA256 (ví dụ Fold 1 Seed 1)**: `705f751172a71b45d3b853e77c9e01a0c91767f341e228a93fa6b8164bd3fa33`.
+  - **Baseline zero-shot CPC**: $0.712807 \pm 0.04434$ (khớp $100\%$ Bảng 2 và toàn bài).
+  - **Target $\Delta\mathrm{CPC}$**: $+0.003539$ ($45/50$ positive, $p = 1.93 \times 10^{-9}$).
+* **LƯU Ý QUAN TRỌNG VỀ RERUN**:
+  - `placebo_matched_v2` was a methodologically equivalent rerun generated from a different realization of the baseline checkpoints (mean baseline CPC 0.713623).
+  - It was not used in the manuscript and was removed from the active repository to prevent accidental mixing with the frozen manuscript run.
+  - **Canonical placebo artifact:** `results/unified_placebo_v1/unified_placebo_per_city.csv`
+  - **Canonical baseline mean CPC:** 0.712807
+  - **Historical script/artifact recovery:** Git commit `021cf7a` (`src/experiment/run_placebo_matched_v2.py`), and `results.zip` (contains original `results/placebo_matched_v2/` archive).
+* **Mapping chi tiết từ `unified_placebo_per_city.csv`:**
+  - **Phần A / Row 1 (Oracle Target $Y_D$):** `d_cpc_target` ($+0.003539$, CI $[+0.00260, +0.00450]$, Wilcoxon 2-sided $p=1.93\times 10^{-9}$, Win rate $45/50$).
+  - **Phần A / Row 2 (Dose-Matched Training Donors):** `d_cpc_matched` (Mean: $-0.000091$, CI $[-0.00089, +0.00071]$, Wilcoxon 2-sided $p=0.4097$, Win rate $19/50$).
+  - **Phần A / Row 3 (Dose-Matched Train-Mean):** `d_cpc_matched_train_mean` ($+0.000914$, CI $[+0.00001, +0.00186]$, Wilcoxon 2-sided $p=0.4319$, Median $+0.00007$, 27/50 dương và 23/50 âm).
+  - **Phần A / Row 4 (Permuted Target $Y_D$):** `d_cpc_perm` ($-0.006964$, CI $[-0.00914, -0.00512]$, Wilcoxon 2-sided $p=1.78\times 10^{-15}$, Win rate $0/50$).
+  - **Phần B / Specificity contrasts ($Target - Placebo$):**
+    - vs Training Donors: $+0.003630$, CI $[+0.00287, +0.00445]$, Wilcoxon 1-sided $p=2.19\times 10^{-11}$, Win: $46/50$ ($92.0\%$).
+    - vs Fold Train-Mean: $+0.002626$, CI $[+0.00197, +0.00336]$, Wilcoxon 1-sided $p=4.03\times 10^{-11}$, Win: $47/50$ ($94.0\%$).
+    - vs Permuted Target: $+0.010504$, CI $[+0.00843, +0.01279]$, Wilcoxon 1-sided $p=1.78\times 10^{-15}$, Win: $49/50$ ($98.0\%$).
+  - **Raw Test Donors (In-Fold, đối chiếu kiểm tra):** `d_cpc_raw_test_exact` ($-0.037721$, $p=8.88\times 10^{-16}$, Win: $50/50$).
 
 ---
 
@@ -208,7 +218,7 @@ Các phân tích sau được trình bày trực tiếp trong lời văn và đ�
 |---|---|---|---|---|---|
 | **Figure 1 / Hình 1** | Oracle calibration framework schematic | [`figures/fig1_oracle_calibration_framework.svg`](figures/fig1_oracle_calibration_framework.svg) | Sơ đồ phương pháp luận | EN: `L157-L160`, VI: `L170-L173` | Vẽ vector SVG trực tiếp |
 | **Figure 2 / Hình 2** | City-level $\Delta\mathrm{CPC}$ across 50 test cities | [`figures/fig2_main_per_city.png`](figures/fig2_main_per_city.png) ([.pdf](figures/fig2_main_per_city.pdf)) | [`results/5fold_results.json`](../results/5fold_results.json) | EN: `L205-L208`, VI: `L225-L228` | [`scripts/generate_all_paper_figures.py`](../scripts/generate_all_paper_figures.py) (`generate_figure2()`) |
-| **Figure 3 / Hình 3** | Matched placebo controls (Authentic vs Donor vs Permuted) | [`figures/fig3_structural_validity_placebo.png`](figures/fig3_structural_validity_placebo.png) ([.pdf](figures/fig3_structural_validity_placebo.pdf)) | [`results/placebo_matched_v2/matched_placebo_per_city.csv`](../results/placebo_matched_v2/matched_placebo_per_city.csv) | EN: `L221-L223`, VI: `L246-L250` | [`scripts/generate_all_paper_figures.py`](../scripts/generate_all_paper_figures.py) (`generate_figure3()`) |
+| **Figure 3 / Hình 3** | Matched placebo controls (Authentic vs Donor vs Permuted) | [`figures/fig3_structural_validity_placebo.png`](figures/fig3_structural_validity_placebo.png) ([.pdf](figures/fig3_structural_validity_placebo.pdf)) | [`results/unified_placebo_v1/unified_placebo_per_city.csv`](../results/unified_placebo_v1/unified_placebo_per_city.csv) | EN: `L221-L223`, VI: `L246-L250` | [`scripts/generate_all_paper_figures.py`](../scripts/generate_all_paper_figures.py) (`generate_figure3()`) |
 | **Figure 4 / Hình 4** | Resolution sensitivity (K-sweep & County) | [`figures/fig4_resolution_sensitivity.png`](figures/fig4_resolution_sensitivity.png) ([.pdf](figures/fig4_resolution_sensitivity.pdf)) | [`results/k_sensitivity_v1/k_sensitivity_summary.json`](../results/k_sensitivity_v1/k_sensitivity_summary.json) & [`results/spatial_resolution/spatial_resolution_summary.json`](../results/spatial_resolution/spatial_resolution_summary.json) | EN: `L257-L259`, VI: `L296-L298` | [`scripts/generate_all_paper_figures.py`](../scripts/generate_all_paper_figures.py) (`generate_figure4()`) |
 | **Figure 5 / Hình 5** | Noise dose-response & TV crossover | [`figures/fig5_noise_dose_response.png`](figures/fig5_noise_dose_response.png) ([.pdf](figures/fig5_noise_dose_response.pdf)) | [`results/noise_robustness_fine_v1/noise_summary.json`](../results/noise_robustness_fine_v1/noise_summary.json) | EN: `L274-L276`, VI: `L307-L309` | [`scripts/generate_all_paper_figures.py`](../scripts/generate_all_paper_figures.py) (`generate_figure5()`) |
 | **Figure 6 / Hình 6** | Mechanistic scatter: $d_{\mathrm{pre}}$ vs $\Delta\mathrm{CPC}$ | [`figures/fig6_mechanistic_dpre.png`](figures/fig6_mechanistic_dpre.png) ([.pdf](figures/fig6_mechanistic_dpre.pdf)) | [`results/audit/dpre_mechanism_data.csv`](../results/audit/dpre_mechanism_data.csv) | EN: `L299-L301`, VI: `L336-L338` | [`scripts/generate_all_paper_figures.py`](../scripts/generate_all_paper_figures.py) (`generate_figure6()`) |
@@ -229,7 +239,7 @@ python scripts/verify_all_numbers.py
 python -c "import json; d=json.load(open('results/5fold_results.json'))['rq1_delta_r']['city']; print(f'Mean: {d[\"delta_cpc_inter\"][\"mean\"]:.5f}, Median: {d[\"delta_cpc_inter\"][\"median\"]:.5f}, WinRate: {d[\"p_improved\"]*100:.1f}%, p: {d[\"wilcoxon_two_sided_p\"]:.2e}')"
 
 # 2. Kiểm tra Table 3 / Bảng 3 Placebo controls
-python -c "import pandas as pd; df=pd.read_csv('results/placebo_matched_v2/matched_placebo_per_city.csv'); print(f'Donor mean: {df[\"wrong_delta_mean\"].mean():.6f}, Permuted mean: {df[\"permuted_delta_mean\"].mean():.6f}, Specificity: {df[\"specificity_wrong_mean\"].mean():.6f}')"
+python -c "import pandas as pd; df=pd.read_csv('results/unified_placebo_v1/unified_placebo_per_city.csv'); print(f'Target: {df[\"d_cpc_target\"].mean():.6f}, Donor mean: {df[\"d_cpc_matched\"].mean():.6f}, Train-mean: {df[\"d_cpc_matched_train_mean\"].mean():.6f}, Permuted: {df[\"d_cpc_perm\"].mean():.6f}')"
 
 # 3. Kiểm tra Table 4 / Bảng 4 K-sweep range
 python -c "import json; k=json.load(open('results/k_sensitivity_v1/k_sensitivity_summary.json'))['summary']; print(f'K=2: {k[0][\"mean_delta\"]:.5f}, K=8: {k[3][\"mean_delta\"]:.5f}, K=20: {k[-1][\"mean_delta\"]:.5f}')"

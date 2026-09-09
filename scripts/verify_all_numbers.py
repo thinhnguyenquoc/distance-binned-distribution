@@ -35,17 +35,17 @@ def main():
     print(f"  - Wilcoxon Two-Sided:  {p_wilcoxon:.2e}  (Paper: 1.93e-9)")
 
     # 2. Specificity and Placebo Controls (Table 3 / Bảng 3 & Figure 3 / Hình 3)
-    df_p = pd.read_csv("results/placebo_matched_v2/matched_placebo_per_city.csv")
+    df_p = pd.read_csv("results/unified_placebo_v1/unified_placebo_per_city.csv")
     with open("results/e1_canonical_specificity_v2/e1_specificity_results.json", "r", encoding="utf-8") as f:
         e1 = json.load(f)["summary"]
 
     print("\n[2] TARGET SPECIFICITY & PLACEBO CONTROLS (Table 3 / Bảng 3 & Figure 3 / Hình 3):")
-    print(f"  - Target Y_D Mean:       {e1['delta_cpc_target_mean']:+.6f} (Paper: +0.003539)")
-    print(f"  - Matched Donor Mean:    {df_p['wrong_delta_mean'].mean():+.6f} (Paper: -0.000091)")
-    print(f"  - Train-Mean Donor:      {df_p['trainmean_delta_mean'].mean():+.6f} (Paper: +0.000914)")
-    print(f"  - Raw In-Fold Donors:    {e1['delta_cpc_wrong_mean']:+.6f} (Paper: -0.037721)")
-    print(f"  - Permuted Target Y_D:   {df_p['permuted_delta_mean'].mean():+.6f} (Paper: -0.006964)")
-    print(f"  - Specificity Gain:      {e1['delta_specificity_mean']:+.6f} (Paper: +0.041261)")
+    print(f"  - Target Y_D Mean:       {df_p['d_cpc_target'].mean():+.6f} (Paper: +0.003539)")
+    print(f"  - Matched Donor Mean:    {df_p['d_cpc_matched'].mean():+.6f} (Paper: -0.000091)")
+    print(f"  - Train-Mean Donor:      {df_p['d_cpc_matched_train_mean'].mean():+.6f} (Paper: +0.000914)")
+    print(f"  - Raw In-Fold Donors:    {df_p['d_cpc_raw_test_exact'].mean():+.6f} (Paper: -0.037721)")
+    print(f"  - Permuted Target Y_D:   {df_p['d_cpc_perm'].mean():+.6f} (Paper: -0.006964)")
+    print(f"  - Specificity Gain:      {(df_p['d_cpc_target'] - df_p['d_cpc_raw_test_exact']).mean():+.6f} (Paper: +0.041261)")
 
     # 3. Distance Resolution Scaling (Table 4 / Bảng 4 & Figure 4 / Hình 4)
     with open("results/k_sensitivity_v1/k_sensitivity_summary.json", "r", encoding="utf-8") as f:

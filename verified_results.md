@@ -164,8 +164,8 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 
 ## 7. PLACEBO & MATCHED PLACEBO AUDIT (P1)
 
-* **Source file**: `results/e1_canonical_specificity_v2/e1_specificity_results.json`, `results/placebo_matched_v2/matched_placebo_per_city.csv`, `placebo.md`
-* **Field / Function nguồn**: `e1_core.py`, `run_placebo_matched_v2.py`
+* **Source file**: `results/e1_canonical_specificity_v2/e1_specificity_results.json`, `results/unified_placebo_v1/unified_placebo_per_city.csv`, `placebo.md`
+* **Field / Function nguồn**: `e1_core.py`, `run_unified_placebo.py`
 * **Protocol check**: **PASS**
 
 ### Phân tích đối đầu Target $Y_D$ vs các điều kiện Placebo (50 Đô thị $\times$ 3 Seeds, $B=1000$ Draws, Fold-Stratified Bootstrap)
@@ -352,7 +352,7 @@ $$r_{\text{rb}} = \frac{W^+ - W^-}{W^+ + W^-} = \frac{1192.0 - 83.0}{1275.0} = 0
 | Random Seeds | `seed.md`, `PROTOCOL_CONTRACT.md` | Section 2 |
 | K-Sensitivity | `results/k_sensitivity_v1/k_sensitivity_summary.json` | `summary`, `contrasts` |
 | Noise Robustness | `results/noise_robustness_fine_v1/noise_summary.json` | `results_by_eps` |
-| Matched Placebo | `results/placebo_matched_v2/matched_placebo_per_city.csv` | `target_delta_mean`, `wrong_delta_mean` |
+| Matched Placebo | `results/unified_placebo_v1/unified_placebo_per_city.csv` | `d_cpc_target`, `d_cpc_matched` |
 | Backbone Robustness | `results/tables/table7_backbone_robustness.md`, `results/mlp_backbone_results.json` | `summary`, `rq1_delta_r.city` |
 | Mechanism Diagnostic | `results/intra_bin_mechanism_diagnostic.json` | `correlations`, `rank_invariance`, `per_city` |
 | Data Splits Manifest | `results/e1/splits_manifest_v2.json` | SHA256: `7f9afe02725c7798dab018b6...` |

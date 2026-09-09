@@ -12,7 +12,7 @@ và `tests/`.
 ### 1. `src_experiment/`
 * **Pilot & Redundant Experiments**:
   * `run_convergence_pilot.py`: Thí điểm đo tốc độ hội tụ epoch.
-  * `run_unified_placebo.py`: Phiên bản gộp placebo cũ (kết quả bài báo dùng `run_placebo_matched_v2.py`).
+  * `run_unified_placebo.py`: Phiên bản archive (runner canonical chính thức đặt tại `src/experiment/run_unified_placebo.py`).
 * **Historical analysis helpers**:
   * `audit_finite_sample_yd_v1.py`: Kiểm toán mẫu hữu hạn đời cũ.
   * `compute_qstar.py`: Helper tính tỷ lệ tương đương quan sát cho các kết quả archive.

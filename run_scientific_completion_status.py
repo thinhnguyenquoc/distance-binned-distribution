@@ -103,8 +103,8 @@ TASKS = [
     Task(
         name="Matched placebo robustness",
         role="robustness on canonical checkpoints",
-        artifact=Path("results/placebo_matched_v2/matched_placebo_per_city.csv"),
-        command="python src/experiment/run_placebo_matched_v2.py --b 1000",
+        artifact=Path("results/unified_placebo_v1/unified_placebo_per_city.csv"),
+        command="python src/experiment/run_unified_placebo.py --b 1000",
         checker=lambda p: _check_csv_rows(p, 50, "matched placebo per-city"),
     ),
     Task(

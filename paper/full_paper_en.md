@@ -216,21 +216,21 @@ The bar chart shows $\Delta\mathrm{CPC}_c = \operatorname{CPC}_c(M_1) - \operato
 
 ## 4.2. Is the improvement target-city-specific and structurally meaningful?
 
-Placebo controls show that the benefit of calibration depends on target-city-specific information: the $Y_D$ of the correct target city produces a larger improvement than dose-matched donor distributions. When the bin order is permuted, the benefit no longer persists and performance decreases, indicating that calibration benefit depends on preserving the correct association between flow shares and distance intervals.
+Placebo controls show that the benefit of calibration depends on target-city-specific information: the $Y_D$ of the correct target city produces a larger improvement than dose-matched donor distributions. When evaluating the dose-matched fold training-mean control, the mean gain is $+0.00091$ with a 95% stratified bootstrap CI of $[+0.00001, +0.00186]$, but the city-level shift is inconsistent (median $+0.00007$, 27/50 positive cities, two-sided Wilcoxon $p=0.4319$). When the intervention log-ratio vector is randomly permuted across distance intervals (preserving intervention dose while breaking spatial ordering; Supplementary S6), the benefit no longer persists and performance decreases ($\Delta\mathrm{CPC} = -0.00696$, with true target outperforming permuted controls in 49/50 cities by $+0.01050$). This indicates that calibration benefit depends on preserving the correct association between flow shares and distance intervals, rather than merely applying an equally strong perturbation.
 
 ![Figure 3](figures/fig3_structural_validity_placebo.png)
-**Figure 3. Controls for target specificity and distance structure.** The figure compares target $Y_D$, dose-matched training-donor placebo, and permuted target $Y_D$ across 50 cities. Error bars represent stratified 95% bootstrap CIs by fold.
+**Figure 3. Controls for target specificity and distance structure.** The figure compares target $Y_D$, dose-matched training-donor placebo, and permuted intervention log-ratio $Y_D$ across 50 cities. Error bars represent stratified 95% bootstrap CIs by fold.
 
 ### Table 3: Target specificity and placebo controls ($N=50$)
 
 | Experimental condition | Mean $\Delta\mathrm{CPC}$ | 95% confidence interval (Stratified) | Benefit relative to $M_0$ ($p_{\text{2-sided}}$) | Specificity increase vs Placebo | 95% specificity CI | Target vs Placebo ($p_{\text{1-sided}}$) | Specificity win rate ($\text{Target } Y_D > \text{Placebo}$) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45 / 50 (vs $M_0$)** |
-| **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46 / 50 (92.0%)** |
-| **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47 / 50 (94.0%)** |
-| **4. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49 / 50 (98.0%)** |
+| **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45/50 (vs $M_0$)** |
+| **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46/50 (92.0%)** |
+| **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47/50 (94.0%)** |
+| **4. Permuted Target $Y_D$ ($B_{\text{draw}}=1000$ Permutations)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49/50 (98.0%)** |
 
-Note: Bootstrap confidence intervals are computed for mean $\Delta\mathrm{CPC}$, while $p$-values are obtained from the Wilcoxon signed-rank test on city-level paired differences; therefore, the two statistics do not test the same quantity and need not lead to the same conclusion.
+Note: Bootstrap confidence intervals are computed for mean $\Delta\mathrm{CPC}$, while $p$-values are obtained from the Wilcoxon signed-rank test on city-level paired differences; therefore, the two statistics do not test the same quantity and need not lead to the same conclusion. Donor placebos are averaged over 1,000 random donor draws; permutation placebos are averaged over 1,000 random permutations of the centered intervention log-ratio vector (with exhaustive permutations for cities with small active bin counts). Results across three model seeds are averaged prior to 50-city aggregation.
 
 ## 4.3. How does the additional value of $Y_D$ depend on observation resolution and quality?
 
@@ -633,7 +633,7 @@ $$
 
 2. **Placebo controls and intervention dose matching (Dose-Matched Controls)**:
 
-   To isolate the specific informative value of the target-city distance distribution from the pure effect of intervention magnitude, control distributions are normalized to match the log-ratio norm of the target distribution $Y_D^{\mathrm{target}}$. For each evaluated city, let $\widehat{Y}^{(0)}$ denote the distance distribution predicted by the zero-shot baseline $M_0$ over active bins ($b = 1, \dots, K_{\mathrm{act}}$). The log-ratio vector of the target distribution and its centered root-mean-square intervention magnitude $D_T$ are given by:
+   To isolate the specific informative value of the target-city distance distribution from the pure effect of intervention magnitude, control distributions are normalized to match the log-ratio norm of the target distribution $Y_D^{\mathrm{target}}$. For each evaluated city, let $\widehat{Y}^{(0)}$ denote the distance distribution predicted by the zero-shot baseline $M_0$ over active bins ($b = 1, \dots, K_{\mathrm{act}}$). The log-ratio vector of the target distribution and its centered root-mean-square intervention magnitude $D_T$ (equivalent to Euclidean norm scaled by $\sqrt{K_{\mathrm{act}}}$) are given by:
 $$
 r_{T,b} = \log\left(\frac{Y_{D,b}^{\mathrm{target}}}{\widehat{Y}_b^{(0)}}\right), \qquad \tilde{r}_{T,b} = r_{T,b} - \frac{1}{K_{\mathrm{act}}} \sum_{m=1}^{K_{\mathrm{act}}} r_{T,m}, \qquad D_T = \sqrt{\frac{1}{K_{\mathrm{act}}} \sum_{b=1}^{K_{\mathrm{act}}} \tilde{r}_{T,b}^2}.
 $$
@@ -650,7 +650,7 @@ r_{M,b} = \log\left(\frac{\overline{Y}_{D,\mathrm{train},b}}{\widehat{Y}_b^{(0)}
 $$
      The vector is scaled to match $D_T$: $\tilde{r}_{M,b}^* = \tilde{r}_{M,b} \cdot (D_T / D_M)$, and the dose-matched distribution is reconstructed via $p_{M,b}^* \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{M,b}^*)$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{M,b}^* = 1$.
 
-   * **Permuted distance-interval control (Permuted Target $Y_D$)**: To verify whether the physical ordering between flow shares and distance bins matters, the centered log-ratio vector $\tilde{\mathbf{r}}_T$ is randomly permuted across active bins ($B_{\mathrm{perm}} = 1,000$ independent random permutations): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, where $\pi$ is a uniform permutation over $\{1, \dots, K_{\mathrm{act}}\}$. Because permutation preserves the exact $\ell_2$ norm ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = D_T$), this control strictly maintains the intervention dose $D_T$ of the target distribution while completely severing the semantic association between distance and flow volume. The permuted distribution is reconstructed via $p_{P,b} \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{P,b} = 1$.
+   * **Permuted distance-interval control (Permuted Target $Y_D$)**: To verify whether the physical ordering between flow shares and distance bins matters, the centered log-ratio vector $\tilde{\mathbf{r}}_T$ is randomly permuted across active bins ($B_{\mathrm{perm}} = 1,000$ independent random permutations; for cities with small active bin counts, exhaustive unique permutations are used): $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, where $\pi$ is a uniform permutation over $\{1, \dots, K_{\mathrm{act}}\}$. Because permutation strictly preserves the centered $\ell_2$ and RMS norms ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), this control strictly maintains the intervention dose $D_T$ of the target distribution while completely severing the semantic association between distance and flow volume. The permuted distribution is reconstructed via $p_{P,b} \propto \widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})$ with $\sum_{b=1}^{K_{\mathrm{act}}} p_{P,b} = 1$.
 
 
 ## S7. Exploratory analysis of county-level spatial resolution

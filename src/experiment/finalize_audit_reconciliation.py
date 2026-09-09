@@ -23,6 +23,27 @@ def reconcile_unified_placebo_fold_stratified(
     seed: int = 42,
 ) -> dict[str, Any]:
     df = pd.read_csv(placebo_csv)
+
+    # Checkpoint integrity guard: verify artifact belongs to frozen manuscript run
+    EXPECTED_M0_CPC = 0.712807294580449
+    EXPECTED_TARGET_DELTA = 0.0035394914704444435
+    TOLERANCE = 1e-6
+
+    mean_m0_cpc = float(df["cpc0"].mean())
+    mean_target_delta = float(df["d_cpc_target"].mean())
+
+    if abs(mean_m0_cpc - EXPECTED_M0_CPC) > TOLERANCE:
+        raise RuntimeError(
+            "The placebo artifact does not belong to the frozen manuscript run: "
+            f"expected mean M0 CPC {EXPECTED_M0_CPC}, but received {mean_m0_cpc}."
+        )
+
+    if abs(mean_target_delta - EXPECTED_TARGET_DELTA) > TOLERANCE:
+        raise RuntimeError(
+            "Target delta does not match the frozen manuscript artifact: "
+            f"expected {EXPECTED_TARGET_DELTA}, but received {mean_target_delta}."
+        )
+
     folds = sorted(df["fold"].unique().tolist())
     fold_dfs = {f: df[df["fold"] == f] for f in folds}
 
@@ -151,7 +172,7 @@ The discrepancy between prior reports (+0.000914) and raw unified placebo (-0.01
   Calculated by applying the average distance distribution $\\bar{Y}_D^{\\text{train}}$ of the 35 training cities directly to the target city without dose matching.
   Because training cities have varied physical diameters (10 km to >60 km), the pooled national average has an overly dispersed distance profile that clashes with individual city topologies, causing a macro structural penalty ($\\Delta\\text{CPC} = -0.0177$).
 - **Dose-Matched Fold Train-Mean ($+0.000914$)**:
-  Calculated in `run_placebo_matched_v2.py` (lines 344–353), where the log-ratio perturbation vector of the train-mean is rescaled to match the target's L2 distance from zero-shot ($D_T$).
+  Calculated in `run_unified_placebo.py` (dose-matched condition), where the log-ratio perturbation vector of the train-mean is rescaled to match the target's L2 distance from zero-shot ($D_T$).
   Because the perturbation dose is constrained to be small, and because the national average distance decay mildly correlates with universal gravity drop-off, it yields a modest positive gain ($+0.000914$). However, it captures **less than 26%** of the true target-specific gain ($+0.003539$), with Target beating Dose-Matched Train-Mean in **47/50 cities ($p = 4.03 \\times 10^{-11}$)**.
 
 ### Primary vs Secondary Evidence for Specificity in the Paper
