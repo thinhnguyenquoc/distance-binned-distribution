@@ -49,17 +49,19 @@ Gọi $c$ là một thành phố và $\mathcal{V}_c$ là tập các vùng đơn 
 | :--- | :--- | :--- |
 | $c$ | Chỉ số thành phố ($c \in \{1, \dots, C\}$) | Mã định danh thành phố ($C = 50$) |
 | $i, j$ | Chỉ số vùng xuất phát (origin) và vùng đích (destination) | Đơn vị không gian cơ sở |
-| $t_{c,ij}$ | Cường độ luồng di chuyển quan sát được ($t_{c,ij} \ge 1$) | Dữ liệu tham chiếu (ground truth) |
+| $t_{c,ij}$ | Cường độ luồng di chuyển quan sát được ($t_{c,ij} \ge 1$) | Nhãn huấn luyện tại thành phố nguồn; dữ liệu tham chiếu để đánh giá và tổng hợp quan sát oracle tại thành phố mục tiêu. |
 | $d_{c,ij}$ | Khoảng cách giữa tâm của vùng $i$ và vùng $j$ (km) | Tính từ tọa độ tâm (Haversine) |
 | $\mathcal{P}_c$ | Không gian tất cả các cặp OD liên vùng hợp lệ ($\mathcal{P}_c = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : i \neq j, d_{c,ij} > 0\}$) | Không gian ứng viên liên vùng |
-| $\Omega_c$ | Tập hỗ trợ liên vùng dương đã biết ($\Omega_c = \{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\}$) | Giả định tập hỗ trợ đã biết |
-| $I_b$ | Khoảng khoảng cách thứ $b$ ($b = 1, \dots, K$) | Phân vị khoảng cách |
-| $K$ | Số lượng khoảng khoảng cách ($K = 8$ ở thiết lập chính) | Cấu hình thực nghiệm cố định |
-| $Y_{c,b}$ | Tỷ trọng luồng di chuyển mục tiêu trong khoảng $b$ ($\sum_{b=1}^K Y_{c,b} = 1$) | Dữ liệu đầu vào hiệu chỉnh oracle |
-| $Y_{D,c}$ | Vector phân phối di chuyển theo khoảng cách của thành phố $c$, với $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$ |Quan sát tổng hợp oracle dùng tại thời điểm hiệu chỉnh |
+| $\Omega_c$ | Tập hỗ trợ liên vùng dương đã biết ($\Omega_c = \{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\}$) | Tập cặp OD được giả định đã biết và dùng chung cho dự báo, hiệu chỉnh và đánh giá. |
+| $I_b$ | Khoảng giá trị khoảng cách xác định nhóm thứ $b$ ($b = 1, \dots, K$) | Khoảng giá trị xác định nhóm thứ $b$ |
+| $K$ | Số nhóm khoảng cách ($K = 8$ ở thiết lập chính) | Cấu hình thực nghiệm cố định |
+| $Y_{c,b}$ | Tỷ trọng luồng di chuyển mục tiêu trong nhóm $b$ ($\sum_{b=1}^K Y_{c,b} = 1$) | Dữ liệu đầu vào hiệu chỉnh oracle |
+| $Y_{D,c}$ | Vector phân phối di chuyển theo khoảng cách của thành phố $c$, với $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$ | Quan sát tổng hợp oracle dùng để hiệu chỉnh tại thành phố mục tiêu. |
 | $\widehat{t}_{c,ij}^{(0)}$ | Dự báo cường độ luồng của baseline cross-city zero-shot (điều kiện $M_0$) | Đầu ra baseline giữ nguyên tham số |
 | $\widehat{t}_{c,ij}^{(1)}$ | Dự báo cường độ luồng sau hiệu chỉnh tại thời điểm suy luận (điều kiện $M_1$) | Đầu ra sau hiệu chỉnh |
 | $M_0, M_1$ | Tên hai điều kiện thực nghiệm (baseline zero-shot giữ nguyên tham số và dự báo sau hiệu chỉnh) | Điều kiện thực nghiệm đối chứng |
+
+Tại thành phố mục tiêu, baseline sử dụng đặc trưng đô thị, thông tin khoảng cách và tập hỗ trợ đã biết; phân phối $Y_{D,c}$ chỉ được cung cấp cho bước hiệu chỉnh.
 
 
 
@@ -86,7 +88,7 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
 
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ được định nghĩa là:
+Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào nhóm khoảng cách thứ $b$ được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -95,7 +97,7 @@ $$
 Các tỷ trọng được chuẩn hóa để: $\sum_{b=1}^K Y_{c,b} = 1$.
 Toàn bộ vector phân phối khoảng cách của thành phố $c$ được ký hiệu là $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$. Trong phần diễn giải, $Y_D$ được dùng như tên viết gọn cho loại quan sát này.
 
-Do các biên được xác định chung từ tập huấn luyện, một số khoảng cự ly xa có thể không chứa cặp OD tại những thành phố có phạm vi địa lý nhỏ. Gọi $\mathcal A_c$ là tập các khoảng có ít nhất một cặp thuộc $\Omega_c$, và $K_{\mathrm{act},c}=|\mathcal A_c|$ là số khoảng hoạt động của thành phố $c$. Các khoảng rỗng có tỷ trọng bằng 0 và được loại khỏi phép tính; các đại lượng của toán tử được biểu diễn trên tập khoảng hoạt động (chi tiết quy trình chuẩn hóa và co giãn được trình bày trong Phụ lục S2).
+Do các biên được xác định chung từ tập huấn luyện, một số khoảng cự ly xa có thể không chứa cặp OD tại những thành phố có phạm vi địa lý nhỏ. Gọi $\mathcal A_c$ là tập các nhóm có ít nhất một cặp thuộc $\Omega_c$, và $K_{\mathrm{act},c}=|\mathcal A_c|$ là số nhóm hoạt động của thành phố $c$. Các nhóm rỗng có tỷ trọng bằng 0 và được loại khỏi phép tính; các đại lượng của toán tử được biểu diễn trên tập nhóm hoạt động (chi tiết quy trình chuẩn hóa và co giãn được trình bày trong Phụ lục S2).
 
 $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố mục tiêu và được sử dụng như một quan sát oracle tại thời điểm hiệu chỉnh. Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county, thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
 
@@ -152,7 +154,9 @@ $$
 \log p_+(t_{c,ij}\mid\mu_{c,ij},\phi).
 $$
 
-Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Trong mỗi checkpoint, $\phi$ là một scalar trainable dùng chung cho toàn bộ model/checkpoint, không được sinh riêng theo city, node hay OD pair. Mô hình lưu $\log\phi$; trong loss và prediction code, giá trị này được clamp trong $[-10,10]$ rồi exponentiate, nên $\phi>0$. Decoder tạo $\mu$ bằng $\operatorname{softplus}(\log T^{\mathrm{grav}}+\mathrm{residual})+10^{-4}$. Khi suy luận, cường độ luồng dự báo là conditional mean của phân phối ZTNB:
+Trong quá trình huấn luyện, mỗi bước cập nhật sử dụng một thành phố và hàm mất mát trung bình trên các cặp OD của thành phố đó.
+
+Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Tham số phân tán $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp OD trong mỗi mô hình. Các phép biến đổi bảo đảm tham số dương và các biện pháp ổn định số học được trình bày trong Phụ lục S1. Khi suy luận, cường độ luồng dự báo là conditional mean của phân phối ZTNB:
 
 $$
 \hat t_{c,ij}^{(0)}
@@ -161,7 +165,7 @@ $$
 {1-p_{\mathrm{NB}}(0\mid\mu_{c,ij},\phi)}.
 $$
 
-Đây là đầu ra được sử dụng trong bước hiệu chỉnh ở mục 3.4.3. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
+Kỳ vọng có điều kiện này là dự báo baseline được đưa vào bước hiệu chỉnh ở mục 3.4.3. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
 
 ### 3.4.3. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
@@ -180,7 +184,7 @@ $$
 }.
 $$
 
-Nghiên cứu sử dụng tỷ số giữa tỷ trọng mục tiêu sau khi điều kiện hóa trên nhóm hoạt động $p_{c,b}^{\mathrm{cond}}$ và tỷ trọng dự báo $\hat Y_{c,b}^{(0)}$ để hiệu chỉnh cường độ luồng trong từng nhóm:
+Ký hiệu $p_{c,b}^{\mathrm{cond}}$ là tỷ trọng mục tiêu sau khi giới hạn trên các nhóm hoạt động và chuẩn hóa để tổng tỷ trọng trên các nhóm này bằng 1. Trong cấu hình oracle chính, các nhóm rỗng có tỷ trọng bằng 0 nên $p_{c,b}^{\mathrm{cond}} = Y_{c,b}$ trên các nhóm hoạt động. Dự báo của mỗi cặp OD được nhân với tỷ số giữa tỷ trọng mục tiêu và tỷ trọng dự báo của nhóm chứa cặp đó:
 
 $$
 \hat t_{c,ij}^{(1)}
@@ -190,9 +194,11 @@ $$
 \qquad (i,j)\in\Omega_c,
 $$
 
-trong đó $b(i,j)$ là nhóm chứa khoảng cách $d_{c,ij}$. Các cặp OD trong cùng một nhóm được nhân với cùng một hệ số: lưu lượng tăng nếu tỷ trọng dự báo thấp hơn quan sát và giảm trong trường hợp ngược lại. Phép hiệu chỉnh chỉ áp dụng cho các nhóm hoạt động $\mathcal A_c$; target được điều kiện hóa trên các nhóm này trước khi tính tỷ số. Với mỗi nhóm hoạt động, target mass dương trong cấu hình oracle được đánh giá và dự báo ZTNB dương, nên hệ số hiệu chỉnh dương.
+trong đó $b(i,j)$ là nhóm chứa khoảng cách $d_{c,ij}$.
 
-Sau hiệu chỉnh, tỷ trọng lưu lượng trên các nhóm hoạt động khớp với phân phối mục tiêu đã điều kiện hóa, trong khi tổng lưu lượng dự báo liên vùng được giữ nguyên. Phát biểu bảo toàn support chỉ áp dụng cho cấu hình này trên $\Omega_c$ và các nhóm hoạt động: vì mọi dự báo ban đầu và hệ số đều dương, phép nhân không tạo hoặc loại bỏ cặp OD trong support đã biết; code không thực hiện link discovery ngoài $\Omega_c$. Vì mọi dự đoán trong cùng một bin được nhân với cùng một hệ số dương, tỷ số giữa hai dự đoán bất kỳ trong bin đó không đổi; do đó thứ tự nội bộ của các cặp OD trong từng bin được bảo toàn. Thứ tự toàn cục giữa các bin không nhất thiết được bảo toàn. Các chứng minh được trình bày trong Phụ lục S3; dạng hiệu chỉnh tổng quát với mức độ điều chỉnh $q\in[0,1]$ được trình bày trong Phụ lục S2, với công thức trên tương ứng với thiết lập chính $q=1$.
+Trong cấu hình oracle chính, tỷ trọng mục tiêu và tỷ trọng dự báo đều dương trên các nhóm hoạt động, nên hệ số hiệu chỉnh dương. Sau hiệu chỉnh, phân phối lưu lượng theo nhóm khớp với phân phối mục tiêu, trong khi tổng lưu lượng dự báo được giữ nguyên. Các cặp OD trong cùng một nhóm nhận chung một hệ số nhân, nên tỷ lệ và thứ hạng giữa các dự báo trong nhóm đó không đổi; thứ hạng giữa các nhóm có thể thay đổi.
+
+Chứng minh các tính chất này được trình bày trong Phụ lục S3; dạng hiệu chỉnh tổng quát với mức điều chỉnh $q\in[0,1]$ được trình bày trong Phụ lục S2. Cấu hình chính sử dụng $q=1$.
 
 ![Hình 1](figures/fig1_oracle_calibration_framework.png)
 **Hình 1. Khung hiệu chỉnh oracle tại thời điểm suy luận.** Baseline $M_0$ được huấn luyện liên thành phố và giữ nguyên tham số trên thành phố mục tiêu. Phân phối khoảng cách oracle $Y_D$, được trích từ luồng tham chiếu của thành phố mục tiêu, dùng để tái phân bổ khối lượng giữa các khoảng và tạo $\widehat{\mathbf{T}}_c^{(1)}$ trên cùng tập hỗ trợ $\Omega_c$.

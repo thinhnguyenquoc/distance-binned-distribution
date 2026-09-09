@@ -56,17 +56,19 @@ Let $c$ be a city and let $\mathcal{V}_c$ be the set of spatial units partitioni
 | :--- | :--- | :--- |
 | $c$ | City index ($c \in \{1, \dots, C\}$) | City identifier ($C = 50$) |
 | $i, j$ | Origin and destination spatial-unit indices | Basic spatial units |
-| $t_{c,ij}$ | Observed mobility-flow intensity ($t_{c,ij} \ge 1$) | Reference data (ground truth) |
+| $t_{c,ij}$ | Observed mobility-flow intensity ($t_{c,ij} \ge 1$) | Training label for source cities; reference data for evaluation and oracle aggregate observation synthesis for the target city. |
 | $d_{c,ij}$ | Distance between the centroids of units $i$ and $j$ (km) | Computed from centroid coordinates (Haversine) |
 | $\mathcal{P}_c$ | Space of all valid interzonal OD pairs ($\mathcal{P}_c = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : i \neq j, d_{c,ij} > 0\}$) | Candidate interzonal pair space |
-| $\Omega_c$ | Known positive interzonal support ($\Omega_c = \{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\}$) | Known-support assumption |
-| $I_b$ | Distance interval $b$ ($b = 1, \dots, K$) | Distance quantile |
-| $K$ | Number of distance intervals ($K = 8$ in the main setting) | Fixed experimental configuration |
-| $Y_{c,b}$ | Target mobility-flow share in interval $b$ ($\sum_{b=1}^K Y_{c,b} = 1$) | Oracle calibration-input data |
-| $Y_{D,c}$ | Distance-binned mobility distribution vector of city $c$, with $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$ | Oracle aggregate observation used at calibration time |
+| $\Omega_c$ | Known positive interzonal support ($\Omega_c = \{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\}$) | Set of OD pairs assumed to be known and shared across prediction, calibration, and evaluation. |
+| $I_b$ | Distance range defining distance bin $b$ ($b = 1, \dots, K$) | Distance range defining bin $b$ |
+| $K$ | Number of distance bins ($K = 8$ in the main setting) | Fixed experimental configuration |
+| $Y_{c,b}$ | Target mobility-flow share in bin $b$ ($\sum_{b=1}^K Y_{c,b} = 1$) | Oracle calibration-input data |
+| $Y_{D,c}$ | Distance-binned mobility distribution vector of city $c$, with $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$ | Oracle aggregate observation used for calibration on the target city. |
 | $\widehat{t}_{c,ij}^{(0)}$ | Flow-intensity prediction of the cross-city zero-shot baseline (condition $M_0$) | Frozen-parameter baseline output |
 | $\widehat{t}_{c,ij}^{(1)}$ | Flow-intensity prediction after inference-time calibration (condition $M_1$) | Post-calibration output |
 | $M_0, M_1$ | Names of the two experimental conditions (frozen-parameter zero-shot baseline and post-calibration prediction) | Comparative experimental conditions |
+
+On the target city, the baseline uses urban features, distance information, and the known support; the distribution $Y_{D,c}$ is supplied solely to the calibration step.
 
 ## 3.2. Support scope and spatial representation
 
@@ -90,7 +92,7 @@ The model predicts flow intensities on the positive support $\Omega_c$, and does
 
 ## 3.3. Distance-binned mobility distribution and city-level observation configuration
 
-The main experiments use a single city-level distance-binned mobility distribution. For each value of $K$, bin edges are recomputed from the distance quantiles of the training cities. Specifically, in each fold, $K-1$ interior bin edges are determined from the $b/K$ quantiles ($b=1,\ldots,K-1$) of interzonal OD pair distances across the 35 training cities. Each pair contributes a single distance value with equal weight; thus, edges are defined on a pair-weighted basis. Validation and test cities are strictly excluded from edge construction. The two outer boundaries are fixed at $a_0 = 0$ and $a_K = +\infty$, forming intervals $I_b = (a_{b-1}, a_b]$ that completely cover all pairs with $d_{c,ij} > 0$. The share of target mobility flow falling in distance interval $b$ is defined as:
+The main experiments use a single city-level distance-binned mobility distribution. For each value of $K$, bin edges are recomputed from the distance quantiles of the training cities. Specifically, in each fold, $K-1$ interior bin edges are determined from the $b/K$ quantiles ($b=1,\ldots,K-1$) of interzonal OD pair distances across the 35 training cities. Each pair contributes a single distance value with equal weight; thus, edges are defined on a pair-weighted basis. Validation and test cities are strictly excluded from edge construction. The two outer boundaries are fixed at $a_0 = 0$ and $a_K = +\infty$, forming intervals $I_b = (a_{b-1}, a_b]$ that completely cover all pairs with $d_{c,ij} > 0$. The share of target mobility flow falling in distance bin $b$ is defined as:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -99,7 +101,7 @@ $$
 The shares are normalized so that: $\sum_{b=1}^K Y_{c,b} = 1$.
 The full distance-distribution vector of city $c$ is denoted by $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$. In the interpretation, $Y_D$ is used as shorthand for this type of observation.
 
-Because bin edges are determined jointly from the training fold, certain long-distance intervals may contain zero OD pairs in cities with smaller geographic diameters. Let $\mathcal A_c$ denote the set of intervals containing at least one pair in $\Omega_c$, with $K_{\mathrm{act},c} = |\mathcal A_c|$ representing the number of active intervals for city $c$. Empty bins carry zero mass and are excluded from calculations; all operator quantities are evaluated over the active set (detailed in Supplementary Section S2).
+Because bin edges are determined jointly from the training fold, certain long-distance intervals may contain zero OD pairs in cities with smaller geographic diameters. Let $\mathcal A_c$ denote the set of distance bins containing at least one pair in $\Omega_c$, with $K_{\mathrm{act},c} = |\mathcal A_c|$ representing the number of active bins for city $c$. Empty bins carry zero mass and are excluded from calculations; all operator quantities are evaluated over the active set (detailed in Supplementary Section S2).
 
 $Y_{D,c}$ is aggregated from the ground-truth flow of the target city and used as an oracle observation at calibration time. An exploratory variant using an origin-county distribution is evaluated on multi-county metropolitan areas; the setup and limitations of this analysis are presented in Supplementary Section S7.
 
@@ -154,9 +156,9 @@ $$
 p_+(t \mid \mu, \phi) = \frac{p_{\mathrm{NB}}(t \mid \mu, \phi)}{1 - p_{\mathrm{NB}}(0 \mid \mu, \phi)}, \qquad \mathcal{L}_c = -\frac{1}{\lvert\Omega_c\rvert} \sum_{(i,j) \in \Omega_c} \log p_+(t_{c,ij} \mid \mu_{c,ij}, \phi).
 $$
 
-Here $\mu>0$ is the mean of the base NB before truncation, not the conditional mean after truncation, and $\phi>0$ is its shape/dispersion parameter. The loss is averaged over pairs $(i,j) \in \Omega_c$ for each city to prevent cities with many OD pairs from dominating optimization.
+Here $\mu>0$ is the mean of the base NB before truncation, not the conditional mean after truncation, and $\phi>0$ is its shape/dispersion parameter. In training, each parameter update uses a single city and the loss averaged over the OD pairs of that city.
 
-At inference, the reported flow is the conditional expectation rather than the base parameter:
+Both neural baselines use the same training protocol with the AdamW optimization algorithm [@loshchilov2019adamw], select checkpoints by validation CPC, and are repeated over three model seeds. The dispersion parameter $\phi$ is learned jointly with network parameters and shared across all OD pairs in each model. Parameter transformations ensuring positivity and numerical stabilization measures are detailed in Supplementary Section S1. At inference, the predicted flow intensity is the conditional expectation of the ZTNB distribution:
 
 $$
 \widehat{t}_{c,ij}^{(0)}
@@ -166,7 +168,7 @@ E[T_{c,ij}\mid T_{c,ij}\ge 1]
 \frac{\mu_{c,ij}}{1-p_{\mathrm{NB}}(0\mid\mu_{c,ij},\phi)}.
 $$
 
-Both neural baselines use the same training protocol with the AdamW optimization algorithm [@loshchilov2019adamw], select checkpoints by validation CPC, and are repeated over three model seeds. In each checkpoint, $\phi$ is one trainable scalar shared across the whole model/checkpoint, not a city-, node-, or OD-specific output. The model stores $\log\phi$; the loss and prediction code clamp it to $[-10,10]$ and exponentiate it, ensuring $\phi>0$. The decoder produces $\mu$ as $\operatorname{softplus}(\log T^{\mathrm{grav}}+\mathrm{residual})+10^{-4}$. After checkpoint selection, all parameters remain fixed on target cities. Training-hyperparameter details are provided in the Appendix.
+This conditional expectation serves as the baseline prediction passed to the calibration step in Section 3.4.3. Training-hyperparameter details are provided in Supplementary Section S1.
 
 ### 3.4.3. Inference-time distance calibration operator
 
@@ -176,13 +178,18 @@ $$
 \widehat{Y}_{c,b}^{(0)} = \frac{\sum_{(i,j) \in \Omega_c} \widehat{t}_{c,ij}^{(0)} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} \widehat{t}_{c,ij}^{(0)}}.
 $$
 
-The analytic calibration operator reallocates flow mass according to the closed-form solution:
+Let $p_{c,b}^{\mathrm{cond}}$ denote the target share restricted to active bins and normalized so that the sum over active bins equals 1. In the main oracle setting, empty bins have zero share, so $p_{c,b}^{\mathrm{cond}} = Y_{c,b}$ on active bins. Each OD pair prediction is multiplied by the ratio of the target share to the predicted share for its distance bin:
 
 $$
-\widehat{t}_{c,ij}^{(1)} = \widehat{t}_{c,ij}^{(0)} \frac{p_{c,b(i,j)}^{\mathrm{cond}}}{\widehat{Y}_{c,b(i,j)}^{(0)}}.
+\widehat{t}_{c,ij}^{(1)} = \widehat{t}_{c,ij}^{(0)} \frac{p_{c,b(i,j)}^{\mathrm{cond}}}{\widehat{Y}_{c,b(i,j)}^{(0)}},
+\qquad (i,j) \in \Omega_c,
 $$
 
-Here, $b(i,j)$ is the interval containing $d_{c,ij}$. In implementation, target shares are first conditioned on active intervals $\mathcal A_c$, and the coefficient is applied only to those active intervals. Every OD pair in the same interval is multiplied by the same positive coefficient. Calibration does not update model parameters. The main setting fixes $q = 1$; the general form $q \in [0, 1]$ is presented in Supplementary Section S2. In the evaluated positive-support setting, the operator preserves the known support within $\Omega_c$, within-interval ranking, and total predicted interzonal mass; it does not perform link discovery outside $\Omega_c$. Global ordering across different intervals need not be preserved. Proofs are presented in Supplementary Section S3.
+where $b(i,j)$ is the bin containing distance $d_{c,ij}$.
+
+In the main oracle setting, both target and predicted shares are strictly positive on active bins, yielding positive calibration multipliers. After calibration, the binned flow distribution matches the target distribution, while total predicted flow is preserved. OD pairs within the same bin receive a common scaling factor, preserving their relative ratios and internal ranking; global ordering across bins may change.
+
+Proofs of these properties are provided in Supplementary Section S3; the general calibration operator with adjustment degree $q \in [0, 1]$ is detailed in Supplementary Section S2. The main configuration uses $q = 1$.
 
 ![Figure 1](figures/fig1_oracle_calibration_framework.png)
 **Figure 1. Inference-time oracle calibration framework.** Baseline $M_0$ is trained cross-city and kept frozen on the target city. The oracle distance distribution $Y_D$, extracted from the target city's reference flow, reallocates mass between intervals and creates $\widehat{\mathbf{T}}_c^{(1)}$ on the same support $\Omega_c$.
