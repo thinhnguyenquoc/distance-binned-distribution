@@ -115,10 +115,15 @@ def generate_figure2():
 
 def generate_figure3():
     """Figure 3 / Hình 3: Target Specificity and Bin-Order Controls (Target Y_D vs Dose-Matched Donor vs Permuted Y_D)."""
+    summary_path = Path("results/unified_placebo_v1/unified_placebo_reconciled_summary.json")
+    with open(summary_path, "r", encoding="utf-8") as f:
+        summary_data = json.load(f)
+
     conditions = ["Target $Y_D$", "Dose-matched donor", "Permuted $Y_D$"]
-    means = [+0.003539, -0.000091, -0.006964]
-    ci_low = [+0.00260, -0.00089, -0.00914]
-    ci_high = [+0.00450, +0.00071, -0.00512]
+    keys = ["target", "matched_train_b", "permuted_b"]
+    means = [float(summary_data[k]["mean_delta_cpc"]) for k in keys]
+    ci_low = [float(summary_data[k]["ci_95"][0]) for k in keys]
+    ci_high = [float(summary_data[k]["ci_95"][1]) for k in keys]
 
     yerr_low = np.array(means) - np.array(ci_low)
     yerr_high = np.array(ci_high) - np.array(means)
