@@ -86,7 +86,7 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
 
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện theo quy trình ở mục 3.3. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ được định nghĩa là:
+Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào khoảng khoảng cách thứ $b$ được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -329,9 +329,9 @@ Trong các cấu hình oracle được khảo sát, tăng số nhóm khoảng c�
 
 ## 4.4. Tính ổn định của mức cải thiện theo khởi tạo và kiến trúc baseline
 
-Với Urban GNN, mức tăng CPC trung bình vẫn dương ở cả ba seed khởi tạo được đánh giá, dao động từ khoảng +0.0031 đến +0.0043. Kết quả này cho thấy mức cải thiện trung bình được duy trì qua các lần khởi tạo đã khảo sát.
+Với Urban GNN, mức tăng CPC trung bình dương ở cả ba seed được đánh giá, dao động từ khoảng +0.0031 đến +0.0043. Kết quả này cho thấy lợi ích trung bình của phép hiệu chỉnh được duy trì qua các lần khởi tạo đã khảo sát.
 
-Khi thay đổi kiến trúc baseline, mức tăng CPC trung bình đạt +0.00354 với Urban GNN và +0.00329 với Pairwise Node MLP; số thành phố cải thiện tương ứng là 45/50 và 47/50 (Bảng 5). Việc mức cải thiện vẫn xuất hiện ở phần lớn thành phố với Pairwise Node MLP cho thấy lợi ích của phép hiệu chỉnh không chỉ xuất hiện ở kiến trúc có truyền thông điệp trên đồ thị.
+Mức tăng CPC trung bình đạt +0.00354 với Urban GNN và +0.00329 với Pairwise Node MLP; số thành phố cải thiện tương ứng là 45/50 và 47/50 (Bảng 5). Lợi ích xuất hiện ở phần lớn thành phố với cả hai baseline neural, cho thấy kết quả không chỉ giới hạn ở kiến trúc có truyền thông điệp trên đồ thị.
 
 ### Bảng 5. Mức cải thiện CPC sau hiệu chỉnh oracle theo kiến trúc baseline trên 50 thành phố ($K=8$).
 
@@ -343,16 +343,16 @@ Khi thay đổi kiến trúc baseline, mức tăng CPC trung bình đạt +0.003
 
 Chú thích: Với mỗi baseline, $\Delta\mathrm{CPC}$ được tính bằng CPC sau hiệu chỉnh trừ CPC trước hiệu chỉnh của chính baseline đó. Hai baseline neural được tổng hợp bằng cách lấy trung bình qua ba seed trong từng thành phố trước khi tính thống kê trên 50 thành phố. Gravity được ước lượng riêng trong từng fold bằng dữ liệu của các thành phố huấn luyện. Cả ba baseline được hiệu chỉnh bằng phân phối oracle cấp thành phố trên cùng tập hỗ trợ đánh giá. CI 95% được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố cải thiện là số thành phố có $\Delta\mathrm{CPC}>0$.
 
-Với Gravity hai tham số, mức tăng CPC trung bình nhỏ hơn, đạt +0.00084 với CI 95% [+0.0002, +0.0016], nhưng chỉ 22/50 thành phố có CPC tăng. Như vậy, mức tăng trung bình dương không đồng nghĩa với việc phần lớn thành phố được cải thiện. Trong các kiến trúc đã khảo sát, hiệu chỉnh mang lại lợi ích ở phần lớn thành phố với hai baseline neural, còn kết quả trên Gravity ít nhất quán hơn giữa các thành phố.
+Với Gravity hai tham số, mức tăng CPC trung bình đạt +0.00084, nhưng chỉ 22/50 thành phố được cải thiện. Vì vậy, mức tăng trung bình dương của Gravity không đại diện cho một xu hướng cải thiện ở đa số thành phố.
 
 ## 4.5. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện hiệu chỉnh
 
-Để tìm hiểu mức cải thiện khác nhau giữa các thành phố, nghiên cứu xem xét mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh. Sai lệch ban đầu được đo bằng khoảng cách Total Variation giữa phân phối do baseline dự báo và phân phối oracle của thành phố mục tiêu. Hình 6 cho thấy các thành phố có sai lệch phân phối lớn hơn thường có mức tăng CPC cao hơn sau hiệu chỉnh.
+Nghiên cứu xem xét mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh. Sai lệch được đo bằng khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle. Trên 50 thành phố được đánh giá, các thành phố có sai lệch lớn hơn thường có mức tăng CPC cao hơn (Hình 6).
 
-Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng cách địa lý trung bình, tương quan từng phần vẫn dương và đạt $r_{\mathrm{partial}}=0.7951$, với $p=5.35\times10^{-12}$. Kết quả này phù hợp với việc phép hiệu chỉnh điều chỉnh sự phân bổ lưu lượng giữa các nhóm khoảng cách. Tuy nhiên, đây là mối liên hệ quan sát trên các thành phố được đánh giá, chưa đủ để kết luận sai lệch phân phối lớn hơn sẽ gây ra mức cải thiện cao hơn.
+Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng cách địa lý trung bình, tương quan từng phần vẫn dương ($r_{\mathrm{partial}}=0.7951$, $p=5.35\times10^{-12}$). Đây là mối liên hệ thăm dò trong tập thành phố được đánh giá; kết quả không bảo đảm rằng một thành phố có sai lệch lớn sẽ được cải thiện sau hiệu chỉnh.
 
 ![Hình 6](figures/fig6_mechanistic_dpre.png)
-**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh.** Mỗi điểm biểu diễn một thành phố ($N=50$) với kiến trúc Urban GNN tại $K=8$, lấy trung bình qua ba model seeds. Trục ngang là khoảng cách Total Variation giữa phân phối khoảng cách dự báo và phân phối oracle; trục dọc là chênh lệch CPC sau và trước hiệu chỉnh. Đường thẳng biểu diễn hồi quy tuyến tính giữa hai biến chưa điều chỉnh theo các biến kiểm soát. Kết quả tương quan từng phần được báo cáo riêng trong nội dung mục 4.5.
+**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh.** Mỗi điểm biểu diễn một thành phố ($N=50$) với Urban GNN tại $K=8$, sau khi lấy trung bình các đại lượng tương ứng qua ba model seeds. Trục ngang là khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle; trục dọc là chênh lệch CPC sau và trước hiệu chỉnh. Đường thẳng biểu diễn hồi quy tuyến tính giữa hai biến trên hình, chưa điều chỉnh theo các biến kiểm soát. Tương quan từng phần được báo cáo riêng trong mục 4.5.
 
 
 # 5. Thảo luận
@@ -367,7 +367,7 @@ Các mô hình như Deep Gravity và UGNN khai thác dữ liệu nguồn để h
 
 Phân phối khoảng cách chỉ cho biết tỷ trọng lưu lượng thuộc từng nhóm, nên phép hiệu chỉnh điều chỉnh cách lưu lượng được phân bổ giữa các nhóm này. Trong cùng một nhóm, các cặp OD được nhân với cùng một hệ số, vì vậy tỷ lệ và thứ hạng giữa các luồng vẫn do baseline quyết định. Đồng thời, tổng lưu lượng dự báo được giữ nguyên, nên phép hiệu chỉnh không xử lý sai lệch về tổng lưu lượng của baseline. Những giới hạn này giúp lý giải vì sao mức cải thiện có thể nhỏ ngay cả khi phân phối khoảng cách được cung cấp chính xác.
 
-Mối liên hệ giữa sai lệch phân phối khoảng cách ban đầu và mức tăng CPC ở mục 4.5 phù hợp với cách phép hiệu chỉnh hoạt động: các thành phố có sai lệch phân phối lớn hơn thường có mức cải thiện cao hơn. Tuy nhiên, tương quan này chưa chứng minh quan hệ nhân quả và không bảo đảm hiệu chỉnh sẽ có lợi cho từng thành phố. Kết quả trên các kiến trúc cũng cho thấy cùng một loại quan sát không mang lại lợi ích đồng đều: cải thiện xuất hiện ở phần lớn thành phố với hai baseline neural, nhưng ít nhất quán hơn với Gravity. Do đó, hiệu quả của bước hiệu chỉnh cần được xem xét cùng với chất lượng và cách phân bổ luồng của dự báo ban đầu.
+Phân tích ở mục 4.5 phù hợp với vai trò của phép hiệu chỉnh trong việc điều chỉnh phân bổ lưu lượng giữa các nhóm khoảng cách. Tuy nhiên, sai lệch phân phối ban đầu được tính bằng phân phối oracle, nên phân tích này chưa cung cấp một quy tắc độc lập để quyết định khi nào nên áp dụng hiệu chỉnh. Sự khác nhau giữa các baseline cho thấy giá trị của cùng một quan sát tổng hợp còn phụ thuộc vào dự báo ban đầu mà nó được dùng để hiệu chỉnh.
 
 Độ phân giải và chất lượng quan sát ảnh hưởng đến hiệu quả hiệu chỉnh theo những cách khác nhau. Tăng số nhóm khoảng cách cung cấp thêm chi tiết để điều chỉnh lưu lượng giữa các dải cự ly, trong khi sai lệch trong tỷ trọng quan sát có thể làm dự báo sau hiệu chỉnh kém chính xác hơn. Các đối chứng từ tập huấn luyện không mang lại lợi ích nhất quán giữa các thành phố. Đối chứng sử dụng phân phối trung bình của tập huấn luyện tạo ra mức tăng trung bình nhỏ, nhưng phân phối đúng thành phố mục tiêu vẫn cho kết quả cao hơn tại 47/50 thành phố. Trong phạm vi các đối chứng đã khảo sát, kết quả này hỗ trợ nhận định rằng cả thông tin đặc thù của thành phố mục tiêu và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách đều có liên quan đến hiệu quả hiệu chỉnh. Vì vậy, đánh giá một nguồn quan sát cần xem xét cả mức độ chi tiết lẫn độ chính xác của phân phối. Tuy nhiên, các thí nghiệm hiện tại chưa xác định số nhóm khoảng cách phù hợp nhất cho từng mức nhiễu.
 

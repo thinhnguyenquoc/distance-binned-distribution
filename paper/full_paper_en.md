@@ -94,7 +94,7 @@ The model predicts flow intensities on the positive support $\Omega_c$, and does
 
 ## 3.3. Distance-binned mobility distribution and city-level observation configuration
 
-The main experiments use a single city-level distance-binned mobility distribution. For each value of $K$, bin edges are recomputed from the distance quantiles of the training fold following the procedure described below. Specifically, in each fold, $K-1$ interior bin edges are determined from the $b/K$ quantiles ($b=1,\ldots,K-1$) of interzonal OD pair distances across the 35 training cities. Each pair contributes a single distance value with equal weight; thus, edges are defined on a pair-weighted basis. Validation and test cities are strictly excluded from edge construction. The two outer boundaries are fixed at $a_0 = 0$ and $a_K = +\infty$, forming intervals $I_b = (a_{b-1}, a_b]$ that completely cover all pairs with $d_{c,ij} > 0$. The share of target mobility flow falling in distance interval $b$ is defined as:
+The main experiments use a single city-level distance-binned mobility distribution. For each value of $K$, bin edges are recomputed from the distance quantiles of the training cities. Specifically, in each fold, $K-1$ interior bin edges are determined from the $b/K$ quantiles ($b=1,\ldots,K-1$) of interzonal OD pair distances across the 35 training cities. Each pair contributes a single distance value with equal weight; thus, edges are defined on a pair-weighted basis. Validation and test cities are strictly excluded from edge construction. The two outer boundaries are fixed at $a_0 = 0$ and $a_K = +\infty$, forming intervals $I_b = (a_{b-1}, a_b]$ that completely cover all pairs with $d_{c,ij} > 0$. The share of target mobility flow falling in distance interval $b$ is defined as:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -303,7 +303,9 @@ Across evaluated oracle configurations, increasing the number of distance interv
 
 ## 4.4. Robustness across initialization and baseline architecture
 
-The improvement remains positive across all three model seeds, with mean $\Delta\mathrm{CPC}$ ranging from approximately $+0.0031$ to $+0.0043$, indicating that the main result is not driven by a single model initialization.
+For Urban GNN, mean $\Delta\mathrm{CPC}$ is positive across all three evaluated seeds, ranging from approximately $+0.0031$ to $+0.0043$. This indicates that the average benefit of calibration is maintained across the surveyed initializations.
+
+Mean $\Delta\mathrm{CPC}$ reaches $+0.00354$ with Urban GNN and $+0.00329$ with Pairwise Node MLP, with 45/50 and 47/50 improved cities, respectively (Table 5). The benefit is present in most cities for both neural baselines, showing that the result is not restricted to architectures with graph message passing.
 
 ### Table 5: Robustness by baseline architecture ($N=50$ cities, $K=8$ intervals)
 
@@ -315,14 +317,16 @@ The improvement remains positive across all three model seeds, with mean $\Delta
 
 Note: The two neural baselines are aggregated across three model seeds. Gravity is estimated only on the training cities of each fold and does not use test-city flows.
 
-The increase is reproduced for both Urban GNN and Pairwise Node MLP, while Gravity produces a smaller effect; therefore, current evidence for architectural robustness supports only the two evaluated neural baselines and should not be generalized to every model family.
+For two-parameter Gravity, mean $\Delta\mathrm{CPC}$ is $+0.00084$, but only 22/50 cities improve. Thus, a positive average increase for Gravity does not represent an improvement trend across a majority of cities.
 
 ## 4.5. Relationship between baseline distance-distribution bias and calibration improvement
 
-The baseline's initial distance-distribution bias is strongly associated with improvement after calibration. After controlling for baseline accuracy, city size, and mean geographic distance, the partial correlation reaches $r_{\mathrm{partial}} = +0.7951$ ($p = 5.35 \times 10^{-12}$). This pattern is consistent with the method's mechanism but is interpreted only as an observational association, not a causal relationship.
+We examined the relationship between the baseline's distance-distribution bias and the CPC gain after calibration. Bias is measured by the Total Variation distance between the predicted distribution and the oracle distribution. Across the 50 evaluated cities, cities with larger bias generally exhibit higher CPC gains (Figure 6).
+
+After controlling for baseline CPC, tract count, OD pair count, and mean geographic distance, the partial correlation remains positive ($r_{\mathrm{partial}} = 0.7951$, $p = 5.35 \times 10^{-12}$). This is an exploratory association within the evaluated benchmark; it does not guarantee that any individual city with large bias will improve after calibration.
 
 ![Figure 6](figures/fig6_mechanistic_dpre.png)
-**Figure 6. Relationship between initial distance-distribution bias and improvement after calibration.** $d_{\mathrm{pre}}$ is the Total Variation distance between the baseline distance distribution and the ground truth. Each point represents a city; the line is a linear fit over 50 cities. The partial correlation after controlling for size–spatial variables is reported in Section 4.5.
+**Figure 6. Relationship between baseline distance-distribution bias and calibration improvement.** Each point represents a city ($N=50$) under Urban GNN at $K=8$, after averaging the corresponding quantities across three model seeds. The horizontal axis is the Total Variation distance between predicted and oracle distributions; the vertical axis is the paired CPC difference after versus before calibration. The line indicates a linear regression between the two plotted variables, unadjusted for covariates. The partial correlation is reported separately in Section 4.5.
 
 # 5. Discussion
 
@@ -332,7 +336,7 @@ The fact that $Y_D$ continues to improve predictions after the baseline has used
 
 The calibration structure also clearly limits the type of bias that $Y_D$ can address. The signal provides information about how total flow volume should be distributed across distance bands, but it provides no additional information for distinguishing OD pairs within the same distance interval.
 
-Therefore, $Y_D$ is primarily able to correct between-bin biases, where the baseline has allocated the wrong amount of mass across distance bands. Conversely, if the error is mainly within-bin, meaning in the allocation of flow among OD pairs with similar distances, $Y_D$ does not directly contain information to correct that error. The observed relationship between initial distance-allocation bias and city-level improvement is consistent with this mechanism, but is not interpreted as causal evidence.
+Therefore, $Y_D$ is primarily able to correct between-bin biases, where the baseline has allocated the wrong amount of mass across distance bands. The analysis in Section 4.5 is consistent with this calibration role in adjusting mass allocation across distance intervals. However, because the initial distribution bias is computed using the oracle distribution, this analysis does not provide an independent decision rule for when calibration should be applied. The variation across baselines indicates that the value of the same aggregate observation also depends on the initial predictions it is used to calibrate.
 
 This mechanism also clarifies the methodological meaning of the result. Models such as Deep Gravity and UGNN show that neural networks can learn transferable mobility patterns from source data [@simini2021deepgravity; @guo2025ugnn]. The result of this study adds that an aggregate target-domain observation can provide a calibration signal for a trained cross-city model without updating its parameters. However, this does not demonstrate deployment feasibility, because $Y_D$ here is an oracle and the calibration operates only on the known positive interzonal support $\Omega_c$.
 
