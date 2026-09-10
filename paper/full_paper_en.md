@@ -253,16 +253,28 @@ Within the scope of the evaluated controls, the target distribution continues to
 ![Figure 3](figures/fig3_structural_validity_placebo.png)
 **Figure 3. Controls for target specificity and distance structure.** The figure compares target $Y_D$, dose-matched training-donor placebo, and permuted calibration log-ratio control across 50 cities. Error bars represent stratified 95% bootstrap CIs by fold.
 
-### Table 3: Target specificity and placebo controls ($N=50$)
+<div style="page-break-before: always;"></div>
 
-| Experimental condition | Mean $\Delta\mathrm{CPC}$ | 95% confidence interval (Stratified) | Benefit relative to $M_0$ ($p_{\text{2-sided}}$) | Specificity increase vs Placebo | 95% specificity CI | Target vs Placebo ($p_{\text{1-sided}}$) | Specificity win rate ($\text{Target } Y_D > \text{Placebo}$) |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1. Oracle Target $Y_D$** | **$+0.003539$** | $[+0.00260, +0.00450]$ | $1.93 \times 10^{-9}$ | — | — | — | **45/50 (vs $M_0$)** |
-| **2. Dose-Matched Training Donors ($B_{\text{draw}}=1000$)** | **$-0.000091$** | $[-0.00089, +0.00071]$ | $0.4097$ (n.s.) | **$+0.003630$** | $[+0.00287, +0.00445]$ | $\mathbf{2.19 \times 10^{-11}}$ | **46/50 (92.0%)** |
-| **3. Dose-Matched Fold Train-Mean $Y_D$** | **$+0.000914$** | $[+0.00001, +0.00186]$ | $0.4319$ (n.s.) | **$+0.002626$** | $[+0.00197, +0.00336]$ | $\mathbf{4.03 \times 10^{-11}}$ | **47/50 (94.0%)** |
-| **4. Permuted Calibration Log-Ratio Control ($B_{\text{draw}}=1000$)** | **$-0.006964$** | $[-0.00914, -0.00512]$ | $1.78 \times 10^{-15}$ | **$+0.010504$** | $[+0.00843, +0.01279]$ | $1.78 \times 10^{-15}$ | **49/50 (98.0%)** |
+### Table 3: Calibration outcomes with target distribution and controls across 50 cities.
 
-Note: Bootstrap confidence intervals are computed for mean $\Delta\mathrm{CPC}$, while $p$-values are obtained from the Wilcoxon signed-rank test on city-level paired differences; therefore, the two statistics do not test the same quantity and need not lead to the same conclusion. Donor placebos are averaged over 1,000 random donor draws; permutation placebos are averaged over the full set of non-identity index permutations when the count does not exceed 1,000; when exceeding 1,000, 1,000 permutations randomly sampled without replacement are used; results across three model seeds are averaged prior to 50-city aggregation.
+**Part A. CPC change relative to zero-shot baseline**
+
+| Condition | Mean $\Delta\mathrm{CPC}$ | 95% CI of mean $\Delta\mathrm{CPC}$ | Two-sided Wilcoxon $p$ |
+|:---|:---:|:---:|:---:|
+| Target oracle distribution | $+0.00354$ | $[+0.0026, +0.0045]$ | $1.93 \times 10^{-9}$ |
+| Training-city donor control, dose-matched | $-0.00009$ | $[-0.0009, +0.0007]$ | $0.4097$ |
+| Training-mean donor control, dose-matched | $+0.00091$ | $[+0.00001, +0.00186]$ | $0.4319$ |
+| Permuted calibration log-ratio control | $-0.00696$ | $[-0.0091, -0.0051]$ | $1.78 \times 10^{-15}$ |
+
+**Part B. Paired city-level CPC differences between target calibration and each control**
+
+| Control | Mean CPC difference | 95% CI of mean difference | One-sided Wilcoxon $p$ | Cities with target CPC > control |
+|:---|:---:|:---:|:---:|:---:|
+| Training-city donor, dose-matched | $+0.00363$ | $[+0.0029, +0.0044]$ | $2.19 \times 10^{-11}$ | 46/50 |
+| Training-mean donor, dose-matched | $+0.00263$ | $[+0.0020, +0.0034]$ | $4.03 \times 10^{-11}$ | 47/50 |
+| Permuted calibration log-ratio control | $+0.01050$ | $[+0.0084, +0.0128]$ | $1.78 \times 10^{-15}$ | 49/50 |
+
+Note: In Part A, $\Delta\mathrm{CPC}$ is the difference between predictions calibrated with each distribution and the zero-shot baseline. In Part B, differences are computed as CPC using the target distribution minus CPC using the control distribution; positive values indicate superior performance for the target distribution. Training-city donor controls are averaged over 1,000 random donor draws; permutation controls are averaged over the full set of non-identity index permutations when the count does not exceed 1,000; when exceeding 1,000, 1,000 permutations randomly sampled without replacement are used; results across three model seeds are averaged prior to 50-city aggregation. Confidence intervals are estimated for mean differences using a city-level paired bootstrap, stratified by fold. Wilcoxon signed-rank tests are two-sided in Part A and one-sided in Part B under the hypothesis that the target distribution yields higher CPC than the control (reported $p$-values are unadjusted raw values). For the training-mean control, the mean CPC change is $+0.00091$, the median is $+0.00007$, and 27/50 cities show positive gains. The bootstrap confidence interval quantifies uncertainty in the mean change, whereas the Wilcoxon test evaluates the signs and ranks of paired differences. Thus, the two statistics reflect distinct aspects of the cross-city difference distribution.
 
 ## 4.3. How does the additional value of $Y_D$ depend on observation resolution and quality?
 
@@ -767,6 +779,8 @@ For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark,
 
 ![Figure S1](figures/fig_s1_spatial_resolution.png)
 **Figure S1. Comparison of CPC gains from city-level and county-level calibration across 11 multi-county metropolitan areas. The analysis is exploratory; the 39 single-county areas are omitted because the two groupings are mathematically equivalent.**
+
+<div style="page-break-before: always;"></div>
 
 ### Table S3: Descriptive city-level results for the multi-county spatial-resolution analysis
 
