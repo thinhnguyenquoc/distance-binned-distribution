@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Origin–destination (OD) flow intensity estimation for an unobserved target city remains challenging. Although zero-shot models leverage urban context and geographic distance for this task, the supplementary value that the distance-binned mobility distribution can provide to these models remains unclarified. This study uses the target city's distance-binned mobility distribution to calibrate the output of a frozen-parameter zero-shot baseline on the known positive interzonal support. The distribution is computed directly from reference OD flows on the exact evaluation support, establishing an oracle setting to assess the benefits of accurate aggregate information.
+Transferring models to estimate origin–destination (OD) flow intensity in an unseen target city without using its OD intensity labels for training remains challenging. Although zero-shot models leverage urban context and geographic distance for this task, the supplementary value that the distance-binned mobility distribution can provide to these models remains unclarified. This study uses the target city's distance-binned mobility distribution to calibrate the output of a frozen-parameter zero-shot baseline on the known positive interzonal support. The distribution is computed directly from reference OD flows on the exact evaluation support, establishing an oracle setting to assess the benefits of accurate aggregate information.
 
 Across 50 U.S. metropolitan areas under 5-fold cross-city validation, city-level oracle calibration with Urban GNN increases mean CPC by 0.00354, with 45/50 cities improved. Relative to intervention-magnitude-matched controls, the target-city distribution performs better, supporting the role of city-specific information and the correspondence between the calibration signal and distance intervals. Within the surveyed range, mean improvement increases with more distance intervals and decreases when the observation is corrupted by noise. Conclusions are bounded to intensity reconstruction on known positive interzonal support with oracle distribution; efficacy with independently sourced observations requires further verification.
 
@@ -16,7 +16,7 @@ Recent mobility models have combined urban context and distance to predict flows
 
 This study tests whether the target city's distribution of mobility across distance intervals provides additional information for a trained cross-city baseline. This distribution describes only the share of total flow by distance interval and is used at inference time to calibrate predictions, while all model parameters remain fixed. The calibration is used as an experimental tool to quantify the information value of the additional mobility distribution.
 
-The study focuses on two questions. First, does the target city's distance-binned mobility distribution improve OD intensity reconstruction relative to a frozen-parameter cross-city zero-shot baseline? Second, if it does, how does the improvement depend on the resolution and quality of the observed distribution? Controls are used to examine the role of city-specific information and the correspondence between the calibration signal and distance intervals.
+The study focuses on two questions. First, does the target city's distance-binned mobility distribution improve OD intensity reconstruction relative to a cross-city zero-shot baseline whose parameters are held fixed, and by how much? Second, how do calibration outcomes vary with the resolution and quality of the observed distribution? Controls are used to examine the role of city-specific information and the correspondence between the calibration signal and distance intervals.
 
 In this study, the distribution is extracted from the reference flows of the target city itself and is therefore treated as an oracle observation. This setting is used to test the information value of the signal before considering whether it can be collected or estimated from an independent source.
 
@@ -43,6 +43,8 @@ In this context, aggregate observations from the target domain provide an interm
 Unlike approaches that mainly calibrate one or a small number of parameters, this study directly uses a vector of flow shares across distance intervals, allowing the value of the signal to be evaluated at multiple resolutions through the number of intervals $K$. $Y_D$ also differs from origin/destination margins or directly observed OD pairs: it constrains only how total flow volume is distributed across distance bands, without determining how that volume is distributed among origin–destination pairs within the same band.
 
 Previous studies have clarified the role of distance and constraints in spatial interaction models [@ortuzar2011modelling; @wilson1971family], while also demonstrating the generalization ability of flow-prediction models and their limitations when local calibration information is absent [@guo2025ugnn; @simini2021deepgravity; @yang2014limits]. However, it remains unclear how much additional value is provided by the target city's own distance-binned mobility distribution after a cross-city model has learned from urban context and pairwise distance, and under what observation conditions that value persists. This study addresses that gap by measuring the improvement when providing the target distance distribution to calibrate the output of a cross-city baseline whose parameters are held fixed.
+
+<div style="page-break-before: always;"></div>
 
 # 3. Data Sources, Spatial Units, and Methodology
 
@@ -187,7 +189,7 @@ $$
 
 where $b(i,j)$ is the bin containing distance $d_{c,ij}$.
 
-In the main oracle setting, both target and predicted shares are strictly positive on active bins, yielding positive calibration multipliers. After calibration, the binned flow distribution matches the target distribution, while total predicted flow is preserved. OD pairs within the same bin receive a common scaling factor, preserving their relative ratios and internal ranking; global ordering across bins may change.
+In the main oracle setting, both target and predicted shares are strictly positive on active bins, yielding positive calibration multipliers. After calibration, the binned flow distribution matches the target distribution, while total predicted flow is preserved. OD pairs within the same bin receive a common scaling factor, preserving their relative ratios and internal ranking; global ordering across bins may change. However, matching bin-level shares does not guarantee an increase in CPC, because the relative distribution among OD pairs within each bin remains determined by the baseline and any overall volume miscalibration is left uncorrected.
 
 Proofs of these properties are provided in Supplementary Section S3; the general calibration operator with adjustment degree $q \in [0, 1]$ is detailed in Supplementary Section S2. The main configuration uses $q = 1$.
 
@@ -244,6 +246,8 @@ The bar chart shows $\Delta\mathrm{CPC}_c = \operatorname{CPC}_c(M_1) - \operato
 
 ## 4.2. Is the improvement target-city-specific and structurally meaningful?
 
+The wrong-city donor and training-mean controls are dose-matched (Supplementary Section S6) by rescaling their centered log-ratio vectors to the RMS magnitude of the target calibration signal. This reference magnitude is computed from the log-ratio between the oracle target distribution and the baseline-predicted distance-bin shares, so these controls use oracle information to examine the role of signal content while controlling intervention magnitude under this measure.
+
 Within the scope of the evaluated controls, the target distribution continues to yield superior performance when the intervention magnitude is matched using the RMS of the centered log-ratio vector. This result supports the complementary value of target-city distance allocation information. When evaluating the dose-matched fold training-mean control, the mean gain is $+0.00091$ with a 95% stratified bootstrap CI of $[+0.00001, +0.00186]$, but the city-level shift is inconsistent (median $+0.00007$, 27/50 positive cities, two-sided Wilcoxon $p=0.4319$). When the components of the centered intervention log-ratio vector are permuted across distance intervals, performance decreases by $-0.00696$ on average relative to baseline (Figure 3). Target-distribution calibration yields higher CPC than the permuted control in 49/50 cities, with a mean pairwise difference of $+0.01050$. This result demonstrates that calibration effectiveness depends on the correspondence between the adjustment signal and the distance intervals.
 
 ![Figure 3](figures/fig3_structural_validity_placebo.png)
@@ -264,7 +268,7 @@ Note: Bootstrap confidence intervals are computed for mean $\Delta\mathrm{CPC}$,
 
 The resolution and quality of the $Y_D$ observation are evaluated along three complementary dimensions: the number of distance intervals $K$, the spatial resolution of the aggregate signal, and observation-quality degradation due to noise. These three analyses evaluate which conditions govern the additional information supplied by $Y_D$.
 
-First, as the number of distance intervals increases from $K=2$ to $K=20$, mean $\Delta\mathrm{CPC}$ increases from $+0.00098$ to $+0.00639$ (Table 4 and Figure 4). At the main configuration $K=8$, the increase reaches $+0.00354$, with 45/50 cities improved. The mean gain increases across all evaluated configurations, while the number of improved cities ranges between 39 and 47 out of 50 cities. These findings reflect the evaluated binning configurations; the study does not identify an optimal number of intervals under noisy observation.
+First, as the nominal number of distance intervals increases from $K=2$ to $K=20$, mean $\Delta\mathrm{CPC}$ increases from $+0.00098$ to $+0.00639$ (Table 4 and Figure 4). At the main configuration $K=8$, the increase reaches $+0.00354$, with 45/50 cities improved. The mean gain increases across all evaluated configurations, while the number of improved cities ranges between 39 and 47 out of 50 cities. These findings reflect the evaluated binning configurations; the study does not identify an optimal number of intervals under noisy observation.
 
 ### Table 4: Scaling information resolution through distance intervals
 
@@ -295,7 +299,7 @@ $$ \Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, $$
 
 because 39 single-county areas produce mathematically equivalent partitions and therefore have $\Delta\mathrm{CPC}_{\mathrm{res}}=0$ by construction. For the group of 11 multi-county areas alone, the mean additional increase was about $+0.00063$. Thus, this result is treated only as exploratory evidence that finer spatial resolution may provide additional information in some urban structures, rather than as general evidence that increasing spatial resolution always improves performance.
 
-Separately from resolution, we further assessed sensitivity to the quality of the $Y_D$ observation itself. Noise was added to the target-city distribution at specified Total Variation error levels while keeping the baseline, evaluation cities, and calibration operator unchanged. Mean $\Delta\mathrm{CPC}$ decreased from $+0.00354$ without noise to $+0.00070$ at 4% TV, turning negative at 5% TV ($-0.00087$; Figure 5). Linear interpolation between the two adjacent noise levels with opposite-sign mean CPC changes yields a descriptive crossing point of approximately 4.44% TV. In the 10,000 bootstrap curves, 9,546 had a crossing within the 0–5% surveyed range; the remaining 454 curves remained positive at the 5% noise level and are recorded as right-censored at the boundary of the surveyed range. We do not report a confidence interval for the crossing location.
+Separately from resolution, under the evaluated synthetic noise mechanism (Supplementary Section S6), mean $\Delta\mathrm{CPC}$ diminishes as the Total Variation (TV) distance between the perturbed and oracle distributions increases (Figure 5). Mean $\Delta\mathrm{CPC}$ decreased from $+0.00354$ without noise to $+0.00070$ at 4% TV, turning negative at 5% TV ($-0.00087$; Figure 5). Linear interpolation between the two adjacent noise levels with opposite-sign mean CPC changes yields a descriptive crossing point of approximately 4.44% TV. In the 10,000 bootstrap curves, 9,546 had a crossing within the 0–5% surveyed range; the remaining 454 curves remained positive at the 5% noise level and are recorded as right-censored at the boundary of the surveyed range. We do not report a confidence interval for the crossing location.
 
 Across the five surveyed positive noise levels, 3% TV was the largest level where the one-sided Wilcoxon test remained significant after Holm correction ($p_{\mathrm{Holm}}=0.0446$). At 4% TV, mean $\Delta\mathrm{CPC}$ remained positive (+0.00070), but the test did not meet this threshold ($p_{\mathrm{Holm}}=0.9695$). The statistical hypothesis test and the mean trajectory crossing describe distinct aspects of the data; the 3% TV level should not be interpreted as a guaranteed operational threshold.
 
@@ -345,7 +349,7 @@ This mechanism also clarifies the methodological meaning of the result. Models s
 
 ## 5.2. Conditions governing the value of $Y_D$
 
-Among the evaluated controls, the target-city distribution yields a higher mean CPC than the control distributions. When intervention magnitudes are matched by RMS log-ratio, the correspondence between the calibration signal and distance intervals remains relevant to the outcome. Thus, the value of the observation depends on the informational content it conveys, beyond the scale of the adjustment itself.
+The evaluated controls support the role of city-specific information and the correspondence between the calibration signal and distance intervals. This finding holds when the intervention magnitude is controlled by the RMS of the centered log-ratio vector.
 
 Increasing the number of distance intervals provides finer detail to adjust flows across distance ranges, but this experiment uses an oracle distribution. For independently collected observations, both the level of detail and the error of the distribution must be assessed concurrently. Current experiments do not identify the most suitable number of bins for each noise level.
 
@@ -353,7 +357,7 @@ Increasing the number of distance intervals provides finer detail to adjust flow
 
 This study evaluates the predictive value of aggregate observations, rather than privacy guarantees. Aggregating data into a distance distribution does not inherently constitute a privacy guarantee.
 
-The county-level analysis is exploratory. Only 11 metropolitan areas in the benchmark produce a genuinely multi-county partition, while the remaining 39 cases are equivalent to city-level calibration. Moreover, counties are administrative boundaries and may not accurately represent functional mobility areas. Therefore, this result does not support a general conclusion that finer spatial resolution improves performance.
+The county-level analysis is exploratory, as the multi-county group comprises only 11 cases. Administrative boundaries may also not align with functional mobility areas, requiring further evaluation of spatial partition schemes before generalizing the benefit of finer local observations.
 
 Two direct limitations of the design are that $Y_D$ is extracted from the target city's ground-truth OD rather than an independent observation source, and that evaluation takes place only on the known positive interzonal support, so zero flows and link discovery are not addressed.
 
@@ -764,7 +768,6 @@ For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark,
 ![Figure S1](figures/fig_s1_spatial_resolution.png)
 **Figure S1. Comparison of CPC gains from city-level and county-level calibration across 11 multi-county metropolitan areas. The analysis is exploratory; the 39 single-county areas are omitted because the two groupings are mathematically equivalent.**
 
-<div style="page-break-before: always;"></div>
 ### Table S3: Descriptive city-level results for the multi-county spatial-resolution analysis
 
 *The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M_{1,\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M_{1,\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Values are summarized at the city level. Results for the 11 multi-county metropolitan areas are reported descriptively; separate confidence intervals and hypothesis tests are not presented for this subgroup.*

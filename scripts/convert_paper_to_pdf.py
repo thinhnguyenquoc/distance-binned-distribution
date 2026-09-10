@@ -206,8 +206,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         img[src*="fig6_mechanistic_dpre"],
         img[src*="fig5_structural_validity_placebo"],
         img[src*="fig3_resolution_sensitivity"],
-        img[src*="fig4_noise_dose_response"] {{
+        img[src*="fig4_noise_dose_response"],
+        img[src*="fig_s1_spatial_resolution"] {{
             max-width: 75%;
+            max-height: 40vh;
+        }}
+
+        .keep-together {{
+            page-break-inside: avoid;
+            break-inside: avoid;
         }}
 
         figcaption, .caption {{
@@ -471,10 +478,26 @@ def protect_and_convert_markdown(md_text: str, base_dir: Path) -> str:
         )
 
     html = re.sub(
-        r"<p>(<img[^>]+>)</p>\s*<p>(<strong>(?:Figure|Hình|Table|Bảng)[^<]+</strong>.*?)</p>",
+        r"<p>(<img[^>]+>)\s*(?:</p>\s*<p>)?(<strong>(?:Figure|Hình|Table|Bảng)[^<]+</strong>.*?)</p>",
         figure_caption_replacer,
         html,
         flags=re.DOTALL,
+    )
+
+    # Wrap Table 3 Part B heading and table in keep-together div
+    html = re.sub(
+        r"(<p><strong>(?:Phần|Part)\s+[B][^<]*</strong></p>\s*<table>.*?</table>)",
+        r"<div class='keep-together'>\1</div>",
+        html,
+        flags=re.DOTALL,
+    )
+
+    # Wrap Bootstrap CI item and formula in keep-together div
+    html = re.sub(
+        r"(<ol start=[\x27\"]2[\x27\"]>\s*<li><strong>[^<]*bootstrap[^<]*</strong>:?</li>\s*</ol>\s*<div class=[\x27\"]math-block[\x27\"][^>]*>.*?</div>)",
+        r"<div class='keep-together'>\1</div>",
+        html,
+        flags=re.IGNORECASE | re.DOTALL,
     )
 
     return html
