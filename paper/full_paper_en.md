@@ -194,7 +194,7 @@ In the main oracle setting, both target and predicted shares are strictly positi
 Proofs of these properties are provided in Supplementary Section S3; the general calibration operator with adjustment degree $q \in [0, 1]$ is detailed in Supplementary Section S2. The main configuration uses $q = 1$.
 
 ![Figure 1](figures/fig1_oracle_calibration_framework.png)
-**Figure 1. Inference-time oracle calibration framework.** Baseline $M_0$ is trained cross-city and kept frozen on the target city. The oracle distance distribution $Y_D$, extracted from the target city's reference flow, reallocates mass between intervals and creates $\widehat{\mathbf{T}}_c^{(1)}$ on the same support $\Omega_c$.
+**Figure 1. Inference-time oracle calibration framework.** Baseline $M_0$ is trained cross-city and kept frozen on the target city. The oracle distance distribution $Y_D$, extracted from the target city's reference flow, reallocates mass between intervals and creates predictions $\widehat{t}_{c,ij}^{(1)}$ on the same support $\Omega_c$.
 
 ## 3.5. Cross-city evaluation protocol and statistical inference
 
@@ -220,7 +220,7 @@ In addition, the aggregated post-calibration distance distribution is compared w
 
 For each city, the improvement is computed as the CPC difference between the post-calibration prediction and the baseline, then averaged across model seeds and macro-averaged across all 50 cities.
 
-The 95% confidence interval is estimated using a city-level paired nonparametric bootstrap, stratified by fold [@efron1993bootstrap]. Paired differences are evaluated using a two-sided Wilcoxon signed-rank test [@wilcoxon1945ranking]. The proportion of cities with $\Delta\mathrm{CPC} > 0$ is reported as an additional descriptive statistic. Corresponding sensitivity and robustness analyses are presented in Section 4.
+The 95% confidence interval is estimated using a city-level paired nonparametric bootstrap, stratified by fold [@efron1993bootstrap]. These confidence intervals are computed conditional on the fixed fold splits and trained models, and do not capture variation from re-splitting folds or retraining models. Paired differences are evaluated using a two-sided Wilcoxon signed-rank test [@wilcoxon1945ranking]. The proportion of cities with $\Delta\mathrm{CPC} > 0$ is reported as an additional descriptive statistic. Corresponding sensitivity and robustness analyses are presented in Section 4.
 
 For the noise stress test, the five positive levels $\epsilon\in\{0.01,0.02,0.03,0.04,0.05\}$ form one Holm family; $\epsilon=0$ is descriptive and is excluded from that family. A one-sided Wilcoxon test is used for the benefit hypothesis ($\Delta\mathrm{CPC}>0$). Noise replicates are averaged within city and seed before averaging the three model seeds; the resulting 50 city-level values are the inferential units. The crossing bootstrap counts curves crossing within 0–5%; non-crossing curves are treated as right-censored above the surveyed range and are not dropped to construct a crossing CI.
 

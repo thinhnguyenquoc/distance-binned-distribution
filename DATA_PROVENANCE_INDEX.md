@@ -14,6 +14,21 @@ Mỗi mục đều có đường dẫn có thể nhấp trực tiếp (direct li
 - **Data audit:** toàn bộ 50 thư mục city có `6,077,114` observations; `t\le0=0`, non-integer `=0`, NaN/Inf `=0`, range `[1,319838]`. Full frozen inference produced `18,231,342` predictions with `prediction\le0=0`, NaN/Inf `=0`, observed range `[1.0140197,6338.7148]`.
 - **Numerical audit:** 210 code-equivalent NB log-PMF cases matched an independent float64 calculation with maximum absolute error `1.78e-15`. Summation through `t=100000` left at most approximately `3.0e-7` numerical discrepancy from the epsilon-stabilized implementation; conditional-mean summation agreed within `1.5e-5` in the tested range.
 
+### Hiện trạng xác nhận nguồn gốc dữ liệu (Data Provenance Status)
+
+Theo xác nhận trực tiếp của tác giả (2026-09-10):
+
+| Trường | Nội dung |
+| :--- | :--- |
+| **Nguồn cung cấp trực tiếp** | Phòng Lab của trường đại học, theo xác nhận của tác giả |
+| **Tên Lab và trường** | Chưa cung cấp |
+| **Bộ dữ liệu/cơ quan thu thập gốc** | Chưa xác nhận |
+| **Năm và đơn vị luồng** | Chưa xác nhận |
+| **Quyền sử dụng và chia sẻ lại** | Chưa xác nhận |
+
+> [!IMPORTANT]
+> Toàn bộ khẳng định về "LODES 2019" do AI tự thêm trước đây đã được loại bỏ hoàn toàn. Các thông tin trên không suy diễn rằng Lab trực tiếp thu thập dữ liệu, không suy diễn dữ liệu là công khai hoặc được phép phân phối lại. Các kết quả kiểm đếm kỹ thuật (50 cities, 6,077,114 observations) được giữ độc lập với nguồn gốc pháp lý và hành chính của dữ liệu.
+
 ---
 
 ## Mục lục tra cứu nhanh
@@ -65,7 +80,7 @@ Các số liệu này xuất hiện đồng nhất trong **Section 0 (Abstract)*
 * **Vị trí trong bài báo:** 
   - Tiếng Việt: [`paper/full_paper_vi.md:L46-L65`](paper/full_paper_vi.md#L46-L65) (Bảng 1)
   - Tiếng Anh: [`paper/full_paper_en.md:L57-L76`](paper/full_paper_en.md#L57-L76) (Table 1)
-* **Mô tả:** Bảng định nghĩa các ký hiệu toán học ($c, \mathcal{V}_c, t_{c,ij}, d_{c,ij}, \mathcal{P}_c, \Omega_c, I_b, K, Y_{c,b}, Y_{D,c}, \widehat{t}_{c,ij}^{(0)}$), nguồn dữ liệu (LODES 2019, US Census TIGER/Line 2019, 50 MSAs) và trạng thái sẵn có của thông tin ở các bước zero-shot và oracle calibration.
+* **Mô tả:** Bảng định nghĩa các ký hiệu toán học ($c, \mathcal{V}_c, t_{c,ij}, d_{c,ij}, \mathcal{P}_c, \Omega_c, I_b, K, Y_{c,b}, Y_{D,c}, \widehat{t}_{c,ij}^{(0)}$), phạm vi 50 vùng đô thị (Nguồn OD, năm dữ liệu và đơn vị luồng chưa được tác giả xác nhận) và trạng thái sẵn có của thông tin ở các bước zero-shot và oracle calibration.
 
 ---
 
@@ -262,3 +277,8 @@ python -c "import json; n=json.load(open('results/noise_robustness_fine_v1/noise
 # 5. Kiểm tra Section 4.5 & Figure 6 / Hình 6 Mechanism correlation
 python -c "import pandas as pd, scipy.stats as st; df=pd.read_csv('results/audit/dpre_mechanism_data.csv'); print(f'Pearson r: {st.pearsonr(df[\"d_pre_tv\"], df[\"delta_cpc\"])[0]:.4f}, Spearman rho: {st.spearmanr(df[\"d_pre_tv\"], df[\"delta_cpc\"])[0]:.4f}')"
 ```
+ 
+---
+ 
+## 6. Nhật ký thay đổi (Change Log)
+* **2026-09-10**: Cập nhật hiện trạng provenance theo xác nhận trực tiếp của tác giả: Nguồn cung cấp trực tiếp là phòng Lab của trường đại học (tên Lab/trường, bộ dữ liệu gốc, năm, đơn vị luồng và quyền chia sẻ chưa xác nhận). Loại bỏ toàn bộ khẳng định “LODES 2019” do AI tự thêm. Không suy diễn dữ liệu là công khai hay được thu thập trực tiếp bởi Lab.
