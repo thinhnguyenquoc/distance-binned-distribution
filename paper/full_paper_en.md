@@ -4,7 +4,7 @@
 
 Transferring models to estimate origin–destination (OD) flow intensity in an unseen target city without using its OD intensity labels for training remains challenging. Although zero-shot models leverage urban context and geographic distance for this task, the supplementary value that the distance-binned mobility distribution can provide to these models remains unclarified. This study uses the target city's distance-binned mobility distribution to calibrate the output of a frozen-parameter zero-shot baseline on the known positive interzonal support. The distribution is computed directly from reference OD flows on the exact evaluation support, establishing an oracle setting to assess the benefits of accurate aggregate information.
 
-Across 50 U.S. metropolitan areas under 5-fold cross-city validation, city-level oracle calibration with Urban GNN increases mean CPC by 0.00354, with 45/50 cities improved. Relative to intervention-magnitude-matched controls, the target-city distribution performs better, supporting the role of city-specific information and the correspondence between the calibration signal and distance intervals. Within the surveyed range, mean improvement increases with more distance intervals and decreases when the observation is corrupted by noise. Conclusions are bounded to intensity reconstruction on known positive interzonal support with oracle distribution; efficacy with independently sourced observations requires further verification.
+Across 50 U.S. metropolitan areas under 5-fold cross-city validation, city-level oracle calibration with the GNN baseline increases mean CPC by 0.00354, with 45/50 cities improved. Relative to intervention-magnitude-matched controls, the target-city distribution performs better, supporting the role of city-specific information and the correspondence between the calibration signal and distance intervals. Within the surveyed range, mean improvement increases with more distance intervals and decreases when the observation is corrupted by noise. Conclusions are bounded to intensity reconstruction on known positive interzonal support with oracle distribution; efficacy with independently sourced observations requires further verification.
 
 **Keywords:** origin–destination matrix; OD intensity reconstruction; distance-binned mobility distribution; zero-shot; cross-city transfer learning; aggregate observations; spatial mobility.
 
@@ -111,9 +111,9 @@ $Y_{D,c}$ is aggregated from the ground-truth flow of the target city and used a
 
 ### 3.4.1. Baselines and common prediction interface
 
-Three baselines are evaluated under the same inference-time calibration protocol. Urban GNN is the primary baseline, Pairwise Node MLP is an additional neural baseline, and two-parameter Gravity is an additional classical baseline for assessing the extent to which calibration effectiveness depends on model architecture.
+The study uses a graph neural network (GNN) as the main baseline, together with a multilayer perceptron (MLP) and a two-parameter Gravity model, to assess how calibration gains depend on the initial prediction model. All three baselines produce flow-intensity predictions on the known positive interzonal support and are subjected to the same calibration procedure while their model parameters remain fixed. The GNN and MLP are used to evaluate calibration on nonlinear neural baselines that achieve relatively high predictive performance within the present benchmark. The two-parameter Gravity model provides a simpler classical reference. This design assesses whether calibration gains persist when the initial predictions are already reasonably accurate, rather than merely reflecting large errors from a weak baseline.
 
-The Urban GNN uses two distance-conditioned message-passing layers with mean neighborhood aggregation, LayerNorm, residual connections, and 0.1 dropout. Each tract is represented by 26 urban features projected to a 64-dimensional embedding. Pairwise OD intensity is decoded from the origin and destination embeddings, log geographic distance, and an internal two-parameter gravity prior using a $130\!-\!64\!-\!32\!-\!1$ MLP. Crucially, the internal gravity parameters within the neural architecture are trainable weights optimized end-to-end alongside the network and stored in the model checkpoint.
+The GNN uses two distance-conditioned message-passing layers with mean neighborhood aggregation, LayerNorm, residual connections, and a dropout rate of 0.1. Each tract is represented by 26 urban features projected to a 64-dimensional embedding. Pairwise OD intensity is decoded from the origin and destination embeddings, log geographic distance, and an internal two-parameter gravity prior using a $130\!-\!64\!-\!32\!-\!1$ MLP. Crucially, the internal gravity parameters within the neural architecture are trainable weights optimized end-to-end alongside the network and stored in the model checkpoint.
 
 The model is trained on the source cities of each fold, and all parameters remain fixed when inferring on the target city.
 
@@ -137,7 +137,7 @@ $$
 
 The two parameters $(G, \alpha)$ of this standalone classical baseline are estimated using pooled log-linear ordinary least squares only on the training cities of each fold and remain fixed when inferring on the test cities. Gravity predictions are then passed through the same $Y_D$ calibration operator as the other baselines.
 
-The MLP control replaces the two graph message-passing layers with two node-wise residual MLP blocks while retaining the same node-feature input, 64-dimensional embeddings, pairwise decoder, geographic distance, trainable gravity prior, optimization settings, and total parameter count. It therefore isolates the contribution of graph-based neighborhood aggregation.
+The MLP replaces the two message-passing layers of the GNN with two residual MLP blocks that process each node independently, while retaining the input features, embedding dimension, pairwise OD decoder, training configuration, and parameter count. The MLP therefore serves as a controlled ablation for evaluating the role of inter-node message passing.
 
 ### 3.4.2. Objective and training configuration
 
@@ -170,7 +170,7 @@ E[T_{c,ij}\mid T_{c,ij}\ge 1]
 \frac{\mu_{c,ij}}{1-p_{\mathrm{NB}}(0\mid\mu_{c,ij},\phi)}.
 $$
 
-This conditional expectation serves as the baseline prediction passed to the calibration step in Section 3.4.3. Training-hyperparameter details are provided in Supplementary Section S1.
+This conditional expectation serves as the baseline prediction passed to the calibration step in Section 3.4.3. The architecture and training rules are held fixed across folds. Data-dependent transformations are fitted using the 35 training cities in each fold, and checkpoints are selected according to CPC on the five validation cities. Test cities are not used for hyperparameter selection, checkpoint selection, or stopping decisions. Training-hyperparameter details are provided in Supplementary Section S1.
 
 ### 3.4.3. Inference-time distance calibration operator
 
@@ -230,14 +230,14 @@ In addition to the primary tests, an exploratory mechanism analysis evaluates th
 
 ## 4.1. Does $Y_D$ improve OD intensity reconstruction on the known positive interzonal support relative to the zero-shot baseline?
 
-In the main experiment with Urban GNN, calibration with $Y_D$ increases cross-city CPC by an average of $+0.00354$. The improvement appears in most cities, but its absolute magnitude is small and varies considerably across cases.
+In the main experiment with the GNN baseline, calibration with $Y_D$ increases cross-city CPC by an average of $+0.00354$. The improvement appears in most cities, but its absolute magnitude is small and varies considerably across cases.
 
 ![Figure 2](figures/fig2_main_per_city.png)
 **Figure 2: Cross-city CPC improvement by city from target-distance calibration.**
 
 The bar chart shows $\Delta\mathrm{CPC}_c = \operatorname{CPC}_c(M_1) - \operatorname{CPC}_c(M_0)$ across 50 cities, ordered from low to high. The dashed line represents the mean improvement and the dotted line represents the median.
 
-### Table 2: Main benchmark with Urban GNN ($N=50$, $K=8$)
+### Table 2: Main benchmark with GNN ($N=50$, $K=8$)
 
 | Experimental condition | Mean interzonal CPC | Median CPC | Mean $\Delta\mathrm{CPC}$ | 95% confidence interval (Stratified) | Winning-city rate | Wilcoxon $p$ (Two-sided) |
 |---|---|---|---|---|---|---|
@@ -322,21 +322,21 @@ Across evaluated oracle configurations, increasing the number of distance interv
 
 ## 4.4. Robustness across initialization and baseline architecture
 
-For Urban GNN, mean $\Delta\mathrm{CPC}$ is positive across all three evaluated seeds, ranging from approximately $+0.0031$ to $+0.0043$. This indicates that the average benefit of calibration is maintained across the surveyed initializations.
+Across seeds 1, 10, and 100 for the GNN, mean $\Delta\mathrm{CPC}$ is $+0.00434$ (41/50 cities improved), $+0.00308$ (44/50 cities), and $+0.00320$ (44/50 cities), respectively, averaging $+0.00354$ across the three seeds. This indicates that the average benefit of calibration is maintained across the surveyed initializations.
 
-Mean $\Delta\mathrm{CPC}$ reaches $+0.00354$ with Urban GNN and $+0.00329$ with Pairwise Node MLP, with 45/50 and 47/50 improved cities, respectively (Table 5). The benefit is present in most cities for both neural baselines, showing that the result is not restricted to architectures with graph message passing.
+Mean $\Delta\mathrm{CPC}$ is $+0.00354$ for the GNN and $+0.00329$ for the MLP, with improvements in 45/50 and 47/50 cities, respectively. The MLP is a controlled ablation of the GNN, retaining the input representation, pairwise OD decoder, training configuration, and parameter count while removing inter-node message passing. The broadly consistent results indicate that the calibration gain is not attributable solely to message passing within the evaluated neural model pair.
 
 ### Table 5: Robustness by baseline architecture ($N=50$ cities, $K=8$ intervals)
 
-| Model architecture | Mean $\Delta\mathrm{CPC}$ | 95% Bootstrap confidence interval | Winning-city rate |
-|:---|:---:|:---:|:---:|
-| **Urban GNN (Message passing)**  | **$+0.00354$** | $[+0.0026, +0.0045]$ | **45 / 50 (90.0%)** |
-| **Pairwise Node MLP (No graph message passing)**  | **$+0.00329$** | $[+0.0025, +0.0042]$ | **47 / 50 (94.0%)** |
-| **Two-parameter Gravity** | $+0.00084$ | $[+0.0002, +0.0016]$ | 22 / 50 (44.0%) |
+| Model architecture | Pre-calibration CPC | Post-calibration CPC | Mean $\Delta\mathrm{CPC}$ | 95% Bootstrap confidence interval | Winning-city rate |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **GNN** | $0.71281$ | $0.71635$ | **$+0.00354$** | $[+0.0026, +0.0045]$ | **45 / 50 (90.0%)** |
+| **MLP** | $0.70913$ | $0.71242$ | **$+0.00329$** | $[+0.0025, +0.0042]$ | **47 / 50 (94.0%)** |
+| **Two-parameter Gravity** | $0.38868$ | $0.38952$ | $+0.00084$ | $[+0.0002, +0.0016]$ | 22 / 50 (44.0%) |
 
-Note: The two neural baselines are aggregated across three model seeds. Gravity is estimated only on the training cities of each fold and does not use test-city flows.
+Note: Pre- and post-calibration CPC values are macro-averages across 50 cities. The two neural baselines are aggregated across three model seeds within each city before computing 50-city statistics. Gravity is estimated only on the training cities of each fold and does not use test-city flows.
 
-For two-parameter Gravity, mean $\Delta\mathrm{CPC}$ is $+0.00084$, but only 22/50 cities improve. Thus, a positive average increase for Gravity does not represent an improvement trend across a majority of cities.
+The pre-calibration CPC values of the GNN and MLP are 0.71281 and 0.70913, respectively, compared with 0.38868 for the two-parameter Gravity model. Calibration nevertheless produces positive gains in most cities for both neural baselines. In contrast, Gravity has substantially lower initial CPC but improves in only 22 of 50 cities (mean gain $+0.00084$). Across the three evaluated models, the observed gains therefore do not exhibit the pattern expected if improvement arose merely from calibrating a weak baseline.
 
 ## 4.5. Relationship between baseline distance-distribution bias and calibration improvement
 
@@ -345,7 +345,7 @@ We examined the relationship between the baseline's distance-distribution bias a
 After controlling for baseline CPC, tract count, OD pair count, and mean geographic distance, the partial correlation remains positive ($r_{\mathrm{partial}} = 0.7951$, $p = 5.35 \times 10^{-12}$). This is an exploratory association within the evaluated benchmark; it does not guarantee that any individual city with large bias will improve after calibration.
 
 ![Figure 6](figures/fig6_mechanistic_dpre.png)
-**Figure 6. Relationship between baseline distance-distribution bias and calibration improvement.** Each point represents a city ($N=50$) under Urban GNN at $K=8$, after averaging the corresponding quantities across three model seeds. The horizontal axis is the Total Variation distance between predicted and oracle distributions; the vertical axis is the paired CPC difference after versus before calibration. The line indicates a linear regression between the two plotted variables, unadjusted for covariates. The partial correlation is reported separately in Section 4.5.
+**Figure 6. Relationship between baseline distance-distribution bias and calibration improvement.** Each point represents a city ($N=50$) under the GNN at $K=8$, after averaging the corresponding quantities across three model seeds. The horizontal axis is the Total Variation distance between predicted and oracle distributions; the vertical axis is the paired CPC difference after versus before calibration. The line indicates a linear regression between the two plotted variables, unadjusted for covariates. The partial correlation is reported separately in Section 4.5.
 
 # 5. Discussion
 
@@ -355,7 +355,7 @@ Pairwise distances between spatial units and the mobility distribution across di
 
 The calibration structure also clearly limits the type of bias that $Y_D$ can address. The signal provides information about how total flow volume should be distributed across distance bands, but it provides no additional information for distinguishing OD pairs within the same distance interval.
 
-Therefore, $Y_D$ is primarily able to correct between-bin biases, where the baseline has allocated the wrong amount of mass across distance bands. The analysis in Section 4.5 is consistent with this calibration role in adjusting mass allocation across distance intervals. However, because the initial distribution bias is computed using the oracle distribution, this analysis does not provide an independent decision rule for when calibration should be applied. The variation across baselines indicates that the value of the same aggregate observation also depends on the initial predictions it is used to calibrate.
+Therefore, $Y_D$ is primarily able to correct between-bin biases, where the baseline has allocated the wrong amount of mass across distance bands. The analysis in Section 4.5 is consistent with this calibration role in adjusting mass allocation across distance intervals. However, because the initial distribution bias is computed using the oracle distribution, this analysis does not provide an independent decision rule for when calibration should be applied. The value of the target distribution depends on the initial predictions it calibrates. That gains persist across two neural baselines with relatively high initial CPC, while remaining smaller and inconsistent for Gravity, indicates that the main result is not merely an artifact of selecting an inaccurate baseline. However, because the two neural baselines share input representations and the pairwise decoder, conclusions remain bounded to the evaluated architectures.
 
 This mechanism also clarifies the methodological meaning of the result. Models such as Deep Gravity and UGNN show that neural networks can learn transferable mobility patterns from source data [@simini2021deepgravity; @guo2025ugnn]. The result of this study adds that an aggregate target-domain observation can provide a calibration signal for a trained cross-city model without updating its parameters. However, this does not demonstrate deployment feasibility, because $Y_D$ here is an oracle and the calibration operates only on the known positive interzonal support $\Omega_c$.
 
@@ -378,7 +378,7 @@ These limitations also define several natural directions for future research. On
 
 # 6. Conclusion
 
-In an oracle setting across 50 U.S. metropolitan areas, the target city's distance-binned mobility distribution improves OD intensity reconstruction from a frozen-parameter zero-shot baseline. For Urban GNN, CPC increases by an average of +0.00354, with 45/50 cities improved. This indicates that the target distribution provides useful supplementary information even when the baseline already incorporates urban context and geographic distances.
+In an oracle setting across 50 U.S. metropolitan areas, the target city's distance-binned mobility distribution improves OD intensity reconstruction from a frozen-parameter zero-shot baseline. For the GNN baseline, CPC increases by an average of +0.00354, with 45/50 cities improved. This indicates that the target distribution provides useful supplementary information even when the baseline already incorporates urban context and geographic distances.
 
 The improvement is small in absolute magnitude and should be understood as an additional calibration rather than a replacement for detailed OD data. The conclusions are limited to intensity reconstruction on known positive interzonal support with oracle $Y_D$; the study does not evaluate link discovery, full-matrix reconstruction, or the use of independently collected $Y_D$ in real-world deployment.
 
@@ -435,9 +435,9 @@ To be added later
 
 ## S1. Detailed GNN neural-network architecture and numerical stability
 
-### S1.1. Urban GNN Encoder tensor layers
+### S1.1. GNN Encoder tensor layers
 
-The Urban GNN maps the 26-dimensional urban-feature vector $\mathbf{x}_{c,i} \in \mathbb{R}^{26}$ and the spatial-radius graph structure $\mathcal{G}_c = (\mathcal{V}_c, \mathcal{E}_c)$ into a 64-dimensional hidden representation $\mathbf{h}_{c,i} \in \mathbb{R}^{64}$:
+The GNN maps the 26-dimensional urban-feature vector $\mathbf{x}_{c,i} \in \mathbb{R}^{26}$ and the spatial-radius graph structure $\mathcal{G}_c = (\mathcal{V}_c, \mathcal{E}_c)$ into a 64-dimensional hidden representation $\mathbf{h}_{c,i} \in \mathbb{R}^{64}$:
 
 1. **Initial node projection**:
 $$
@@ -491,7 +491,7 @@ The exact hyperparameter configuration extracted directly from the trained model
 #### Table S1: Architectural and training hyperparameters of zero-shot baselines
 | Component | Hyperparameter | Value | Description |
 |:---|:---|:---:|:---|
-| **Urban GNN Encoder** | Input feature dimension ($d_{\mathrm{in}}$) | 26 | Demographics, socio-economic, and urban features |
+| **GNN Encoder** | Input feature dimension ($d_{\mathrm{in}}$) | 26 | Demographics, socio-economic, and urban features |
 | | Message passing layers | 2 | Distance-conditioned `GraphConvLayer` |
 | | Attention mechanism / heads | N/A (0) | Standard mean aggregation; no attention layers |
 | | Hidden / Output dimension | 64 | LayerNorm(64) + ReLU + Dropout |
@@ -505,11 +505,16 @@ The exact hyperparameter configuration extracted directly from the trained model
 | | Optimizer | AdamW | Macro-averaged city-by-city steps |
 | | Initial learning rate | 0.0032 | $3.2 \times 10^{-3}$ |
 | | Weight decay | 0.0001 | $10^{-4}$ |
+| | Model seeds | $\{1, 10, 100\}$ | Three independent initializations per fold |
+| | Maximum epochs | 200 | Fixed across all folds |
 | | Learning rate scheduler | ReduceLROnPlateau | Factor 0.5, patience 4 epochs, min LR $10^{-5}$ |
 | | Early stopping patience | 16 epochs | Monitored on validation interzonal CPC ($\min \Delta = 10^{-4}$) |
-| | Parameter count | 33,668 | Identical parameter count for Urban GNN and Node MLP |
+| | Checkpoint selection rule | Best validation CPC | Checkpoint with highest CPC on 5 validation cities |
+| | Parameter count | 33,668 | The GNN and MLP have the same total parameter count |
 
 **Parameter separation note:** The two parameters $(G_{\mathrm{NN}}, \alpha_{\mathrm{NN}})$ of the neural gravity prior are internal, trainable variables optimized end-to-end with the network via AdamW and saved inside the checkpoint bundle. Conversely, the standalone Two-Parameter Gravity baseline is fitted independently via pooled log-linear OLS on the training cities ($G_{\mathrm{OLS}} \approx -8.54, \alpha_{\mathrm{OLS}} \approx 1.66$ on Fold 1). The two models do not share coefficients.
+
+**Reproducibility provenance:** City assignments are stored in a fixed split manifest (`results/e1/splits_manifest_v2.json`, SHA-256: `96a09089574c37dbcf13112b5bcd20c738327df3c08f5915fdcb2a9f15110543`). Each checkpoint records the corresponding fold, model seed, model configuration, and normalization statistics (`results/checkpoints/5fold_fold{f}_seed{s}.pt` and `mlp_fold{f}_seed{s}.pt`). In the source code, the GNN baseline is implemented by the `UrbanGNN` class, and the MLP baseline is implemented by the `ZeroShotMLPModel` class (using the `NodeMLP` encoder); these code identifiers are retained for compatibility with the existing checkpoints and result-generation scripts. Tables and figures are generated from stored city-level results using the analysis scripts provided in the repository.
 
 ## S2. General form of the analytic calibration operator ($q \in [0, 1]$)
 
@@ -623,7 +628,7 @@ $$
 
 3. **Spearman rank-correlation coefficient ($\rho_{\mathrm{Spearman}}$)**: Spearman rank correlation is computed between the observed and predicted intensity vectors on $\Omega_c$. Larger values indicate better agreement in OD-pair rankings.
 
-### Table S2: Supplementary evaluation metrics for Urban GNN with $K=8$.
+### Table S2: Supplementary evaluation metrics for GNN with $K=8$.
 
 | Metric | Baseline $M_0$ | Post-calibration $M_1$ | Mean Change | Median Change | Improved Cities |
 |:---|---:|---:|---:|---:|---:|

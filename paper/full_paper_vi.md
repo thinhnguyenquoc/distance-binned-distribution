@@ -4,7 +4,7 @@
 
 Việc chuyển giao mô hình để ước lượng cường độ luồng OD tại một thành phố mới mà không sử dụng nhãn cường độ OD của thành phố đó để huấn luyện vẫn là một thách thức. Mặc dù các mô hình zero-shot đã khai thác đặc điểm đô thị và khoảng cách địa lý để thực hiện nhiệm vụ này, giá trị bổ sung mà phân phối di chuyển theo khoảng cách có thể mang lại cho các mô hình đó vẫn chưa được làm rõ. Nghiên cứu sử dụng phân phối di chuyển theo khoảng cách của thành phố mục tiêu để hiệu chỉnh đầu ra của mô hình zero-shot được giữ nguyên tham số, trên tập hỗ trợ dương liên vùng đã biết. Phân phối được tính trực tiếp từ dữ liệu OD tham chiếu trên cùng tập hỗ trợ đánh giá, tạo thành thiết lập oracle để khảo sát lợi ích của thông tin tổng hợp chính xác.
 
-Nghiên cứu áp dụng kiểm định chéo liên thành phố 5 lượt trên 50 vùng đô thị Hoa Kỳ. Với baseline Urban GNN, hiệu chỉnh oracle cấp thành phố làm CPC tăng trung bình 0.00354, với 45/50 thành phố được cải thiện. So với các đối chứng được chuẩn hóa theo độ lớn can thiệp, phân phối mục tiêu cho kết quả tốt hơn, hỗ trợ vai trò của thông tin đặc thù theo thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Trong phạm vi khảo sát, mức cải thiện trung bình tăng khi sử dụng nhiều nhóm khoảng cách hơn và giảm khi phân phối quan sát bị nhiễu. Kết luận giới hạn ở tái tạo cường độ trên tập hỗ trợ dương liên vùng đã biết với phân phối oracle; hiệu quả với quan sát thu thập độc lập cần được kiểm chứng.
+Nghiên cứu áp dụng kiểm định chéo liên thành phố 5 lượt trên 50 vùng đô thị Hoa Kỳ. Với baseline GNN, hiệu chỉnh oracle cấp thành phố làm CPC tăng trung bình 0.00354, với 45/50 thành phố được cải thiện. So với các đối chứng được chuẩn hóa theo độ lớn can thiệp, phân phối mục tiêu cho kết quả tốt hơn, hỗ trợ vai trò của thông tin đặc thù theo thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Trong phạm vi khảo sát, mức cải thiện trung bình tăng khi sử dụng nhiều nhóm khoảng cách hơn và giảm khi phân phối quan sát bị nhiễu. Kết luận giới hạn ở tái tạo cường độ trên tập hỗ trợ dương liên vùng đã biết với phân phối oracle; hiệu quả với quan sát thu thập độc lập cần được kiểm chứng.
 
 **Từ khóa:** ma trận nguồn–đích; tái tạo cường độ OD; phân phối di chuyển theo khoảng cách; zero-shot; học chuyển giao giữa các thành phố; quan sát tổng hợp; di chuyển không gian.
 
@@ -109,11 +109,11 @@ $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố m�
 
 ### 3.4.1. Các baseline và giao diện dự báo chung
 
-Nghiên cứu sử dụng Urban GNN làm baseline chính, cùng Pairwise Node MLP và Gravity hai tham số để kiểm tra mức độ phụ thuộc của hiệu quả hiệu chỉnh vào kiến trúc mô hình. Cả ba baseline đều tạo ra dự báo cường độ luồng trên tập hỗ trợ dương liên vùng đã biết và được áp dụng cùng một phép hiệu chỉnh khi các tham số mô hình được giữ cố định.
+Nghiên cứu sử dụng mạng nơ-ron đồ thị (Graph Neural Network, GNN) làm baseline chính, cùng với mạng perceptron đa lớp (Multilayer Perceptron, MLP) và Gravity hai tham số để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào mô hình dự báo ban đầu. Cả ba baseline đều tạo ra dự báo cường độ luồng trên tập hỗ trợ dương liên vùng đã biết và được áp dụng cùng một phép hiệu chỉnh khi các tham số mô hình được giữ cố định. GNN và MLP được sử dụng để đánh giá phép hiệu chỉnh trên các baseline neural phi tuyến có năng lực dự báo tương đối cao trong benchmark hiện tại. Gravity hai tham số cung cấp một mốc tham chiếu cổ điển có cấu trúc đơn giản hơn. Thiết kế này cho phép xem xét liệu mức cải thiện có còn xuất hiện khi dự báo ban đầu đã đạt độ chính xác tương đối tốt, thay vì chỉ phản ánh sai số lớn của một baseline yếu.
 
-Urban GNN sử dụng hai lớp truyền thông điệp có điều kiện theo khoảng cách, với phép tổng hợp trung bình lân cận, LayerNorm, kết nối residual và dropout 0.1. Mỗi tract được biểu diễn bằng 26 đặc trưng đô thị và được chiếu thành embedding 64 chiều. Decoder cặp OD là một MLP có cấu trúc $130–64–32–1$, nhận đầu vào gồm embedding của vùng xuất phát và vùng đích, khoảng cách biến đổi bằng $\log(1+d_{c,ij})$ và log gravity prior nội tại. Hai tham số của gravity prior được học đồng thời với toàn bộ mạng.
+GNN sử dụng hai lớp truyền thông điệp có điều kiện theo khoảng cách, với phép tổng hợp trung bình lân cận, LayerNorm, kết nối residual và dropout 0.1. Mỗi tract được biểu diễn bằng 26 đặc trưng đô thị và được chiếu thành embedding 64 chiều. Decoder cặp OD là một MLP có cấu trúc $130–64–32–1$, nhận đầu vào gồm embedding của vùng xuất phát và vùng đích, khoảng cách biến đổi bằng $\log(1+d_{c,ij})$ và log gravity prior nội tại. Hai tham số của gravity prior được học đồng thời với toàn bộ mạng.
 
-Pairwise Node MLP thay thế hai lớp truyền thông điệp của Urban GNN bằng hai khối MLP residual xử lý riêng từng node, đồng thời giữ nguyên đầu vào, kích thước embedding, decoder cặp OD, cấu hình huấn luyện và tổng số tham số. So sánh này giúp đánh giá vai trò của việc tổng hợp thông tin từ các vùng lân cận đối với hiệu quả hiệu chỉnh.
+MLP thay thế hai lớp truyền thông điệp của GNN bằng hai khối residual MLP xử lý độc lập từng node, đồng thời giữ nguyên đặc trưng đầu vào, kích thước embedding, decoder cặp OD, cấu hình huấn luyện và tổng số tham số. Vì vậy, MLP được sử dụng như một ablation có kiểm soát để đánh giá vai trò của truyền thông điệp giữa các node.
 
 Baseline Gravity hai tham số dự báo cường độ luồng dựa trên tích dân số của vùng xuất phát và vùng đích cùng khoảng cách địa lý:
 
@@ -167,7 +167,7 @@ $$
 {1-p_{\mathrm{NB}}(0\mid\mu_{c,ij},\phi)}.
 $$
 
-Kỳ vọng có điều kiện này là dự báo baseline được đưa vào bước hiệu chỉnh ở mục 3.4.3. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
+Kỳ vọng có điều kiện này là dự báo baseline được đưa vào bước hiệu chỉnh ở mục 3.4.3. Kiến trúc và quy tắc huấn luyện được giữ cố định giữa các fold. Các phép biến đổi phụ thuộc dữ liệu được fit trên 35 thành phố huấn luyện của từng fold; checkpoint được chọn theo CPC của năm thành phố validation. Các thành phố kiểm tra không được sử dụng để chọn siêu tham số, checkpoint hoặc tiêu chí dừng. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
 
 ### 3.4.3. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
@@ -241,16 +241,16 @@ Ngoài các kiểm định chính, một phân tích cơ chế thăm dò đánh 
 
 ## 4.1. Phân phối khoảng cách mục tiêu có cải thiện tái tạo cường độ OD so với zero-shot hay không?
 
-Trong thí nghiệm chính với Urban GNN và phân phối oracle cấp thành phố ở độ phân giải $K=8$, hiệu chỉnh làm CPC liên vùng trung bình tăng từ 0.71281 lên 0.71635. Mức tăng trung bình đạt +0.00354, với khoảng tin cậy bootstrap 95% $[+0.0026,+0.0045]$ và 45/50 thành phố được cải thiện (Bảng 2). Kết quả kiểm định Wilcoxon hai phía cũng cho thấy sự khác biệt có ý nghĩa thống kê ($p=1.93\times10^{-9}$). Nhìn chung, mức cải thiện tuyệt đối nhỏ nhưng xuất hiện ở phần lớn thành phố.
+Trong thí nghiệm chính với GNN và phân phối oracle cấp thành phố ở độ phân giải $K=8$, hiệu chỉnh làm CPC liên vùng trung bình tăng từ 0.71281 lên 0.71635. Mức tăng trung bình đạt +0.00354, với khoảng tin cậy bootstrap 95% $[+0.0026,+0.0045]$ và 45/50 thành phố được cải thiện (Bảng 2). Kết quả kiểm định Wilcoxon hai phía cũng cho thấy sự khác biệt có ý nghĩa thống kê ($p=1.93\times10^{-9}$). Nhìn chung, mức cải thiện tuyệt đối nhỏ nhưng xuất hiện ở phần lớn thành phố.
 
 Tuy nhiên, mức cải thiện khác nhau giữa các thành phố (Hình 2). Trung vị của mức tăng CPC là +0.00195, thấp hơn mức tăng trung bình, cho thấy một số thành phố có mức cải thiện lớn kéo giá trị trung bình lên. Trong khi đó, năm thành phố có CPC giảm sau hiệu chỉnh (tỷ lệ bị tổn hại / harm rate là 5/50 hay 10.0%). Vì vậy, phân phối khoảng cách chính xác giúp cải thiện dự báo ở phần lớn thành phố được đánh giá, nhưng không bảo đảm cải thiện trong mọi trường hợp.
 
 ![Hình 2](figures/fig2_main_per_city.png)
 **Hình 2. Mức thay đổi CPC theo thành phố sau hiệu chỉnh bằng phân phối khoảng cách oracle.**
 
-Mỗi cột biểu diễn chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline Urban GNN tại một thành phố, lấy trung bình qua ba seed và xếp từ thấp đến cao. Thí nghiệm sử dụng phân phối oracle cấp thành phố với $K=8$. Cột xanh biểu thị CPC tăng, cột đỏ biểu thị CPC giảm; đường nét đứt và đường chấm lần lượt biểu diễn mức thay đổi trung bình (+0.00354) và trung vị (+0.00195).
+Mỗi cột biểu diễn chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline GNN tại một thành phố, lấy trung bình qua ba seed và xếp từ thấp đến cao. Thí nghiệm sử dụng phân phối oracle cấp thành phố với $K=8$. Cột xanh biểu thị CPC tăng, cột đỏ biểu thị CPC giảm; đường nét đứt và đường chấm lần lượt biểu diễn mức thay đổi trung bình (+0.00354) và trung vị (+0.00195).
 
-### Bảng 2. Kết quả hiệu chỉnh oracle cấp thành phố với Urban GNN trên 50 thành phố ($K=8$).
+### Bảng 2. Kết quả hiệu chỉnh oracle cấp thành phố với GNN trên 50 thành phố ($K=8$).
 
 | Điều kiện | CPC trung bình ± SD | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện | Wilcoxon $p$ (hai phía) |
 |:---|:---:|:---:|:---:|:---:|:---:|
@@ -272,7 +272,7 @@ Khi các thành phần của vector log-ratio hiệu chỉnh đã trừ trung b�
 ![Hình 3](figures/fig3_structural_validity_placebo.png)
 **Hình 3. Mức thay đổi CPC khi sử dụng phân phối đúng thành phố và các phân phối đối chứng giả dược (placebo controls).**
 
-Các cột biểu diễn mức thay đổi CPC trung bình so với baseline Urban GNN trên 50 thành phố khi sử dụng phân phối oracle của thành phố mục tiêu, phân phối đối chứng từ thành phố huấn luyện đã được điều chỉnh về cùng mức độ can thiệp (dose-matched donor), và đối chứng hoán vị log-ratio mục tiêu giữa các nhóm khoảng cách. Thanh sai số biểu diễn khoảng tin cậy bootstrap 95% của mức thay đổi trung bình, phân tầng theo fold. Đối chứng sử dụng phân phối trung bình của tập huấn luyện được báo cáo thêm trong Bảng 3.
+Các cột biểu diễn mức thay đổi CPC trung bình so với baseline GNN trên 50 thành phố khi sử dụng phân phối oracle của thành phố mục tiêu, phân phối đối chứng từ thành phố huấn luyện đã được điều chỉnh về cùng mức độ can thiệp (dose-matched donor), và đối chứng hoán vị log-ratio mục tiêu giữa các nhóm khoảng cách. Thanh sai số biểu diễn khoảng tin cậy bootstrap 95% của mức thay đổi trung bình, phân tầng theo fold. Đối chứng sử dụng phân phối trung bình của tập huấn luyện được báo cáo thêm trong Bảng 3.
 
 ### Bảng 3. Kết quả hiệu chỉnh với phân phối mục tiêu và các đối chứng trên 50 thành phố.
 
@@ -337,21 +337,21 @@ Trong các cấu hình oracle được khảo sát, tăng số nhóm khoảng c�
 
 ## 4.4. Tính ổn định của mức cải thiện theo khởi tạo và kiến trúc baseline
 
-Với Urban GNN, mức tăng CPC trung bình dương ở cả ba seed được đánh giá, dao động từ khoảng +0.0031 đến +0.0043. Kết quả này cho thấy lợi ích trung bình của phép hiệu chỉnh được duy trì qua các lần khởi tạo đã khảo sát.
+Với các seed 1, 10 và 100 của GNN, mức thay đổi CPC trung bình lần lượt là +0.00434 (41/50 thành phố cải thiện), +0.00308 (44/50 thành phố) và +0.00320 (44/50 thành phố), với trung bình qua ba seed đạt +0.00354. Kết quả này cho thấy lợi ích trung bình của phép hiệu chỉnh được duy trì qua các lần khởi tạo đã khảo sát.
 
-Mức tăng CPC trung bình đạt +0.00354 với Urban GNN và +0.00329 với Pairwise Node MLP; số thành phố cải thiện tương ứng là 45/50 và 47/50 (Bảng 5). Lợi ích xuất hiện ở phần lớn thành phố với cả hai baseline neural, cho thấy kết quả không chỉ giới hạn ở kiến trúc có truyền thông điệp trên đồ thị.
+Mức tăng CPC trung bình đạt +0.00354 với GNN và +0.00329 với MLP; số thành phố cải thiện tương ứng là 45/50 và 47/50. MLP là một ablation có kiểm soát của GNN, giữ nguyên biểu diễn đầu vào, decoder cặp OD, cấu hình huấn luyện và quy mô tham số nhưng loại bỏ truyền thông điệp giữa các node. Kết quả tương đối nhất quán giữa hai cấu hình cho thấy lợi ích hiệu chỉnh không phụ thuộc riêng vào thành phần truyền thông điệp trong cặp mô hình neural được so sánh.
 
 ### Bảng 5. Mức cải thiện CPC sau hiệu chỉnh oracle theo kiến trúc baseline trên 50 thành phố ($K=8$).
 
-| Baseline | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện |
-|:---|:---:|:---:|:---:|
-| Urban GNN | $+0.00354$ | $[+0.0026, +0.0045]$ | 45/50 (90.0%) |
-| Pairwise Node MLP | $+0.00329$ | $[+0.0025, +0.0042]$ | 47/50 (94.0%) |
-| Gravity hai tham số | $+0.00084$ | $[+0.0002, +0.0016]$ | 22/50 (44.0%) |
+| Baseline | CPC trước hiệu chỉnh | CPC sau hiệu chỉnh | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| GNN | $0.71281$ | $0.71635$ | $+0.00354$ | $[+0.0026, +0.0045]$ | 45/50 (90.0%) |
+| MLP | $0.70913$ | $0.71242$ | $+0.00329$ | $[+0.0025, +0.0042]$ | 47/50 (94.0%) |
+| Gravity hai tham số | $0.38868$ | $0.38952$ | $+0.00084$ | $[+0.0002, +0.0016]$ | 22/50 (44.0%) |
 
-Chú thích: Với mỗi baseline, $\Delta\mathrm{CPC}$ được tính bằng CPC sau hiệu chỉnh trừ CPC trước hiệu chỉnh của chính baseline đó. Hai baseline neural được tổng hợp bằng cách lấy trung bình qua ba seed trong từng thành phố trước khi tính thống kê trên 50 thành phố. Gravity được ước lượng riêng trong từng fold bằng dữ liệu của các thành phố huấn luyện. Cả ba baseline được hiệu chỉnh bằng phân phối oracle cấp thành phố trên cùng tập hỗ trợ đánh giá. CI 95% được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố cải thiện là số thành phố có $\Delta\mathrm{CPC}>0$.
+Chú thích: CPC trước và sau hiệu chỉnh là macro-average trên 50 thành phố. Với mỗi baseline, $\Delta\mathrm{CPC}$ được tính bằng CPC sau hiệu chỉnh trừ CPC trước hiệu chỉnh của chính baseline đó tại từng thành phố. Hai baseline neural được tổng hợp bằng cách lấy trung bình qua ba seed trong từng thành phố trước khi tính thống kê trên 50 thành phố. Gravity được ước lượng riêng trong từng fold bằng dữ liệu của các thành phố huấn luyện. Cả ba baseline được hiệu chỉnh bằng phân phối oracle cấp thành phố trên cùng tập hỗ trợ đánh giá. CI 95% được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố cải thiện là số thành phố có $\Delta\mathrm{CPC}>0$.
 
-Với Gravity hai tham số, mức tăng CPC trung bình đạt +0.00084, nhưng chỉ 22/50 thành phố được cải thiện. Vì vậy, mức tăng trung bình dương của Gravity không đại diện cho một xu hướng cải thiện ở đa số thành phố.
+CPC trước hiệu chỉnh của GNN và MLP lần lượt là 0.71281 và 0.70913, cao hơn đáng kể so với 0.38868 của Gravity hai tham số. Tuy vậy, mức tăng sau hiệu chỉnh vẫn dương ở phần lớn thành phố đối với cả hai baseline neural. Ngược lại, Gravity có CPC ban đầu thấp hơn nhưng chỉ cải thiện tại 22/50 thành phố (mức tăng trung bình +0.00084). Trong phạm vi ba mô hình được khảo sát, kết quả không cho thấy mức tăng được tạo ra đơn thuần bằng cách áp dụng hiệu chỉnh cho một baseline yếu.
 
 ## 4.5. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện hiệu chỉnh
 
@@ -360,7 +360,7 @@ Nghiên cứu xem xét mối liên hệ giữa sai lệch phân phối khoảng 
 Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng cách địa lý trung bình, tương quan từng phần vẫn dương ($r_{\mathrm{partial}}=0.7951$, $p=5.35\times10^{-12}$). Đây là mối liên hệ thăm dò trong tập thành phố được đánh giá; kết quả không bảo đảm rằng một thành phố có sai lệch lớn sẽ được cải thiện sau hiệu chỉnh.
 
 ![Hình 6](figures/fig6_mechanistic_dpre.png)
-**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh.** Mỗi điểm biểu diễn một thành phố ($N=50$) với Urban GNN tại $K=8$, sau khi lấy trung bình các đại lượng tương ứng qua ba model seeds. Trục ngang là khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle; trục dọc là chênh lệch CPC sau và trước hiệu chỉnh. Đường thẳng biểu diễn hồi quy tuyến tính giữa hai biến trên hình, chưa điều chỉnh theo các biến kiểm soát. Tương quan từng phần được báo cáo riêng trong mục 4.5.
+**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh.** Mỗi điểm biểu diễn một thành phố ($N=50$) với GNN tại $K=8$, sau khi lấy trung bình các đại lượng tương ứng qua ba model seeds. Trục ngang là khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle; trục dọc là chênh lệch CPC sau và trước hiệu chỉnh. Đường thẳng biểu diễn hồi quy tuyến tính giữa hai biến trên hình, chưa điều chỉnh theo các biến kiểm soát. Tương quan từng phần được báo cáo riêng trong mục 4.5.
 
 
 # 5. Thảo luận
@@ -373,15 +373,15 @@ Các mô hình như Deep Gravity và UGNN khai thác dữ liệu nguồn để h
 
 ## 5.2. Khả năng và giới hạn của phép hiệu chỉnh khoảng cách
 
-Phân phối khoảng cách chỉ cho biết tỷ trọng lưu lượng thuộc từng nhóm, nên phép hiệu chỉnh điều chỉnh cách lưu lượng được phân bổ giữa các nhóm này. Trong cùng một nhóm, các cặp OD được nhân với cùng một hệ số, vì vậy tỷ lệ và thứ hạng giữa các luồng vẫn do baseline quyết định. Đồng thời, tổng lưu lượng dự báo được giữ nguyên, nên phép hiệu chỉnh không xử lý sai lệch về tổng lưu lượng của baseline. Những giới hạn này giúp lý giải vì sao mức cải thiện có thể nhỏ ngay cả khi phân phối khoảng cách được cung cấp chính xác.
+Hiệu chỉnh bằng $Y_D$ chỉ điều chỉnh phân bổ lưu lượng giữa các nhóm khoảng cách, không cung cấp thêm thông tin để phân biệt các cặp OD trong cùng một nhóm. Vì vậy, phép hiệu chỉnh chủ yếu khắc phục sai lệch về tỷ trọng giữa các nhóm khoảng cách của baseline. Phân tích ở mục 4.5 phù hợp với cơ chế này. Tuy nhiên, do sai lệch ban đầu được tính từ phân phối oracle, phân tích này không cung cấp một quy tắc độc lập để quyết định khi nào nên áp dụng hiệu chỉnh trên thực tế. Giá trị của phân phối mục tiêu phụ thuộc vào dự báo ban đầu mà nó hiệu chỉnh. Việc mức tăng được duy trì trên hai baseline neural có CPC ban đầu tương đối cao, trong khi nhỏ hơn và không nhất quán trên Gravity, cho thấy kết quả chính không chỉ là hệ quả của việc chọn một baseline có độ chính xác thấp. Tuy nhiên, hai baseline neural chia sẻ biểu diễn đầu vào và decoder, nên kết luận vẫn được giới hạn trong các mô hình đã khảo sát.
 
-Phân tích ở mục 4.5 phù hợp với vai trò của phép hiệu chỉnh trong việc điều chỉnh phân bổ lưu lượng giữa các nhóm khoảng cách. Tuy nhiên, sai lệch phân phối ban đầu được tính bằng phân phối oracle, nên phân tích này chưa cung cấp một quy tắc độc lập để quyết định khi nào nên áp dụng hiệu chỉnh. Sự khác nhau giữa các baseline cho thấy giá trị của cùng một quan sát tổng hợp còn phụ thuộc vào dự báo ban đầu mà nó được dùng để hiệu chỉnh.
+## 5.3. Các điều kiện chi phối giá trị của phân phối khoảng cách
 
-Các đối chứng được khảo sát hỗ trợ vai trò của thông tin đặc thù theo thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Kết quả này được ghi nhận khi độ lớn can thiệp được kiểm soát theo RMS của vector log-ratio đã trừ trung bình.
+Các đối chứng đã khảo sát hỗ trợ vai trò của thông tin đặc thù theo thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Kết quả này được duy trì khi độ lớn can thiệp được kiểm soát theo RMS của vector log-ratio đã trừ trung bình.
 
-Tăng số nhóm khoảng cách cung cấp thêm chi tiết để điều chỉnh lưu lượng giữa các dải cự ly, nhưng thí nghiệm này sử dụng phân phối oracle. Với quan sát thu thập độc lập, cần đánh giá đồng thời độ chi tiết và sai số của phân phối. Các thí nghiệm hiện tại chưa xác định số nhóm phù hợp nhất cho từng mức nhiễu.
+Tăng số nhóm khoảng cách cung cấp thông tin chi tiết hơn để điều chỉnh lưu lượng theo dải cự ly, nhưng thí nghiệm này sử dụng phân phối oracle. Với quan sát thu thập độc lập, mức độ chi tiết và sai số của phân phối cần được xem xét đồng thời. Các thí nghiệm hiện tại chưa xác định được số nhóm phù hợp cho từng mức nhiễu.
 
-## 5.3. Giới hạn nghiên cứu và hướng kiểm chứng tiếp theo
+## 5.4. Giới hạn và hướng nghiên cứu tiếp theo
 
 Giới hạn chính của nghiên cứu là phân phối khoảng cách được tổng hợp từ chính dữ liệu OD tham chiếu của thành phố mục tiêu. Thiết lập oracle cho phép đánh giá lợi ích khi có phân phối chính xác trên tập hỗ trợ đã chọn, nhưng chưa xác nhận hiệu quả với một nguồn quan sát được thu thập độc lập. Các thí nghiệm gây nhiễu cũng chưa bao quát đầy đủ những sai lệch có thể xuất hiện trong dữ liệu thực tế, như hạn chế về độ phủ, tính đại diện và khác biệt về thời gian thu thập [@gallotti2024distorted; @pappalardo2023future]. Vì vậy, bước kiểm chứng tiếp theo là đánh giá các nguồn quan sát độc lập và mức độ tương thích của chúng với phạm vi không gian, thời gian và tập hỗ trợ dùng để tái tạo OD.
 
@@ -393,7 +393,7 @@ Nghiên cứu đánh giá giá trị dự báo của quan sát tổng hợp, kh�
 
 # 6. Kết luận
 
-Trong thiết lập oracle trên 50 vùng đô thị Hoa Kỳ, phân phối di chuyển theo khoảng cách của thành phố mục tiêu giúp cải thiện tái tạo cường độ OD từ baseline zero-shot được giữ nguyên tham số. Với Urban GNN, CPC tăng trung bình +0.00354 và 45/50 thành phố được cải thiện. Kết quả này cho thấy phân phối mục tiêu bổ sung thông tin hữu ích ngay cả khi baseline đã sử dụng đặc trưng đô thị và khoảng cách địa lý.
+Trong thiết lập oracle trên 50 vùng đô thị Hoa Kỳ, phân phối di chuyển theo khoảng cách của thành phố mục tiêu giúp cải thiện tái tạo cường độ OD từ baseline zero-shot được giữ nguyên tham số. Với GNN, CPC tăng trung bình +0.00354 và 45/50 thành phố được cải thiện. Kết quả này cho thấy phân phối mục tiêu bổ sung thông tin hữu ích ngay cả khi baseline đã sử dụng đặc trưng đô thị và khoảng cách địa lý.
 
 Tuy nhiên, mức cải thiện phụ thuộc vào độ phân giải và chất lượng của phân phối quan sát. Trong dải khảo sát, tăng số nhóm khoảng cách giúp tăng mức cải thiện trung bình, còn nhiễu làm lợi ích suy giảm. Trong các đối chứng đã khảo sát, phân phối đúng thành phố mục tiêu mang lại kết quả tốt hơn các phân phối từ tập huấn luyện và đối chứng hoán vị, cho thấy thông tin đặc thù theo thành phố và sự tương ứng với các nhóm khoảng cách đều có liên quan đến hiệu quả hiệu chỉnh. Các kết luận này giới hạn ở việc tái tạo cường độ luồng trên tập hỗ trợ liên vùng dương đã biết với phân phối oracle. Việc đánh giá phân phối được thu thập độc lập là bước tiếp theo để kiểm chứng khả năng áp dụng trong thực tế.
 
@@ -450,8 +450,8 @@ Bổ sung sau
 
 ## S1. Chi tiết kiến trúc mạng neural GNN và ổn định số học
 
-### S1.1. Các lớp tensor của Urban GNN Encoder
-Mạng Urban GNN ánh xạ vector đặc trưng đô thị 26 chiều $\mathbf{x}_{c,i} \in \mathbb{R}^{26}$ và cấu trúc đồ thị bán kính không gian $\mathcal{G}_c = (\mathcal{V}_c, \mathcal{E}_c)$ thành biểu diễn ẩn 64 chiều $\mathbf{h}_{c,i} \in \mathbb{R}^{64}$:
+### S1.1. Các lớp tensor của GNN Encoder
+Mạng GNN ánh xạ vector đặc trưng đô thị 26 chiều $\mathbf{x}_{c,i} \in \mathbb{R}^{26}$ và cấu trúc đồ thị bán kính không gian $\mathcal{G}_c = (\mathcal{V}_c, \mathcal{E}_c)$ thành biểu diễn ẩn 64 chiều $\mathbf{h}_{c,i} \in \mathbb{R}^{64}$:
 
 1. **Chiếu nút ban đầu**:
 $$
@@ -505,7 +505,7 @@ Cấu hình siêu tham số chính xác được trích xuất trực tiếp t�
 #### Bảng S1: Siêu tham số kiến trúc và huấn luyện của các zero-shot baseline
 | Thành phần | Siêu tham số | Giá trị | Mô tả chi tiết |
 |:---|:---|:---:|:---|
-| **Urban GNN Encoder** | Số chiều đặc trưng đầu vào ($d_{\mathrm{in}}$) | 26 | Đặc trưng nhân khẩu, kinh tế - xã hội của tract |
+| **GNN Encoder** | Số chiều đặc trưng đầu vào ($d_{\mathrm{in}}$) | 26 | Đặc trưng nhân khẩu, kinh tế - xã hội của tract |
 | | Số lớp truyền thông điệp (Message passing) | 2 | Khối `GraphConvLayer` có điều kiện khoảng cách |
 | | Cơ chế Attention / Số attention heads | N/A (0) | Tổng hợp lân cận bằng trung bình; không dùng attention |
 | | Chiều ẩn / Chiều đầu ra node embedding | 64 | LayerNorm(64) + ReLU + Dropout |
@@ -519,11 +519,16 @@ Cấu hình siêu tham số chính xác được trích xuất trực tiếp t�
 | | Thuật toán tối ưu | AdamW | Bước tối ưu city-by-city (city-balanced) |
 | | Tốc độ học ban đầu (Initial LR) | 0.0032 | $3.2 \times 10^{-3}$ |
 | | Hệ số suy giảm trọng số (Weight decay) | 0.0001 | $10^{-4}$ |
+| | Hạt giống ngẫu nhiên (Model seeds) | $\{1, 10, 100\}$ | Ba khởi tạo độc lập cho từng fold |
+| | Số epoch tối đa (Maximum epochs) | 200 | Cố định cho mọi fold |
 | | Bộ điều chỉnh LR (Scheduler) | ReduceLROnPlateau | Hệ số 0.5, patience 4 epochs, min LR $10^{-5}$ |
 | | Dừng sớm (Early stopping patience) | 16 epochs | Theo dõi trên CPC liên vùng tập validation ($\min \Delta = 10^{-4}$) |
-| | Tổng số tham số mô hình | 33,668 | Giữ đúng số tham số như nhau giữa Urban GNN và Node MLP |
+| | Quy tắc chọn checkpoint | Best validation CPC | Lưu checkpoint đạt CPC cao nhất trên 5 validation cities |
+| | Tổng số tham số mô hình | 33,668 | Giữ cùng tổng số tham số giữa GNN và MLP |
 
 **Ghi chú phân tách tham số:** Hai tham số $(G_{\mathrm{NN}}, \alpha_{\mathrm{NN}})$ của gravity prior nội tại trong các mạng neural là các biến khả vi được tối ưu hóa đồng thời end-to-end cùng toàn bộ mạng qua AdamW và được lưu trữ trực tiếp trong checkpoint. Ngược lại, baseline Gravity hai tham số cổ điển độc lập được ước lượng riêng biệt bằng phương pháp bình phương tối thiểu pooled log-linear OLS trên các thành phố huấn luyện ($G_{\mathrm{OLS}} \approx -8.54, \alpha_{\mathrm{OLS}} \approx 1.66$ trên Fold 1). Hai mô hình này hoàn toàn không dùng chung hay chia sẻ hệ số với nhau.
+
+**Dấu vết tái lập:** Phân chia thành phố được lưu trong một split manifest cố định (`results/e1/splits_manifest_v2.json`, SHA-256: `96a09089574c37dbcf13112b5bcd20c738327df3c08f5915fdcb2a9f15110543`). Mỗi checkpoint lưu fold, model seed, cấu hình mô hình và thống kê chuẩn hóa tương ứng (`results/checkpoints/5fold_fold{f}_seed{s}.pt` và `mlp_fold{f}_seed{s}.pt`). Trong mã nguồn, baseline GNN được triển khai bằng class `UrbanGNN`, và baseline MLP được triển khai bằng class `ZeroShotMLPModel` (sử dụng bộ mã hóa `NodeMLP`); các định danh code này được giữ nguyên để tương thích với các checkpoint và script tạo kết quả hiện có. Các bảng và hình được tạo từ kết quả cấp thành phố đã lưu bằng các script phân tích trong repository.
 
 ## S2. Dạng tổng quát của toán tử hiệu chỉnh giải tích ($q \in [0, 1]$)
 
@@ -634,7 +639,7 @@ $$
 
 3. **Hệ số tương quan hạng Spearman ($\rho_{\mathrm{Spearman}}$)**: Tương quan hạng Spearman được tính giữa các vector cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị mức độ phù hợp cao hơn về thứ hạng giữa các cặp OD.
 
-### Bảng S2: Các thước đo đánh giá bổ sung cho Urban GNN với $K=8$.
+### Bảng S2: Các thước đo đánh giá bổ sung cho GNN với $K=8$.
 
 | Thước đo | Baseline $M_0$ | Sau hiệu chỉnh $M_1$ | Thay đổi trung bình | Trung vị thay đổi | Thành phố cải thiện |
 |:---|---:|---:|---:|---:|---:|
