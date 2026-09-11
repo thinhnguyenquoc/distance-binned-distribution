@@ -1,4 +1,4 @@
-# Deep Gravity Allocation Model with CSR batching
+# Deep Gravity Allocation Model with CSR batching & batched inference
 from __future__ import annotations
 import torch
 import torch.nn as nn
@@ -11,6 +11,24 @@ def segment_logsumexp(scores: torch.Tensor, origin_idx: torch.Tensor, num_origin
     sum_exp = torch.zeros((num_origins,), dtype=scores.dtype, device=scores.device)
     sum_exp.scatter_add_(0, origin_idx, torch.exp(shifted))
     return max_scores + torch.log(sum_exp.clamp_min(1e-12))
+
+
+def build_origin_csr(pair_o_idx: torch.Tensor, num_origins: int):
+    """
+    Builds CSR index structure to slice pairs by origin in O(1) without scanning.
+    
+    Returns:
+        sort_perm: (E,) permutation index that sorts pair_o_idx.
+        offsets: (num_origins + 1,) CSR start and end pointers.
+        active_origins: (N_active,) 1D tensor of origin IDs that have >= 1 pair.
+    """
+    sort_perm = torch.argsort(pair_o_idx)
+    sorted_o_idx = pair_o_idx[sort_perm]
+    counts = torch.bincount(sorted_o_idx, minlength=num_origins)
+    offsets = torch.zeros(num_origins + 1, dtype=torch.long)
+    offsets[1:] = torch.cumsum(counts, dim=0)
+    active_origins = torch.nonzero(counts > 0).squeeze(-1)
+    return sort_perm, offsets, active_origins
 
 
 class DeepGravityAllocationModel(nn.Module):
@@ -96,3 +114,77 @@ class DeepGravityAllocationModel(nn.Module):
         if not active.any():
             return torch.tensor(0.0, device=batch_pair_feat.device, requires_grad=True)
         return origin_loss[active].mean()
+
+    @torch.no_grad()
+    def compute_probs_batched_csr(
+        self,
+        sorted_pair_feat: torch.Tensor,
+        sort_perm: torch.Tensor,
+        offsets: torch.Tensor,
+        active_origins: torch.Tensor,
+        total_pairs: int,
+        batch_origins: int = 64,
+        max_pairs_per_batch: int = 250000,
+        device: torch.device = torch.device("cpu"),
+    ) -> torch.Tensor:
+        """
+        Compute destination probabilities in origin-chunked batches via CSR representation.
+        Prevents forward-passing entire cities at once, capping peak memory.
+        Writes probabilities back into the original pair order.
+        """
+        self.eval()
+        sorted_probs = torch.zeros(total_pairs, dtype=torch.float32, device=device)
+        
+        i = 0
+        n_active = len(active_origins)
+        while i < n_active:
+            batch_orig = []
+            curr_pairs = 0
+            while i < n_active and len(batch_orig) < batch_origins:
+                orig_id = active_origins[i].item()
+                st = offsets[orig_id].item()
+                en = offsets[orig_id + 1].item()
+                pair_count = en - st
+                if pair_count == 0:
+                    i += 1
+                    continue
+                if batch_orig and (curr_pairs + pair_count > max_pairs_per_batch):
+                    break
+                batch_orig.append(orig_id)
+                curr_pairs += pair_count
+                i += 1
+                
+            if not batch_orig:
+                if i < n_active:
+                    batch_orig.append(active_origins[i].item())
+                    i += 1
+                else:
+                    break
+                    
+            num_b_orig = len(batch_orig)
+            b_feat_list = []
+            b_compact_list = []
+            b_slice_ranges = []
+            
+            for compact_id, orig_id in enumerate(batch_orig):
+                st = offsets[orig_id].item()
+                en = offsets[orig_id + 1].item()
+                b_feat_list.append(sorted_pair_feat[st:en])
+                b_compact_list.append(torch.full((en - st,), compact_id, dtype=torch.long, device=device))
+                b_slice_ranges.append((st, en))
+                
+            b_feat = torch.cat(b_feat_list, dim=0)
+            b_compact = torch.cat(b_compact_list, dim=0)
+            
+            b_probs = self.compute_probs(b_feat, b_compact, num_b_orig)
+            
+            offset_ptr = 0
+            for st, en in b_slice_ranges:
+                length = en - st
+                sorted_probs[st:en] = b_probs[offset_ptr : offset_ptr + length]
+                offset_ptr += length
+                
+        # Invert permutation back to original unsorted pair order
+        probs_original_order = torch.zeros(total_pairs, dtype=torch.float32, device=device)
+        probs_original_order[sort_perm] = sorted_probs
+        return probs_original_order
