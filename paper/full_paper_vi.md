@@ -123,6 +123,8 @@ $$
 
 Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách; luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Để bảo đảm ổn định số học, dân số $P_{c,i}$ và $P_{c,j}$ được chặn dưới tại 1, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng riêng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
 
+GNN được sử dụng làm baseline neural chính, trong khi MLP đóng vai trò đối chứng kiến trúc nhằm kiểm tra liệu kết quả có phụ thuộc vào message passing hay không. Gravity hai tham số cung cấp một tham chiếu cổ điển có cấu trúc đơn giản hơn. Ba mô hình không được sử dụng để khẳng định bao phủ toàn bộ các họ kiến trúc, mà để đánh giá phép hiệu chỉnh trên các mức năng lực và giả định mô hình khác nhau.
+
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
 Dữ liệu huấn luyện gồm các cặp OD có lưu lượng quan sát nguyên dương, $t_{c,ij}\in\{1,2,\ldots\}$. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Phân phối NB nền được tham số hóa bằng trung bình $\mu$ và tham số phân tán $\phi$:
@@ -353,7 +355,7 @@ Mức tăng CPC trung bình đạt +0.00354 với GNN và +0.00329 với MLP; s�
 
 Chú thích: CPC trước và sau hiệu chỉnh là macro-average trên 50 thành phố. Với mỗi baseline, $\Delta\mathrm{CPC}$ được tính bằng CPC sau hiệu chỉnh trừ CPC trước hiệu chỉnh của chính baseline đó tại từng thành phố. Hai baseline neural được tổng hợp bằng cách lấy trung bình qua ba seed trong từng thành phố trước khi tính thống kê trên 50 thành phố. Gravity được ước lượng riêng trong từng fold bằng dữ liệu của các thành phố huấn luyện. Cả ba baseline được hiệu chỉnh bằng phân phối oracle cấp thành phố trên cùng tập hỗ trợ đánh giá. CI 95% được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố cải thiện là số thành phố có $\Delta\mathrm{CPC}>0$.
 
-CPC trước hiệu chỉnh của GNN và MLP lần lượt là 0.71281 và 0.70913, cao hơn rõ rệt về mặt mô tả so với 0.38868 của Gravity hai tham số. Tuy vậy, mức tăng sau hiệu chỉnh vẫn dương ở phần lớn thành phố đối với cả hai baseline neural. Ngược lại, Gravity có CPC ban đầu thấp hơn nhưng chỉ cải thiện tại 22/50 thành phố (mức tăng trung bình +0.00084). Trong phạm vi ba mô hình được khảo sát, baseline có CPC thấp hơn không tạo ra mức tăng lớn hơn hoặc nhất quán hơn. Mẫu kết quả này không phù hợp với cách giải thích rằng lợi ích quan sát được chỉ xuất phát từ việc áp dụng hiệu chỉnh cho một baseline yếu.
+CPC trước hiệu chỉnh của GNN và MLP lần lượt là 0.71281 và 0.70913, cao hơn rõ rệt về mặt mô tả so với 0.38868 của Gravity hai tham số. GNN và MLP có CPC trước hiệu chỉnh tương đương và đều ghi nhận mức tăng CPC ở phần lớn thành phố, cho thấy kết quả không chỉ giới hạn ở thành phần message passing của GNN. Trong khi đó, Gravity có CPC ban đầu thấp hơn nhưng chỉ cải thiện ở 22/50 thành phố và có mức tăng trung bình nhỏ hơn. Trong phạm vi ba mô hình được khảo sát, mẫu kết quả này không phù hợp với cách giải thích rằng mức cải thiện chủ yếu xuất hiện vì baseline ban đầu yếu.
 
 ## 4.5. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện hiệu chỉnh
 

@@ -139,6 +139,8 @@ The two parameters $(G, \alpha)$ of this standalone classical baseline are estim
 
 The MLP replaces the two message-passing layers of the GNN with two residual MLP blocks that process each node independently, while retaining the input features, embedding dimension, pairwise OD decoder, training configuration, and parameter count. The MLP therefore serves as a controlled ablation for evaluating the role of inter-node message passing.
 
+GNN serves as the primary neural baseline, while MLP acts as an architectural control to test whether the observed gains depend on spatial message passing. The two-parameter Gravity model provides a simpler classical reference. The three models are not intended to exhaustively cover all architectural families, but rather to evaluate calibration across contrasting predictive capacities and inductive biases.
+
 ### 3.4.2. Objective and training configuration
 
 Because the dataset retains only OD pairs with positive observed flow, the response satisfies $t_{c,ij}\in\{1,2,\ldots\}$. The two neural baselines are trained with a Zero-Truncated Negative Binomial (ZTNB) likelihood [@grogger1991truncated]. The underlying NB uses the mean--shape parameterization:
@@ -336,7 +338,7 @@ Mean $\Delta\mathrm{CPC}$ is $+0.00354$ for the GNN and $+0.00329$ for the MLP, 
 
 Note: Pre- and post-calibration CPC values are macro-averages across 50 cities. The two neural baselines are aggregated across three model seeds within each city before computing 50-city statistics. Gravity is estimated only on the training cities of each fold and does not use test-city flows.
 
-The pre-calibration CPC values of the GNN and MLP are 0.71281 and 0.70913, respectively, descriptively higher than 0.38868 for the two-parameter Gravity model. Calibration nevertheless produces positive gains in most cities for both neural baselines. In contrast, Gravity has substantially lower initial CPC but improves in only 22 of 50 cities (mean gain $+0.00084$). Across the three evaluated models, the baseline with lower CPC does not exhibit larger or more consistent gains. This observed pattern does not align with the explanation that the calibration gain arises merely from applying calibration to a weak baseline.
+The pre-calibration CPC values of the GNN and MLP are 0.71281 and 0.70913, respectively, descriptively higher than 0.38868 for the two-parameter Gravity model. GNN and MLP achieve comparable pre-calibration CPC values and both show positive CPC gains across most cities, indicating that the benefits are not restricted to GNN's message passing mechanism. In contrast, the Gravity model starts from a substantially lower baseline accuracy but improves in only 22 of 50 cities with a smaller mean gain. Within the evaluated models, this empirical pattern is inconsistent with the hypothesis that calibration gains arise primarily as an artifact of weak baseline performance.
 
 ## 4.5. Relationship between baseline distance-distribution bias and calibration improvement
 
