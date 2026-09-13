@@ -91,7 +91,7 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
 
-Nghiên cứu chia khoảng cách di chuyển thành $K$ nhóm và tính tỷ trọng tổng lưu lượng thuộc từng nhóm tại mỗi thành phố. Trong mỗi fold, các mốc chia được chọn sao cho số cặp OD liên vùng thuộc $\Omega_c$ của 35 thành phố huấn luyện trong các nhóm xấp xỉ bằng nhau, với mỗi cặp được tính một lần bất kể cường độ luồng. Các mốc này được xác định lại cho từng giá trị $K$ rồi áp dụng chung cho các thành phố validation và kiểm tra. Để bao phủ cả những khoảng cách ngoài phạm vi quan sát trong tập huấn luyện, mốc đầu được đặt tại $a_0=0$ và mốc cuối tại $a_K=+\infty$. Với nhóm thứ $b$ được ký hiệu là $I_b=(a_{b-1},a_b]$, tỷ trọng lưu lượng của nhóm được tính bằng tổng cường độ luồng trong nhóm chia cho tổng cường độ luồng của thành phố:
+Nghiên cứu chia khoảng cách di chuyển thành $K$ nhóm và tính tỷ trọng tổng lưu lượng thuộc từng nhóm tại mỗi thành phố. Trong mỗi fold, các mốc chia được chọn sao cho số cặp OD liên vùng thuộc $\Omega_c$ của 35 thành phố huấn luyện trong các nhóm xấp xỉ bằng nhau, với mỗi cặp được tính một lần bất kể cường độ luồng. Các mốc này được xác định lại cho từng giá trị $K$ rồi áp dụng chung cho các thành phố validation và kiểm tra. Nếu một số phân vị trùng nhau, các mốc trùng được gộp lại để mỗi nhóm có độ rộng dương. Khi đó, số nhóm thực tế nhỏ hơn số nhóm yêu cầu ban đầu. Trong các công thức dưới đây, $K$ là số nhóm thực tế sau khi loại mốc trùng, còn $K_{\mathrm{act},c}$ là số nhóm chứa cặp OD tại thành phố $c$. Để bao phủ cả những khoảng cách ngoài phạm vi quan sát trong tập huấn luyện, mốc đầu được đặt tại $a_0=0$ và mốc cuối tại $a_K=+\infty$. Với nhóm thứ $b$ được ký hiệu là $I_b=(a_{b-1},a_b]$, tỷ trọng lưu lượng của nhóm được tính bằng tổng cường độ luồng trong nhóm chia cho tổng cường độ luồng của thành phố:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -149,7 +149,7 @@ p_+(t\mid\mu,\phi)
 \qquad t=1,2,\ldots
 $$
 
-Mẫu số $1-p_{\mathrm{NB}}(0\mid\mu,\phi)$ bảo đảm tổng xác suất trên các giá trị dương bằng 1. Sự khác nhau về miền giá trị của $t$ trong hai công thức phản ánh bước điều kiện hóa này, không phải sự khác nhau giữa các tập dữ liệu.
+Mẫu số $1-p_{\mathrm{NB}}(0\mid\mu,\phi)$ bảo đảm tổng xác suất trên các giá trị dương bằng 1. Sự khác nhau về miền giá trị của $t$ trong hai công thức phản ánh bước điều kiện hóa này, không phải sự khác nhau giữa các tập dữ liệu. Việc loại giá trị luồng bằng 0 trong ZTNB khác với việc loại cặp nội vùng có $i=j$. Điều kiện liên vùng được áp dụng khi chọn các cặp OD, còn điều kiện luồng dương xác định miền giá trị của phân phối xác suất.
 
 Với mỗi cặp OD, mạng dự báo tham số trung bình nền $\mu_{c,ij}$, còn $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp trong mỗi mô hình. Tại mỗi thành phố nguồn $c$, hàm mất mát chỉ sử dụng các cặp liên vùng thuộc $\Omega_c$, thống nhất với phạm vi chọn checkpoint, hiệu chỉnh và đánh giá CPC. Hàm mất mát $\mathcal L_c$ là trung bình âm logarit xác suất của các luồng quan sát trên tập huấn luyện:
 
@@ -551,6 +551,8 @@ Tham số cường độ hiệu chỉnh $q \in [0, 1]$ điều khiển mức đ�
 
 Ở cấu hình chính $K=8$, 40/50 thành phố có đủ tám nhóm hoạt động, còn tại 10 thành phố còn lại, một hoặc nhiều nhóm cự ly xa không chứa cặp OD, dẫn đến $K_{\mathrm{act},c}\in[5,7]$. Thuật toán chỉ thực hiện hiệu chỉnh trên tập nhóm hoạt động $\mathcal A_c$.
 
+Các công thức dưới đây giả định tập $\Omega_c$ không rỗng và dự báo ban đầu dương trên mọi cặp thuộc tập này. Khi tỷ trọng mục tiêu dương trên các nhóm hoạt động, các hệ số hiệu chỉnh cũng dương. Nếu tỷ trọng mục tiêu bằng 0 ở một nhóm hoạt động, hệ số của nhóm đó bằng 0 khi $q>0$, nên không còn bảo toàn tính dương hoặc thứ hạng nghiêm ngặt trong nhóm. Tại $q=0$, hệ số được quy ước bằng 1 để giữ nguyên dự báo ban đầu.
+
 Quy trình hiệu chỉnh tổng quát được thực hiện qua các bước:
 
 ### S2.1. Tập các nhóm hoạt động
@@ -558,25 +560,25 @@ Tập các nhóm hoạt động $\mathcal A_c$ được xác định trực ti�
 $$
 \mathcal A_c = \left\{ b \in \{1, \dots, K\} : \exists(i,j) \in \Omega_c,\ d_{c,ij} \in I_b \right\},
 $$
-với $K_{\mathrm{act},c} = |\mathcal A_c|$. Trên tập hỗ trợ dương, nhóm có ít nhất một cặp OD có tỷ trọng oracle dương. Do dự báo baseline cũng dương trên tập hỗ trợ, nhóm đó có tỷ trọng dự báo dương. Trong pipeline placebo, nhóm hoạt động được xác định bằng ngưỡng số học $Y_{c,b} > 10^{-8}$. Kiểm tra trên 50 thành phố cho thấy tập nhóm thu được bằng ngưỡng này trùng với tập nhóm xác định từ sự tồn tại của cặp OD.
+với $K_{\mathrm{act},c} = |\mathcal A_c|$. Trên tập hỗ trợ dương, nhóm có ít nhất một cặp OD có tỷ trọng oracle dương. Do dự báo baseline cũng dương trên tập hỗ trợ, nhóm đó có tỷ trọng dự báo dương. Về định nghĩa, tập nhóm hoạt động được xác định từ sự tồn tại của cặp OD, không phụ thuộc vào độ lớn tỷ trọng oracle. Nếu một triển khai dùng ngưỡng số học trên tỷ trọng để xác định nhóm hoạt động, cần đối chiếu với định nghĩa này để bảo đảm không bỏ sót nhóm có lưu lượng nhỏ.
 
 ### S2.2. Phân phối mục tiêu điều kiện trên các nhóm hoạt động
 Tỷ trọng mục tiêu được điều kiện hóa trên các nhóm hoạt động theo:
 $$
-p_{c,b}^{\mathrm{cond}} = \frac{Y_{c,b} \mathbf{1}(b \in A_c)}{\sum_{r \in A_c} Y_{c,r}}.
+p_{c,b}^{\mathrm{cond}} = \frac{Y_{c,b} \mathbf{1}(b \in \mathcal A_c)}{\sum_{r \in \mathcal A_c} Y_{c,r}}.
 $$
-Việc điều kiện hóa bảo đảm tổng tỷ trọng trên các nhóm hoạt động bằng 1.
+Việc điều kiện hóa bảo đảm tổng tỷ trọng trên các nhóm hoạt động bằng 1. Công thức yêu cầu tổng tỷ trọng mục tiêu trên tập nhóm hoạt động lớn hơn 0. Điều kiện này luôn thỏa mãn với phân phối oracle trên tập hỗ trợ dương không rỗng. Với phân phối ngoài tập hoặc phân phối đối chứng không có khối lượng trên các nhóm hoạt động, tỷ trọng có điều kiện không xác định và cần quy định cách xử lý riêng.
 
 ### S2.3. Trọng số hiệu chỉnh mềm
-Với mỗi nhóm hoạt động $b \in A_c$, tỷ lệ co giãn mềm được tính theo:
+Với mỗi nhóm hoạt động $b \in \mathcal A_c$, tỷ lệ co giãn mềm được tính theo:
 $$
-w_{c,b}(q) = \biggl( \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{c,b}^{(0)}} \biggr)^q, \qquad b \in A_c.
+w_{c,b}(q) = \biggl( \frac{p_{c,b}^{\mathrm{cond}}}{\widehat{Y}_{c,b}^{(0)}} \biggr)^q, \qquad b \in \mathcal A_c.
 $$
 
 ### S2.4. Hệ số chuẩn hóa và hệ số co giãn
 Hệ số chuẩn hóa bảo toàn tổng khối lượng và hệ số co giãn tương ứng là:
 $$
-Z_c(q) = \sum_{r \in A_c} \widehat{Y}_{c,r}^{(0)} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c(q)}.
+Z_c(q) = \sum_{r \in \mathcal A_c} \widehat{Y}_{c,r}^{(0)} w_{c,r}(q), \qquad s_{c,b}(q) = \frac{w_{c,b}(q)}{Z_c(q)}.
 $$
 
 ### S2.5. Dự báo sau hiệu chỉnh
@@ -587,14 +589,14 @@ $$
 trong đó $b(i,j)$ là nhóm cự ly chứa cặp $(i,j)$.
 
 ### S2.6. Trường hợp chính $q = 1$
-Trong cấu hình oracle chính, các nhóm ngoài $A_c$ không chứa cặp OD thuộc tập hỗ trợ nên có tỷ trọng mục tiêu bằng 0. Vì vậy, trên các nhóm hoạt động, $p^{\mathrm{cond}}_{c,b}=Y_{c,b}$. Với $q=1$, hệ số chuẩn hóa bằng 1 và hệ số hiệu chỉnh trở thành:
+Trong cấu hình oracle chính, các nhóm ngoài $\mathcal A_c$ không chứa cặp OD thuộc tập hỗ trợ nên có tỷ trọng mục tiêu bằng 0. Vì vậy, trên các nhóm hoạt động, $p^{\mathrm{cond}}_{c,b}=Y_{c,b}$. Với $q=1$, hệ số chuẩn hóa bằng 1 và hệ số hiệu chỉnh trở thành:
 $$
 Z_c(1)=1,
 \qquad
 s_{c,b}(1)
 =
 \frac{Y_{c,b}}{\widehat Y_{c,b}^{(0)}},
-\qquad b\in A_c.
+\qquad b\in \mathcal A_c.
 $$
 Kết quả này không yêu cầu tất cả $K$ nhóm đều hoạt động và thu về toán tử hiệu chỉnh trình bày ở mục 3.4.3.
 
@@ -625,14 +627,24 @@ $$
 Tổng khối lượng luồng sau hiệu chỉnh thỏa mãn:
 $$
 \begin{aligned}
-\sum_{(i,j) \in \Omega_c} \widehat{t}_{c,ij}^{(1)} &= S_c^{(0)} \sum_{b \in A_c} \widehat{Y}_{c,b}^{(0)} s_{c,b}(q) \\
-&= \frac{S_c^{(0)}}{Z_c(q)} \sum_{b \in A_c} \widehat{Y}_{c,b}^{(0)} w_{c,b}(q) \\
+\sum_{(i,j) \in \Omega_c} \widehat{t}_{c,ij}^{(1)} &= S_c^{(0)} \sum_{b \in \mathcal A_c} \widehat{Y}_{c,b}^{(0)} s_{c,b}(q) \\
+&= \frac{S_c^{(0)}}{Z_c(q)} \sum_{b \in \mathcal A_c} \widehat{Y}_{c,b}^{(0)} w_{c,b}(q) \\
 &= S_c^{(0)}.
 \end{aligned}
 $$
 Vì $S_c^{(0)}$ chính là tổng khối lượng dự báo trước hiệu chỉnh, toán tử bảo toàn tổng khối lượng dự báo của baseline.
 
 
+
+### S3.4. Quan hệ giữa hiệu chỉnh và CPC
+
+Gọi $S_c=\sum_{(i,j)\in\Omega_c}t_{c,ij}$ là tổng lưu lượng quan sát và $\widehat S_c=\sum_{(i,j)\in\Omega_c}\widehat t_{c,ij}$ là tổng lưu lượng dự báo. Với các luồng không âm, CPC có thể viết lại thành:
+
+$$
+\operatorname{CPC}_c(\widehat t)=1-\frac{\sum_{(i,j)\in\Omega_c}|t_{c,ij}-\widehat t_{c,ij}|}{S_c+\widehat S_c}.
+$$
+
+Do phép hiệu chỉnh bảo toàn tổng lưu lượng dự báo, mẫu số không đổi giữa hai điều kiện. Vì vậy, CPC tăng khi và chỉ khi tổng sai số tuyệt đối trên các cặp OD giảm. Việc khớp chính xác tỷ trọng giữa các nhóm không bảo đảm điều kiện này, vì phép nhân chung trong mỗi nhóm vẫn có thể làm tăng sai số của một số cặp. Phân phối oracle do đó là thông tin tổng hợp chính xác, không phải một bảo đảm về CPC tối ưu hay một cận trên của độ chính xác.
 
 ## S4. Các thước đo đánh giá bổ sung
 
@@ -693,6 +705,16 @@ $$
 5. **Họ kiểm định của stress-test nhiễu**: Năm mức dương $\epsilon=0.01,0.02,0.03,0.04,0.05$ dùng cùng một hiệu chỉnh Holm và kiểm định Wilcoxon một phía với đơn vị là 50 giá trị cấp thành phố. $\epsilon=0$ không thuộc họ Holm. Crossing bootstrap lấy mẫu lại thành phố riêng trong từng fold, dùng cùng chỉ số thành phố được lấy mẫu ở mọi mức nhiễu, rồi đếm crossing trong miền 0–5%. Trong kết quả bootstrap được báo cáo, các đường cong không có điểm cắt trong miền khảo sát đều còn dương tại mức nhiễu 5% và được ghi nhận là kiểm duyệt phải tại giới hạn này. Không tính khoảng tin cậy cho vị trí điểm cắt từ riêng tập đường cong có điểm cắt quan sát được.
 
 
+
+6. **Phân biệt các giả thuyết kiểm định**: Với $\Delta_c=\operatorname{CPC}_c(M_1)-\operatorname{CPC}_c(M_0)$, hiệu ứng chính được đánh giá bằng Wilcoxon hai phía. Khi so sánh phân phối mục tiêu với một đối chứng, chênh lệch được định nghĩa bằng CPC mục tiêu trừ CPC đối chứng và kiểm định một phía xét hướng mục tiêu tốt hơn. Kiểm định Wilcoxon signed-rank giả định các chênh lệch độc lập giữa các đơn vị và phân bố chênh lệch đối xứng để diễn giải theo độ dịch chuyển. Các thành phố trong cùng fold dùng chung mô hình đã huấn luyện, nên suy luận được hiểu có điều kiện trên các mô hình và cách chia fold đã cố định. Với độ nhạy theo $K$, kiểm định lợi ích tại từng $K$ hoặc so sánh với $K=8$ không thay thế cho kiểm định tính đơn điệu theo $K$.
+
+7. **Tương quan từng phần**: Sau khi hồi quy hai biến lên cùng tập biến kiểm soát và hệ số chặn, tương quan Pearson giữa hai phần dư cho hệ số tương quan từng phần $r$. Với $n$ quan sát và $k$ biến kiểm soát độc lập tuyến tính, thống kê kiểm định được tính bằng:
+
+$$
+t_r=r\sqrt{\frac{n-k-2}{1-r^2}},\qquad \nu=n-k-2.
+$$
+
+Giá trị p hai phía được tính từ phân phối Student với $\nu$ bậc tự do theo các giả định của kiểm định tương quan từng phần tuyến tính. Không sử dụng trực tiếp p-value Pearson của hai phần dư với bậc tự do $n-2$. Tương quan này mô tả mối liên hệ sau khi kiểm soát tuyến tính các biến đã chọn, không chứng minh quan hệ nhân quả. Hệ số $R^2$ của hồi quy đa biến thuộc về toàn bộ mô hình và không được quy cho riêng một biến giải thích.
 
 ## S6. Chi tiết kỹ thuật các stress-test độ bền
 

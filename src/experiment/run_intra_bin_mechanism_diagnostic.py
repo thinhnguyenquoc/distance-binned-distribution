@@ -200,10 +200,12 @@ def _city_gravity_diagnostic(
 def run_diagnostic(
     data_root: str = "data",
     output_path: Path = DEFAULT_OUTPUT,
+    checkpoint_dir: Path | str = Path("results/checkpoints"),
     device_str: str = "cpu",
     backbone: str = "gnn",
     binning: str = "quantile",
 ) -> dict[str, Any]:
+    checkpoint_dir = Path(checkpoint_dir)
     if backbone not in {"gnn", "mlp", "gravity"}:
         raise ValueError(f"Unsupported checkpoint backbone: {backbone}")
     if binning not in {"quantile", "equal_width"}:
@@ -232,7 +234,7 @@ def run_diagnostic(
         models = {}
         for seed in CANONICAL_SEEDS:
             checkpoint_name = f"5fold_fold{fold}_seed{seed}.pt" if backbone == "gnn" else f"mlp_fold{fold}_seed{seed}.pt"
-            checkpoint = Path("results/checkpoints") / checkpoint_name
+            checkpoint = checkpoint_dir / checkpoint_name
             model, scaler, metadata = load_checkpoint(checkpoint, device_str=device_str)
             if metadata.get("seed") != seed or metadata.get("hyperparams", {}).get("fold") != fold:
                 raise RuntimeError(f"Checkpoint provenance mismatch: {checkpoint}")
@@ -284,10 +286,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the post hoc intra-bin mechanism diagnostic")
     parser.add_argument("--data-root", default="data")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--checkpoint-dir", type=Path, default=Path("results/checkpoints"))
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--backbone", choices=["gnn", "mlp", "gravity"], default="gnn")
     parser.add_argument("--binning", choices=["quantile", "equal_width"], default="quantile")
     args = parser.parse_args()
-    result = run_diagnostic(args.data_root, args.output, args.device, args.backbone, args.binning)
+    result = run_diagnostic(
+        data_root=args.data_root,
+        output_path=args.output,
+        checkpoint_dir=args.checkpoint_dir,
+        device_str=args.device,
+        backbone=args.backbone,
+        binning=args.binning,
+    )
     print(json.dumps(result["correlations"], indent=2))
     print(json.dumps(result["rank_invariance"], indent=2))

@@ -95,12 +95,25 @@ def fast_eval_cpc(
     return float(2.0 * min_sum / denom)
 
 
-def bootstrap_ci(vals: np.ndarray, n_boot: int = 10000, seed: int = 42) -> tuple[float, float]:
-    rng = np.random.RandomState(seed)
-    n = len(vals)
-    boot_indices = rng.randint(0, n, size=(n_boot, n))
-    boot_means = vals[boot_indices].mean(axis=1)
-    return float(np.percentile(boot_means, 2.5)), float(np.percentile(boot_means, 97.5))
+def stratified_indices(fold_ids: np.ndarray, n_boot: int = 10000, seed: int = 42) -> np.ndarray:
+    """Resample cities within each fold, preserving its original sample size."""
+    folds = np.asarray(fold_ids)
+    if folds.ndim != 1 or not len(folds) or pd.isna(folds).any() or n_boot < 1:
+        raise ValueError("Nonempty fold IDs and a positive bootstrap count are required")
+    rng = np.random.default_rng(seed)
+    return np.concatenate([
+        rng.choice(np.flatnonzero(folds == fold), size=(n_boot, int((folds == fold).sum())), replace=True)
+        for fold in sorted(np.unique(folds))
+    ], axis=1)
+
+
+def bootstrap_ci(vals: np.ndarray, indices: np.ndarray) -> tuple[float, float]:
+    """Apply shared city resamples to a condition or paired difference."""
+    values = np.asarray(vals, dtype=float)
+    if values.ndim != 1 or not np.isfinite(values).all() or indices.shape[1] != len(values):
+        raise ValueError("Finite city-level values must match bootstrap indices")
+    means = values[indices].mean(axis=1)
+    return tuple(float(x) for x in np.percentile(means, [2.5, 97.5]))
 
 
 def run_unified_placebo(
@@ -332,10 +345,25 @@ def run_unified_placebo(
     df_city = pd.DataFrame(city_results)
     df_city.to_csv(output_dir / "unified_placebo_per_city.csv", index=False)
 
+    summarize_placebo(df_city, output_dir)
+
+
+def summarize_placebo(df_city: pd.DataFrame, output_dir: Path) -> dict:
+    """Recompute summaries without inference or placebo resampling."""
+    if len(df_city) != 50 or df_city["city"].nunique() != 50:
+        raise ValueError("Expected exactly 50 distinct city-level records")
+    expected = load_splits_manifest_v2(str(Path(__file__).resolve().parents[2] / "results/e1/splits_manifest_v2.json"),
+                                     data_root=str(Path(__file__).resolve().parents[2] / "data"))
+    expected_pairs = {(city, fold) for fold, split in expected.items() for city in split["test"]}
+    if set(zip(df_city["city"], df_city["fold"])) != expected_pairs:
+        raise ValueError("City/fold assignments do not match the locked split manifest")
+    df_city = df_city.sort_values(["fold", "city"]).reset_index(drop=True)
+    indices = stratified_indices(df_city["fold"].to_numpy())
+    output_dir.mkdir(parents=True, exist_ok=True)
     # Compute Summary Statistics
     summary = {}
     cond_keys = [
-        ("target", "d_cpc_target", "Target Y_D (Upper Bound)"),
+        ("target", "d_cpc_target", "Target Y_D (Oracle)"),
         ("raw_test_exact", "d_cpc_raw_test_exact", "Raw Test Donors (E1-v2 exact 9 donors)"),
         ("raw_test_b", "d_cpc_raw_test_b", "Raw Test Donors (B=1000 draws)"),
         ("raw_train_b", "d_cpc_raw_train", "Raw Training Donors (B=1000 draws)"),
@@ -351,7 +379,7 @@ def run_unified_placebo(
         vals = df_city[col].values
         mean_v = float(np.mean(vals))
         median_v = float(np.median(vals))
-        ci_low, ci_high = bootstrap_ci(vals)
+        ci_low, ci_high = bootstrap_ci(vals, indices)
 
         if key == "target":
             spec_gain_mean = 0.0
@@ -363,7 +391,7 @@ def run_unified_placebo(
             diffs = target_vals - vals
             spec_gain_mean = float(np.mean(diffs))
             spec_gain_median = float(np.median(diffs))
-            spec_ci = list(bootstrap_ci(diffs))
+            spec_ci = list(bootstrap_ci(diffs, indices))
             win_rate = int((diffs > 0).sum())
             p_val = float(wilcoxon(diffs, alternative="greater").pvalue)
 
@@ -396,27 +424,19 @@ def run_unified_placebo(
         p_str = f"{s['p_wilcoxon']:.2e}" if s['p_wilcoxon'] < 0.001 else f"{s['p_wilcoxon']:.4f}"
         md += f"| **{s['label']}** | `{s['mean_delta_cpc']:+.6f}` | `{s['median_delta_cpc']:+.6f}` | **`{spec_str}`** | `{spec_ci_str}` | **{s['win_rate']}** | `{p_str}` |\n"
 
-    md += """
----
-
-## 2. Scientific Reconciliation of the Placebo Discrepancy
-
-This unified experiment rigorously clarifies why prior documents showed two seemingly contrasting placebo numbers:
-- **`Raw Test Donor (-0.037721)`**:
-  Evaluates raw donor $Y_D$ taken directly from another city without scale matching.
-  Cities have fundamentally different urban spatial scales (radii ranging from 10 km to over 60 km). Imposing an unmatched city's raw distance distribution introduces **massive macro-structural distortions**, severely penalizing CPC ($-0.0377$).
-- **`Dose-Matched Training Donor (-0.000107)`**:
-  Constrains the perturbation direction to match the target's L2 deviation from zero-shot ($D_T = \\|\\tilde{r}_T\\|_2$).
-  Because the zero-shot model is already well-aligned ($D_T$ is tiny), dose-matched donor noise only introduces a subtle, localized shift around zero. The slight negative gain ($-0.000107$) confirms that even when the distortion magnitude is infinitesimally small, uninformative directions harm reconstruction.
-
-### Conclusion for the Paper
-Both placebos provide valid, complementary answers to two distinct scientific questions:
-1. **Macro Spatial Specificity**: Applying an arbitrary city's distance distribution destroys reconstruction performance ($\Delta\\text{CPC} = -0.0377$, Win Rate 50/50, $p < 10^{-15}$).
-2. **Micro Directional Specificity**: Even when matched to the exact subtle perturbation magnitude of the target, wrong directions fail to improve performance ($\Delta\\text{CPC} = -0.0001$, Win Rate 46/50, $p < 10^{-9}$).
-"""
+    md += "\nBootstrap: 10,000 city resamples stratified by fold, seed 42. "
+    md += "The same resample indices are used for every condition and paired contrast.\n"
+    md += "The target row reports its gain over baseline. Other rows report target-minus-placebo "
+    md += "for the specificity CI, win rate and p-value. Wilcoxon p-values remain one-sided "
+    md += "(greater), raw and unadjusted; only the bootstrap procedure was changed.\n"
+    metadata = {"bootstrap": "city-level, fold-stratified", "n_boot": 10000, "seed": 42,
+                "shared_resamples": True, "fold_counts": {str(k): int(v) for k, v in df_city.groupby("fold").size().items()},
+                "wilcoxon": "greater; unchanged", "statistical_unit": "city, after seed averaging"}
+    (output_dir / "bootstrap_method.json").write_text(json.dumps(metadata, indent=2) + "\n")
 
     (output_dir / "unified_placebo_summary.md").write_text(md_content if 'md_content' in locals() else md, encoding="utf-8")
-    print(f"Unified Placebo Experiment complete. Summary written to {output_dir}.")
+    print(f"Placebo summary written to {output_dir}.")
+    return summary
 
 
 if __name__ == "__main__":
@@ -425,7 +445,14 @@ if __name__ == "__main__":
     parser.add_argument("--data-root", default="data")
     parser.add_argument("--checkpoint-dir", type=Path, default=Path("results/checkpoints"))
     parser.add_argument("--output-dir", type=Path, default=Path("results/unified_placebo_v1"))
+    parser.add_argument("--summary-only", type=Path, help="Recompute bootstrap from an existing per-city CSV; no experiment runs")
     args = parser.parse_args()
+    if args.summary_only is not None:
+        import hashlib
+        source = args.summary_only.read_bytes()
+        summarize_placebo(pd.read_csv(args.summary_only), args.output_dir)
+        (args.output_dir / "summary_source.json").write_text(json.dumps({"path": str(args.summary_only.resolve()), "sha256": hashlib.sha256(source).hexdigest()}, indent=2) + "\n")
+        sys.exit(0)
     run_unified_placebo(
         b_draws=args.b,
         data_root=args.data_root,

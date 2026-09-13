@@ -199,4 +199,14 @@ We investigate whether the strong observed correlation between baseline distance
 
 
 if __name__ == "__main__":
-    run_dpre_mechanism_diagnostic()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--intra-json", type=Path, default=Path("results/intra_bin_mechanism_diagnostic.json"))
+    parser.add_argument("--results-5fold", type=Path, default=Path("results/5fold_results.json"))
+    parser.add_argument("--output-dir", type=Path, default=Path("results/audit"))
+    args = parser.parse_args()
+    run_dpre_mechanism_diagnostic(
+        intra_json_path=args.intra_json,
+        results_5fold_path=args.results_5fold,
+        output_dir=args.output_dir,
+    )
