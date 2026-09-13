@@ -355,7 +355,20 @@ For single-county cities, all tracts belong to the same origin county, meaning $
     (TABLES_DIR / "spatial_resolution_per_city.md").write_text("# Complete Spatial Resolution Breakdown (50 Cities)\n\n" + "\n".join(rows) + "\n", encoding="utf-8")
 
 
-def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAULT_SEED, smoke: bool = False):
+def run_spatial_resolution_experiment(
+    device_str: str = "cpu",
+    seed: int = DEFAULT_SEED,
+    smoke: bool = False,
+    data_root: str = "data",
+    checkpoint_dir: str = "results/checkpoints",
+    output_dir: str = str(PROJECT_ROOT / "results" / "spatial_resolution"),
+):
+    global DATA_ROOT, RESULTS_DIR, TABLES_DIR
+    DATA_ROOT = data_root
+    RESULTS_DIR = Path(output_dir)
+    TABLES_DIR = RESULTS_DIR / "tables"
+    ckpt_dir = Path(checkpoint_dir)
+
     t_global_start = time.time()
     device = torch.device(device_str)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -365,6 +378,7 @@ def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAU
     log_msg("SPATIAL RESOLUTION EXPERIMENT: ORIGIN COUNTY-LEVEL VS CITY-LEVEL CALIBRATION")
     log_msg("=" * 75)
     log_msg(f"  Configuration: K={K_MOVE} bins, q={Q_CALIB}, Seed={seed}, Device={device_str}")
+    log_msg(f"  Data root: {DATA_ROOT}, Checkpoints: {ckpt_dir}, Output: {RESULTS_DIR}")
     
     MANIFEST_PATH = PROJECT_ROOT / "results" / "e1" / "splits_manifest_v2.json"
     splits = load_splits_manifest_v2(str(MANIFEST_PATH), data_root=DATA_ROOT)
@@ -396,7 +410,7 @@ def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAU
         fold_city_seed_results = {city: [] for city in test10}
 
         for m_seed in ([1, 10, 100] if not smoke else [1, 10]):
-            ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
+            ckpt_path = ckpt_dir / f"5fold_fold{fold_id}_seed{m_seed}.pt"
             if not ckpt_path.exists():
                 raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}")
             
@@ -486,6 +500,16 @@ if __name__ == "__main__":
     parser.add_argument("--smoke", action="store_true", help="Run quick smoke test on subset of cities")
     parser.add_argument("--device", default="cpu", help="PyTorch device (cpu/cuda)")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Random seed")
+    parser.add_argument("--data-root", default="data")
+    parser.add_argument("--checkpoint-dir", default="results/checkpoints")
+    parser.add_argument("--output-dir", default=str(PROJECT_ROOT / "results" / "spatial_resolution"))
     args = parser.parse_args()
     
-    run_spatial_resolution_experiment(device_str=args.device, seed=args.seed, smoke=args.smoke)
+    run_spatial_resolution_experiment(
+        device_str=args.device,
+        seed=args.seed,
+        smoke=args.smoke,
+        data_root=args.data_root,
+        checkpoint_dir=args.checkpoint_dir,
+        output_dir=args.output_dir,
+    )

@@ -8,8 +8,9 @@
     "knn_k": 10,
     "loss_type": "ztnb",
     "total_cities_evaluated": 50,
-    "total_runtime_sec": 8514.032089233398,
+    "total_runtime_sec": 146.66662287712097,
     "run_signature": {
+      "lr": 0.0032,
       "backbone": "mlp",
       "seeds": [
         1,
@@ -38,22 +39,22 @@
     "std_definition": "sample_sd_ddof_1",
     "missingness_correlations": {
       "city": {
-        "corr_with_rho_c": -0.4055740457380164,
-        "corr_with_n_tracts": 0.27722658156666735,
-        "corr_with_mean_distance": 0.584383331690622,
-        "corr_with_average_flow": -0.1877468604274804
+        "corr_with_rho_c": -0.4055762451970193,
+        "corr_with_n_tracts": 0.2772222253456463,
+        "corr_with_mean_distance": 0.5843966559965896,
+        "corr_with_average_flow": -0.1877484788076012
       },
       "county": {
-        "corr_with_rho_c": -0.4579213167287981,
-        "corr_with_n_tracts": 0.33767812532998587,
-        "corr_with_mean_distance": 0.6000067450144271,
-        "corr_with_average_flow": -0.21987702492515382
+        "corr_with_rho_c": -0.45792113386089217,
+        "corr_with_n_tracts": 0.3376726887634905,
+        "corr_with_mean_distance": 0.600016893595,
+        "corr_with_average_flow": -0.2198772864580188
       },
       "subzone": {
-        "corr_with_rho_c": -0.38834304628574734,
-        "corr_with_n_tracts": 0.28194566952308653,
-        "corr_with_mean_distance": 0.7145031435740713,
-        "corr_with_average_flow": -0.17993339239532224
+        "corr_with_rho_c": -0.3883485226895118,
+        "corr_with_n_tracts": 0.2819538515567174,
+        "corr_with_mean_distance": 0.7145151692462917,
+        "corr_with_average_flow": -0.17994623191253817
       }
     },
     "city": {
@@ -70,27 +71,27 @@
       },
       "m1_cpc_inter": {
         "n": 50,
-        "mean": 0.7124182171378759,
-        "std": 0.04737282062934389,
+        "mean": 0.7124182446631308,
+        "std": 0.047372820040417346,
         "median": 0.7134832972874989,
         "iqr": 0.05958459685564366,
         "p25": 0.6873263849913481,
         "p75": 0.7469109818469918,
-        "min": 0.5274065562923808,
+        "min": 0.5274065429874174,
         "max": 0.7850295965336654
       },
       "delta_cpc_inter": {
         "n": 50,
-        "mean": 0.0032876962174252845,
-        "std": 0.003554371424034485,
+        "mean": 0.0032877237426803285,
+        "std": 0.003554450639494385,
         "median": 0.0020603991951245737,
         "iqr": 0.0038220306446720975,
         "p25": 0.001028815459542004,
         "p75": 0.0048508461042141016,
         "min": -0.00260168782099901,
-        "max": 0.013761621935178492,
-        "ci_95_lower": 0.002492912758575697,
-        "ci_95_upper": 0.004173333093005746
+        "max": 0.013762661437626833,
+        "ci_95_lower": 0.002492925524209975,
+        "ci_95_upper": 0.004173347375088599
       },
       "p_improved": 0.94,
       "wilcoxon_one_sided_p": 2.1903368008224788e-11,
@@ -111,27 +112,27 @@
       },
       "m1_cpc_inter": {
         "n": 50,
-        "mean": 0.7125538349752162,
-        "std": 0.04720832837818459,
+        "mean": 0.7125538588896443,
+        "std": 0.047208330016109905,
         "median": 0.7134832972874989,
         "iqr": 0.05958459685564366,
         "p25": 0.6873263849913481,
         "p75": 0.7469109818469918,
-        "min": 0.5296300232893372,
+        "min": 0.5296300035488443,
         "max": 0.7851622805935823
       },
       "delta_cpc_inter": {
         "n": 50,
-        "mean": 0.0034233140547655916,
-        "std": 0.003684185826918397,
+        "mean": 0.0034233379691937203,
+        "std": 0.00368425543343506,
         "median": 0.0022096015336521835,
         "iqr": 0.0040896390368993785,
         "p25": 0.001028815459542004,
         "p75": 0.0051184544964413825,
         "min": -0.00260168782099901,
-        "max": 0.01469325432457147,
-        "ci_95_lower": 0.0025825038806791107,
-        "ci_95_upper": 0.004340608680116788
+        "max": 0.014694119721203602,
+        "ci_95_lower": 0.002582497424806082,
+        "ci_95_upper": 0.004340620801269345
       },
       "p_improved": 0.94,
       "wilcoxon_one_sided_p": 1.9318768806897424e-11,
@@ -152,27 +153,27 @@
       },
       "m1_cpc_inter": {
         "n": 50,
-        "mean": 0.720216230517785,
-        "std": 0.046772665044131884,
+        "mean": 0.720216085883163,
+        "std": 0.046772515208699454,
         "median": 0.7204929009178265,
         "iqr": 0.062474010597917795,
         "p25": 0.6950359830266795,
         "p75": 0.7575099936245973,
-        "min": 0.5377306640939966,
+        "min": 0.5377306216032456,
         "max": 0.7898890233197354
       },
       "delta_cpc_inter": {
         "n": 50,
-        "mean": 0.011085709597334369,
-        "std": 0.005821803419847264,
+        "mean": 0.011085564962712381,
+        "std": 0.005821873198406809,
         "median": 0.009152925689089486,
         "iqr": 0.007571349850119147,
         "p25": 0.0069009314568645175,
         "p75": 0.014472281306983664,
         "min": 0.0038089861798316083,
-        "max": 0.027965262292343307,
-        "ci_95_lower": 0.00975195252115246,
-        "ci_95_upper": 0.012527022754701675
+        "max": 0.02796543308174748,
+        "ci_95_lower": 0.009751954683957068,
+        "ci_95_upper": 0.01252670829096285
       },
       "p_improved": 1.0,
       "wilcoxon_one_sided_p": 8.881784197001252e-16,
@@ -187,7 +188,7 @@
       "n_pairs": 4624,
       "rho_c": 1.0,
       "average_flow": 812.7528533801582,
-      "mean_distance": 8.15912914276123,
+      "mean_distance": 8.159129725960495,
       "n_inter_pairs": 4556,
       "total_trips": 5038398.0,
       "total_inter_trips": 3702902.0,
@@ -213,7 +214,8 @@
         "spearman_inter": 0.8703531603589717,
         "rel_error_total": 0.09086089414700467,
         "cpc_inflow": 0.8925481543219446,
-        "cpc_outflow": 0.8990387934706932
+        "cpc_outflow": 0.8990387934706932,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7919081297526515,
@@ -225,7 +227,8 @@
         "spearman_inter": 0.8703531603589717,
         "rel_error_total": 0.09086089414700467,
         "cpc_inflow": 0.8925481543219446,
-        "cpc_outflow": 0.8990387934706932
+        "cpc_outflow": 0.8990387934706932,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7964242890738291,
@@ -237,7 +240,8 @@
         "spearman_inter": 0.884933801807872,
         "rel_error_total": 0.09086089414700473,
         "cpc_inflow": 0.8947976592198975,
-        "cpc_outflow": 0.8985712551898053
+        "cpc_outflow": 0.8985712551898053,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 68,
@@ -255,7 +259,7 @@
       "n_pairs": 28534,
       "rho_c": 0.9990490278951819,
       "average_flow": 472.50294376872904,
-      "mean_distance": 12.778569221496582,
+      "mean_distance": 12.778570306769717,
       "n_inter_pairs": 28365,
       "total_trips": 16936351.0,
       "total_inter_trips": 13402546.0,
@@ -281,7 +285,8 @@
         "spearman_inter": 0.7786049547434836,
         "rel_error_total": 0.10647003115195502,
         "cpc_inflow": 0.8523080020259614,
-        "cpc_outflow": 0.8529190961555173
+        "cpc_outflow": 0.8529190961555173,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7138291320423467,
@@ -293,7 +298,8 @@
         "spearman_inter": 0.7786049547434836,
         "rel_error_total": 0.10647003115195502,
         "cpc_inflow": 0.8523080020259614,
-        "cpc_outflow": 0.8529190961555173
+        "cpc_outflow": 0.8529190961555173,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.720000088919816,
@@ -305,7 +311,8 @@
         "spearman_inter": 0.7990604035677823,
         "rel_error_total": 0.10647003115195508,
         "cpc_inflow": 0.8556655700166441,
-        "cpc_outflow": 0.8528648700395206
+        "cpc_outflow": 0.8528648700395206,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 169,
@@ -323,7 +330,7 @@
       "n_pairs": 16384,
       "rho_c": 1.0,
       "average_flow": 635.0816313976378,
-      "mean_distance": 13.96358871459961,
+      "mean_distance": 13.96358805956451,
       "n_inter_pairs": 16256,
       "total_trips": 12752117.0,
       "total_inter_trips": 10323887.0,
@@ -349,7 +356,8 @@
         "spearman_inter": 0.8071307463113816,
         "rel_error_total": 0.4358890805212072,
         "cpc_inflow": 0.7121125919836521,
-        "cpc_outflow": 0.7120277702513885
+        "cpc_outflow": 0.7120277702513885,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6549820089506359,
@@ -361,7 +369,8 @@
         "spearman_inter": 0.8071307463113816,
         "rel_error_total": 0.4358890805212072,
         "cpc_inflow": 0.7121125919836521,
-        "cpc_outflow": 0.7120277702513885
+        "cpc_outflow": 0.7120277702513885,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.662878064681462,
@@ -373,7 +382,8 @@
         "spearman_inter": 0.8305914442623048,
         "rel_error_total": 0.4358890805212072,
         "cpc_inflow": 0.7151090353406571,
-        "cpc_outflow": 0.7136465811651885
+        "cpc_outflow": 0.7136465811651885,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 128,
@@ -391,7 +401,7 @@
       "n_pairs": 10598,
       "rho_c": 0.9989529792499524,
       "average_flow": 375.2969032872796,
-      "mean_distance": 6.238588333129883,
+      "mean_distance": 6.238588552528362,
       "n_inter_pairs": 10495,
       "total_trips": 5152792.0,
       "total_inter_trips": 3938741.0,
@@ -417,7 +427,8 @@
         "spearman_inter": 0.7998064361930822,
         "rel_error_total": 0.19452064907723857,
         "cpc_inflow": 0.8351388786921521,
-        "cpc_outflow": 0.8374210770783984
+        "cpc_outflow": 0.8374210770783984,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7471169852557292,
@@ -429,7 +440,8 @@
         "spearman_inter": 0.7998064361930822,
         "rel_error_total": 0.19452064907723857,
         "cpc_inflow": 0.8351388786921521,
-        "cpc_outflow": 0.8374210770783984
+        "cpc_outflow": 0.8374210770783984,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7502346368465459,
@@ -441,7 +453,8 @@
         "spearman_inter": 0.8139352469134554,
         "rel_error_total": 0.1945206490772385,
         "cpc_inflow": 0.8385617951184763,
-        "cpc_outflow": 0.8373852434346324
+        "cpc_outflow": 0.8373852434346324,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 103,
@@ -459,7 +472,7 @@
       "n_pairs": 29875,
       "rho_c": 0.9981852399516064,
       "average_flow": 335.68527371894146,
-      "mean_distance": 12.67488956451416,
+      "mean_distance": 12.674889533858966,
       "n_inter_pairs": 29702,
       "total_trips": 12447475.0,
       "total_inter_trips": 9970524.0,
@@ -485,7 +498,8 @@
         "spearman_inter": 0.7621473632106399,
         "rel_error_total": 0.18684447012142755,
         "cpc_inflow": 0.8564235277708011,
-        "cpc_outflow": 0.857348671804123
+        "cpc_outflow": 0.857348671804123,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7255828861771595,
@@ -497,7 +511,8 @@
         "spearman_inter": 0.7621473632106399,
         "rel_error_total": 0.18684447012142755,
         "cpc_inflow": 0.8564235277708011,
-        "cpc_outflow": 0.857348671804123
+        "cpc_outflow": 0.857348671804123,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7319327992900753,
@@ -509,7 +524,8 @@
         "spearman_inter": 0.7799513937627145,
         "rel_error_total": 0.18684447012142755,
         "cpc_inflow": 0.8603181512902337,
-        "cpc_outflow": 0.8556825276046892
+        "cpc_outflow": 0.8556825276046892,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 173,
@@ -527,7 +543,7 @@
       "n_pairs": 42706,
       "rho_c": 0.996646498757094,
       "average_flow": 161.88333843149252,
-      "mean_distance": 7.989790916442871,
+      "mean_distance": 7.989791007994955,
       "n_inter_pairs": 42499,
       "total_trips": 8581893.0,
       "total_inter_trips": 6879880.0,
@@ -553,7 +569,8 @@
         "spearman_inter": 0.7452116619774909,
         "rel_error_total": 0.2457401928777221,
         "cpc_inflow": 0.8368238520640906,
-        "cpc_outflow": 0.8386672982342002
+        "cpc_outflow": 0.8386672982342002,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7309548113067634,
@@ -565,7 +582,8 @@
         "spearman_inter": 0.7463266767302051,
         "rel_error_total": 0.24574019287772209,
         "cpc_inflow": 0.8367820624399931,
-        "cpc_outflow": 0.8386700460446338
+        "cpc_outflow": 0.8386700460446338,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7368478668830457,
@@ -577,7 +595,8 @@
         "spearman_inter": 0.7637293780086182,
         "rel_error_total": 0.2457401928777221,
         "cpc_inflow": 0.8404936897112356,
-        "cpc_outflow": 0.8388062851700125
+        "cpc_outflow": 0.8388062851700125,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 207,
@@ -595,7 +614,7 @@
       "n_pairs": 3097336,
       "rho_c": 0.7103013638524932,
       "average_flow": 48.919936974375894,
-      "mean_distance": 12.573524475097656,
+      "mean_distance": 12.573524114602996,
       "n_inter_pairs": 3095249,
       "total_trips": 171155786.0,
       "total_inter_trips": 151419386.0,
@@ -612,40 +631,43 @@
         "cpc_outflow": 0.6603033941062192
       },
       "M1_city_oracle_obs": {
-        "cpc": 0.5353523355075049,
-        "cpc_inter": 0.5274065562923808,
-        "rmse_log1p_inter": 1.6454510849936872,
-        "rmse_inter": 196.22619760235776,
-        "nrmse_inter": 4.011170286362806,
-        "mae_inter": 63.87711588827322,
-        "spearman_inter": 0.5410763399787556,
+        "cpc": 0.5353523259146095,
+        "cpc_inter": 0.5274065429874174,
+        "rmse_log1p_inter": 1.6454518046584357,
+        "rmse_inter": 196.22619282092919,
+        "nrmse_inter": 4.01117018862293,
+        "mae_inter": 63.87711765417061,
+        "spearman_inter": 0.5410761819163,
         "rel_error_total": 0.7594749893635958,
-        "cpc_inflow": 0.6570208739098685,
-        "cpc_outflow": 0.6568136444305013
+        "cpc_inflow": 0.6570209103473161,
+        "cpc_outflow": 0.6568136827302209,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
-        "cpc": 0.5374929152853293,
-        "cpc_inter": 0.5296300232893372,
-        "rmse_log1p_inter": 1.630600217696057,
-        "rmse_inter": 195.4505393822667,
-        "nrmse_inter": 3.9953146195720373,
-        "mae_inter": 63.57622518354947,
-        "spearman_inter": 0.5453252698585227,
+        "cpc": 0.5374928973743441,
+        "cpc_inter": 0.5296300035488443,
+        "rmse_log1p_inter": 1.630600948364975,
+        "rmse_inter": 195.45053379991154,
+        "nrmse_inter": 3.995314505459971,
+        "mae_inter": 63.576227819436184,
+        "spearman_inter": 0.5453252070520738,
         "rel_error_total": 0.7594749893635958,
-        "cpc_inflow": 0.6572501179172542,
-        "cpc_outflow": 0.657609866093262
+        "cpc_inflow": 0.6572501397451661,
+        "cpc_outflow": 0.6576098771550635,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
-        "cpc": 0.5457575143561553,
-        "cpc_inter": 0.5377306640939966,
-        "rmse_log1p_inter": 1.5787569299788349,
-        "rmse_inter": 196.25326708207425,
-        "nrmse_inter": 4.011723628852406,
-        "mae_inter": 62.48483744076842,
-        "spearman_inter": 0.5534880588530803,
+        "cpc": 0.5457574767831906,
+        "cpc_inter": 0.5377306216032456,
+        "rmse_log1p_inter": 1.5787574872968364,
+        "rmse_inter": 196.25326266360298,
+        "nrmse_inter": 4.011723538531945,
+        "mae_inter": 62.48484320891554,
+        "spearman_inter": 0.553487983191871,
         "rel_error_total": 0.7594749893635958,
-        "cpc_inflow": 0.6612857915503317,
-        "cpc_outflow": 0.6603033941062192
+        "cpc_inflow": 0.6612857113190161,
+        "cpc_outflow": 0.6603033941062192,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 2037,
@@ -908,9 +930,9 @@
           }
         ]
       },
-      "delta_city": 0.0044148819432560105,
-      "delta_county": 0.006638348940212424,
-      "delta_subzone": 0.014738989744871867,
+      "delta_city": 0.004414868638292657,
+      "delta_county": 0.006638329199719517,
+      "delta_subzone": 0.014738947254120838,
       "fold": 1
     },
     {
@@ -919,7 +941,7 @@
       "n_pairs": 75503,
       "rho_c": 0.9839637942761471,
       "average_flow": 271.1880599792625,
-      "mean_distance": 15.597249984741211,
+      "mean_distance": 15.597251317510292,
       "n_inter_pairs": 75226,
       "total_trips": 25280273.0,
       "total_inter_trips": 20400393.0,
@@ -945,7 +967,8 @@
         "spearman_inter": 0.7657130220784651,
         "rel_error_total": 0.07775237176539102,
         "cpc_inflow": 0.8159915057534467,
-        "cpc_outflow": 0.8172957889925606
+        "cpc_outflow": 0.8172957889925606,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6767338415982767,
@@ -957,7 +980,8 @@
         "spearman_inter": 0.7657130220784651,
         "rel_error_total": 0.07775237176539102,
         "cpc_inflow": 0.8159915057534467,
-        "cpc_outflow": 0.8172957889925606
+        "cpc_outflow": 0.8172957889925606,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6869199536859747,
@@ -969,7 +993,8 @@
         "spearman_inter": 0.7755434276710867,
         "rel_error_total": 0.07775237176539102,
         "cpc_inflow": 0.8277933574981526,
-        "cpc_outflow": 0.8160341272173234
+        "cpc_outflow": 0.8160341272173234,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 275,
@@ -998,7 +1023,7 @@
       "n_pairs": 17383,
       "rho_c": 0.9976289613694194,
       "average_flow": 580.7548547910266,
-      "mean_distance": 8.955789566040039,
+      "mean_distance": 8.955790186514337,
       "n_inter_pairs": 17251,
       "total_trips": 12787775.0,
       "total_inter_trips": 10018602.0,
@@ -1024,7 +1049,8 @@
         "spearman_inter": 0.7720715934132037,
         "rel_error_total": 0.04122501626458144,
         "cpc_inflow": 0.82100210330485,
-        "cpc_outflow": 0.8235402361796895
+        "cpc_outflow": 0.8235402361796895,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6924568339519612,
@@ -1036,7 +1062,8 @@
         "spearman_inter": 0.7720715934132037,
         "rel_error_total": 0.04122501626458144,
         "cpc_inflow": 0.82100210330485,
-        "cpc_outflow": 0.8235402361796895
+        "cpc_outflow": 0.8235402361796895,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6981438510352894,
@@ -1048,7 +1075,8 @@
         "spearman_inter": 0.7938316562234041,
         "rel_error_total": 0.041225016264581506,
         "cpc_inflow": 0.8250125767563659,
-        "cpc_outflow": 0.8232518565219675
+        "cpc_outflow": 0.8232518565219675,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 132,
@@ -1066,7 +1094,7 @@
       "n_pairs": 9993,
       "rho_c": 0.9992929292929293,
       "average_flow": 600.0755079349035,
-      "mean_distance": 10.090116500854492,
+      "mean_distance": 10.090115947922452,
       "n_inter_pairs": 9893,
       "total_trips": 7512014.0,
       "total_inter_trips": 5936547.0,
@@ -1092,7 +1120,8 @@
         "spearman_inter": 0.818590371985282,
         "rel_error_total": 0.018102121212721922,
         "cpc_inflow": 0.8746249962255859,
-        "cpc_outflow": 0.8783631566615323
+        "cpc_outflow": 0.8783631566615323,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7649744671923153,
@@ -1104,7 +1133,8 @@
         "spearman_inter": 0.818590371985282,
         "rel_error_total": 0.018102121212721922,
         "cpc_inflow": 0.8746249962255859,
-        "cpc_outflow": 0.8783631566615323
+        "cpc_outflow": 0.8783631566615323,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7721729658076514,
@@ -1116,7 +1146,8 @@
         "spearman_inter": 0.8300270811556828,
         "rel_error_total": 0.01810212121272187,
         "cpc_inflow": 0.8823454893491105,
-        "cpc_outflow": 0.874805527139446
+        "cpc_outflow": 0.874805527139446,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 100,
@@ -1134,7 +1165,7 @@
       "n_pairs": 15814,
       "rho_c": 0.9960634920634921,
       "average_flow": 381.6532381438042,
-      "mean_distance": 8.310260772705078,
+      "mean_distance": 8.310260527003091,
       "n_inter_pairs": 15688,
       "total_trips": 7987756.0,
       "total_inter_trips": 5987376.0,
@@ -1160,7 +1191,8 @@
         "spearman_inter": 0.7664865333049358,
         "rel_error_total": 0.20208295809286828,
         "cpc_inflow": 0.8274913022972689,
-        "cpc_outflow": 0.8299311710465949
+        "cpc_outflow": 0.8299311710465949,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7113471966703078,
@@ -1172,7 +1204,8 @@
         "spearman_inter": 0.7667692981791531,
         "rel_error_total": 0.20208295809286825,
         "cpc_inflow": 0.8274617613680147,
-        "cpc_outflow": 0.8297993838456913
+        "cpc_outflow": 0.8297993838456913,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7171650598530914,
@@ -1184,7 +1217,8 @@
         "spearman_inter": 0.7896474338597264,
         "rel_error_total": 0.20208295809286828,
         "cpc_inflow": 0.8330417014387362,
-        "cpc_outflow": 0.829720546158739
+        "cpc_outflow": 0.829720546158739,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 126,
@@ -1202,7 +1236,7 @@
       "n_pairs": 31101,
       "rho_c": 0.9815273281279756,
       "average_flow": 307.10105419738716,
-      "mean_distance": 6.073319911956787,
+      "mean_distance": 6.073320118982893,
       "n_inter_pairs": 30924,
       "total_trips": 11845965.0,
       "total_inter_trips": 9496793.0,
@@ -1228,7 +1262,8 @@
         "spearman_inter": 0.705052537178671,
         "rel_error_total": 0.114340451397079,
         "cpc_inflow": 0.8058600746464304,
-        "cpc_outflow": 0.8050227804417709
+        "cpc_outflow": 0.8050227804417709,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6793788386265529,
@@ -1240,7 +1275,8 @@
         "spearman_inter": 0.70495755939036,
         "rel_error_total": 0.11434045139707906,
         "cpc_inflow": 0.8058794714210329,
-        "cpc_outflow": 0.8050433243695673
+        "cpc_outflow": 0.8050433243695673,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6839826360111512,
@@ -1252,7 +1288,8 @@
         "spearman_inter": 0.7292840966680599,
         "rel_error_total": 0.11434045139707906,
         "cpc_inflow": 0.8081274565464396,
-        "cpc_outflow": 0.8047754536803895
+        "cpc_outflow": 0.8047754536803895,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 175,
@@ -1286,7 +1323,7 @@
       "n_pairs": 19288,
       "rho_c": 0.9982796371598374,
       "average_flow": 430.2096715233171,
-      "mean_distance": 13.596250534057617,
+      "mean_distance": 13.59625020776195,
       "n_inter_pairs": 19149,
       "total_trips": 11393723.0,
       "total_inter_trips": 8238085.0,
@@ -1303,49 +1340,52 @@
         "cpc_outflow": 0.8830551632588953
       },
       "M1_city_oracle_obs": {
-        "cpc": 0.7470663977862909,
-        "cpc_inter": 0.7450074645172093,
-        "rmse_log1p_inter": 0.8381842714506377,
-        "rmse_inter": 632.833505044283,
-        "nrmse_inter": 1.4709885596097851,
-        "mae_inter": 222.68634079249964,
-        "spearman_inter": 0.8075302264394435,
-        "rel_error_total": 0.029846128407091336,
-        "cpc_inflow": 0.8778632930088769,
-        "cpc_outflow": 0.8814739503913436
+        "cpc": 0.7470659095403988,
+        "cpc_inter": 0.7450080697875956,
+        "rmse_log1p_inter": 0.838186665722566,
+        "rmse_inter": 632.8332976290561,
+        "nrmse_inter": 1.4709880774838808,
+        "mae_inter": 222.68580903545546,
+        "spearman_inter": 0.8075272343629445,
+        "rel_error_total": 0.029846128407091374,
+        "cpc_inflow": 0.8778629186519291,
+        "cpc_outflow": 0.8814735595602685,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
-        "cpc": 0.7470663977862909,
-        "cpc_inter": 0.7450074645172093,
-        "rmse_log1p_inter": 0.8381842714506377,
-        "rmse_inter": 632.833505044283,
-        "nrmse_inter": 1.4709885596097851,
-        "mae_inter": 222.68634079249964,
-        "spearman_inter": 0.8075302264394435,
-        "rel_error_total": 0.029846128407091336,
-        "cpc_inflow": 0.8778632930088769,
-        "cpc_outflow": 0.8814739503913436
+        "cpc": 0.7470659095403988,
+        "cpc_inter": 0.7450080697875956,
+        "rmse_log1p_inter": 0.838186665722566,
+        "rmse_inter": 632.8332976290561,
+        "nrmse_inter": 1.4709880774838808,
+        "mae_inter": 222.68580903545546,
+        "spearman_inter": 0.8075272343629445,
+        "rel_error_total": 0.029846128407091374,
+        "cpc_inflow": 0.8778629186519291,
+        "cpc_outflow": 0.8814735595602685,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
-        "cpc": 0.7631299273763967,
-        "cpc_inter": 0.7617865495470563,
-        "rmse_log1p_inter": 0.7820869302113099,
-        "rmse_inter": 561.5128516708359,
-        "nrmse_inter": 1.3052074112666763,
-        "mae_inter": 208.02951189670668,
-        "spearman_inter": 0.8307681490479456,
+        "cpc": 0.763128668024859,
+        "cpc_inter": 0.7617881216186483,
+        "rmse_log1p_inter": 0.7820750218057798,
+        "rmse_inter": 561.5087859095637,
+        "nrmse_inter": 1.3051979606161181,
+        "mae_inter": 208.02813380473484,
+        "spearman_inter": 0.830770648486804,
         "rel_error_total": 0.029846128407091336,
-        "cpc_inflow": 0.8870539972856938,
-        "cpc_outflow": 0.8830551632588953
+        "cpc_inflow": 0.8870644551249015,
+        "cpc_outflow": 0.8830551632588953,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 139,
         "n_nearest_fallback": 0,
         "fallback_details": []
       },
-      "delta_city": 0.009127435063780776,
-      "delta_county": 0.009127435063780776,
-      "delta_subzone": 0.025906520093627705,
+      "delta_city": 0.009128040334167031,
+      "delta_county": 0.009128040334167031,
+      "delta_subzone": 0.02590809216521972,
       "fold": 2
     },
     {
@@ -1354,7 +1394,7 @@
       "n_pairs": 41165,
       "rho_c": 0.9989269862946886,
       "average_flow": 297.0272447634393,
-      "mean_distance": 13.267685890197754,
+      "mean_distance": 13.267685542735357,
       "n_inter_pairs": 40962,
       "total_trips": 15467070.0,
       "total_inter_trips": 12166830.0,
@@ -1380,7 +1420,8 @@
         "spearman_inter": 0.7399884970245317,
         "rel_error_total": 0.05529700403251289,
         "cpc_inflow": 0.849161666830764,
-        "cpc_outflow": 0.8482600845951279
+        "cpc_outflow": 0.8482600845951279,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.707463036973819,
@@ -1392,7 +1433,8 @@
         "spearman_inter": 0.7399884970245317,
         "rel_error_total": 0.05529700403251289,
         "cpc_inflow": 0.849161666830764,
-        "cpc_outflow": 0.8482600845951279
+        "cpc_outflow": 0.8482600845951279,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7170988755188357,
@@ -1404,7 +1446,8 @@
         "spearman_inter": 0.758451481831873,
         "rel_error_total": 0.05529700403251289,
         "cpc_inflow": 0.8611219884752691,
-        "cpc_outflow": 0.8509434857607534
+        "cpc_outflow": 0.8509434857607534,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 203,
@@ -1422,7 +1465,7 @@
       "n_pairs": 786365,
       "rho_c": 0.7972866517233538,
       "average_flow": 69.71943486653458,
-      "mean_distance": 17.441654205322266,
+      "mean_distance": 17.441654441068557,
       "n_inter_pairs": 785372,
       "total_trips": 65329401.0,
       "total_inter_trips": 54755692.0,
@@ -1439,40 +1482,43 @@
         "cpc_outflow": 0.7605122413647029
       },
       "M1_city_oracle_obs": {
-        "cpc": 0.6268486734703034,
-        "cpc_inter": 0.6315304373323333,
-        "rmse_log1p_inter": 1.3098054804565393,
-        "rmse_inter": 202.31827671762173,
-        "nrmse_inter": 2.9018920922827895,
-        "mae_inter": 63.69578030219111,
-        "spearman_inter": 0.6749348403277451,
+        "cpc": 0.6268486080436314,
+        "cpc_inter": 0.6315303729024339,
+        "rmse_log1p_inter": 1.3098073957527874,
+        "rmse_inter": 202.31826313961508,
+        "nrmse_inter": 2.9018918975306858,
+        "mae_inter": 63.69579144006963,
+        "spearman_inter": 0.6749341259707263,
         "rel_error_total": 0.4788880610565623,
-        "cpc_inflow": 0.754871094273554,
-        "cpc_outflow": 0.7562176296537975
+        "cpc_inflow": 0.7548711037226689,
+        "cpc_outflow": 0.7562176398432112,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
-        "cpc": 0.6268486734703034,
-        "cpc_inter": 0.6315304373323333,
-        "rmse_log1p_inter": 1.3098054804565393,
-        "rmse_inter": 202.31827671762173,
-        "nrmse_inter": 2.9018920922827895,
-        "mae_inter": 63.69578030219111,
-        "spearman_inter": 0.6749348403277451,
+        "cpc": 0.6268486080436314,
+        "cpc_inter": 0.6315303729024339,
+        "rmse_log1p_inter": 1.3098073957527874,
+        "rmse_inter": 202.31826313961508,
+        "nrmse_inter": 2.9018918975306858,
+        "mae_inter": 63.69579144006963,
+        "spearman_inter": 0.6749341259707263,
         "rel_error_total": 0.4788880610565623,
-        "cpc_inflow": 0.754871094273554,
-        "cpc_outflow": 0.7562176296537975
+        "cpc_inflow": 0.7548711037226689,
+        "cpc_outflow": 0.7562176398432112,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
-        "cpc": 0.6375644457824502,
-        "cpc_inter": 0.6420424829372523,
-        "rmse_log1p_inter": 1.2639250940079798,
-        "rmse_inter": 208.70339875958072,
-        "nrmse_inter": 2.9934751932385297,
-        "mae_inter": 61.878390980936565,
-        "spearman_inter": 0.6860096560073691,
+        "cpc": 0.6375644433310588,
+        "cpc_inter": 0.6420425143249303,
+        "rmse_log1p_inter": 1.2639265587965802,
+        "rmse_inter": 208.70338233896146,
+        "nrmse_inter": 2.993474957714256,
+        "mae_inter": 61.878385565528525,
+        "spearman_inter": 0.6860092223981269,
         "rel_error_total": 0.4788880610565623,
-        "cpc_inflow": 0.7608594635284979,
-        "cpc_outflow": 0.7605122413647029
+        "cpc_inflow": 0.7608596701229114,
+        "cpc_outflow": 0.7605122413647029,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 990,
@@ -1495,9 +1541,9 @@
           }
         ]
       },
-      "delta_city": 0.012057565939489923,
-      "delta_county": 0.012057565939489923,
-      "delta_subzone": 0.022569611544408952,
+      "delta_city": 0.012057501509590507,
+      "delta_county": 0.012057501509590507,
+      "delta_subzone": 0.022569642932086964,
       "fold": 2
     },
     {
@@ -1506,7 +1552,7 @@
       "n_pairs": 11015,
       "rho_c": 0.9990842490842491,
       "average_flow": 371.88753437213563,
-      "mean_distance": 10.217183113098145,
+      "mean_distance": 10.217182767555103,
       "n_inter_pairs": 10910,
       "total_trips": 5501851.0,
       "total_inter_trips": 4057293.0,
@@ -1532,7 +1578,8 @@
         "spearman_inter": 0.8044060337977011,
         "rel_error_total": 0.10420350719437699,
         "cpc_inflow": 0.8521910918489471,
-        "cpc_outflow": 0.8577708036889437
+        "cpc_outflow": 0.8577708036889437,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7499399525973285,
@@ -1544,7 +1591,8 @@
         "spearman_inter": 0.8044060337977011,
         "rel_error_total": 0.10420350719437699,
         "cpc_inflow": 0.8521910918489471,
-        "cpc_outflow": 0.8577708036889437
+        "cpc_outflow": 0.8577708036889437,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.758500794853906,
@@ -1556,7 +1604,8 @@
         "spearman_inter": 0.8224139939325074,
         "rel_error_total": 0.10420350719437706,
         "cpc_inflow": 0.8615594101305054,
-        "cpc_outflow": 0.8598985446404815
+        "cpc_outflow": 0.8598985446404815,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 105,
@@ -1574,7 +1623,7 @@
       "n_pairs": 27466,
       "rho_c": 0.9967141292442497,
       "average_flow": 256.4868131868132,
-      "mean_distance": 11.947696685791016,
+      "mean_distance": 11.947696460398125,
       "n_inter_pairs": 27300,
       "total_trips": 8876079.0,
       "total_inter_trips": 7002090.0,
@@ -1600,7 +1649,8 @@
         "spearman_inter": 0.6693350782310898,
         "rel_error_total": 0.06729425770173093,
         "cpc_inflow": 0.8187467531142838,
-        "cpc_outflow": 0.8192744592271998
+        "cpc_outflow": 0.8192744592271998,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6757405942467873,
@@ -1612,7 +1662,8 @@
         "spearman_inter": 0.6693350782310898,
         "rel_error_total": 0.06729425770173093,
         "cpc_inflow": 0.8187467531142838,
-        "cpc_outflow": 0.8192744592271998
+        "cpc_outflow": 0.8192744592271998,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6870829259698142,
@@ -1624,7 +1675,8 @@
         "spearman_inter": 0.6888840612495711,
         "rel_error_total": 0.06729425770173093,
         "cpc_inflow": 0.8349249457818061,
-        "cpc_outflow": 0.8180751903218032
+        "cpc_outflow": 0.8180751903218032,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 166,
@@ -1642,7 +1694,7 @@
       "n_pairs": 5328,
       "rho_c": 0.9998097412480974,
       "average_flow": 870.6660323501427,
-      "mean_distance": 9.564995765686035,
+      "mean_distance": 9.564995674742164,
       "n_inter_pairs": 5255,
       "total_trips": 6306409.0,
       "total_inter_trips": 4575350.0,
@@ -1668,7 +1720,8 @@
         "spearman_inter": 0.8302242648845478,
         "rel_error_total": 0.03781662895411102,
         "cpc_inflow": 0.8876282950738766,
-        "cpc_outflow": 0.8903277735948186
+        "cpc_outflow": 0.8903277735948186,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.77190572492565,
@@ -1680,7 +1733,8 @@
         "spearman_inter": 0.8302242648845478,
         "rel_error_total": 0.03781662895411102,
         "cpc_inflow": 0.8876282950738766,
-        "cpc_outflow": 0.8903277735948186
+        "cpc_outflow": 0.8903277735948186,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.782588116850587,
@@ -1692,7 +1746,8 @@
         "spearman_inter": 0.846246846283445,
         "rel_error_total": 0.03781662895411102,
         "cpc_inflow": 0.9010626215110488,
-        "cpc_outflow": 0.8921457904809581
+        "cpc_outflow": 0.8921457904809581,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 73,
@@ -1710,7 +1765,7 @@
       "n_pairs": 9994,
       "rho_c": 0.9993939393939394,
       "average_flow": 474.5676167374166,
-      "mean_distance": 9.033552169799805,
+      "mean_distance": 9.033552186836587,
       "n_inter_pairs": 9894,
       "total_trips": 6411562.0,
       "total_inter_trips": 4695372.0,
@@ -1727,49 +1782,52 @@
         "cpc_outflow": 0.8773961177032791
       },
       "M1_city_oracle_obs": {
-        "cpc": 0.7613846951587625,
-        "cpc_inter": 0.7578849954271623,
-        "rmse_log1p_inter": 0.8048256369445483,
-        "rmse_inter": 586.1637239035841,
-        "nrmse_inter": 1.2351532283921403,
-        "mae_inter": 227.905228275668,
-        "spearman_inter": 0.7930390118693764,
-        "rel_error_total": 0.016402491425646887,
-        "cpc_inflow": 0.8753240708460837,
-        "cpc_outflow": 0.8780118815674697
+        "cpc": 0.7613847533006088,
+        "cpc_inter": 0.7578848046519426,
+        "rmse_log1p_inter": 0.8048266127074858,
+        "rmse_inter": 586.1637192893885,
+        "nrmse_inter": 1.2351532186691936,
+        "mae_inter": 227.90540741748222,
+        "spearman_inter": 0.7930373264349813,
+        "rel_error_total": 0.016402491425646818,
+        "cpc_inflow": 0.8753244752834465,
+        "cpc_outflow": 0.8780123091799602,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
-        "cpc": 0.7613846951587625,
-        "cpc_inter": 0.7578849954271623,
-        "rmse_log1p_inter": 0.8048256369445483,
-        "rmse_inter": 586.1637239035841,
-        "nrmse_inter": 1.2351532283921403,
-        "mae_inter": 227.905228275668,
-        "spearman_inter": 0.7930390118693764,
-        "rel_error_total": 0.016402491425646887,
-        "cpc_inflow": 0.8753240708460837,
-        "cpc_outflow": 0.8780118815674697
+        "cpc": 0.7613847533006088,
+        "cpc_inter": 0.7578848046519426,
+        "rmse_log1p_inter": 0.8048266127074858,
+        "rmse_inter": 586.1637192893885,
+        "nrmse_inter": 1.2351532186691936,
+        "mae_inter": 227.90540741748222,
+        "spearman_inter": 0.7930373264349813,
+        "rel_error_total": 0.016402491425646818,
+        "cpc_inflow": 0.8753244752834465,
+        "cpc_outflow": 0.8780123091799602,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
-        "cpc": 0.7692140154974435,
-        "cpc_inter": 0.7661678580122464,
-        "rmse_log1p_inter": 0.7575310613845382,
-        "rmse_inter": 575.7717442536435,
-        "nrmse_inter": 1.213255443369673,
-        "mae_inter": 220.10682410887458,
-        "spearman_inter": 0.8175950803152406,
+        "cpc": 0.7692017727570849,
+        "cpc_inter": 0.7661588945232239,
+        "rmse_log1p_inter": 0.7575748577449052,
+        "rmse_inter": 575.7729471322808,
+        "nrmse_inter": 1.2132579780530246,
+        "mae_inter": 220.11527085464513,
+        "spearman_inter": 0.8175726502272177,
         "rel_error_total": 0.016402491425646887,
-        "cpc_inflow": 0.8807116261617414,
-        "cpc_outflow": 0.8773961177032791
+        "cpc_inflow": 0.8806970999646713,
+        "cpc_outflow": 0.8773961177032791,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 100,
         "n_nearest_fallback": 0,
         "fallback_details": []
       },
-      "delta_city": 0.0035305337412080418,
-      "delta_county": 0.0035305337412080418,
-      "delta_subzone": 0.011813396326292191,
+      "delta_city": 0.00353034296598842,
+      "delta_county": 0.00353034296598842,
+      "delta_subzone": 0.01180443283726973,
       "fold": 2
     },
     {
@@ -1778,7 +1836,7 @@
       "n_pairs": 77821,
       "rho_c": 0.9925883256528417,
       "average_flow": 296.77374550237937,
-      "mean_distance": 15.257075309753418,
+      "mean_distance": 15.257074709685208,
       "n_inter_pairs": 77541,
       "total_trips": 28590574.0,
       "total_inter_trips": 23012133.0,
@@ -1804,7 +1862,8 @@
         "spearman_inter": 0.7957067242862556,
         "rel_error_total": 0.02931468237343912,
         "cpc_inflow": 0.8754115360721603,
-        "cpc_outflow": 0.8760641856249006
+        "cpc_outflow": 0.8760641856249006,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.738481164882879,
@@ -1816,7 +1875,8 @@
         "spearman_inter": 0.7957067242862556,
         "rel_error_total": 0.02931468237343912,
         "cpc_inflow": 0.8754115360721603,
-        "cpc_outflow": 0.8760641856249006
+        "cpc_outflow": 0.8760641856249006,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7470597654853577,
@@ -1828,7 +1888,8 @@
         "spearman_inter": 0.8102922731618688,
         "rel_error_total": 0.02931468237343912,
         "cpc_inflow": 0.8824636633505109,
-        "cpc_outflow": 0.8767857382285077
+        "cpc_outflow": 0.8767857382285077,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 280,
@@ -1846,7 +1907,7 @@
       "n_pairs": 39732,
       "rho_c": 0.9932663316582916,
       "average_flow": 186.3635535768491,
-      "mean_distance": 6.4683918952941895,
+      "mean_distance": 6.4683921384305405,
       "n_inter_pairs": 39532,
       "total_trips": 9231165.0,
       "total_inter_trips": 7367324.0,
@@ -1872,7 +1933,8 @@
         "spearman_inter": 0.7021887413546047,
         "rel_error_total": 0.35126562005353473,
         "cpc_inflow": 0.7959750155132954,
-        "cpc_outflow": 0.7975262485902105
+        "cpc_outflow": 0.7975262485902105,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6882269901325944,
@@ -1884,7 +1946,8 @@
         "spearman_inter": 0.7021887413546047,
         "rel_error_total": 0.35126562005353473,
         "cpc_inflow": 0.7959750155132954,
-        "cpc_outflow": 0.7975262485902105
+        "cpc_outflow": 0.7975262485902105,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.693470806887576,
@@ -1896,7 +1959,8 @@
         "spearman_inter": 0.7212881716356749,
         "rel_error_total": 0.35126562005353473,
         "cpc_inflow": 0.7975242749979725,
-        "cpc_outflow": 0.7971662949954622
+        "cpc_outflow": 0.7971662949954622,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 199,
@@ -1920,7 +1984,7 @@
       "n_pairs": 528714,
       "rho_c": 0.8688555347091933,
       "average_flow": 73.85575848496214,
-      "mean_distance": 12.409200668334961,
+      "mean_distance": 12.409199926214717,
       "n_inter_pairs": 527934,
       "total_trips": 46470427.0,
       "total_inter_trips": 38990966.0,
@@ -1946,7 +2010,8 @@
         "spearman_inter": 0.6952541688475297,
         "rel_error_total": 0.2996134444421573,
         "cpc_inflow": 0.7920802136861412,
-        "cpc_outflow": 0.7929795376545344
+        "cpc_outflow": 0.7929795376545344,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6622578269169611,
@@ -1958,7 +2023,8 @@
         "spearman_inter": 0.6952369889478004,
         "rel_error_total": 0.29961344444215693,
         "cpc_inflow": 0.7920972170835548,
-        "cpc_outflow": 0.7929725800851178
+        "cpc_outflow": 0.7929725800851178,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.669790604812358,
@@ -1970,7 +2036,8 @@
         "spearman_inter": 0.7084286514545873,
         "rel_error_total": 0.299613444442157,
         "cpc_inflow": 0.7977464275702006,
-        "cpc_outflow": 0.7940911734029906
+        "cpc_outflow": 0.7940911734029906,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 780,
@@ -1988,7 +2055,7 @@
       "n_pairs": 85793,
       "rho_c": 0.9725179725179726,
       "average_flow": 83.80725414054459,
-      "mean_distance": 10.733064651489258,
+      "mean_distance": 10.733064520110291,
       "n_inter_pairs": 85496,
       "total_trips": 9016292.0,
       "total_inter_trips": 7165185.0,
@@ -2014,7 +2081,8 @@
         "spearman_inter": 0.6590690629463829,
         "rel_error_total": 0.6591336959934347,
         "cpc_inflow": 0.7387358494257223,
-        "cpc_outflow": 0.7382385995581773
+        "cpc_outflow": 0.7382385995581773,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6400365222306014,
@@ -2026,7 +2094,8 @@
         "spearman_inter": 0.6594656965443969,
         "rel_error_total": 0.6591336959934346,
         "cpc_inflow": 0.7387931594764364,
-        "cpc_outflow": 0.7383449190597782
+        "cpc_outflow": 0.7383449190597782,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.64701786678707,
@@ -2038,7 +2107,8 @@
         "spearman_inter": 0.690187553026321,
         "rel_error_total": 0.6591336959934346,
         "cpc_inflow": 0.7390619553113389,
-        "cpc_outflow": 0.7382089994968575
+        "cpc_outflow": 0.7382089994968575,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 297,
@@ -2056,7 +2126,7 @@
       "n_pairs": 10000,
       "rho_c": 1.0,
       "average_flow": 640.3832323232323,
-      "mean_distance": 8.416534423828125,
+      "mean_distance": 8.416534408631952,
       "n_inter_pairs": 9900,
       "total_trips": 8144338.0,
       "total_inter_trips": 6339794.0,
@@ -2082,7 +2152,8 @@
         "spearman_inter": 0.7931134247740693,
         "rel_error_total": 0.03686882347934315,
         "cpc_inflow": 0.8695869061355102,
-        "cpc_outflow": 0.8708918503346591
+        "cpc_outflow": 0.8708918503346591,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.759168547635777,
@@ -2094,7 +2165,8 @@
         "spearman_inter": 0.7931134247740693,
         "rel_error_total": 0.03686882347934315,
         "cpc_inflow": 0.8695869061355102,
-        "cpc_outflow": 0.8708918503346591
+        "cpc_outflow": 0.8708918503346591,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7648043758023085,
@@ -2106,7 +2178,8 @@
         "spearman_inter": 0.8102913058518192,
         "rel_error_total": 0.0368688234793431,
         "cpc_inflow": 0.8751337751271867,
-        "cpc_outflow": 0.8710785860049004
+        "cpc_outflow": 0.8710785860049004,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 100,
@@ -2124,7 +2197,7 @@
       "n_pairs": 26547,
       "rho_c": 0.9991668560175717,
       "average_flow": 546.6711643420255,
-      "mean_distance": 16.21391487121582,
+      "mean_distance": 16.213914965692254,
       "n_inter_pairs": 26384,
       "total_trips": 18293354.0,
       "total_inter_trips": 14423372.0,
@@ -2150,7 +2223,8 @@
         "spearman_inter": 0.7126709710642675,
         "rel_error_total": 0.2549952276267196,
         "cpc_inflow": 0.7974996798644317,
-        "cpc_outflow": 0.7967866601802104
+        "cpc_outflow": 0.7967866601802104,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6692388972495507,
@@ -2162,7 +2236,8 @@
         "spearman_inter": 0.7126709710642675,
         "rel_error_total": 0.2549952276267196,
         "cpc_inflow": 0.7974996798644317,
-        "cpc_outflow": 0.7967866601802104
+        "cpc_outflow": 0.7967866601802104,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6819150753159715,
@@ -2174,7 +2249,8 @@
         "spearman_inter": 0.7398363233587736,
         "rel_error_total": 0.2549952276267196,
         "cpc_inflow": 0.8076314754094724,
-        "cpc_outflow": 0.7973704253600739
+        "cpc_outflow": 0.7973704253600739,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 163,
@@ -2192,7 +2268,7 @@
       "n_pairs": 19527,
       "rho_c": 0.9962487153134635,
       "average_flow": 289.64187342033324,
-      "mean_distance": 10.436408996582031,
+      "mean_distance": 10.436408870940962,
       "n_inter_pairs": 19387,
       "total_trips": 7390956.0,
       "total_inter_trips": 5615287.0,
@@ -2218,7 +2294,8 @@
         "spearman_inter": 0.8240827376466121,
         "rel_error_total": 0.03202457239029879,
         "cpc_inflow": 0.8696879798740978,
-        "cpc_outflow": 0.8712398791378103
+        "cpc_outflow": 0.8712398791378103,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7557010347427952,
@@ -2230,7 +2307,8 @@
         "spearman_inter": 0.8240827376466121,
         "rel_error_total": 0.03202457239029879,
         "cpc_inflow": 0.8696879798740978,
-        "cpc_outflow": 0.8712398791378103
+        "cpc_outflow": 0.8712398791378103,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.761751799557486,
@@ -2242,7 +2320,8 @@
         "spearman_inter": 0.8412727989329994,
         "rel_error_total": 0.03202457239029879,
         "cpc_inflow": 0.8762638798116656,
-        "cpc_outflow": 0.8701001366368355
+        "cpc_outflow": 0.8701001366368355,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 140,
@@ -2260,7 +2339,7 @@
       "n_pairs": 5625,
       "rho_c": 1.0,
       "average_flow": 463.2972972972973,
-      "mean_distance": 6.686794281005859,
+      "mean_distance": 6.686793696493716,
       "n_inter_pairs": 5550,
       "total_trips": 3455665.0,
       "total_inter_trips": 2571300.0,
@@ -2286,7 +2365,8 @@
         "spearman_inter": 0.8357622261478698,
         "rel_error_total": 0.10469646008280269,
         "cpc_inflow": 0.8731445415112519,
-        "cpc_outflow": 0.8745922334208897
+        "cpc_outflow": 0.8745922334208897,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7752507152736439,
@@ -2298,7 +2378,8 @@
         "spearman_inter": 0.8357622261478698,
         "rel_error_total": 0.10469646008280269,
         "cpc_inflow": 0.8731445415112519,
-        "cpc_outflow": 0.8745922334208897
+        "cpc_outflow": 0.8745922334208897,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7799991094963227,
@@ -2310,7 +2391,8 @@
         "spearman_inter": 0.8587968171399013,
         "rel_error_total": 0.10469646008280269,
         "cpc_inflow": 0.8786952630626406,
-        "cpc_outflow": 0.8740188055087533
+        "cpc_outflow": 0.8740188055087533,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 75,
@@ -2328,7 +2410,7 @@
       "n_pairs": 12757,
       "rho_c": 0.9990518331226296,
       "average_flow": 341.2258778867447,
-      "mean_distance": 6.06102180480957,
+      "mean_distance": 6.0610222246913885,
       "n_inter_pairs": 12644,
       "total_trips": 5451842.0,
       "total_inter_trips": 4314460.0,
@@ -2354,7 +2436,8 @@
         "spearman_inter": 0.7766329351157109,
         "rel_error_total": 0.24859904863156043,
         "cpc_inflow": 0.8184476899965016,
-        "cpc_outflow": 0.823398623601435
+        "cpc_outflow": 0.823398623601435,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7396813092012275,
@@ -2366,7 +2449,8 @@
         "spearman_inter": 0.7766329351157109,
         "rel_error_total": 0.24859904863156043,
         "cpc_inflow": 0.8184476899965016,
-        "cpc_outflow": 0.823398623601435
+        "cpc_outflow": 0.823398623601435,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7446590557139074,
@@ -2378,7 +2462,8 @@
         "spearman_inter": 0.7937320610897699,
         "rel_error_total": 0.24859904863156046,
         "cpc_inflow": 0.8197916331881968,
-        "cpc_outflow": 0.821490116645859
+        "cpc_outflow": 0.821490116645859,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 111,
@@ -2407,7 +2492,7 @@
       "n_pairs": 14639,
       "rho_c": 0.999862258953168,
       "average_flow": 407.370849979336,
-      "mean_distance": 9.690765380859375,
+      "mean_distance": 9.690764694391884,
       "n_inter_pairs": 14518,
       "total_trips": 7347932.0,
       "total_inter_trips": 5914210.0,
@@ -2433,7 +2518,8 @@
         "spearman_inter": 0.8276296532466737,
         "rel_error_total": 0.05326844758335477,
         "cpc_inflow": 0.8868334747803436,
-        "cpc_outflow": 0.8886653933777285
+        "cpc_outflow": 0.8886653933777285,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7829998048800865,
@@ -2445,7 +2531,8 @@
         "spearman_inter": 0.8276956447823905,
         "rel_error_total": 0.05326844758335477,
         "cpc_inflow": 0.8869334347525788,
-        "cpc_outflow": 0.8886527334165114
+        "cpc_outflow": 0.8886527334165114,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.787587207679057,
@@ -2457,7 +2544,8 @@
         "spearman_inter": 0.8384727441555557,
         "rel_error_total": 0.053268447583354826,
         "cpc_inflow": 0.8916197405595353,
-        "cpc_outflow": 0.8887637418070442
+        "cpc_outflow": 0.8887637418070442,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 121,
@@ -2475,7 +2563,7 @@
       "n_pairs": 31892,
       "rho_c": 0.9953235829514783,
       "average_flow": 307.165168858197,
-      "mean_distance": 6.424212455749512,
+      "mean_distance": 6.4242122494948495,
       "n_inter_pairs": 31713,
       "total_trips": 12246177.0,
       "total_inter_trips": 9741129.0,
@@ -2501,7 +2589,8 @@
         "spearman_inter": 0.7711810081200904,
         "rel_error_total": 0.05549315361580074,
         "cpc_inflow": 0.8244870332210456,
-        "cpc_outflow": 0.8279688120659943
+        "cpc_outflow": 0.8279688120659943,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6888391629743038,
@@ -2513,7 +2602,8 @@
         "spearman_inter": 0.7711810081200904,
         "rel_error_total": 0.05549315361580074,
         "cpc_inflow": 0.8244870332210456,
-        "cpc_outflow": 0.8279688120659943
+        "cpc_outflow": 0.8279688120659943,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.691722342261736,
@@ -2525,7 +2615,8 @@
         "spearman_inter": 0.7915273843193095,
         "rel_error_total": 0.05549315361580081,
         "cpc_inflow": 0.826926246774966,
-        "cpc_outflow": 0.8279936171711437
+        "cpc_outflow": 0.8279936171711437,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 179,
@@ -2543,7 +2634,7 @@
       "n_pairs": 8464,
       "rho_c": 1.0,
       "average_flow": 753.0065695174391,
-      "mean_distance": 9.002531051635742,
+      "mean_distance": 9.002531198055848,
       "n_inter_pairs": 8372,
       "total_trips": 8038546.0,
       "total_inter_trips": 6304171.0,
@@ -2569,7 +2660,8 @@
         "spearman_inter": 0.7693477810139951,
         "rel_error_total": 0.020093611734100247,
         "cpc_inflow": 0.8617535417062107,
-        "cpc_outflow": 0.8613698369609835
+        "cpc_outflow": 0.8613698369609835,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7550476289782966,
@@ -2581,7 +2673,8 @@
         "spearman_inter": 0.7693477810139951,
         "rel_error_total": 0.020093611734100247,
         "cpc_inflow": 0.8617535417062107,
-        "cpc_outflow": 0.8613698369609835
+        "cpc_outflow": 0.8613698369609835,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7640914742709517,
@@ -2593,7 +2686,8 @@
         "spearman_inter": 0.7881643078368504,
         "rel_error_total": 0.020093611734100198,
         "cpc_inflow": 0.8758509546427682,
-        "cpc_outflow": 0.8589796924533449
+        "cpc_outflow": 0.8589796924533449,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 92,
@@ -2611,7 +2705,7 @@
       "n_pairs": 33368,
       "rho_c": 0.996367020957185,
       "average_flow": 259.4063582944101,
-      "mean_distance": 11.670419692993164,
+      "mean_distance": 11.670420144819182,
       "n_inter_pairs": 33185,
       "total_trips": 11340302.0,
       "total_inter_trips": 8608400.0,
@@ -2637,7 +2731,8 @@
         "spearman_inter": 0.7692811402524232,
         "rel_error_total": 0.23895739133991367,
         "cpc_inflow": 0.8184755723503593,
-        "cpc_outflow": 0.8183994762783847
+        "cpc_outflow": 0.8183994762783847,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6954802762997009,
@@ -2649,7 +2744,8 @@
         "spearman_inter": 0.7692811402524232,
         "rel_error_total": 0.23895739133991367,
         "cpc_inflow": 0.8184755723503593,
-        "cpc_outflow": 0.8183994762783847
+        "cpc_outflow": 0.8183994762783847,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7074348270202078,
@@ -2661,7 +2757,8 @@
         "spearman_inter": 0.7836895829189966,
         "rel_error_total": 0.23895739133991356,
         "cpc_inflow": 0.827819474274201,
-        "cpc_outflow": 0.8203683072993359
+        "cpc_outflow": 0.8203683072993359,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 183,
@@ -2679,7 +2776,7 @@
       "n_pairs": 206950,
       "rho_c": 0.9653165409104933,
       "average_flow": 159.7572922266293,
-      "mean_distance": 19.237462997436523,
+      "mean_distance": 19.237463438202663,
       "n_inter_pairs": 206487,
       "total_trips": 41715577.0,
       "total_inter_trips": 32987804.0,
@@ -2705,7 +2802,8 @@
         "spearman_inter": 0.7212966733888503,
         "rel_error_total": 0.29212131825973214,
         "cpc_inflow": 0.8016585062127349,
-        "cpc_outflow": 0.8004971574010314
+        "cpc_outflow": 0.8004971574010314,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6628512932314237,
@@ -2717,7 +2815,8 @@
         "spearman_inter": 0.7212966733888503,
         "rel_error_total": 0.29212131825973214,
         "cpc_inflow": 0.8016585062127349,
-        "cpc_outflow": 0.8004971574010314
+        "cpc_outflow": 0.8004971574010314,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6726555547354888,
@@ -2729,7 +2828,8 @@
         "spearman_inter": 0.7427575093979768,
         "rel_error_total": 0.29212131825973214,
         "cpc_inflow": 0.8087847023865645,
-        "cpc_outflow": 0.8019034439822711
+        "cpc_outflow": 0.8019034439822711,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 463,
@@ -2747,7 +2847,7 @@
       "n_pairs": 12976,
       "rho_c": 0.9984474460487501,
       "average_flow": 332.4858497900793,
-      "mean_distance": 5.953653335571289,
+      "mean_distance": 5.953653669829058,
       "n_inter_pairs": 12862,
       "total_trips": 5772699.0,
       "total_inter_trips": 4276433.0,
@@ -2773,7 +2873,8 @@
         "spearman_inter": 0.7722719446672098,
         "rel_error_total": 0.1112402615066837,
         "cpc_inflow": 0.8564702661453983,
-        "cpc_outflow": 0.8615644234610457
+        "cpc_outflow": 0.8615644234610457,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7336009199819497,
@@ -2785,7 +2886,8 @@
         "spearman_inter": 0.7722719446672098,
         "rel_error_total": 0.1112402615066837,
         "cpc_inflow": 0.8564702661453983,
-        "cpc_outflow": 0.8615644234610457
+        "cpc_outflow": 0.8615644234610457,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7393339006511355,
@@ -2797,7 +2899,8 @@
         "spearman_inter": 0.7862868159253974,
         "rel_error_total": 0.11124026150668363,
         "cpc_inflow": 0.8661402573160988,
-        "cpc_outflow": 0.8621547789593245
+        "cpc_outflow": 0.8621547789593245,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 114,
@@ -2815,7 +2918,7 @@
       "n_pairs": 23059,
       "rho_c": 0.9980393865458348,
       "average_flow": 444.364561051207,
-      "mean_distance": 14.396759033203125,
+      "mean_distance": 14.396758833846183,
       "n_inter_pairs": 22907,
       "total_trips": 12846518.0,
       "total_inter_trips": 10179059.0,
@@ -2841,7 +2944,8 @@
         "spearman_inter": 0.793436591559257,
         "rel_error_total": 0.2080462758444147,
         "cpc_inflow": 0.8360503899646107,
-        "cpc_outflow": 0.8374408767705456
+        "cpc_outflow": 0.8374408767705456,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.703093533378372,
@@ -2853,7 +2957,8 @@
         "spearman_inter": 0.793436591559257,
         "rel_error_total": 0.2080462758444147,
         "cpc_inflow": 0.8360503899646107,
-        "cpc_outflow": 0.8374408767705456
+        "cpc_outflow": 0.8374408767705456,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7104621807483583,
@@ -2865,7 +2970,8 @@
         "spearman_inter": 0.8123544579393146,
         "rel_error_total": 0.20804627584441474,
         "cpc_inflow": 0.8425171269636618,
-        "cpc_outflow": 0.8377894771706117
+        "cpc_outflow": 0.8377894771706117,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 152,
@@ -2883,7 +2989,7 @@
       "n_pairs": 14158,
       "rho_c": 0.9997863552200541,
       "average_flow": 378.62518697912964,
-      "mean_distance": 9.086835861206055,
+      "mean_distance": 9.086836621312813,
       "n_inter_pairs": 14039,
       "total_trips": 6741393.0,
       "total_inter_trips": 5315519.0,
@@ -2909,7 +3015,8 @@
         "spearman_inter": 0.798125931663274,
         "rel_error_total": 0.14100262281649256,
         "cpc_inflow": 0.8636046860774229,
-        "cpc_outflow": 0.8643100180765159
+        "cpc_outflow": 0.8643100180765159,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.754725474346486,
@@ -2921,7 +3028,8 @@
         "spearman_inter": 0.7986162784051891,
         "rel_error_total": 0.14100262281649265,
         "cpc_inflow": 0.8637628172101331,
-        "cpc_outflow": 0.8646287010766874
+        "cpc_outflow": 0.8646287010766874,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7599301496524605,
@@ -2933,7 +3041,8 @@
         "spearman_inter": 0.8171807420154468,
         "rel_error_total": 0.14100262281649265,
         "cpc_inflow": 0.8678587751053245,
-        "cpc_outflow": 0.8606170556989806
+        "cpc_outflow": 0.8606170556989806,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 119,
@@ -2951,7 +3060,7 @@
       "n_pairs": 117474,
       "rho_c": 0.9699393818940673,
       "average_flow": 184.49282823625836,
-      "mean_distance": 17.01962661743164,
+      "mean_distance": 17.019626452812776,
       "n_inter_pairs": 117126,
       "total_trips": 27207000.0,
       "total_inter_trips": 21608907.0,
@@ -2977,7 +3086,8 @@
         "spearman_inter": 0.7808416203799248,
         "rel_error_total": 0.09253956352404265,
         "cpc_inflow": 0.8528328263547592,
-        "cpc_outflow": 0.8558882384256109
+        "cpc_outflow": 0.8558882384256109,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7103223121307953,
@@ -2989,7 +3099,8 @@
         "spearman_inter": 0.7808416203799248,
         "rel_error_total": 0.09253956352404265,
         "cpc_inflow": 0.8528328263547592,
-        "cpc_outflow": 0.8558882384256109
+        "cpc_outflow": 0.8558882384256109,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7175324875625659,
@@ -3001,7 +3112,8 @@
         "spearman_inter": 0.8012035234535843,
         "rel_error_total": 0.09253956352404265,
         "cpc_inflow": 0.8586374719081472,
-        "cpc_outflow": 0.856342914409621
+        "cpc_outflow": 0.856342914409621,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 348,
@@ -3019,7 +3131,7 @@
       "n_pairs": 19871,
       "rho_c": 0.9994934143870314,
       "average_flow": 439.72508869741506,
-      "mean_distance": 8.356160163879395,
+      "mean_distance": 8.356160212850064,
       "n_inter_pairs": 19730,
       "total_trips": 11051146.0,
       "total_inter_trips": 8675776.0,
@@ -3045,7 +3157,8 @@
         "spearman_inter": 0.7472636480082153,
         "rel_error_total": 0.3540884668406439,
         "cpc_inflow": 0.8100828523030624,
-        "cpc_outflow": 0.8109601538347991
+        "cpc_outflow": 0.8109601538347991,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7071752311533185,
@@ -3057,7 +3170,8 @@
         "spearman_inter": 0.7472636480082153,
         "rel_error_total": 0.3540884668406439,
         "cpc_inflow": 0.8100828523030624,
-        "cpc_outflow": 0.8109601538347991
+        "cpc_outflow": 0.8109601538347991,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7144254752890971,
@@ -3069,7 +3183,8 @@
         "spearman_inter": 0.7757862080882952,
         "rel_error_total": 0.3540884668406439,
         "cpc_inflow": 0.8133675849409716,
-        "cpc_outflow": 0.8099236606055472
+        "cpc_outflow": 0.8099236606055472,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 141,
@@ -3087,7 +3202,7 @@
       "n_pairs": 37109,
       "rho_c": 0.9962219343696027,
       "average_flow": 353.81953624444685,
-      "mean_distance": 5.217103481292725,
+      "mean_distance": 5.217103553111025,
       "n_inter_pairs": 36916,
       "total_trips": 15567591.0,
       "total_inter_trips": 13061602.0,
@@ -3113,7 +3228,8 @@
         "spearman_inter": 0.7104870466145958,
         "rel_error_total": 0.13410384474826942,
         "cpc_inflow": 0.7919981880606733,
-        "cpc_outflow": 0.7920273655976025
+        "cpc_outflow": 0.7920273655976025,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6798130736130268,
@@ -3125,7 +3241,8 @@
         "spearman_inter": 0.7104870466145958,
         "rel_error_total": 0.13410384474826942,
         "cpc_inflow": 0.7919981880606733,
-        "cpc_outflow": 0.7920273655976025
+        "cpc_outflow": 0.7920273655976025,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6820927289391034,
@@ -3137,7 +3254,8 @@
         "spearman_inter": 0.7250977086773954,
         "rel_error_total": 0.13410384474826942,
         "cpc_inflow": 0.7950158074462168,
-        "cpc_outflow": 0.7893263082798931
+        "cpc_outflow": 0.7893263082798931,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 190,
@@ -3171,7 +3289,7 @@
       "n_pairs": 9357,
       "rho_c": 0.9944158075601375,
       "average_flow": 503.1235421166307,
-      "mean_distance": 10.835758209228516,
+      "mean_distance": 10.835758223286456,
       "n_inter_pairs": 9260,
       "total_trips": 6343735.0,
       "total_inter_trips": 4658924.0,
@@ -3197,7 +3315,8 @@
         "spearman_inter": 0.8295620290391295,
         "rel_error_total": 0.09092291613273985,
         "cpc_inflow": 0.8376069170169842,
-        "cpc_outflow": 0.8378729220936477
+        "cpc_outflow": 0.8378729220936477,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7322237445271284,
@@ -3209,7 +3328,8 @@
         "spearman_inter": 0.8295620290391295,
         "rel_error_total": 0.09092291613273985,
         "cpc_inflow": 0.8376069170169842,
-        "cpc_outflow": 0.8378729220936477
+        "cpc_outflow": 0.8378729220936477,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7436780882095723,
@@ -3221,7 +3341,8 @@
         "spearman_inter": 0.8481385708894766,
         "rel_error_total": 0.09092291613273985,
         "cpc_inflow": 0.8567953678056718,
-        "cpc_outflow": 0.8418187265603727
+        "cpc_outflow": 0.8418187265603727,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 93,
@@ -3260,7 +3381,7 @@
       "n_pairs": 13222,
       "rho_c": 0.9997711670480549,
       "average_flow": 555.6867322804608,
-      "mean_distance": 10.218308448791504,
+      "mean_distance": 10.218308809093328,
       "n_inter_pairs": 13107,
       "total_trips": 9054311.0,
       "total_inter_trips": 7283386.0,
@@ -3286,7 +3407,8 @@
         "spearman_inter": 0.8273752567222661,
         "rel_error_total": 0.21354658890159728,
         "cpc_inflow": 0.8369806190627554,
-        "cpc_outflow": 0.8376782857642627
+        "cpc_outflow": 0.8376782857642627,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.750039432251264,
@@ -3298,7 +3420,8 @@
         "spearman_inter": 0.8273752567222661,
         "rel_error_total": 0.21354658890159728,
         "cpc_inflow": 0.8369806190627554,
-        "cpc_outflow": 0.8376782857642627
+        "cpc_outflow": 0.8376782857642627,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7548788046768897,
@@ -3310,7 +3433,8 @@
         "spearman_inter": 0.8441977981839731,
         "rel_error_total": 0.21354658890159728,
         "cpc_inflow": 0.8393666635424194,
-        "cpc_outflow": 0.8344526056286518
+        "cpc_outflow": 0.8344526056286518,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 115,
@@ -3328,7 +3452,7 @@
       "n_pairs": 34048,
       "rho_c": 0.9948002350176263,
       "average_flow": 343.1202197088267,
-      "mean_distance": 14.023892402648926,
+      "mean_distance": 14.023892260177226,
       "n_inter_pairs": 33863,
       "total_trips": 14731346.0,
       "total_inter_trips": 11619080.0,
@@ -3354,7 +3478,8 @@
         "spearman_inter": 0.7787627072165161,
         "rel_error_total": 0.1509528264690326,
         "cpc_inflow": 0.8482059480219043,
-        "cpc_outflow": 0.8498650854766084
+        "cpc_outflow": 0.8498650854766084,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7107520807500889,
@@ -3366,7 +3491,8 @@
         "spearman_inter": 0.7787627072165161,
         "rel_error_total": 0.1509528264690326,
         "cpc_inflow": 0.8482059480219043,
-        "cpc_outflow": 0.8498650854766084
+        "cpc_outflow": 0.8498650854766084,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.717258933100033,
@@ -3378,7 +3504,8 @@
         "spearman_inter": 0.7958021022538334,
         "rel_error_total": 0.15095282646903266,
         "cpc_inflow": 0.854312617806746,
-        "cpc_outflow": 0.8504004417517855
+        "cpc_outflow": 0.8504004417517855,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 185,
@@ -3396,7 +3523,7 @@
       "n_pairs": 161129,
       "rho_c": 0.8551154202275412,
       "average_flow": 162.10033292884034,
-      "mean_distance": 27.917530059814453,
+      "mean_distance": 27.917530068990217,
       "n_inter_pairs": 160695,
       "total_trips": 34024526.0,
       "total_inter_trips": 26048713.0,
@@ -3413,49 +3540,52 @@
         "cpc_outflow": 0.8445468732181972
       },
       "M1_city_oracle_obs": {
-        "cpc": 0.6938264237894247,
-        "cpc_inter": 0.6930894334458378,
-        "rmse_log1p_inter": 1.1595515480856224,
-        "rmse_inter": 389.76071216159045,
-        "nrmse_inter": 2.4044411576420988,
-        "mae_inter": 105.76115743507994,
-        "spearman_inter": 0.8147486257790187,
+        "cpc": 0.6938273502470678,
+        "cpc_inter": 0.6930904729482862,
+        "rmse_log1p_inter": 1.1595489826701249,
+        "rmse_inter": 389.76069137247737,
+        "nrmse_inter": 2.4044410293936695,
+        "mae_inter": 105.76079904297258,
+        "spearman_inter": 0.814749355972781,
         "rel_error_total": 0.12582949530985707,
-        "cpc_inflow": 0.838908110864962,
-        "cpc_outflow": 0.8390083947797718
+        "cpc_inflow": 0.838907778429614,
+        "cpc_outflow": 0.839008076097903,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
-        "cpc": 0.6945854511407297,
-        "cpc_inter": 0.6940210658352308,
-        "rmse_log1p_inter": 1.1573876200771849,
-        "rmse_inter": 387.3629422532537,
-        "nrmse_inter": 2.3896492700190834,
-        "mae_inter": 105.44025992874008,
-        "spearman_inter": 0.8150578775731322,
+        "cpc": 0.6945861832605716,
+        "cpc_inter": 0.694021931231863,
+        "rmse_log1p_inter": 1.1573846881098808,
+        "rmse_inter": 387.3629486033837,
+        "nrmse_inter": 2.3896493091931545,
+        "mae_inter": 105.43996153658479,
+        "spearman_inter": 0.8150586373352011,
         "rel_error_total": 0.12582949530985713,
-        "cpc_inflow": 0.84047873425819,
-        "cpc_outflow": 0.8400731619708762
+        "cpc_inflow": 0.840478494052137,
+        "cpc_outflow": 0.8400729448460783,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
-        "cpc": 0.7066694157964266,
-        "cpc_inter": 0.7072930738030027,
-        "rmse_log1p_inter": 1.1041218432191229,
-        "rmse_inter": 364.83303198477734,
-        "nrmse_inter": 2.250661830194597,
-        "mae_inter": 100.86739583354101,
-        "spearman_inter": 0.8268513899841046,
-        "rel_error_total": 0.12582949530985707,
-        "cpc_inflow": 0.8496181273332862,
-        "cpc_outflow": 0.8445468732181972
+        "cpc": 0.7066691656315076,
+        "cpc_inter": 0.7072932445924068,
+        "rmse_log1p_inter": 1.1041207781819553,
+        "rmse_inter": 364.8330358385701,
+        "nrmse_inter": 2.250661853968717,
+        "mae_inter": 100.86733714007373,
+        "spearman_inter": 0.8268515446206056,
+        "rel_error_total": 0.12582949530985713,
+        "cpc_inflow": 0.8496180830528949,
+        "cpc_outflow": 0.8445468732181972,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 434,
         "n_nearest_fallback": 0,
         "fallback_details": []
       },
-      "delta_city": 0.013761621935178492,
-      "delta_county": 0.01469325432457147,
-      "delta_subzone": 0.027965262292343307,
+      "delta_city": 0.013762661437626833,
+      "delta_county": 0.014694119721203602,
+      "delta_subzone": 0.02796543308174748,
       "fold": 5
     },
     {
@@ -3464,7 +3594,7 @@
       "n_pairs": 20703,
       "rho_c": 0.9983974358974358,
       "average_flow": 392.4344569288389,
-      "mean_distance": 9.705127716064453,
+      "mean_distance": 9.705128172410069,
       "n_inter_pairs": 20559,
       "total_trips": 10760695.0,
       "total_inter_trips": 8068060.0,
@@ -3490,7 +3620,8 @@
         "spearman_inter": 0.7339403590395647,
         "rel_error_total": 0.2118653422645346,
         "cpc_inflow": 0.8221769242576501,
-        "cpc_outflow": 0.8233857809086832
+        "cpc_outflow": 0.8233857809086832,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.694380680490898,
@@ -3502,7 +3633,8 @@
         "spearman_inter": 0.7332542323671963,
         "rel_error_total": 0.2118653422645346,
         "cpc_inflow": 0.822763293881347,
-        "cpc_outflow": 0.8234844565303066
+        "cpc_outflow": 0.8234844565303066,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7034866545379933,
@@ -3514,7 +3646,8 @@
         "spearman_inter": 0.7657532039684494,
         "rel_error_total": 0.2118653422645346,
         "cpc_inflow": 0.8317649363070186,
-        "cpc_outflow": 0.8161540373045274
+        "cpc_outflow": 0.8161540373045274,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 144,
@@ -3532,7 +3665,7 @@
       "n_pairs": 20685,
       "rho_c": 0.99752331002331,
       "average_flow": 262.84616133586485,
-      "mean_distance": 13.998374938964844,
+      "mean_distance": 13.998374998366367,
       "n_inter_pairs": 20541,
       "total_trips": 7193886.0,
       "total_inter_trips": 5399123.0,
@@ -3558,7 +3691,8 @@
         "spearman_inter": 0.7534872443823949,
         "rel_error_total": 0.040214827769175406,
         "cpc_inflow": 0.8516157439116337,
-        "cpc_outflow": 0.8543577892531995
+        "cpc_outflow": 0.8543577892531995,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7320919414170362,
@@ -3570,7 +3704,8 @@
         "spearman_inter": 0.7537825937448117,
         "rel_error_total": 0.040214827769175406,
         "cpc_inflow": 0.8537892131736277,
-        "cpc_outflow": 0.8546945946714045
+        "cpc_outflow": 0.8546945946714045,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7437047417145584,
@@ -3582,7 +3717,8 @@
         "spearman_inter": 0.7798905375686513,
         "rel_error_total": 0.040214827769175406,
         "cpc_inflow": 0.863464620554237,
-        "cpc_outflow": 0.8570812756978903
+        "cpc_outflow": 0.8570812756978903,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 144,
@@ -3600,7 +3736,7 @@
       "n_pairs": 9397,
       "rho_c": 0.9987113402061856,
       "average_flow": 476.2611827956989,
-      "mean_distance": 5.374888896942139,
+      "mean_distance": 5.374889098117428,
       "n_inter_pairs": 9300,
       "total_trips": 5793376.0,
       "total_inter_trips": 4429229.0,
@@ -3626,7 +3762,8 @@
         "spearman_inter": 0.6759327203908013,
         "rel_error_total": 0.0632676440933167,
         "cpc_inflow": 0.8509740293877194,
-        "cpc_outflow": 0.8539961974625837
+        "cpc_outflow": 0.8539961974625837,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7204147656843999,
@@ -3638,7 +3775,8 @@
         "spearman_inter": 0.6759327203908013,
         "rel_error_total": 0.0632676440933167,
         "cpc_inflow": 0.8509740293877194,
-        "cpc_outflow": 0.8539961974625837
+        "cpc_outflow": 0.8539961974625837,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7251641735417639,
@@ -3650,7 +3788,8 @@
         "spearman_inter": 0.7159017165803672,
         "rel_error_total": 0.06326764409331677,
         "cpc_inflow": 0.8548025388033881,
-        "cpc_outflow": 0.8541131998065451
+        "cpc_outflow": 0.8541131998065451,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 91,
@@ -3699,7 +3838,7 @@
       "n_pairs": 145279,
       "rho_c": 0.9851977262837249,
       "average_flow": 158.6073363470099,
-      "mean_distance": 9.930608749389648,
+      "mean_distance": 9.930608673350585,
       "n_inter_pairs": 144895,
       "total_trips": 27419366.0,
       "total_inter_trips": 22981410.0,
@@ -3725,7 +3864,8 @@
         "spearman_inter": 0.6737070772930703,
         "rel_error_total": 0.12411093586175691,
         "cpc_inflow": 0.8098844002745723,
-        "cpc_outflow": 0.8102927717417071
+        "cpc_outflow": 0.8102927717417071,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.6497043471221239,
@@ -3737,7 +3877,8 @@
         "spearman_inter": 0.6737070772930703,
         "rel_error_total": 0.12411093586175691,
         "cpc_inflow": 0.8098844002745723,
-        "cpc_outflow": 0.8102927717417071
+        "cpc_outflow": 0.8102927717417071,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.6559168158843709,
@@ -3749,7 +3890,8 @@
         "spearman_inter": 0.7033262303815242,
         "rel_error_total": 0.12411093586175691,
         "cpc_inflow": 0.8145282459856924,
-        "cpc_outflow": 0.8105887542118023
+        "cpc_outflow": 0.8105887542118023,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 384,
@@ -3767,7 +3909,7 @@
       "n_pairs": 33445,
       "rho_c": 0.9986789167117035,
       "average_flow": 334.64244483194034,
-      "mean_distance": 9.312341690063477,
+      "mean_distance": 9.312341842691293,
       "n_inter_pairs": 33262,
       "total_trips": 14019747.0,
       "total_inter_trips": 11130877.0,
@@ -3793,7 +3935,8 @@
         "spearman_inter": 0.7612137987788717,
         "rel_error_total": 0.24867620722630104,
         "cpc_inflow": 0.8292158571208857,
-        "cpc_outflow": 0.8313402664618136
+        "cpc_outflow": 0.8313402664618136,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7197558358269291,
@@ -3805,7 +3948,8 @@
         "spearman_inter": 0.7612137987788717,
         "rel_error_total": 0.24867620722630104,
         "cpc_inflow": 0.8292158571208857,
-        "cpc_outflow": 0.8313402664618136
+        "cpc_outflow": 0.8313402664618136,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7260105399004011,
@@ -3817,7 +3961,8 @@
         "spearman_inter": 0.7760751879012363,
         "rel_error_total": 0.24867620722630104,
         "cpc_inflow": 0.835944904361523,
-        "cpc_outflow": 0.8291829032679834
+        "cpc_outflow": 0.8291829032679834,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 183,
@@ -3835,7 +3980,7 @@
       "n_pairs": 13685,
       "rho_c": 0.9997052755673446,
       "average_flow": 519.0241008254717,
-      "mean_distance": 10.803373336791992,
+      "mean_distance": 10.80337396688443,
       "n_inter_pairs": 13568,
       "total_trips": 8972522.0,
       "total_inter_trips": 7042119.0,
@@ -3861,7 +4006,8 @@
         "spearman_inter": 0.827702999449996,
         "rel_error_total": 0.20752506497291556,
         "cpc_inflow": 0.8407209600703824,
-        "cpc_outflow": 0.8428886660439362
+        "cpc_outflow": 0.8428886660439362,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.7529262436251577,
@@ -3873,7 +4019,8 @@
         "spearman_inter": 0.827702999449996,
         "rel_error_total": 0.20752506497291556,
         "cpc_inflow": 0.8407209600703824,
-        "cpc_outflow": 0.8428886660439362
+        "cpc_outflow": 0.8428886660439362,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7572006013567516,
@@ -3885,7 +4032,8 @@
         "spearman_inter": 0.8466866441098677,
         "rel_error_total": 0.20752506497291556,
         "cpc_inflow": 0.8449198276542603,
-        "cpc_outflow": 0.8428122665534866
+        "cpc_outflow": 0.8428122665534866,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 117,
@@ -3903,7 +4051,7 @@
       "n_pairs": 9216,
       "rho_c": 1.0,
       "average_flow": 590.1169956140351,
-      "mean_distance": 9.037700653076172,
+      "mean_distance": 9.037699783763342,
       "n_inter_pairs": 9120,
       "total_trips": 6787057.0,
       "total_inter_trips": 5381867.0,
@@ -3929,7 +4077,8 @@
         "spearman_inter": 0.8505364637747429,
         "rel_error_total": 0.16803409008754197,
         "cpc_inflow": 0.8675084500725957,
-        "cpc_outflow": 0.8679962250055316
+        "cpc_outflow": 0.8679962250055316,
+        "yd_source": "target_ground_truth_positive_od"
       },
       "M1_county_oracle_obs": {
         "cpc": 0.795443129968215,
@@ -3941,7 +4090,8 @@
         "spearman_inter": 0.8505364637747429,
         "rel_error_total": 0.16803409008754197,
         "cpc_inflow": 0.8675084500725957,
-        "cpc_outflow": 0.8679962250055316
+        "cpc_outflow": 0.8679962250055316,
+        "yd_source": "target_ground_truth_positive_od_county_grouped"
       },
       "M1_subzone_oracle_obs": {
         "cpc": 0.7994017397959954,
@@ -3953,7 +4103,8 @@
         "spearman_inter": 0.8453178550504444,
         "rel_error_total": 0.16803409008754197,
         "cpc_inflow": 0.8742270914978164,
-        "cpc_outflow": 0.8603876151558394
+        "cpc_outflow": 0.8603876151558394,
+        "yd_source": "target_ground_truth_positive_od_tract_grouped"
       },
       "mapping_stats": {
         "n_strict_within": 96,
