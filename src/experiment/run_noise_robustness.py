@@ -36,13 +36,11 @@ from src.training.train import load_checkpoint
 from src.training.evaluate import compute_cpc_pair
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.data.city_splits import generate_35_5_10_splits, load_splits_manifest_v2
+from src.experiment.e1_core import active_bins_from_pairs
 from src.experiment.run_experiment import infer_zero_shot
 
 def evaluate_cpc(t_true_inter: np.ndarray, t_pred_inter: np.ndarray) -> float:
     return compute_cpc_pair(t_true_inter, t_pred_inter)
-
-def get_active_bins(yd: np.ndarray, eps: float = 1e-8) -> np.ndarray:
-    return yd > eps
 
 def get_stable_seed(noise_seed: int, fold: int, city: str, replicate_id: int) -> int:
     s = f"{noise_seed}_{fold}_{city}_{replicate_id}"
@@ -282,7 +280,7 @@ def run_noise_robustness(args: argparse.Namespace) -> None:
             t_true_inter = raw.pair_trips.numpy()[inter_mask]
             
             yd_target = extract_yd_kbins(dist_km, raw.pair_trips.numpy(), bin_edges, inter_mask)
-            active_mask = get_active_bins(yd_target)
+            active_mask = active_bins_from_pairs(dist_km[inter_mask], bin_edges)
             
             p_active_orig = yd_target[active_mask]
             p_active_orig = p_active_orig / p_active_orig.sum()
@@ -428,7 +426,7 @@ def generate_summary(
         return
         
     results: Dict[float, Dict[str, Any]] = {}
-    p_benefit_onesided: List[float] = []
+    p_benefit_twosided: List[float] = []
     p_degrad_onesided: List[float] = []
     
     # Get oracle delta_cpc per city for degradation paired test
@@ -452,13 +450,13 @@ def generate_summary(
         
         ci_lower, ci_upper = fold_stratified_bootstrap(eval_df, "delta_cpc_mean", eps, evaluation_folds)
         
-        # 1. Benefit Test (H1: delta_cpc > 0 vs M0)
+        # 1. Benefit Test (pre/post effect vs M0): two-sided
         try:
-            _, p_ben = wilcoxon(vals, alternative='greater')
+            _, p_ben = wilcoxon(vals, alternative='two-sided')
         except Exception:
             p_ben = 1.0
             
-        # 2. Degradation Test (H1: delta_cpc_clean - delta_cpc_eps > 0 vs clean Y_D)
+        # 2. Degradation Test (clean Y_D beats noisy Y_D): one-sided
         degrad_vals = []
         for _, row in c_eps.iterrows():
             clean_v = clean_vals_by_city.get((row["fold"], row["target_city"]), row["delta_cpc_mean"])
@@ -471,7 +469,7 @@ def generate_summary(
                 _, p_deg = wilcoxon(degrad_arr, alternative='greater')
             except Exception:
                 p_deg = 1.0
-            p_benefit_onesided.append(float(p_ben))
+            p_benefit_twosided.append(float(p_ben))
             p_degrad_onesided.append(float(p_deg))
         else:
             p_deg = float('nan')
@@ -486,7 +484,7 @@ def generate_summary(
             "wilcoxon_degrad_raw": float(p_deg) if not np.isnan(p_deg) else None
         }
         
-    p_ben_adj = holm_correction(p_benefit_onesided)
+    p_ben_adj = holm_correction(p_benefit_twosided)
     p_deg_adj = holm_correction(p_degrad_onesided)
     
     for i, e in enumerate(nonzero_epsilons):

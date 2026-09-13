@@ -142,7 +142,7 @@ def run_experiment(
             raise RuntimeError(f"Expected K={K}, got {k_active} in fold {fold}")
         for city in sorted(split["test"])[:city_limit]:
             raw = load_city(city, data_root=data_root, feature_scaler=None, fit_scaler=True)
-            distances = np.expm1(raw.pair_distance.numpy())
+            distances = np.asarray(raw.dist_km, dtype=np.float64)
             origins = raw.pair_o_idx.numpy()
             destinations = raw.pair_d_idx.numpy()
             inter = (origins != destinations) & (distances > 0.0)
@@ -236,7 +236,8 @@ def run_experiment(
         deltas = np.array([row["delta_cpc"] for row in rows])
         tv = np.array([row["empirical_tv"] for row in rows])
         try:
-            p_value = float(wilcoxon(deltas, alternative="greater").pvalue)
+            # Gain over M0 is a pre/post effect: two-sided.
+            p_value = float(wilcoxon(deltas, alternative="two-sided").pvalue)
         except ValueError:
             p_value = 1.0
         summary["results"][key] = {"sample_trips": None if key == "inf" else int(key), "mean_delta_cpc": float(deltas.mean()), "median_delta_cpc": float(np.median(deltas)), "ci95_delta_cpc": list(_fold_bootstrap(city_rows, "delta_cpc", key, n_boot=10000)), "mean_empirical_tv": float(tv.mean()), "win_rate": float(np.mean(deltas > 0.0)), "harm_rate": float(np.mean(deltas < 0.0)), "wilcoxon_p_raw": p_value, "n_cities": len(rows)}

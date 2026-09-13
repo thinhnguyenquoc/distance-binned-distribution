@@ -376,6 +376,7 @@ def train_zero_shot_model(
             pair_distance = c.pair_distance.to(device),
             pair_trips    = c.pair_trips.to(device),
             bin_labels    = c.bin_labels.to(device),
+            dist_km       = c.dist_km,
         )
         for c in train_cities
     ]

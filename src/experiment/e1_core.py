@@ -20,6 +20,8 @@ Public API:
   compute_summary(...)   -- Aggregate statistics across cities
   write_tables(...)      -- GitHub Markdown tables (Nature/PNAS standard)
   build_inter_mask(...)  -- Interzonal Omega_c^+ boolean mask
+  active_bins_from_pairs(...) -- Active bins defined by OD-pair existence
+  verify_checkpoint_provenance(...) -- Reject out-of-scope checkpoints
   safe_wilcoxon(...)     -- Defensive Wilcoxon signed-rank test
   compute_iqr(...)       -- Sample IQR
   log_msg(...)           -- Timestamped logging
@@ -29,6 +31,7 @@ Public API:
 
 from __future__ import annotations
 
+import json
 import os
 import platform
 import time
@@ -129,6 +132,42 @@ def build_inter_mask(cd: Any, dist_km: np.ndarray) -> np.ndarray:
     return (o != d) & (dist_km > 0.0)
 
 
+def active_bins_from_pairs(dist_km_inter: np.ndarray, bin_edges: np.ndarray) -> np.ndarray:
+    """Active bins are those containing at least one interzonal OD pair (not a mass threshold)."""
+    edges = np.asarray(bin_edges, dtype=np.float64)
+    d = np.asarray(dist_km_inter, dtype=np.float64)
+    return np.array(
+        [bool(((d > edges[k]) & (d <= edges[k + 1])).any()) for k in range(len(edges) - 1)],
+        dtype=bool,
+    )
+
+
+def manifest_sha256(manifest_path: str | Path) -> str:
+    """SHA-256 recorded inside the locked split manifest."""
+    with open(manifest_path, "r", encoding="utf-8") as handle:
+        return json.load(handle)["manifest_sha256"]
+
+
+def verify_checkpoint_provenance(
+    metadata: dict,
+    ckpt_path: str | Path,
+    expected_seed: int,
+    expected_fold: int,
+    expected_manifest_sha256: str,
+    expected_backbone: str | None = None,
+) -> None:
+    """Reject any checkpoint whose training scope does not match the analysis being run."""
+    hp = metadata.get("hyperparams", {}) or {}
+    if int(metadata.get("seed", -1)) != int(expected_seed):
+        raise RuntimeError(f"Checkpoint seed mismatch: {ckpt_path}")
+    if int(hp.get("fold", -1)) != int(expected_fold):
+        raise RuntimeError(f"Checkpoint fold mismatch: {ckpt_path}")
+    if hp.get("split_manifest_sha256") != expected_manifest_sha256:
+        raise RuntimeError(f"Split manifest mismatch in checkpoint: {ckpt_path}")
+    if expected_backbone is not None and hp.get("backbone", expected_backbone) != expected_backbone:
+        raise RuntimeError(f"Checkpoint backbone mismatch: {ckpt_path}")
+
+
 def safe_wilcoxon(diff: np.ndarray, alternative: str = "greater") -> tuple[float, float]:
     """Defensive Wilcoxon signed-rank test (handles n<2, all-zero, NaN)."""
     diff_clean = diff[~np.isnan(diff)]
@@ -191,7 +230,7 @@ def run_city(
     else:
         cd = load_city(city, data_root=data_root, feature_scaler=scaler)
         ei, ed = build_radius_graph(cd.lon_lat, radius_km=5.0)
-        dist_km = np.expm1(cd.pair_distance.numpy())
+        dist_km = np.asarray(cd.dist_km, dtype=np.float64)
         inter = build_inter_mask(cd, dist_km)
         t_gt = cd.pair_trips.numpy().astype(np.float64)
         Y_D_tgt = (test_yd_cache.get(city) if test_yd_cache else None)
@@ -227,7 +266,7 @@ def run_city(
             Y_D_wr = test_yd_cache[donor]
         else:
             cd_d   = load_city(donor, data_root=data_root, feature_scaler=scaler)
-            dist_d = np.expm1(cd_d.pair_distance.numpy())
+            dist_d = np.asarray(cd_d.dist_km, dtype=np.float64)
             inter_d = build_inter_mask(cd_d, dist_d)
             t_gt_d = cd_d.pair_trips.numpy().astype(np.float64)
             Y_D_wr = extract_yd_kbins(dist_d, t_gt_d, bin_edges, inter_d)
@@ -330,8 +369,9 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
     ci_tl, ci_th, _ = fold_bootstrap(dt, fid, seed=bootstrap_seed)
     ci_wl, ci_wh, _ = fold_bootstrap(dw, fid, seed=bootstrap_seed)
     ci_sl, ci_sh, _ = fold_bootstrap(ds, fid, seed=bootstrap_seed)
-    _, pt = safe_wilcoxon(dt, alternative="greater")
-    _, pw = safe_wilcoxon(dw, alternative="greater")
+    # Pre/post effects are two-sided; only target-vs-placebo superiority is one-sided.
+    _, pt = safe_wilcoxon(dt, alternative="two-sided")
+    _, pw = safe_wilcoxon(dw, alternative="two-sided")
     _, ps = safe_wilcoxon(ds, alternative="greater")
 
     is_full_50_complete = bool(
@@ -344,8 +384,8 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
         c_ci_tl, c_ci_th, _ = fold_bootstrap(dt, fid, seed=bootstrap_seed)
         c_ci_wl, c_ci_wh, _ = fold_bootstrap(dw, fid, seed=bootstrap_seed)
         c_ci_sl, c_ci_sh, _ = fold_bootstrap(ds, fid, seed=bootstrap_seed)
-        _, c_pt = safe_wilcoxon(dt, alternative="greater")
-        _, c_pw = safe_wilcoxon(dw, alternative="greater")
+        _, c_pt = safe_wilcoxon(dt, alternative="two-sided")
+        _, c_pw = safe_wilcoxon(dw, alternative="two-sided")
         _, c_ps = safe_wilcoxon(ds, alternative="greater")
         conf_summary = {
             "status": "full_5_fold_complete",
@@ -365,6 +405,11 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
             "delta_specificity_iqr": compute_iqr(ds), "delta_specificity_std": float(ds.std(ddof=1)),
             "delta_specificity_ci_l": c_ci_sl, "delta_specificity_ci_h": c_ci_sh,
             "n_positive_specificity": int((ds > 0).sum()), "p_specificity": float(c_ps),
+            "test_sidedness": {
+                "p_wilcoxon_target": "two-sided (pre/post effect)",
+                "p_wilcoxon_wrong": "two-sided (pre/post effect)",
+                "p_specificity": "one-sided greater (target > placebo)",
+            },
             "ci_lower_bound_positive": bool(c_ci_tl > 0),
             "specificity_ci_lower_bound_positive": bool(c_ci_sl > 0),
             "target_beats_wrong": bool(float(ds.mean()) > 0),
@@ -429,6 +474,11 @@ def compute_summary(results: list, fold_manifest: dict = None, bootstrap_seed: i
         "delta_specificity_iqr": compute_iqr(ds), "delta_specificity_std": float(ds.std(ddof=ddof)),
         "delta_specificity_ci_l": ci_sl, "delta_specificity_ci_h": ci_sh,
         "n_positive_specificity": int((ds > 0).sum()), "p_specificity": float(ps),
+        "test_sidedness": {
+            "p_wilcoxon_target": "two-sided (pre/post effect)",
+            "p_wilcoxon_wrong": "two-sided (pre/post effect)",
+            "p_specificity": "one-sided greater (target > placebo)",
+        },
         "ci_lower_bound_positive": bool(ci_tl > 0),
         "specificity_ci_lower_bound_positive": bool(ci_sl > 0),
         "target_beats_wrong": bool(float(ds.mean()) > 0),
@@ -508,6 +558,9 @@ def write_tables(
          f"**+{summary['delta_specificity_mean']:.4f}** | **+{summary['delta_specificity_median']:.4f}** | {summary['delta_specificity_iqr']:.4f} | "
          f"**[{sl:+.4f}, {sh:+.4f}]** | **{summary['win_rate_specificity']}** | **{summary['p_specificity']:.2e}** |"),
         "",
+        "*Wilcoxon p: the two Delta CPC rows are two-sided (pre/post effect); the Specificity row is"
+        " one-sided (greater, target > placebo). Raw and unadjusted.*",
+        "",
     ])
 
     conf = summary.get("full_5_fold_folds_2_5")
@@ -529,6 +582,9 @@ def write_tables(
             (f"| **Specificity (Target - Wrong)** | -- | "
              f"**+{conf['delta_specificity_mean']:.4f}** | **+{conf['delta_specificity_median']:.4f}** | {conf['delta_specificity_iqr']:.4f} | "
              f"**[{c_sl:+.4f}, {c_sh:+.4f}]** | **{conf['win_rate_specificity']}** | **{conf['p_specificity']:.2e}** |"),
+            "",
+            "*Wilcoxon p: the two Delta CPC rows are two-sided (pre/post effect); the Specificity row is"
+            " one-sided (greater, target > placebo). Raw and unadjusted.*",
             "",
         ])
     else:

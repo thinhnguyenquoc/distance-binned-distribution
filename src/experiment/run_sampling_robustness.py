@@ -336,7 +336,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
     finite_m = [m for m in sorted_m if not np.isinf(m)]
     
     results: Dict[str, Dict[str, Any]] = {}
-    p_benefit_onesided: List[float] = []
+    p_benefit_twosided: List[float] = []
     p_degrad_onesided: List[float] = []
     
     # Get oracle delta_cpc per city for degradation paired test
@@ -364,13 +364,13 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
         tv_ci_lo, tv_ci_hi = fold_stratified_bootstrap(eval_df, "empirical_tv_mean", m, evaluation_folds)
         ci_lower, ci_upper = fold_stratified_bootstrap(eval_df, "delta_cpc_mean", m, evaluation_folds)
         
-        # 1. Benefit Test (H1: delta_cpc > 0 vs M0)
+        # 1. Benefit Test (pre/post effect vs M0): two-sided
         try:
-            _, p_ben = wilcoxon(vals, alternative='greater')
+            _, p_ben = wilcoxon(vals, alternative='two-sided')
         except Exception:
             p_ben = 1.0
             
-        # 2. Degradation Test (H1: delta_cpc_oracle - delta_cpc_m > 0)
+        # 2. Degradation Test (full Y_D beats subsampled Y_D): one-sided
         degrad_vals = []
         for _, row in c_m.iterrows():
             clean_v = clean_vals_by_city.get((row["fold"], row["target_city"]), row["delta_cpc_mean"])
@@ -383,7 +383,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
                 _, p_deg = wilcoxon(degrad_arr, alternative='greater')
             except Exception:
                 p_deg = 1.0
-            p_benefit_onesided.append(float(p_ben))
+            p_benefit_twosided.append(float(p_ben))
             p_degrad_onesided.append(float(p_deg))
         else:
             p_deg = float('nan')
@@ -400,7 +400,7 @@ def generate_sampling_summary(city_df: pd.DataFrame, output_dir: str, m_grid: Li
             "wilcoxon_degrad_raw": float(p_deg) if not np.isnan(p_deg) else None
         }
         
-    p_ben_adj = holm_correction(p_benefit_onesided)
+    p_ben_adj = holm_correction(p_benefit_twosided)
     p_deg_adj = holm_correction(p_degrad_onesided)
     
     for i, m in enumerate(finite_m):

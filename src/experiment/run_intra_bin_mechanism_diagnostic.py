@@ -25,6 +25,7 @@ from src.data.city_splits import load_splits_manifest_v2
 from src.data.dataset import load_city, load_raw_city
 from src.data.urban_graph import build_radius_graph
 from src.data.yd_extractor import compute_equal_width_kbin_edges, compute_kbin_edges, extract_yd_kbins
+from src.experiment.e1_core import manifest_sha256, verify_checkpoint_provenance
 from src.experiment.run_backbone_robustness import fit_gravity_parameters
 from src.training.evaluate import compute_cpc_pair
 from src.training.train import infer_zero_shot, load_checkpoint
@@ -122,7 +123,7 @@ def _city_seed_diagnostic(
     city_data = load_city(city, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
     edge_index, edge_dist = build_radius_graph(city_data.lon_lat.numpy(), radius_km=5.0)
     truth = city_data.pair_trips.numpy().astype(np.float64)
-    distances_km = np.expm1(city_data.pair_distance.numpy())
+    distances_km = np.asarray(city_data.dist_km, dtype=np.float64)
     inter_mask = (city_data.pair_o_idx.numpy() != city_data.pair_d_idx.numpy()) & (distances_km > 0.0)
 
     prediction = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device).numpy().astype(np.float64)
@@ -236,8 +237,13 @@ def run_diagnostic(
             checkpoint_name = f"5fold_fold{fold}_seed{seed}.pt" if backbone == "gnn" else f"mlp_fold{fold}_seed{seed}.pt"
             checkpoint = checkpoint_dir / checkpoint_name
             model, scaler, metadata = load_checkpoint(checkpoint, device_str=device_str)
-            if metadata.get("seed") != seed or metadata.get("hyperparams", {}).get("fold") != fold:
-                raise RuntimeError(f"Checkpoint provenance mismatch: {checkpoint}")
+            verify_checkpoint_provenance(
+                metadata,
+                checkpoint,
+                expected_seed=seed,
+                expected_fold=fold,
+                expected_manifest_sha256=manifest_sha256(manifest_path),
+            )
             models[seed] = (model, scaler)
 
         for city in sorted(split["test"]):

@@ -199,7 +199,8 @@ def run_backbone_robustness(
                 boot_means.append(np.mean(samp))
             ci_l, ci_h = np.percentile(boot_means, [2.5, 97.5])
 
-            _, w_p = stats.wilcoxon(m1_cpc, m0_cpc, alternative="greater")
+            # Pre/post calibration effect: two-sided.
+            _, w_p = stats.wilcoxon(m1_cpc, m0_cpc, alternative="two-sided")
 
             return {
                 "n": n,

@@ -78,13 +78,19 @@ def analyze_subset(gnn_map, all_mlp_results, folds_to_include, label):
     mlp_sum = summarize(mlp_deltas)
     gamma_sum = summarize(gammas)
 
-    _, gnn_w_p = stats.wilcoxon(gnn_deltas, alternative="greater")
-    _, mlp_w_p = stats.wilcoxon(mlp_deltas, alternative="greater")
+    # Pre/post calibration effects are two-sided; Gamma is a two-sided architecture contrast.
+    _, gnn_w_p = stats.wilcoxon(gnn_deltas, alternative="two-sided")
+    _, mlp_w_p = stats.wilcoxon(mlp_deltas, alternative="two-sided")
     _, gamma_w_p = stats.wilcoxon(gammas, alternative="two-sided")
 
     return {
         "label": label,
         "n": len(paired_results),
+        "test_sidedness": {
+            "gnn_p": "two-sided (pre/post effect)",
+            "mlp_p": "two-sided (pre/post effect)",
+            "gamma_p": "two-sided (architecture contrast)",
+        },
         "gnn_m0_mean": float(np.mean([r["gnn_m0"] for r in paired_results])),
         "gnn_m1_mean": float(np.mean([r["gnn_m1"] for r in paired_results])),
         "gnn_sum": gnn_sum,
@@ -149,7 +155,7 @@ def run_comparison(output_dir: str = "results", export_md: bool = True):
                 if not res:
                     continue
                 f.write(f"## {res['label']}\n\n")
-                f.write("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta\\text{CPC}$ | 95% Fold-Stratified Bootstrap CI | Improved Cities | Wilcoxon $p$ |\n")
+                f.write("| Backbone Architecture | Zero-Shot $M_0$ CPC | Calibrated $M_1$ CPC | Marginal Gain $\\Delta\\text{CPC}$ | 95% Fold-Stratified Bootstrap CI | Improved Cities | Two-sided Wilcoxon $p$ |\n")
                 f.write("|---|:---:|:---:|:---:|:---:|:---:|:---:|\n")
                 gnn_mean = res['gnn_sum']['mean']
                 gnn_std = res['gnn_sum']['std']
@@ -160,6 +166,7 @@ def run_comparison(output_dir: str = "results", export_md: bool = True):
                 f.write(f"| **Gravity-Informed Urban GNN** | {res['gnn_m0_mean']:.4f} | **{res['gnn_m1_mean']:.4f}** | **{gnn_mean:+.4f} +- {gnn_std:.4f}** | [{res['gnn_sum']['ci_95'][0]:+.4f}, {res['gnn_sum']['ci_95'][1]:+.4f}] | {res['gnn_pos']}/{res['n']} ({res['gnn_pos']/res['n']*100:.1f}%) | p = {res['gnn_p']:.2e} |\n")
                 f.write(f"| **Pairwise Spatial MLP** | {res['mlp_m0_mean']:.4f} | **{res['mlp_m1_mean']:.4f}** | **{mlp_mean:+.4f} +- {mlp_std:.4f}** | [{res['mlp_sum']['ci_95'][0]:+.4f}, {res['mlp_sum']['ci_95'][1]:+.4f}] | {res['mlp_pos']}/{res['n']} ({res['mlp_pos']/res['n']*100:.1f}%) | p = {res['mlp_p']:.2e} |\n")
                 f.write(f"| **Architecture Advantage ($\\Gamma = \\Delta_\\text{{GNN}} - \\Delta_\\text{{MLP}}$)** | — | — | **{gam_mean:+.4f} +- {gam_std:.4f}** | [{res['gamma_sum']['ci_95'][0]:+.4f}, {res['gamma_sum']['ci_95'][1]:+.4f}] | — | p = {res['gamma_p']:.2e} |\n\n")
+                f.write("All Wilcoxon signed-rank tests reported here are two-sided: the $\\Delta\\text{CPC}$ rows test a pre/post calibration effect and $\\Gamma$ tests an architecture difference. One-sided tests are reserved for target-versus-control superiority contrasts.\n\n")
             
         print(f"\nSaved comparison table to {table_path}")
 

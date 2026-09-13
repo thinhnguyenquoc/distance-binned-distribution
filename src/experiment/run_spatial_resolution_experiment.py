@@ -124,7 +124,7 @@ def run_spatial_resolution_city(
     
     cd = load_city(city, data_root=DATA_ROOT, feature_scaler=scaler)
     ei, ed = build_radius_graph(cd.lon_lat, radius_km=5.0)
-    dist_km = np.expm1(cd.pair_distance.numpy())
+    dist_km = np.asarray(cd.dist_km, dtype=np.float64)
     inter_mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
     t_gt = cd.pair_trips.numpy().astype(np.float64)
     
@@ -229,7 +229,8 @@ def compute_resolution_summary(results: list[dict], bootstrap_seed: int = DEFAUL
     ci_scity_l, ci_scity_h = fold_bootstrap(d_spec_city, fid, seed=bootstrap_seed)
     ci_scounty_l, ci_scounty_h = fold_bootstrap(d_spec_county, fid, seed=bootstrap_seed)
     
-    _, p_res = safe_wilcoxon(d_res, alternative="greater")
+    # Resolution contrast is an effect (two-sided); specificity contrasts are superiority (one-sided).
+    _, p_res = safe_wilcoxon(d_res, alternative="two-sided")
     _, p_scity = safe_wilcoxon(d_spec_city, alternative="greater")
     _, p_scounty = safe_wilcoxon(d_spec_county, alternative="greater")
     
@@ -407,7 +408,7 @@ def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAU
             test_yd_cache = {}
             for t_city in test10:
                 cd_t = load_city(t_city, data_root=DATA_ROOT, feature_scaler=scaler, fit_scaler=False)
-                dist_t = np.expm1(cd_t.pair_distance.numpy())
+                dist_t = np.asarray(cd_t.dist_km, dtype=np.float64)
                 inter_t = (cd_t.pair_o_idx.numpy() != cd_t.pair_d_idx.numpy()) & (dist_t > 0.0)
                 t_gt_t = cd_t.pair_trips.numpy().astype(np.float64)
                 test_yd_cache[t_city] = extract_yd_kbins(dist_t, t_gt_t, bin_edges, inter_t)

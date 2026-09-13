@@ -13,11 +13,16 @@ from src.data.dataset import load_city
 from src.data.urban_graph import build_radius_graph
 from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
 from src.training.train import load_checkpoint, infer_zero_shot
+from src.experiment.e1_core import active_bins_from_pairs
 from src.experiment.run_unified_placebo import (
-    get_active_bins as orig_get_active_bins,
     safe_log_ratio as orig_safe_log_ratio,
     fast_eval_cpc as orig_fast_eval_cpc,
 )
+
+
+def legacy_active_bins(yd, eps=1e-8):
+    """Retired Y_D mass threshold, retained here only for the mask-comparison audit."""
+    return yd > eps
 
 def run_comprehensive_audit():
     manifest_path = Path("results/e1/splits_manifest_v2.json")
@@ -79,7 +84,7 @@ def run_comprehensive_audit():
         train_yd_dict = {}
         for tc in train_cities:
             raw_c = load_city(tc, data_root="data", fit_scaler=False)
-            dist_c = np.expm1(raw_c.pair_distance.numpy())
+            dist_c = np.asarray(raw_c.dist_km, dtype=np.float64)
             inter_c = (raw_c.pair_o_idx.numpy() != raw_c.pair_d_idx.numpy()) & (dist_c > 0.0)
             t_gt_c = raw_c.pair_trips.numpy().astype(np.float64)
             train_yd_dict[tc] = extract_yd_kbins(dist_c, t_gt_c, bin_edges, inter_c)
@@ -90,7 +95,7 @@ def run_comprehensive_audit():
         test_data_dict = {}
         for tc in test_cities:
             raw_c = load_city(tc, data_root="data", fit_scaler=False)
-            dist_c = np.expm1(raw_c.pair_distance.numpy())
+            dist_c = np.asarray(raw_c.dist_km, dtype=np.float64)
             inter_c = (raw_c.pair_o_idx.numpy() != raw_c.pair_d_idx.numpy()) & (dist_c > 0.0)
             t_gt_c = raw_c.pair_trips.numpy().astype(np.float64)
             test_yd_dict[tc] = extract_yd_kbins(dist_c, t_gt_c, bin_edges, inter_c)
@@ -103,8 +108,8 @@ def run_comprehensive_audit():
                 for k in range(K)
             ])
             active_by_support = support_pair_counts > 0
-            active_by_experiment = orig_get_active_bins(test_yd_dict[tc], eps=1e-8)
-            active_by_audit = (test_yd_dict[tc] > 1e-8)
+            active_by_experiment = active_bins_from_pairs(dist_inter, bin_edges)
+            active_by_audit = legacy_active_bins(test_yd_dict[tc], eps=1e-8)
 
             if not np.array_equal(active_by_support, active_by_experiment) or not np.array_equal(active_by_experiment, active_by_audit):
                 mask_diff_count += 1
@@ -139,7 +144,7 @@ def run_comprehensive_audit():
             raw_c, dist_km, inter_mask, t_gt = test_data_dict[tc]
             ei, ed = build_radius_graph(raw_c.lon_lat, radius_km=5.0, include_self_loop=True, cache_key=f"{tc}_tracts")
             yd_target = test_yd_dict[tc]
-            active_mask = orig_get_active_bins(yd_target)
+            active_mask = active_bins_from_pairs(dist_km[inter_mask], bin_edges)
             t_true_inter = t_gt[inter_mask]
             dist_inter = dist_km[inter_mask]
             bin_masks = [((dist_inter > float(bin_edges[k])) & (dist_inter <= float(bin_edges[k + 1]))) for k in range(K)]

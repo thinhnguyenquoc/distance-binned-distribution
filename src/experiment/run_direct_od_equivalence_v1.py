@@ -921,7 +921,8 @@ def aggregate_combined_direct_od(
     for p_val in p_vals_tested:
         sub = per_city_combined[per_city_combined.p == p_val]
         gains = sub["gain_direct_od"].values
-        _, p_w = stats.wilcoxon(gains, alternative="greater")
+        # Gain over M0 is a pre/post effect: two-sided.
+        _, p_w = stats.wilcoxon(gains, alternative="two-sided")
         raw_p_values.append(p_w)
 
     holm_p_vals = holm_correction(raw_p_values)
