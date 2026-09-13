@@ -2,20 +2,21 @@
 
 ## Tóm tắt
 
-Khả năng khái quát hóa và chuyển giao của mô hình từ tập thành phố huấn luyện sang một thành phố mới nơi không có cường độ OD, vẫn là một thách thức. Mặc dù các mô hình zero-shot đã khai thác đặc điểm đô thị và khoảng cách địa lý để thực hiện nhiệm vụ này, giá trị bổ sung độ chính xác dự báo mà phân phối di chuyển theo khoảng cách có thể mang lại cho các mô hình đó vẫn chưa được làm rõ. Nghiên cứu sử dụng phân phối di chuyển theo khoảng cách của thành phố mục tiêu để hiệu chỉnh đầu ra của mô hình zero-shot được giữ nguyên tham số, trên tập hỗ trợ dương liên vùng đã biết với phân phối được tính trực tiếp từ dữ liệu OD tham chiếu để khảo sát lợi ích của thông tin tổng hợp này.
+Việc chuyển giao mô hình sang một thành phố mới, nơi không có nhãn cường độ OD phục vụ huấn luyện, vẫn là một thách thức. Mặc dù các mô hình zero-shot đã khai thác đặc điểm đô thị và khoảng cách địa lý để thực hiện nhiệm vụ này, mức cải thiện độ chính xác mà phân phối di chuyển theo khoảng cách có thể mang lại cho các mô hình đó vẫn chưa được làm rõ. Để khảo sát giá trị của thông tin tổng hợp này, nghiên cứu sử dụng phân phối di chuyển theo khoảng cách của thành phố mục tiêu để hiệu chỉnh đầu ra của mô hình zero-shot được giữ nguyên tham số. Thí nghiệm được thực hiện trên tập hỗ trợ dương liên vùng đã biết, với phân phối oracle được tính trực tiếp từ dữ liệu OD tham chiếu.
 
 Nghiên cứu áp dụng kiểm định chéo liên thành phố 5 lượt trên 50 vùng đô thị Hoa Kỳ. Với baseline GNN, hiệu chỉnh oracle cấp thành phố làm CPC tăng trung bình 0.00354, với 45/50 thành phố được cải thiện. So với các đối chứng được chuẩn hóa theo độ lớn can thiệp, phân phối mục tiêu cho kết quả tốt hơn, hỗ trợ vai trò của thông tin đặc thù theo thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Trong phạm vi khảo sát, kết quả thử nghiệm cho thấy mức cải thiện trung bình tăng khi sử dụng nhiều nhóm khoảng cách hơn và giảm khi phân phối quan sát bị nhiễu. 
 
-**Từ khóa:** ma trận nguồn–đích; tái tạo cường độ OD; phân phối di chuyển theo khoảng cách; zero-shot; học chuyển giao giữa các thành phố; quan sát tổng hợp; di chuyển không gian.
+**Từ khóa:** ma trận nguồn–đích, tái tạo cường độ OD, phân phối di chuyển theo khoảng cách, zero-shot, học chuyển giao giữa các thành phố, quan sát tổng hợp, di chuyển không gian.
 
 # 1. Giới thiệu
 
 Ma trận nguồn–đích (OD) mô tả cường độ di chuyển giữa các đơn vị không gian và là đầu vào quan trọng cho phân tích giao thông và quy hoạch đô thị [@barbosa2018humanmobility]. Tuy nhiên, việc thu thập dữ liệu OD chi tiết tại thành phố mục tiêu thường gặp nhiều khó khăn. Ngay cả khi có dữ liệu, độ phủ và tính đại diện của dữ liệu đối với mô hình đi lại của toàn thành phố vẫn có thể bị hạn chế [@gallotti2024distorted; @pappalardo2023future]. Trong khi đó, luồng di chuyển phụ thuộc vào bối cảnh đô thị và đặc trưng địa phương, nên các quy luật học được từ thành phố này không nhất thiết phù hợp hoàn toàn với một thành phố khác. Vì vậy, các mô hình liên thành phố có thể dự báo kém chính xác hơn tại thành phố mục tiêu khi thiếu thông tin địa phương để hiệu chỉnh [@yang2014limits].
 
 Các mô hình dự báo luồng di chuyển gần đây đã khai thác đặc điểm đô thị và khoảng cách địa lý để dự báo cho các thành phố mới [@enaya2026transgm; @guo2025ugnn; @simini2021deepgravity]. Trong thiết lập zero-shot, mô hình được huấn luyện trên các thành phố nguồn rồi áp dụng cho thành phố mục tiêu mà không sử dụng nhãn cường độ OD tại đó để huấn luyện hay cập nhật tham số. Tuy nhiên, mức độ suy giảm của luồng di chuyển theo khoảng cách có thể khác nhau giữa các bối cảnh đô thị [@lenormand2016comparison; @verma2025distance]. Vì vậy, quan hệ học được từ các thành phố nguồn có thể chưa phản ánh đúng cách lưu lượng di chuyển được phân bổ theo khoảng cách tại thành phố mục tiêu.
-Phân phối di chuyển theo khoảng cách mô tả tỷ trọng tổng lưu lượng nằm trong từng nhóm khoảng cách của một thành phố. Thông tin tổng hợp này bổ sung cho khoảng cách địa lý của từng cặp vùng, vốn chỉ mô tả sự cách biệt về không gian. 
 
-Để làm rõ vấn đề này, nghiên cứu sử dụng phân phối di chuyển theo khoảng cách của thành phố mục tiêu để hiệu chỉnh dự báo của mô hình zero-shot được giữ cố định. Phân phối này cho biết tỷ trọng tổng lưu lượng thuộc từng nhóm khoảng cách, nhưng không cho biết cường độ luồng của từng cặp OD. Việc so sánh kết quả trước và sau hiệu chỉnh giúp đánh giá liệu thông tin tổng hợp này có cải thiện dự báo ngoài những gì mô hình đã học từ đặc điểm đô thị và khoảng cách địa lý hay không. Nghiên cứu tập trung vào hai câu hỏi: thứ nhất, phân phối di chuyển theo khoảng cách của thành phố mục tiêu có cải thiện việc tái tạo cường độ luồng OD so với mô hình zero-shot hay không và mức cải thiện là bao nhiêu; thứ hai, kết quả hiệu chỉnh thay đổi như thế nào theo độ phân giải và chất lượng của phân phối quan sát? Các đối chứng được sử dụng để kiểm tra vai trò của phân phối đúng thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách.
+Cách phân bổ này được mô tả bằng phân phối di chuyển theo khoảng cách, cho biết tỷ trọng tổng lưu lượng nằm trong từng nhóm khoảng cách của một thành phố, nhưng không xác định cường độ luồng của từng cặp OD. Thông tin tổng hợp này có thể bổ sung cho khoảng cách địa lý của từng cặp vùng, vốn chỉ mô tả sự cách biệt về không gian. 
+
+Trên cơ sở đó, nghiên cứu sử dụng phân phối của thành phố mục tiêu để hiệu chỉnh đầu ra của mô hình zero-shot, đồng thời giữ nguyên các tham số mô hình. Việc so sánh dự báo trước và sau hiệu chỉnh nhằm trả lời hai câu hỏi. Thứ nhất, hiệu chỉnh có cải thiện khả năng tái tạo cường độ luồng OD so với dự báo zero-shot ban đầu hay không và mức cải thiện là bao nhiêu? Thứ hai, kết quả hiệu chỉnh thay đổi như thế nào theo độ phân giải và chất lượng của phân phối quan sát? Để làm rõ nguồn gốc của mức cải thiện, nghiên cứu sử dụng các đối chứng nhằm kiểm tra vai trò của phân phối đúng thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách.
 
 Nghiên cứu áp dụng kiểm định chéo liên thành phố 5 lượt trên 50 vùng đô thị tại Hoa Kỳ để định lượng mức cải thiện và đánh giá ảnh hưởng của độ phân giải cũng như chất lượng phân phối đến kết quả hiệu chỉnh. Cụ thể, tại mỗi thành phố mục tiêu, mô hình chỉ tái tạo cường độ OD trên các cặp vùng khác nhau đã biết có luồng di chuyển. Phân phối dùng để hiệu chỉnh được tính từ các luồng OD thực trên chính tập đánh giá này, tạo thành thiết lập oracle nhằm đánh giá giá trị bổ sung của phân phối chính xác. Để kiểm tra tính ổn định của mức cải thiện, nghiên cứu còn thực hiện thí nghiệm với nhiều khởi tạo ngẫu nhiên và kiến trúc mô hình. Tuy nhiên, do thông tin hiệu chỉnh được tổng hợp từ luồng OD thực của tập đánh giá, hiệu quả khi sử dụng phân phối từ nguồn dữ liệu độc lập vẫn cần được kiểm chứng.
 # 2. Nghiên cứu liên quan
@@ -24,7 +25,7 @@ Nghiên cứu áp dụng kiểm định chéo liên thành phố 5 lượt trên
 
 Các mô hình tương tác không gian từ lâu đã biểu diễn luồng OD thông qua khả năng phát sinh, mức độ thu hút và lực cản không gian, trong đó khoảng cách hoặc chi phí di chuyển là thành phần cốt lõi của cấu trúc luồng [@ortuzar2011modelling; @wilson1971family]. Các phương pháp hiệu chỉnh cổ điển cho thấy thống kê tổng hợp về cự ly hoặc thời gian di chuyển có thể được sử dụng để xác định tham số lực cản. Hyman [@hyman1969calibration] đề xuất hiệu chỉnh mô hình phân bổ chuyến đi dựa trên chiều dài chuyến đi trung bình, trong khi Merlin [@merlin2020medians] sử dụng trung vị thời gian di chuyển để hiệu chỉnh mô hình tương tác không gian một tham số.
 
-Các nghiên cứu so sánh cũng cho thấy quy luật suy giảm theo khoảng cách không cố định giữa các bộ dữ liệu và bối cảnh đô thị, mà có thể thay đổi theo phương thức di chuyển, mục đích chuyến đi, mức độ đô thị hóa và điều kiện kinh tế–xã hội [@verma2025distance]. Những kết quả này cho thấy đặc điểm di chuyển theo khoảng cách phụ thuộc vào từng bối cảnh. Về mặt phương pháp toán học, phép nhân co giãn theo nhóm tỷ trọng quan sát có liên hệ chặt chẽ với phương pháp khớp tỷ lệ lặp (Iterative Proportional Fitting - IPF) hay thuật toán Furness trong quy hoạch giao thông cổ điển [@ortuzar2011modelling], vốn bắt nguồn từ nguyên lý chuẩn hóa bảng hai chiều của Deming và Stephan cũng như mô hình cực đại hóa entropy [@wilson1971family]. Khi tái phân bổ lưu lượng dự báo giữa các nhóm khoảng cách rời nhau, bước hiệu chỉnh có thể được thực hiện trực tiếp bằng một hệ số nhân cho mỗi nhóm. Nghiên cứu này áp dụng phép hiệu chỉnh đó cho đầu ra của baseline liên thành phố tại thời điểm suy luận, khi các tham số mô hình được giữ nguyên.
+Các nghiên cứu so sánh cũng cho thấy quy luật suy giảm theo khoảng cách không cố định giữa các bộ dữ liệu và bối cảnh đô thị, mà có thể thay đổi theo phương thức di chuyển, mục đích chuyến đi, mức độ đô thị hóa và điều kiện kinh tế–xã hội [@verma2025distance]. Sự khác biệt này là cơ sở để xem xét hiệu chỉnh theo đặc điểm di chuyển của từng thành phố. Về cách thực hiện, phép nhân co giãn theo nhóm tỷ trọng quan sát có liên hệ chặt chẽ với phương pháp khớp tỷ lệ lặp (Iterative Proportional Fitting, IPF) hay thuật toán Furness trong quy hoạch giao thông cổ điển [@ortuzar2011modelling], vốn bắt nguồn từ nguyên lý chuẩn hóa bảng hai chiều của Deming và Stephan cũng như mô hình cực đại hóa entropy [@wilson1971family]. Khi tái phân bổ lưu lượng dự báo giữa các nhóm khoảng cách rời nhau, bước hiệu chỉnh có thể được thực hiện trực tiếp bằng một hệ số nhân cho mỗi nhóm. Nghiên cứu này áp dụng phép hiệu chỉnh đó cho đầu ra của baseline liên thành phố tại thời điểm suy luận, khi các tham số mô hình được giữ nguyên.
 
 ## 2.2. Mô hình học máy liên thành phố và quan sát tổng hợp
 
@@ -49,7 +50,7 @@ Gọi $c$ là một thành phố và $\mathcal{V}_c$ là tập các vùng đơn 
 | :--- | :--- | :--- |
 | $c$ | Chỉ số thành phố ($c \in \{1, \dots, C\}$) | Mã định danh thành phố ($C = 50$) |
 | $i, j$ | Chỉ số vùng xuất phát (origin) và vùng đích (destination) | Đơn vị không gian cơ sở |
-| $t_{c,ij}$ | Cường độ luồng di chuyển quan sát được ($t_{c,ij} \ge 1$) | Nhãn huấn luyện tại thành phố nguồn; dữ liệu tham chiếu để đánh giá và tổng hợp quan sát oracle tại thành phố mục tiêu. |
+| $t_{c,ij}$ | Cường độ luồng di chuyển quan sát được ($t_{c,ij} \ge 1$) | Dùng làm nhãn huấn luyện tại thành phố nguồn, còn tại thành phố mục tiêu được dùng để đánh giá và tổng hợp quan sát oracle. |
 | $d_{c,ij}$ | Khoảng cách giữa tâm của vùng $i$ và vùng $j$ (km) | Tính từ tọa độ tâm (Haversine) |
 | $\mathcal{P}_c$ | Không gian tất cả các cặp OD liên vùng hợp lệ ($\mathcal{P}_c = \{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : i \neq j, d_{c,ij} > 0\}$) | Không gian ứng viên liên vùng |
 | $\Omega_c$ | Tập hỗ trợ liên vùng dương đã biết ($\Omega_c = \{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\}$) | Tập cặp OD được giả định đã biết và dùng chung cho dự báo, hiệu chỉnh và đánh giá. |
@@ -61,13 +62,13 @@ Gọi $c$ là một thành phố và $\mathcal{V}_c$ là tập các vùng đơn 
 | $\widehat{t}_{c,ij}^{(1)}$ | Dự báo cường độ luồng sau hiệu chỉnh tại thời điểm suy luận (điều kiện $M_1$) | Đầu ra sau hiệu chỉnh |
 | $M_0, M_1$ | Tên hai điều kiện thực nghiệm (baseline zero-shot giữ nguyên tham số và dự báo sau hiệu chỉnh) | Điều kiện thực nghiệm đối chứng |
 
-Tại thành phố mục tiêu, baseline sử dụng đặc trưng đô thị, thông tin khoảng cách và tập hỗ trợ đã biết; phân phối $Y_{D,c}$ chỉ được cung cấp cho bước hiệu chỉnh.
+Tại thành phố mục tiêu, baseline sử dụng đặc trưng đô thị, thông tin khoảng cách và tập hỗ trợ đã biết, còn phân phối $Y_{D,c}$ chỉ được cung cấp cho bước hiệu chỉnh.
 
 
 
 ## 3.2. Phạm vi hỗ trợ và biểu diễn không gian
 
-Dữ liệu thực nghiệm bao gồm 50 vùng đô thị tại Hoa Kỳ, với tract là đơn vị không gian cơ sở. Mỗi tract được biểu diễn bằng tọa độ tâm và các đặc trưng đô thị; dữ liệu còn bao gồm khoảng cách giữa các cặp tract và cường độ luồng OD quan sát được. Nguồn và quy trình xây dựng benchmark sẽ được mô tả đầy đủ theo tài liệu dữ liệu gốc trước khi nộp bài.
+Dữ liệu thực nghiệm bao gồm 50 vùng đô thị tại Hoa Kỳ, với tract là đơn vị không gian cơ sở. Mỗi tract được biểu diễn bằng tọa độ tâm và các đặc trưng đô thị. Bên cạnh đó, dữ liệu còn bao gồm khoảng cách giữa các cặp tract và cường độ luồng OD quan sát được. Nguồn và quy trình xây dựng benchmark sẽ được mô tả đầy đủ theo tài liệu dữ liệu gốc trước khi nộp bài.
 
 Không gian tất cả các cặp OD liên vùng hợp lệ được xác định bởi:
 
@@ -78,9 +79,7 @@ $$
 Phạm vi đánh giá được giới hạn nghiêm ngặt trên tập hỗ trợ liên vùng dương đã biết:
 
 $$
-\boxed{
-\Omega_c = \left\{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\right\} = \left\{(i,j) \in \mathcal{V}_c \times \mathcal{V}_c : t_{c,ij} \ge 1,\ i \neq j,\ d_{c,ij} > 0\right\}.
-}
+\Omega_c = \left\{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\right\}.
 $$
 
 Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omega_c$, không giải quyết bài toán phát hiện liên kết (link discovery) hay phân loại cặp có luồng zero trong $\mathcal{P}_c$. Trong toàn bài, các cặp ngoài $\Omega_c$ được xem là chưa biết và không thuộc phạm vi đánh giá.
@@ -88,7 +87,7 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
 
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau; do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào nhóm khoảng cách thứ $b$ được định nghĩa là:
+Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau. Do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào nhóm khoảng cách thứ $b$ được định nghĩa là:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -97,7 +96,7 @@ $$
 Các tỷ trọng được chuẩn hóa để: $\sum_{b=1}^K Y_{c,b} = 1$.
 Toàn bộ vector phân phối khoảng cách của thành phố $c$ được ký hiệu là $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$. Trong phần diễn giải, $Y_D$ được dùng như tên viết gọn cho loại quan sát này.
 
-Do các biên được xác định chung từ tập huấn luyện, một số khoảng cự ly xa có thể không chứa cặp OD tại những thành phố có phạm vi địa lý nhỏ. Gọi $\mathcal A_c$ là tập các nhóm có ít nhất một cặp thuộc $\Omega_c$, và $K_{\mathrm{act},c}=|\mathcal A_c|$ là số nhóm hoạt động của thành phố $c$. Các nhóm rỗng có tỷ trọng bằng 0 và được loại khỏi phép tính; các đại lượng của toán tử được biểu diễn trên tập nhóm hoạt động (chi tiết quy trình chuẩn hóa và co giãn được trình bày trong Phụ lục S2).
+Do các biên được xác định chung từ tập huấn luyện, một số khoảng cự ly xa có thể không chứa cặp OD tại những thành phố có phạm vi địa lý nhỏ. Gọi $\mathcal A_c$ là tập các nhóm có ít nhất một cặp thuộc $\Omega_c$, và $K_{\mathrm{act},c}=|\mathcal A_c|$ là số nhóm hoạt động của thành phố $c$. Các nhóm rỗng có tỷ trọng bằng 0 và được loại khỏi phép tính. Vì vậy, các đại lượng của toán tử được biểu diễn trên tập nhóm hoạt động (chi tiết quy trình chuẩn hóa và co giãn được trình bày trong Phụ lục S2).
 
 $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố mục tiêu và được sử dụng như một quan sát oracle tại thời điểm hiệu chỉnh. Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county, thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
 
@@ -119,7 +118,7 @@ $$
 \hat{t}_{c,ij}^{(0,\mathrm{grav})} = \exp(G)\frac{P_{c,i}P_{c,j}}{\tilde d_{c,ij}^{\,\alpha}}, \qquad (i,j)\in\Omega_c.
 $$
 
-Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách; luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Để bảo đảm ổn định số học, dân số $P_{c,i}$ và $P_{c,j}$ được chặn dưới tại 1, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng riêng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
+Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách. Theo đó, luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Để bảo đảm ổn định số học, dân số $P_{c,i}$ và $P_{c,j}$ được chặn dưới tại 1, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng riêng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
@@ -144,7 +143,7 @@ p_+(t\mid\mu,\phi)
 \qquad t=1,2,\ldots
 $$
 
-Trong đó, $\mu>0$ là trung bình của phân phối NB nền trước khi điều kiện hóa; $\phi>0$ là tham số phân tán. Hàm mất mát được tính bằng âm log-hợp lý trung bình trên các cặp OD của từng thành phố:
+Trong đó, $\mu>0$ là trung bình của phân phối NB nền trước khi điều kiện hóa, còn $\phi>0$ là tham số phân tán. Hàm mất mát được tính bằng âm log-hợp lý trung bình trên các cặp OD của từng thành phố:
 
 $$
 \mathcal L_c
@@ -165,7 +164,7 @@ $$
 {1-p_{\mathrm{NB}}(0\mid\mu_{c,ij},\phi)}.
 $$
 
-Kỳ vọng có điều kiện này là dự báo baseline được đưa vào bước hiệu chỉnh ở mục 3.4.3. Kiến trúc và quy tắc huấn luyện được giữ cố định giữa các fold. Các phép biến đổi phụ thuộc dữ liệu được fit trên 35 thành phố huấn luyện của từng fold; checkpoint được chọn theo CPC của năm thành phố validation. Các thành phố kiểm tra không được sử dụng để chọn siêu tham số, checkpoint hoặc tiêu chí dừng. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
+Kỳ vọng có điều kiện này là dự báo baseline được đưa vào bước hiệu chỉnh ở mục 3.4.3. Kiến trúc và quy tắc huấn luyện được giữ cố định giữa các fold. Các phép biến đổi phụ thuộc dữ liệu được fit trên 35 thành phố huấn luyện của từng fold, còn checkpoint được chọn theo CPC của năm thành phố validation. Các thành phố kiểm tra không được sử dụng để chọn siêu tham số, checkpoint hoặc tiêu chí dừng. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
 
 ### 3.4.3. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
@@ -196,9 +195,9 @@ $$
 
 trong đó $b(i,j)$ là nhóm chứa khoảng cách $d_{c,ij}$.
 
-Trong cấu hình oracle chính, tỷ trọng mục tiêu và tỷ trọng dự báo đều dương trên các nhóm hoạt động, nên hệ số hiệu chỉnh dương. Sau hiệu chỉnh, phân phối lưu lượng theo nhóm khớp với phân phối mục tiêu, trong khi tổng lưu lượng dự báo được giữ nguyên. Các cặp OD trong cùng một nhóm nhận chung một hệ số nhân, nên tỷ lệ và thứ hạng giữa các dự báo trong nhóm đó không đổi; thứ hạng giữa các nhóm có thể thay đổi. Tuy nhiên, việc khớp tỷ trọng theo nhóm không bảo đảm CPC tăng, vì phân bổ tương đối giữa các cặp OD trong cùng nhóm vẫn do baseline quyết định và sai lệch về tổng lưu lượng dự báo không được điều chỉnh.
+Trong cấu hình oracle chính, tỷ trọng mục tiêu và tỷ trọng dự báo đều dương trên các nhóm hoạt động, nên hệ số hiệu chỉnh dương. Sau hiệu chỉnh, phân phối lưu lượng theo nhóm khớp với phân phối mục tiêu, trong khi tổng lưu lượng dự báo được giữ nguyên. Các cặp OD trong cùng một nhóm nhận chung một hệ số nhân, nên tỷ lệ và thứ hạng giữa các dự báo trong nhóm đó không đổi, trong khi thứ hạng giữa các nhóm có thể thay đổi. Tuy nhiên, việc khớp tỷ trọng theo nhóm không bảo đảm CPC tăng, vì phân bổ tương đối giữa các cặp OD trong cùng nhóm vẫn do baseline quyết định và sai lệch về tổng lưu lượng dự báo không được điều chỉnh.
 
-Chứng minh các tính chất này được trình bày trong Phụ lục S3; dạng hiệu chỉnh tổng quát với mức điều chỉnh $q\in[0,1]$ được trình bày trong Phụ lục S2. Cấu hình chính sử dụng $q=1$.
+Chứng minh các tính chất này được trình bày trong Phụ lục S3, còn dạng hiệu chỉnh tổng quát với mức điều chỉnh $q\in[0,1]$ được trình bày trong Phụ lục S2. Cấu hình chính sử dụng $q=1$.
 
 ![Hình 1](figures/fig1_oracle_calibration_framework.png)
 **Hình 1. Khung hiệu chỉnh oracle tại thời điểm suy luận.** Baseline $M_0$ được huấn luyện liên thành phố và giữ nguyên tham số trên thành phố mục tiêu. Phân phối khoảng cách oracle $Y_D$, được trích từ luồng tham chiếu của thành phố mục tiêu, dùng để tái phân bổ khối lượng giữa các khoảng và tạo các dự báo $\widehat{t}_{c,ij}^{(1)}$ trên cùng tập hỗ trợ $\Omega_c$.
@@ -209,7 +208,7 @@ Chứng minh các tính chất này được trình bày trong Phụ lục S3; d
 
 ### 3.5.1. Giao thức kiểm định chéo liên thành phố 5-fold
 
-Nghiên cứu áp dụng giao thức kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị Hoa Kỳ (mỗi fold gồm 35 thành phố huấn luyện, 5 thành phố validation và 10 thành phố kiểm tra). Đơn vị phân chia fold là toàn bộ thành phố; không có bất kỳ cặp OD hoặc tract nào của cùng một thành phố bị phân tán giữa tập huấn luyện và tập kiểm tra.
+Nghiên cứu áp dụng giao thức kiểm định chéo liên thành phố 5-fold trên 50 vùng đô thị Hoa Kỳ (mỗi fold gồm 35 thành phố huấn luyện, 5 thành phố validation và 10 thành phố kiểm tra). Đơn vị phân chia fold là toàn bộ thành phố, nên không có bất kỳ cặp OD hoặc tract nào của cùng một thành phố bị phân tán giữa tập huấn luyện và tập kiểm tra.
 
 ### 3.5.2. Thước đo đánh giá và so sánh mô hình
 
@@ -221,19 +220,19 @@ $$
 
 CPC nằm trong $[0, 1]$, với giá trị lớn hơn biểu thị mức chồng lấp lớn hơn giữa cường độ dự báo và quan sát.
 
-Ba thước đo bổ sung—NRMSE, RMSE trên thang $\log(1+x)$ và tương quan hạng Spearman—được báo cáo trong Phụ lục S4 như các kiểm tra mô tả về mức độ nhất quán của kết quả. CPC vẫn là thước đo đánh giá chính và là cơ sở cho các phân tích suy luận thống kê.
+Ba thước đo bổ sung gồm NRMSE, RMSE trên thang $\log(1+x)$ và tương quan hạng Spearman được báo cáo trong Phụ lục S4 như các kiểm tra mô tả về mức độ nhất quán của kết quả. CPC vẫn là thước đo đánh giá chính và là cơ sở cho các phân tích suy luận thống kê.
 
 Bên cạnh đó, phân phối khoảng cách gộp sau hiệu chỉnh được đối chiếu với $Y_D$ như một chẩn đoán cơ chế nội bộ nhằm xác nhận thuật toán đã tái phân bổ khối lượng đúng thiết kế. Cả ba họ mô hình (GNN, MLP, Gravity) được đánh giá trên cùng tập hỗ trợ bằng cùng thước đo CPC.
 
 ### 3.5.3. Phân tích thống kê và lượng hóa độ bất định
 
-Đối với mỗi thành phố, mức cải thiện được tính từ chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline, sau đó lấy trung bình qua các model seeds trong từng thành phố và macro-average trên toàn bộ 50 thành phố. Thành phố là đơn vị thống kê ($N=50$); kết quả của ba model seeds được trung bình trước khi thực hiện bootstrap và kiểm định Wilcoxon.
+Đối với mỗi thành phố, mức cải thiện được tính từ chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline, sau đó lấy trung bình qua các model seeds trong từng thành phố và macro-average trên toàn bộ 50 thành phố. Thành phố là đơn vị thống kê ($N=50$). Kết quả của ba model seeds được trung bình trước khi thực hiện bootstrap và kiểm định Wilcoxon.
 
 Khoảng tin cậy 95% được ước lượng bằng paired nonparametric bootstrap ở cấp thành phố, phân tầng theo fold [@efron1993bootstrap]. Các khoảng tin cậy này được tính có điều kiện trên cách chia fold và các mô hình đã huấn luyện được giữ cố định, không bao quát biến thiên do chia lại fold hoặc huấn luyện lại mô hình. Các chênh lệch ghép cặp được đánh giá bằng kiểm định Wilcoxon signed-rank hai phía [@wilcoxon1945ranking]. Khoảng tin cậy bootstrap được tính cho mức chênh lệch CPC trung bình giữa các thành phố. Kiểm định Wilcoxon signed-rank sử dụng dấu và thứ hạng của các chênh lệch ghép cặp, do đó đánh giá một khía cạnh khác của phân bố chênh lệch và không được diễn giải như một kiểm định trực tiếp đối với giá trị trung bình. Vì vậy, khoảng tin cậy bootstrap và kết quả Wilcoxon được báo cáo song song như hai mô tả bổ sung. Tỷ lệ thành phố có $\Delta\mathrm{CPC} > 0$ được báo cáo như một thống kê mô tả bổ sung. Các phân tích độ nhạy và độ bền tương ứng được trình bày trong Mục 4.
 
-Trong stress-test nhiễu, năm mức dương $\epsilon\in\{0.01,0.02,0.03,0.04,0.05\}$ thuộc cùng một họ Holm; mức $\epsilon=0$ chỉ là mốc mô tả và không thuộc họ này. Kiểm định Wilcoxon một phía được dùng cho giả thuyết lợi ích ($\Delta\mathrm{CPC}>0$). Các lượt lặp nhiễu được lấy trung bình trước qua ba model seeds, sau đó giữ 50 giá trị cấp thành phố làm đơn vị suy luận. Bootstrap crossing được dùng để đếm các đường cong có crossing trong miền 0–5%; các đường cong không crossing được báo cáo là bị kiểm duyệt phải phía trên miền khảo sát, không dùng để tạo một CI crossing bằng cách loại bỏ chúng.
+Trong stress-test nhiễu, năm mức dương $\epsilon\in\{0.01,0.02,0.03,0.04,0.05\}$ thuộc cùng một họ Holm, còn mức $\epsilon=0$ chỉ là mốc mô tả và không thuộc họ này. Kiểm định Wilcoxon một phía được dùng cho giả thuyết lợi ích ($\Delta\mathrm{CPC}>0$). Các lượt lặp nhiễu được lấy trung bình trước qua ba model seeds, sau đó giữ 50 giá trị cấp thành phố làm đơn vị suy luận. Bootstrap crossing được dùng để đếm các đường cong có crossing trong miền 0–5%. Những đường cong không crossing được báo cáo là bị kiểm duyệt phải phía trên miền khảo sát, không dùng để tạo một CI crossing bằng cách loại bỏ chúng.
 
-Ngoài các kiểm định chính, một phân tích cơ chế thăm dò đánh giá mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện sau hiệu chỉnh. Sai lệch ban đầu $d_{\mathrm{pre}}$ được tính bằng Total Variation giữa phân phối khoảng cách dự báo của baseline và phân phối tham chiếu. Tương quan Pearson và tương quan từng phần được báo cáo; tương quan từng phần kiểm soát độ chính xác baseline ($M_0$ CPC) và các đặc trưng quy mô không gian của thành phố gồm $\log N_{\mathrm{tracts}}$, $\log N_{\mathrm{pairs}}$ và khoảng cách địa lý trung bình.
+Ngoài các kiểm định chính, một phân tích cơ chế thăm dò đánh giá mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện sau hiệu chỉnh. Sai lệch ban đầu $d_{\mathrm{pre}}$ được tính bằng Total Variation giữa phân phối khoảng cách dự báo của baseline và phân phối tham chiếu. Tương quan Pearson và tương quan từng phần được báo cáo. Trong đó, tương quan từng phần kiểm soát độ chính xác baseline ($M_0$ CPC) và các đặc trưng quy mô không gian của thành phố gồm $\log N_{\mathrm{tracts}}$, $\log N_{\mathrm{pairs}}$ và khoảng cách địa lý trung bình.
 
 # 4. Kết quả thực nghiệm
 
@@ -246,7 +245,7 @@ Tuy nhiên, mức cải thiện khác nhau giữa các thành phố (Hình 2). T
 ![Hình 2](figures/fig2_main_per_city.png)
 **Hình 2. Mức thay đổi CPC theo thành phố sau hiệu chỉnh bằng phân phối khoảng cách oracle.**
 
-Mỗi cột biểu diễn chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline GNN tại một thành phố, lấy trung bình qua ba seed và xếp từ thấp đến cao. Thí nghiệm sử dụng phân phối oracle cấp thành phố với $K=8$. Cột xanh biểu thị CPC tăng, cột đỏ biểu thị CPC giảm; đường nét đứt và đường chấm lần lượt biểu diễn mức thay đổi trung bình (+0.00354) và trung vị (+0.00195).
+Mỗi cột biểu diễn chênh lệch CPC giữa dự báo sau hiệu chỉnh và baseline GNN tại một thành phố, lấy trung bình qua ba seed và xếp từ thấp đến cao. Thí nghiệm sử dụng phân phối oracle cấp thành phố với $K=8$. Cột xanh biểu thị CPC tăng, cột đỏ biểu thị CPC giảm. Đường nét đứt và đường chấm lần lượt biểu diễn mức thay đổi trung bình (+0.00354) và trung vị (+0.00195).
 
 ### Bảng 2. Kết quả hiệu chỉnh oracle cấp thành phố với GNN trên 50 thành phố ($K=8$).
 
@@ -255,11 +254,11 @@ Mỗi cột biểu diễn chênh lệch CPC giữa dự báo sau hiệu chỉnh 
 | Baseline zero-shot ($M_0$) | $0.71281 \pm 0.04434$ | — | — | — | — |
 | Hiệu chỉnh oracle ($M_1$) | $0.71635 \pm 0.04454$ | $+0.00354$ | $[+0.0026, +0.0045]$ | $45/50\ (90.0\%)$ | $1.93 \times 10^{-9}$ |
 
-Chú thích: CPC được lấy trung bình qua ba seed trong từng thành phố trước khi tổng hợp trên 50 thành phố; SD là độ lệch chuẩn giữa các thành phố. CI 95% được tính cho mức tăng CPC trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. P-value được tính bằng kiểm định Wilcoxon signed-rank hai phía trên các chênh lệch cấp thành phố. Thành phố được tính là cải thiện khi chênh lệch CPC trung bình qua ba seed lớn hơn 0.
+Chú thích: CPC được lấy trung bình qua ba seed trong từng thành phố trước khi tổng hợp trên 50 thành phố. SD là độ lệch chuẩn giữa các thành phố. CI 95% được tính cho mức tăng CPC trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. P-value được tính bằng kiểm định Wilcoxon signed-rank hai phía trên các chênh lệch cấp thành phố. Thành phố được tính là cải thiện khi chênh lệch CPC trung bình qua ba seed lớn hơn 0.
 
 ## 4.2. Mức cải thiện có phụ thuộc vào phân phối của đúng thành phố và thứ tự các nhóm khoảng cách hay không?
 
-Để kiểm tra liệu mức cải thiện có phụ thuộc vào phân phối của chính thành phố mục tiêu hay không, nghiên cứu so sánh phân phối này với các phân phối từ thành phố hiến tặng (thành phố donor) trong tập huấn luyện và phân phối trung bình của tập huấn luyện trong cùng fold. Các đối chứng từ thành phố huấn luyện và phân phối trung bình tập huấn luyện được chuẩn hóa liều can thiệp (dose-matched; Phụ lục S6) bằng cách co giãn vector log-ratio đã trừ trung bình về cùng độ lớn RMS với tín hiệu hiệu chỉnh mục tiêu. Độ lớn tham chiếu này được tính từ log-ratio giữa phân phối oracle mục tiêu và phân phối dự báo của baseline, nên các đối chứng sử dụng thêm thông tin oracle để kiểm tra vai trò của nội dung tín hiệu khi độ lớn được kiểm soát theo chuẩn này. Hiệu chỉnh bằng phân phối đúng thành phố đạt mức tăng CPC trung bình +0.00354, trong khi đối chứng từ các thành phố huấn luyện đạt −0.00009 và đối chứng từ phân phối trung bình đạt +0.00091 (Bảng 3). Đối chứng từ thành phố huấn luyện có mức thay đổi trung bình gần 0, với khoảng tin cậy bao gồm cả giá trị âm và dương.
+Để kiểm tra liệu mức cải thiện có phụ thuộc vào phân phối của chính thành phố mục tiêu hay không, nghiên cứu so sánh phân phối này với các phân phối từ thành phố hiến tặng (thành phố donor) trong tập huấn luyện và phân phối trung bình của tập huấn luyện trong cùng fold. Các đối chứng từ thành phố huấn luyện và phân phối trung bình tập huấn luyện được chuẩn hóa liều can thiệp (dose-matched, xem Phụ lục S6) bằng cách co giãn vector log-ratio đã trừ trung bình về cùng độ lớn RMS với tín hiệu hiệu chỉnh mục tiêu. Độ lớn tham chiếu này được tính từ log-ratio giữa phân phối oracle mục tiêu và phân phối dự báo của baseline, nên các đối chứng sử dụng thêm thông tin oracle để kiểm tra vai trò của nội dung tín hiệu khi độ lớn được kiểm soát theo chuẩn này. Hiệu chỉnh bằng phân phối đúng thành phố đạt mức tăng CPC trung bình +0.00354, trong khi đối chứng từ các thành phố huấn luyện đạt −0.00009 và đối chứng từ phân phối trung bình đạt +0.00091 (Bảng 3). Đối chứng từ thành phố huấn luyện có mức thay đổi trung bình gần 0, với khoảng tin cậy bao gồm cả giá trị âm và dương.
 
 Đối chứng sử dụng phân phối trung bình của tập huấn luyện tạo ra mức tăng CPC trung bình nhỏ ($+0.00091$), nhưng mức thay đổi không nhất quán giữa các thành phố: trung vị chỉ đạt $+0.00007$, với 27/50 thành phố có CPC tăng và 23/50 thành phố có CPC giảm. Khoảng tin cậy bootstrap 95% của mức thay đổi trung bình là $[+0.00001, +0.00186]$, trong khi kiểm định Wilcoxon hai phía không cho thấy sự dịch chuyển nhất quán của các chênh lệch ghép cặp ($p=0.4319$). Hai kết quả này phản ánh những đặc điểm khác nhau của phân bố chênh lệch giữa các thành phố.
 
@@ -291,14 +290,14 @@ Các cột biểu diễn mức thay đổi CPC trung bình so với baseline GNN
 | Trung bình tập huấn luyện, dose-matched | $+0.00263$ | $[+0.0020, +0.0034]$ | $4.03 \times 10^{-11}$ | 47/50 |
 | Đối chứng hoán vị log-ratio hiệu chỉnh | $+0.01050$ | $[+0.0084, +0.0128]$ | $1.78 \times 10^{-15}$ | 49/50 |
 
-Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh bằng từng phân phối và baseline zero-shot. Ở phần B, chênh lệch được tính bằng CPC khi dùng phân phối đúng thành phố trừ CPC khi dùng phân phối đối chứng; giá trị dương cho biết phân phối đúng thành phố cho kết quả tốt hơn. Đối chứng từ thành phố huấn luyện được lấy trung bình qua 1.000 lượt chọn donor ngẫu nhiên; đối chứng hoán vị được lấy trung bình trên toàn bộ các hoán vị chỉ số khác hoán vị đồng nhất khi số lượng không vượt quá 1.000; nếu vượt quá mức này, sử dụng 1.000 hoán vị được chọn ngẫu nhiên không hoàn lại; kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho chênh lệch trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Kiểm định Wilcoxon ở phần A là hai phía; ở phần B là một phía theo giả thuyết phân phối đúng thành phố cho CPC cao hơn đối chứng (các giá trị $p$ được báo cáo là $p$ gốc chưa điều chỉnh nhiều giả thuyết). Đối với đối chứng sử dụng phân phối trung bình của tập huấn luyện, mức thay đổi CPC trung bình là $+0.00091$, trung vị là $+0.00007$, và 27/50 thành phố có thay đổi dương. Khoảng tin cậy bootstrap mô tả độ bất định của mức thay đổi trung bình, trong khi kiểm định Wilcoxon sử dụng dấu và thứ hạng của các chênh lệch ghép cặp. Vì vậy, hai kết quả phản ánh những đặc điểm khác nhau của phân bố chênh lệch giữa các thành phố.
+Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh bằng từng phân phối và baseline zero-shot. Ở phần B, chênh lệch được tính bằng CPC khi dùng phân phối đúng thành phố trừ CPC khi dùng phân phối đối chứng. Do đó, giá trị dương cho biết phân phối đúng thành phố cho kết quả tốt hơn. Đối chứng từ thành phố huấn luyện được lấy trung bình qua 1.000 lượt chọn donor ngẫu nhiên. Đối với phép hoán vị, kết quả được lấy trung bình trên toàn bộ các hoán vị chỉ số khác hoán vị đồng nhất khi số lượng không vượt quá 1.000. Nếu vượt quá mức này, sử dụng 1.000 hoán vị được chọn ngẫu nhiên không hoàn lại. Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho chênh lệch trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Kiểm định Wilcoxon ở phần A là hai phía, còn ở phần B là một phía theo giả thuyết phân phối đúng thành phố cho CPC cao hơn đối chứng (các giá trị $p$ được báo cáo là $p$ gốc chưa điều chỉnh nhiều giả thuyết). Đối với đối chứng sử dụng phân phối trung bình của tập huấn luyện, mức thay đổi CPC trung bình là $+0.00091$, trung vị là $+0.00007$, và 27/50 thành phố có thay đổi dương. Khoảng tin cậy bootstrap mô tả độ bất định của mức thay đổi trung bình, trong khi kiểm định Wilcoxon sử dụng dấu và thứ hạng của các chênh lệch ghép cặp. Vì vậy, hai kết quả phản ánh những đặc điểm khác nhau của phân bố chênh lệch giữa các thành phố.
 
 
 ## 4.3. Giá trị bổ sung của $Y_D$ phụ thuộc như thế nào vào độ phân giải và chất lượng quan sát?
 
 Phần này đánh giá độ nhạy của mức cải thiện theo ba khía cạnh: số nhóm khoảng cách $K$, độ phân giải không gian của phân phối, và độ chính xác của quan sát dưới tác động của nhiễu.
 
-Trước hết, khi số nhóm khoảng cách danh nghĩa tăng từ $K=2$ lên $K=20$, mức tăng CPC trung bình tăng từ +0.00098 lên +0.00639 (Bảng 4 và Hình 4). Tại cấu hình chính $K=8$, mức tăng đạt +0.00354, với 45/50 thành phố được cải thiện. Mức tăng trung bình tăng trên toàn bộ các cấu hình được khảo sát, trong khi số thành phố cải thiện dao động từ 39 đến 47 trên tổng số 50 thành phố. Đây là kết quả của các cấu hình phân nhóm được đánh giá; nghiên cứu chưa xác định số nhóm tối ưu khi quan sát có nhiễu.
+Trước hết, khi số nhóm khoảng cách danh nghĩa tăng từ $K=2$ lên $K=20$, mức tăng CPC trung bình tăng từ +0.00098 lên +0.00639 (Bảng 4 và Hình 4). Tại cấu hình chính $K=8$, mức tăng đạt +0.00354, với 45/50 thành phố được cải thiện. Mức tăng trung bình tăng trên toàn bộ các cấu hình được khảo sát, trong khi số thành phố cải thiện dao động từ 39 đến 47 trên tổng số 50 thành phố. Đây là kết quả của các cấu hình phân nhóm được đánh giá. Tuy nhiên, nghiên cứu chưa xác định số nhóm tối ưu khi quan sát có nhiễu.
 
 ### Bảng 4. Mức thay đổi CPC theo số nhóm khoảng cách $K$ trên 50 thành phố.
 
@@ -318,18 +317,18 @@ Trước hết, khi số nhóm khoảng cách danh nghĩa tăng từ $K=2$ lên 
 Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. $K$ là số khoảng danh nghĩa được xác định từ tập huấn luyện. Số khoảng hoạt động $K_{\mathrm{act},c}$ có thể nhỏ hơn $K$ tại những thành phố không có cặp OD trong một số khoảng cự ly xa.
 
 ![Hình 4](figures/fig4_resolution_sensitivity.png)
-**Hình 4. Mức thay đổi CPC trung bình theo số nhóm khoảng cách $K$.** Các điểm biểu diễn mức tăng CPC trung bình so với baseline trên 50 thành phố; thanh sai số biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Cấu hình chính $K=8$ được đánh dấu bằng đường gióng.
+**Hình 4. Mức thay đổi CPC trung bình theo số nhóm khoảng cách $K$.** Các điểm biểu diễn mức tăng CPC trung bình so với baseline trên 50 thành phố, còn thanh sai số biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Cấu hình chính $K=8$ được đánh dấu bằng đường gióng.
 
 Mức cải thiện trung bình tăng trên toàn bộ dải $K$ được khảo sát. Kết quả này cho thấy độ phân giải danh nghĩa cao hơn có thể cung cấp thêm thông tin hiệu chỉnh, mặc dù số khoảng thực sự hoạt động còn phụ thuộc vào phạm vi khoảng cách của từng thành phố.
 
 Ngoài độ phân giải theo khoảng cách, phân tích thăm dò về độ phân giải không gian cho thấy khi áp dụng phân phối theo từng county xuất phát trên 11 vùng đô thị có nhiều county, CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 9/11 trường hợp, với mức tăng trung bình trong nhóm này là +0.00063. Khi tính gộp trên toàn bộ 50 thành phố (trong đó 39 vùng đơn county có mức chênh lệch bằng 0 theo cấu trúc), mức tăng bổ sung trung bình là +0.00014. Kết quả này bước đầu cho thấy việc phân nhóm quan sát theo county xuất phát có thể bổ sung thông tin tại một số vùng đô thị có nhiều county trong benchmark. Khả năng khái quát của kết quả cần được kiểm tra trên tập dữ liệu có nhiều vùng đô thị multi-county hơn.
 
-Về chất lượng của quan sát, dưới cơ chế nhiễu tổng hợp được khảo sát (Phụ lục S6), mức thay đổi CPC trung bình giảm dần khi độ lệch giữa phân phối bị nhiễu và phân phối oracle, đo bằng Total Variation (TV), tăng lên (Hình 5). Mức tăng CPC trung bình giảm từ +0.00354 khi không thêm nhiễu xuống +0.00070 tại 4% TV và chuyển sang âm tại 5% TV (−0.00087; Hình 5). Nội suy tuyến tính giữa hai mức nhiễu liền kề có mức thay đổi CPC trung bình trái dấu cho điểm cắt mô tả khoảng 4.44% TV. Trong 10.000 đường cong bootstrap, 9.546 đường có điểm cắt trong miền khảo sát 0–5%; 454 đường còn lại vẫn dương tại mức nhiễu 5% và được ghi nhận là kiểm duyệt phải tại giới hạn khảo sát. Nghiên cứu không báo cáo khoảng tin cậy cho vị trí điểm cắt.
+Về chất lượng của quan sát, dưới cơ chế nhiễu tổng hợp được khảo sát (Phụ lục S6), mức thay đổi CPC trung bình giảm dần khi độ lệch giữa phân phối bị nhiễu và phân phối oracle, đo bằng Total Variation (TV), tăng lên (Hình 5). Mức tăng CPC trung bình giảm từ +0.00354 khi không thêm nhiễu xuống +0.00070 tại 4% TV và chuyển sang âm tại 5% TV (−0.00087, Hình 5). Nội suy tuyến tính giữa hai mức nhiễu liền kề có mức thay đổi CPC trung bình trái dấu cho điểm cắt mô tả khoảng 4.44% TV. Trong 10.000 đường cong bootstrap, 9.546 đường có điểm cắt trong miền khảo sát 0–5%, còn 454 đường còn lại vẫn dương tại mức nhiễu 5% và được ghi nhận là kiểm duyệt phải tại giới hạn khảo sát. Nghiên cứu không báo cáo khoảng tin cậy cho vị trí điểm cắt.
 
-Trong năm mức nhiễu dương được khảo sát, 3% TV là mức lớn nhất mà kiểm định Wilcoxon một phía còn có ý nghĩa sau hiệu chỉnh Holm ($p_{\mathrm{Holm}}=0.0446$). Tại 4% TV, mức tăng CPC trung bình vẫn dương (+0.00070), nhưng kiểm định không đạt tiêu chí này ($p_{\mathrm{Holm}}=0.9695$). Kết quả kiểm định và điểm cắt của đường trung bình mô tả hai khía cạnh khác nhau; mức 3% TV không được xem là một ngưỡng bảo đảm hiệu quả áp dụng.
+Trong năm mức nhiễu dương được khảo sát, 3% TV là mức lớn nhất mà kiểm định Wilcoxon một phía còn có ý nghĩa sau hiệu chỉnh Holm ($p_{\mathrm{Holm}}=0.0446$). Tại 4% TV, mức tăng CPC trung bình vẫn dương (+0.00070), nhưng kiểm định không đạt tiêu chí này ($p_{\mathrm{Holm}}=0.9695$). Kết quả kiểm định và điểm cắt của đường trung bình mô tả hai khía cạnh khác nhau, nên mức 3% TV không được xem là một ngưỡng bảo đảm hiệu quả áp dụng.
 
 ![Hình 5](figures/fig5_noise_dose_response.png)
-**Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố; dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% giữa các thành phố, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt mô tả tại $\epsilon_{\mathrm{cross}}=4.44\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
+**Hình 5. Mức thay đổi CPC trung bình theo mức nhiễu Total Variation thêm vào phân phối mục tiêu.** Các điểm biểu diễn mức thay đổi CPC trung bình so với baseline trên 50 thành phố, còn dải bóng mờ biểu diễn khoảng tin cậy bootstrap 95% giữa các thành phố, phân tầng theo fold. Đường đứt nét đỏ đánh dấu điểm cắt mô tả tại $\epsilon_{\mathrm{cross}}=4.44\%$ TV, nơi mức cải thiện trung bình chuyển từ dương sang âm.
 
 Trong các cấu hình oracle được khảo sát, tăng số nhóm khoảng cách giúp tăng mức cải thiện trung bình. Khi phân phối bị nhiễu theo cơ chế đã xét, lợi ích này suy giảm và có thể chuyển thành mức giảm CPC.
 
@@ -337,7 +336,7 @@ Trong các cấu hình oracle được khảo sát, tăng số nhóm khoảng c�
 
 Với các seed 1, 10 và 100 của GNN, mức thay đổi CPC trung bình lần lượt là +0.00434 (41/50 thành phố cải thiện), +0.00308 (44/50 thành phố) và +0.00320 (44/50 thành phố), với trung bình qua ba seed đạt +0.00354. Kết quả này cho thấy lợi ích trung bình của phép hiệu chỉnh được duy trì qua các lần khởi tạo đã khảo sát.
 
-Mức tăng CPC trung bình đạt +0.00354 với GNN và +0.00329 với MLP; số thành phố cải thiện tương ứng là 45/50 và 47/50. MLP là một ablation có kiểm soát của GNN, giữ nguyên biểu diễn đầu vào, decoder cặp OD, cấu hình huấn luyện và quy mô tham số nhưng loại bỏ truyền thông điệp giữa các node. Kết quả tương đối nhất quán giữa hai cấu hình cho thấy lợi ích hiệu chỉnh không phụ thuộc riêng vào thành phần truyền thông điệp trong cặp mô hình neural được so sánh.
+Mức tăng CPC trung bình đạt +0.00354 với GNN và +0.00329 với MLP, với số thành phố cải thiện tương ứng là 45/50 và 47/50. MLP là một ablation có kiểm soát của GNN, giữ nguyên biểu diễn đầu vào, decoder cặp OD, cấu hình huấn luyện và quy mô tham số nhưng loại bỏ truyền thông điệp giữa các node. Kết quả tương đối nhất quán giữa hai cấu hình cho thấy lợi ích hiệu chỉnh không phụ thuộc riêng vào thành phần truyền thông điệp trong cặp mô hình neural được so sánh.
 
 <div style="page-break-before: always;"></div>
 
@@ -357,10 +356,10 @@ CPC trước hiệu chỉnh của GNN và MLP lần lượt là 0.71281 và 0.70
 
 Nghiên cứu xem xét mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh. Sai lệch được đo bằng khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle. Trên 50 thành phố được đánh giá, các thành phố có sai lệch lớn hơn thường có mức tăng CPC cao hơn (Hình 6).
 
-Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng cách địa lý trung bình, tương quan từng phần vẫn dương ($r_{\mathrm{partial}}=0.7951$, $p=5.35\times10^{-12}$). Đây là mối liên hệ thăm dò trong tập thành phố được đánh giá; kết quả không bảo đảm rằng một thành phố có sai lệch lớn sẽ được cải thiện sau hiệu chỉnh.
+Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng cách địa lý trung bình, tương quan từng phần vẫn dương ($r_{\mathrm{partial}}=0.7951$, $p=5.35\times10^{-12}$). Đây là mối liên hệ thăm dò trong tập thành phố được đánh giá, nên kết quả không bảo đảm rằng một thành phố có sai lệch lớn sẽ được cải thiện sau hiệu chỉnh.
 
 ![Hình 6](figures/fig6_mechanistic_dpre.png)
-**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh.** Mỗi điểm biểu diễn một thành phố ($N=50$) với GNN tại $K=8$, sau khi lấy trung bình các đại lượng tương ứng qua ba model seeds. Trục ngang là khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle; trục dọc là chênh lệch CPC sau và trước hiệu chỉnh. Đường thẳng biểu diễn hồi quy tuyến tính giữa hai biến trên hình, chưa điều chỉnh theo các biến kiểm soát. Tương quan từng phần được báo cáo riêng trong mục 4.5.
+**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh.** Mỗi điểm biểu diễn một thành phố ($N=50$) với GNN tại $K=8$, sau khi lấy trung bình các đại lượng tương ứng qua ba model seeds. Trục ngang là khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle, còn trục dọc là chênh lệch CPC sau và trước hiệu chỉnh. Đường thẳng biểu diễn hồi quy tuyến tính giữa hai biến trên hình, chưa điều chỉnh theo các biến kiểm soát. Tương quan từng phần được báo cáo riêng trong mục 4.5.
 
 
 # 5. Thảo luận
@@ -373,19 +372,23 @@ Các mô hình như Deep Gravity và UGNN khai thác dữ liệu nguồn để h
 
 ## 5.2. Khả năng và giới hạn của phép hiệu chỉnh khoảng cách
 
-Hiệu chỉnh bằng $Y_D$ chỉ điều chỉnh phân bổ lưu lượng giữa các nhóm khoảng cách, không cung cấp thêm thông tin để phân biệt các cặp OD trong cùng một nhóm. Đồng thời, tổng lưu lượng dự báo được giữ nguyên, nên phép hiệu chỉnh không xử lý sai lệch về tổng lưu lượng của baseline. Vì vậy, toán tử chủ yếu khắc phục sai lệch về tỷ trọng giữa các nhóm khoảng cách; các sai lệch bên trong nhóm và sai lệch tổng lượng vẫn do baseline quyết định. Phân tích ở mục 4.5 phù hợp với cơ chế này. Tuy nhiên, do sai lệch ban đầu được tính từ phân phối oracle, phân tích này không cung cấp một quy tắc độc lập để quyết định khi nào nên áp dụng hiệu chỉnh trên thực tế. Giá trị của phân phối mục tiêu phụ thuộc vào dự báo ban đầu mà nó hiệu chỉnh. Mức tăng được duy trì trên hai baseline neural có CPC ban đầu cao hơn, trong khi nhỏ hơn và kém nhất quán trên Gravity. Mẫu kết quả này làm giảm khả năng kết quả chính chỉ là hệ quả của việc chọn một baseline có độ chính xác thấp. Tuy nhiên, GNN và MLP chia sẻ biểu diễn đầu vào và decoder, nên kết luận vẫn được giới hạn trong các mô hình đã khảo sát.
+Hiệu chỉnh bằng $Y_D$ chỉ điều chỉnh phân bổ lưu lượng giữa các nhóm khoảng cách, không cung cấp thêm thông tin để phân biệt các cặp OD trong cùng một nhóm. Đồng thời, tổng lưu lượng dự báo được giữ nguyên, nên phép hiệu chỉnh không xử lý sai lệch về tổng lưu lượng của baseline. Vì vậy, toán tử chủ yếu khắc phục sai lệch về tỷ trọng giữa các nhóm khoảng cách, còn các sai lệch bên trong nhóm và sai lệch tổng lượng vẫn do baseline quyết định. Mối liên hệ giữa sai lệch phân phối ban đầu và mức tăng CPC ở mục 4.5 phù hợp với cơ chế này. Tuy nhiên, do sai lệch ban đầu được tính từ phân phối oracle, phân tích này không cung cấp một quy tắc độc lập để quyết định khi nào nên áp dụng hiệu chỉnh trên thực tế. 
 
-Các đối chứng đã khảo sát hỗ trợ vai trò của thông tin đặc thù theo thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Kết quả này được duy trì khi độ lớn can thiệp được kiểm soát theo RMS của vector log-ratio đã trừ trung bình. Tăng số nhóm khoảng cách cung cấp thông tin chi tiết hơn để điều chỉnh lưu lượng theo dải cự ly, nhưng thí nghiệm này sử dụng phân phối oracle. Với quan sát thu thập độc lập, mức độ chi tiết và sai số của phân phối cần được xem xét đồng thời. Các thí nghiệm hiện tại chưa xác định được số nhóm phù hợp cho từng mức nhiễu.
+Bên cạnh sai lệch phân phối, kết quả so sánh các kiến trúc cho thấy giá trị của thông tin mục tiêu còn phụ thuộc vào mô hình dự báo ban đầu. Mức tăng được duy trì trên hai baseline neural có CPC ban đầu cao hơn, trong khi nhỏ hơn và kém nhất quán trên Gravity. Mẫu kết quả này làm giảm khả năng kết quả chính chỉ là hệ quả của việc chọn một baseline có độ chính xác thấp. Tuy nhiên, GNN và MLP chia sẻ biểu diễn đầu vào và decoder, nên kết luận vẫn được giới hạn trong các mô hình đã khảo sát.
+
+Các đối chứng đã khảo sát hỗ trợ vai trò của thông tin đặc thù theo thành phố và sự tương ứng giữa tín hiệu hiệu chỉnh với các nhóm khoảng cách. Kết quả này được duy trì khi độ lớn can thiệp được kiểm soát theo RMS của vector log-ratio đã trừ trung bình.
+
+Về độ phân giải của quan sát, tăng số nhóm khoảng cách cung cấp thông tin chi tiết hơn để điều chỉnh lưu lượng theo dải cự ly, nhưng thí nghiệm này sử dụng phân phối oracle. Với quan sát thu thập độc lập, mức độ chi tiết và sai số của phân phối cần được xem xét đồng thời. Các thí nghiệm hiện tại chưa xác định được số nhóm phù hợp cho từng mức nhiễu.
 
 ## 5.3. Giới hạn và hướng nghiên cứu tiếp theo
 
 Giới hạn chính của nghiên cứu là phân phối khoảng cách được tổng hợp từ chính dữ liệu OD tham chiếu của thành phố mục tiêu. Thiết lập oracle cho phép đánh giá lợi ích khi có phân phối chính xác trên tập hỗ trợ đã chọn, nhưng chưa xác nhận hiệu quả với một nguồn quan sát được thu thập độc lập. Các thí nghiệm gây nhiễu cũng chưa bao quát đầy đủ những sai lệch có thể xuất hiện trong dữ liệu thực tế, như hạn chế về độ phủ, tính đại diện và khác biệt về thời gian thu thập [@gallotti2024distorted; @pappalardo2023future]. Vì vậy, bước kiểm chứng tiếp theo là đánh giá các nguồn quan sát độc lập và mức độ tương thích của chúng với phạm vi không gian, thời gian và tập hỗ trợ dùng để tái tạo OD.
 
-Ngoài ra, nghiên cứu chỉ tái tạo cường độ trên các cặp OD liên vùng đã biết có luồng dương, nên chưa đánh giá khả năng xác định cặp có luồng hoặc tái tạo toàn bộ ma trận OD. Các kết quả được ghi nhận trên 50 vùng đô thị Hoa Kỳ và các baseline đã khảo sát; khả năng khái quát sang những bối cảnh khác vẫn cần được kiểm tra. Phân tích theo origin-county chỉ mang tính thăm dò do nhóm vùng đô thị có nhiều county chỉ gồm 11 trường hợp. Ranh giới hành chính cũng có thể không phản ánh các vùng di chuyển chức năng, nên cần kiểm tra thêm các cách phân chia không gian trước khi khái quát lợi ích của quan sát chi tiết hơn theo địa bàn.
+Ngoài ra, nghiên cứu chỉ tái tạo cường độ trên các cặp OD liên vùng đã biết có luồng dương, nên chưa đánh giá khả năng xác định cặp có luồng hoặc tái tạo toàn bộ ma trận OD. Các kết quả được ghi nhận trên 50 vùng đô thị Hoa Kỳ và các baseline đã khảo sát. Vì vậy, khả năng khái quát sang những bối cảnh khác vẫn cần được kiểm tra. Phân tích theo origin-county chỉ mang tính thăm dò do nhóm vùng đô thị có nhiều county chỉ gồm 11 trường hợp. Ranh giới hành chính cũng có thể không phản ánh các vùng di chuyển chức năng, nên cần kiểm tra thêm các cách phân chia không gian trước khi khái quát lợi ích của quan sát chi tiết hơn theo địa bàn.
 
 Một hướng mở rộng khác là kết hợp phân phối khoảng cách với tổng luồng đi hoặc tổng luồng đến của từng vùng. Các ràng buộc này đã được sử dụng trong mô hình tương tác không gian [@ortuzar2011modelling; @wilson1971family] và có thể bổ sung thông tin theo vùng mà phân phối khoảng cách chưa cung cấp. Nghiên cứu tiếp theo cần kiểm tra liệu việc kết hợp các quan sát này có tạo thêm cải thiện khi cùng áp dụng cho một baseline được giữ cố định hay không.
 
-Nghiên cứu đánh giá giá trị dự báo của quan sát tổng hợp, không đánh giá mức bảo vệ quyền riêng tư. Việc tổng hợp dữ liệu thành phân phối khoảng cách tự nó không tạo thành một bảo đảm quyền riêng tư.
+Cuối cùng, phạm vi nghiên cứu giới hạn ở giá trị dự báo của quan sát tổng hợp và chưa bao gồm việc đánh giá mức bảo vệ quyền riêng tư. Việc tổng hợp dữ liệu thành phân phối khoảng cách tự nó không tạo thành một bảo đảm quyền riêng tư.
 
 # 6. Kết luận
 
@@ -485,14 +488,16 @@ Trong quá trình huấn luyện, log-likelihood của ZTNB được tính toán
 
 * Tham số trung bình cơ sở được chặn dưới: $\mu_{c,ij} = \operatorname{softplus}(\log T_{c,ij}^{\mathrm{grav}} + \operatorname{residual}_{c,ij}) + 10^{-4}$.
 * Tham số phân tán được chặn trong không gian log: $\log \phi_{\mathrm{safe}} = \operatorname{clamp}(\log \phi, \text{min}=-10.0, \text{max}=10.0)$, sau đó $\phi = \exp(\log \phi_{\mathrm{safe}})$.
-* Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit; xác suất tại 0 được chuẩn hóa số học qua $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - p_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
+* Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit. Đồng thời, xác suất tại 0 được chuẩn hóa số học qua $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - p_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
 * Gradient của toàn bộ tham số mô hình được cắt theo chuẩn Euclid tối đa: $\|\mathbf{g}\|_2 \le 5.0$ thông qua `torch.nn.utils.clip_grad_norm_`.
 
 ### S1.3. Danh sách 26 đặc trưng và đồ thị không gian
 
-Theo thứ tự cột trong `src.data.dataset.NODE_FEATURE_COLUMNS`, 26 đặc trưng gồm 13 Census: `total_population`, `median_age`, `median_income`, `per_capita_income`, `employment_rate`, `unemployment_rate`, `commute_transit_pct`, `commute_active_pct`, `commute_wfh_pct`, `zero_vehicle_pct`, `avg_vehicles_per_household`, `higher_education_pct`, `homeownership_rate`; 8 POI: `office`, `office_density`, `industrial`, `industrial_density`, `commercial`, `commercial_density`, `education_primary`, `education_primary_density`; và 5 Road: `road_length_total`, `road_density`, `road_count`, `motorway_length`, `primary_length`. CSV thiếu giá trị được đọc như 0; NaN/Inf được thay bằng 0. Code không áp dụng log transform cho các cột này. Trong mỗi fold, `load_cities()` fit một `StandardScaler` trên node features gộp của 35 thành phố huấn luyện; validation và target chỉ gọi `transform`, và scaler statistics được lưu trong checkpoint.
+Theo thứ tự cột trong `src.data.dataset.NODE_FEATURE_COLUMNS`, 26 đặc trưng được chia thành ba nhóm. Nhóm thứ nhất gồm 13 đặc trưng Census: `total_population`, `median_age`, `median_income`, `per_capita_income`, `employment_rate`, `unemployment_rate`, `commute_transit_pct`, `commute_active_pct`, `commute_wfh_pct`, `zero_vehicle_pct`, `avg_vehicles_per_household`, `higher_education_pct`, `homeownership_rate`. Nhóm thứ hai gồm 8 đặc trưng POI: `office`, `office_density`, `industrial`, `industrial_density`, `commercial`, `commercial_density`, `education_primary`, `education_primary_density`. Nhóm cuối gồm 5 đặc trưng Road: `road_length_total`, `road_density`, `road_count`, `motorway_length`, `primary_length`. 
 
-Đồ thị dùng node là tract và tọa độ centroid `(lon, lat)` từ `meta.csv`. Khoảng cách là Haversine với bán kính Trái Đất 6371 km. Cấu hình frozen chính dùng radius graph 5.0 km, self-loop, cạnh hai chiều sau bước symmetrize; nếu một node không có hàng xóm khác trong bán kính, code nối nó với node gần nhất. Edge attribute là khoảng cách địa lý theo km. Đồ thị chỉ dùng geography quan sát được, không dùng OD flows.
+Khi đọc CSV, các giá trị thiếu được gán bằng 0, đồng thời NaN/Inf cũng được thay bằng 0. Các cột này không được biến đổi logarit. Trong mỗi fold, `load_cities()` khớp một `StandardScaler` trên đặc trưng nút gộp của 35 thành phố huấn luyện. Sau đó, dữ liệu validation và thành phố mục tiêu chỉ được biến đổi bằng `transform` với các thống kê đã học. Các thống kê chuẩn hóa này được lưu trong checkpoint.
+
+Để xây dựng đồ thị, mỗi tract được xem là một nút có tọa độ tâm `(lon, lat)` lấy từ `meta.csv`. Khoảng cách giữa các nút được tính bằng công thức Haversine với bán kính Trái Đất 6371 km. Cấu hình chính sử dụng đồ thị bán kính 5.0 km có cạnh tự nối và các cạnh hai chiều sau bước đối xứng hóa. Nếu một nút không có nút lân cận khác trong bán kính này, mã nguồn nối nó với nút gần nhất. Mỗi cạnh mang thuộc tính khoảng cách địa lý theo km. Như vậy, đồ thị được xây dựng từ thông tin địa lý quan sát được mà không sử dụng luồng OD.
 
 ### S1.4. Cấu hình siêu tham số kiến trúc và phân tách baseline
 
@@ -501,16 +506,16 @@ Cấu hình siêu tham số chính xác được trích xuất trực tiếp t�
 #### Bảng S1: Siêu tham số kiến trúc và huấn luyện của các zero-shot baseline
 | Thành phần | Siêu tham số | Giá trị | Mô tả chi tiết |
 |:---|:---|:---:|:---|
-| **GNN Encoder** | Số chiều đặc trưng đầu vào ($d_{\mathrm{in}}$) | 26 | Đặc trưng nhân khẩu, kinh tế - xã hội của tract |
+| **GNN Encoder** | Số chiều đặc trưng đầu vào ($d_{\mathrm{in}}$) | 26 | Đặc trưng nhân khẩu, kinh tế và xã hội của tract |
 | | Số lớp truyền thông điệp (Message passing) | 2 | Khối `GraphConvLayer` có điều kiện khoảng cách |
-| | Cơ chế Attention / Số attention heads | N/A (0) | Tổng hợp lân cận bằng trung bình; không dùng attention |
+| | Cơ chế Attention / Số attention heads | N/A (0) | Tổng hợp lân cận bằng trung bình và không dùng attention |
 | | Chiều ẩn / Chiều đầu ra node embedding | 64 | LayerNorm(64) + ReLU + Dropout |
 | | Xác suất Dropout | 0.1 | Chiếu đầu vào, cập nhật residual, chiếu đầu ra |
 | | Loại đồ thị không gian | Radius graph | Bán kính địa lý $r = 5.0$ km có self-loops |
 | **Pairwise Decoder** | Chiều vector đầu vào | 130 | Ghép $[\mathbf{h}_i \,(64) \parallel \mathbf{h}_j \,(64) \parallel \log(1+d) \,(1) \parallel \log T^{\mathrm{grav}} \,(1)]$ |
-| | Các tầng ẩn | [64, 32] | Tầng 1: 64 (LayerNorm+ReLU+Dropout); Tầng 2: 32 (ReLU+Dropout) |
+| | Các tầng ẩn | [64, 32] | Tầng 1: 64 (LayerNorm+ReLU+Dropout), tầng 2: 32 (ReLU+Dropout) |
 | | Tầng đầu ra | 1 | Đầu ra neural residual khởi tạo bằng 0 |
-| | Gravity prior nội tại | $(G, \alpha)$ khả vi | Khởi tạo tại $G_0=0.0, \alpha_0=1.0$; huấn luyện end-to-end qua AdamW |
+| | Gravity prior nội tại | $(G, \alpha)$ khả vi | Khởi tạo tại $G_0=0.0, \alpha_0=1.0$ và huấn luyện end-to-end qua AdamW |
 | **Tối ưu hóa** | Hàm mục tiêu | ZTNB NLL | Hợp lý Zero-Truncated Negative Binomial |
 | | Thuật toán tối ưu | AdamW | Bước tối ưu city-by-city (city-balanced) |
 | | Tốc độ học ban đầu (Initial LR) | 0.0032 | $3.2 \times 10^{-3}$ |
@@ -524,7 +529,7 @@ Cấu hình siêu tham số chính xác được trích xuất trực tiếp t�
 
 **Ghi chú phân tách tham số:** Hai tham số $(G_{\mathrm{NN}}, \alpha_{\mathrm{NN}})$ của gravity prior nội tại trong các mạng neural là các biến khả vi được tối ưu hóa đồng thời end-to-end cùng toàn bộ mạng qua AdamW và được lưu trữ trực tiếp trong checkpoint. Ngược lại, baseline Gravity hai tham số cổ điển độc lập được ước lượng riêng biệt bằng phương pháp bình phương tối thiểu pooled log-linear OLS trên các thành phố huấn luyện ($G_{\mathrm{OLS}} \approx -8.54, \alpha_{\mathrm{OLS}} \approx 1.66$ trên Fold 1). Hai mô hình này hoàn toàn không dùng chung hay chia sẻ hệ số với nhau.
 
-**Dấu vết tái lập:** Phân chia thành phố được lưu trong một split manifest cố định (`results/e1/splits_manifest_v2.json`, SHA-256: `96a09089574c37dbcf13112b5bcd20c738327df3c08f5915fdcb2a9f15110543`). Mỗi checkpoint lưu fold, model seed, cấu hình mô hình và thống kê chuẩn hóa tương ứng (`results/checkpoints/5fold_fold{f}_seed{s}.pt` và `mlp_fold{f}_seed{s}.pt`). Trong mã nguồn, baseline GNN được triển khai bằng class `UrbanGNN`, và baseline MLP được triển khai bằng class `ZeroShotMLPModel` (sử dụng bộ mã hóa `NodeMLP`); các định danh code này được giữ nguyên để tương thích với các checkpoint và script tạo kết quả hiện có. Các bảng và hình được tạo từ kết quả cấp thành phố đã lưu bằng các script phân tích trong repository.
+**Dấu vết tái lập:** Phân chia thành phố được lưu trong một split manifest cố định (`results/e1/splits_manifest_v2.json`, SHA-256: `96a09089574c37dbcf13112b5bcd20c738327df3c08f5915fdcb2a9f15110543`). Mỗi checkpoint lưu fold, model seed, cấu hình mô hình và thống kê chuẩn hóa tương ứng (`results/checkpoints/5fold_fold{f}_seed{s}.pt` và `mlp_fold{f}_seed{s}.pt`). Trong mã nguồn, baseline GNN được triển khai bằng class `UrbanGNN`, và baseline MLP được triển khai bằng class `ZeroShotMLPModel` (sử dụng bộ mã hóa `NodeMLP`). Các định danh này được giữ nguyên để tương thích với các checkpoint và script tạo kết quả hiện có. Các bảng và hình được tạo từ kết quả cấp thành phố đã lưu bằng các script phân tích trong repository.
 
 ## S2. Dạng tổng quát của toán tử hiệu chỉnh giải tích ($q \in [0, 1]$)
 
@@ -534,7 +539,7 @@ Tham số cường độ hiệu chỉnh $q \in [0, 1]$ điều khiển mức đ�
 - $q = 1$: khớp đầy đủ tỷ trọng luồng theo từng nhóm khoảng cách hoạt động.
 - Thiết lập chính cố định $q = 1$.
 
-Ở cấu hình chính $K=8$, 40/50 thành phố có đủ tám nhóm hoạt động; tại 10 thành phố còn lại, một hoặc nhiều nhóm cự ly xa không chứa cặp OD, dẫn đến $K_{\mathrm{act},c}\in[5,7]$. Thuật toán chỉ thực hiện hiệu chỉnh trên tập nhóm hoạt động $\mathcal A_c$.
+Ở cấu hình chính $K=8$, 40/50 thành phố có đủ tám nhóm hoạt động, còn tại 10 thành phố còn lại, một hoặc nhiều nhóm cự ly xa không chứa cặp OD, dẫn đến $K_{\mathrm{act},c}\in[5,7]$. Thuật toán chỉ thực hiện hiệu chỉnh trên tập nhóm hoạt động $\mathcal A_c$.
 
 Quy trình hiệu chỉnh tổng quát được thực hiện qua các bước:
 
@@ -600,7 +605,7 @@ Với hai cặp $(i,j)$ và $(u,v)$ cùng thuộc khoảng $b$, ta có:
 $$
 \frac{\widehat{t}_{c,ij}^{(1)}}{\widehat{t}_{c,uv}^{(1)}} = \frac{s_{c,b}(q) \widehat{t}_{c,ij}^{(0)}}{s_{c,b}(q) \widehat{t}_{c,uv}^{(0)}} = \frac{\widehat{t}_{c,ij}^{(0)}}{\widehat{t}_{c,uv}^{(0)}}.
 $$
-Do đó, tỷ số giữa hai dự đoán trong cùng một khoảng không đổi và thứ tự nội bộ của các cặp trong khoảng đó được bảo toàn; kết luận này không mở rộng thành bảo toàn thứ hạng toàn thành phố.
+Do đó, tỷ số giữa hai dự đoán trong cùng một khoảng không đổi và thứ tự nội bộ của các cặp trong khoảng đó được bảo toàn. Tuy nhiên, kết luận này không mở rộng thành bảo toàn thứ hạng toàn thành phố.
 
 ### S3.3. Bảo toàn tổng khối lượng dự báo
 Gọi $S_c^{(0)}$ là tổng khối lượng dự báo của baseline:
@@ -621,7 +626,7 @@ Vì $S_c^{(0)}$ chính là tổng khối lượng dự báo trước hiệu ch�
 
 ## S4. Các thước đo đánh giá bổ sung
 
-Ngoài CPC, nghiên cứu báo cáo ba thước đo bổ sung trên cùng tập hỗ trợ liên vùng dương $\Omega_c$. Các thước đo này được sử dụng để kiểm tra mô tả liệu hướng thay đổi sau hiệu chỉnh có được duy trì khi xem xét độ lớn sai số và thứ hạng của các luồng hay không. CPC vẫn là thước đo chính; không thực hiện thêm kiểm định giả thuyết cho các thước đo bổ sung.
+Ngoài CPC, nghiên cứu báo cáo ba thước đo bổ sung trên cùng tập hỗ trợ liên vùng dương $\Omega_c$. Các thước đo này được sử dụng để kiểm tra mô tả liệu hướng thay đổi sau hiệu chỉnh có được duy trì khi xem xét độ lớn sai số và thứ hạng của các luồng hay không. CPC vẫn là thước đo chính, nên nghiên cứu không thực hiện thêm kiểm định giả thuyết cho các thước đo bổ sung.
 
 1. **RMSE chuẩn hóa (NRMSE)**:
 $$
@@ -643,7 +648,7 @@ $$
 | $\operatorname{RMSE}_{\mathrm{log1p}}$ $\downarrow$ | 0.92586 | 0.90050 | −0.02536 | −0.01158 | 35/50 |
 | Spearman $\rho$ $\uparrow$ | 0.76913 | 0.77167 | +0.00253 | +0.00119 | 38/50 |
 
-Chú thích: Các giá trị được tính trên tập hỗ trợ $\Omega_c$. Với mỗi thành phố, kết quả được lấy trung bình qua ba model seeds trước khi macro-average trên 50 thành phố. Mũi tên chỉ hướng tốt hơn của từng thước đo. “Thành phố cải thiện” được xác định bằng mức giảm đối với NRMSE và $\operatorname{RMSE}_{\mathrm{log1p}}$, và mức tăng đối với Spearman. Các kết quả này mang tính mô tả bổ sung; các khoảng tin cậy và kiểm định giả thuyết chính của nghiên cứu dựa trên CPC. RMSE trên thang $\log(1+x)$ cũng giảm, cho thấy mức cải thiện vẫn xuất hiện khi ảnh hưởng của các luồng cường độ rất lớn được giảm bớt.
+Chú thích: Các giá trị được tính trên tập hỗ trợ $\Omega_c$. Với mỗi thành phố, kết quả được lấy trung bình qua ba model seeds trước khi macro-average trên 50 thành phố. Mũi tên chỉ hướng tốt hơn của từng thước đo. “Thành phố cải thiện” được xác định bằng mức giảm đối với NRMSE và $\operatorname{RMSE}_{\mathrm{log1p}}$, và mức tăng đối với Spearman. Các kết quả này mang tính mô tả bổ sung, còn các khoảng tin cậy và kiểm định giả thuyết chính của nghiên cứu dựa trên CPC. RMSE trên thang $\log(1+x)$ cũng giảm, cho thấy mức cải thiện vẫn xuất hiện khi ảnh hưởng của các luồng cường độ rất lớn được giảm bớt.
 
 
 
@@ -695,7 +700,7 @@ $$
 \operatorname{TV}\bigl(p(\sigma), p\bigr) = \frac{1}{2} \sum_{b=1}^{K_{\mathrm{act}}} \lvert p_b(\sigma) - p_b \rvert = \epsilon.
 $$
 
-   Mức nhiễu TV đo độ sai khác giữa hai phân phối tỷ trọng; không biểu thị tỷ lệ chuyến đi bị đo sai hay tỷ lệ sai số của từng cặp OD. Thí nghiệm dùng $K=8$, seeds mô hình $\{1,10,100\}$, năm fold, 50 thành phố, một replicate tại $\epsilon=0$ và 1,000 replicate tại mỗi mức dương. Các lượt lặp được trung bình trước seeds, seeds được trung bình trước suy luận cấp thành phố. Các khoảng tin cậy bootstrap phản ánh biến thiên giữa các thành phố đánh giá, có điều kiện trên cách chia fold, checkpoint và pipeline đã cố định; chúng không bao quát biến thiên do huấn luyện lại mô hình hoặc chia lại fold.
+   Mức nhiễu TV đo độ sai khác giữa hai phân phối tỷ trọng và không biểu thị tỷ lệ chuyến đi bị đo sai hay tỷ lệ sai số của từng cặp OD. Thí nghiệm dùng $K=8$, seeds mô hình $\{1,10,100\}$, năm fold, 50 thành phố, một replicate tại $\epsilon=0$ và 1,000 replicate tại mỗi mức dương. Kết quả được lấy trung bình qua các lượt lặp nhiễu trong từng seed, rồi lấy trung bình qua các seed trước khi thực hiện suy luận ở cấp thành phố. Các khoảng tin cậy bootstrap phản ánh biến thiên giữa các thành phố đánh giá, có điều kiện trên cách chia fold, checkpoint và pipeline đã cố định. Vì vậy, chúng không bao quát biến thiên do huấn luyện lại mô hình hoặc chia lại fold.
 
 2. **Đối chứng Placebo và chuẩn hóa liều can thiệp (Dose-Matched Controls)**:
 
@@ -723,7 +728,7 @@ $$
 p_{D,b}^* = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{D,b}^*)}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{D,m}^*)}, \qquad b \in \mathcal A_c.
 $$
 
-   Khi $D_D < 10^{-12}$, vector log-ratio đã trừ trung bình có độ lớn dưới ngưỡng số học và hướng co giãn được xem là suy biến; khi đó mã nguồn gán mức chênh lệch bằng kết quả của target ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$). Nhánh xử lý suy biến không được kích hoạt trong các thí nghiệm được báo cáo.
+   Khi $D_D < 10^{-12}$, vector log-ratio đã trừ trung bình có độ lớn dưới ngưỡng số học và hướng co giãn được xem là suy biến. Khi đó, mã nguồn gán mức chênh lệch bằng kết quả của target ($\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$). Nhánh xử lý suy biến không được kích hoạt trong các thí nghiệm được báo cáo.
 
    - **Đối chứng trung bình tập huấn luyện (Training-Mean Donor, Dose-Matched)**: Phân phối đối chứng được tính bằng trung bình cộng các phân phối khoảng cách đã chuẩn hóa của 35 thành phố huấn luyện trong fold tương ứng, với trọng số bằng nhau cho mỗi thành phố. Phân phối trung bình được xử lý bằng cùng hàm log-ratio và quy tắc ổn định số học như đối chứng donor. Trong các fold được đánh giá, phân phối trung bình trước bước chặn dưới có tỷ trọng dương trên mọi nhóm hoạt động của thành phố mục tiêu. Log-ratio và liều can thiệp $D_M$ được tính qua:
 
@@ -745,7 +750,7 @@ $$
 
    Khi $D_M < 10^{-12}$, vector log-ratio đã trừ trung bình có độ lớn dưới ngưỡng số học và mã nguồn gán $\Delta\mathrm{CPC} = \Delta\mathrm{CPC}_{\mathrm{target}}$. Nhánh xử lý suy biến không được kích hoạt trong các thí nghiệm được báo cáo.
 
-   - **Đối chứng hoán vị log-ratio hiệu chỉnh**: Để kiểm tra vai trò của sự tương ứng giữa tín hiệu hiệu chỉnh và các nhóm khoảng cách, nghiên cứu hoán vị các thành phần của vector log-ratio mục tiêu đã trừ trung bình trên tập nhóm hoạt động: $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, trong đó $\pi$ là một hoán vị trên $\mathcal A_c$ khác hoán vị đồng nhất ($\pi \neq \mathrm{id}$). Trong cấu hình chính $K=8$, quy trình trước hết tạo tập các hoán vị chỉ số khác hoán vị đồng nhất trên các nhóm hoạt động. Nếu tập này có không quá 1.000 phần tử, toàn bộ các hoán vị được sử dụng; nếu có nhiều hơn 1.000 phần tử, quy trình chọn ngẫu nhiên 1.000 hoán vị không hoàn lại. Kết quả đối chứng được tính bằng trung bình CPC trên các hoán vị được sử dụng. Trong benchmark được đánh giá, 3 thành phố sử dụng toàn bộ tập hoán vị hợp lệ, với số lượng lần lượt là 719, 119 và 119; 47 thành phố còn lại sử dụng 1.000 hoán vị mỗi thành phố. Phép hoán vị bảo toàn chuẩn Euclid và RMS của vector log-ratio đã trừ trung bình ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), đồng thời làm ngẫu nhiên sự tương ứng giữa các thành phần của vector này và các nhóm khoảng cách. Phân phối hoán vị sau đó được tái tạo qua:
+   - **Đối chứng hoán vị log-ratio hiệu chỉnh**: Để kiểm tra vai trò của sự tương ứng giữa tín hiệu hiệu chỉnh và các nhóm khoảng cách, nghiên cứu hoán vị các thành phần của vector log-ratio mục tiêu đã trừ trung bình trên tập nhóm hoạt động: $\tilde{r}_{P,b} = \tilde{r}_{T,\pi(b)}$, trong đó $\pi$ là một hoán vị trên $\mathcal A_c$ khác hoán vị đồng nhất ($\pi \neq \mathrm{id}$). Trong cấu hình chính $K=8$, quy trình trước hết tạo tập các hoán vị chỉ số khác hoán vị đồng nhất trên các nhóm hoạt động. Nếu tập này có không quá 1.000 phần tử, toàn bộ các hoán vị được sử dụng. Nếu có nhiều hơn 1.000 phần tử, quy trình chọn ngẫu nhiên 1.000 hoán vị không hoàn lại. Kết quả đối chứng được tính bằng trung bình CPC trên các hoán vị được sử dụng. Trong benchmark được đánh giá, 3 thành phố sử dụng toàn bộ tập hoán vị hợp lệ, với số lượng lần lượt là 719, 119 và 119, còn 47 thành phố còn lại sử dụng 1.000 hoán vị mỗi thành phố. Phép hoán vị bảo toàn chuẩn Euclid và RMS của vector log-ratio đã trừ trung bình ($\|\tilde{\mathbf{r}}_P\|_2 = \|\tilde{\mathbf{r}}_T\|_2 = \sqrt{K_{\mathrm{act}}} D_T$), đồng thời làm ngẫu nhiên sự tương ứng giữa các thành phần của vector này và các nhóm khoảng cách. Phân phối hoán vị sau đó được tái tạo qua:
 
 $$
 p_{P,b} = \frac{\widehat{Y}_b^{(0)} \exp(\tilde{r}_{P,b})}{\displaystyle\sum_{m\in\mathcal A_c} \widehat{Y}_m^{(0)} \exp(\tilde{r}_{P,m})}, \qquad b \in \mathcal A_c.
@@ -757,7 +762,7 @@ $$
 
 ### S7.1. Thiết lập
 
-Phân tích thăm dò này kiểm tra xem việc cung cấp quan sát khoảng cách tổng hợp ở độ phân giải không gian chi tiết hơn cấp thành phố—cụ thể là nhóm theo đơn vị hành chính cấp hạt (county)—có mang lại thông tin bổ sung hay không.
+Phân tích thăm dò này kiểm tra xem việc cung cấp quan sát khoảng cách tổng hợp ở độ phân giải không gian chi tiết hơn cấp thành phố, cụ thể là nhóm theo đơn vị hành chính cấp hạt (county), có mang lại thông tin bổ sung hay không.
 
 Ranh giới county được lấy từ Database of Global Administrative Areas, phiên bản 4.1 (GADM 4.1) [@gadm41]. Mỗi tract được gán vào county bao quanh tương ứng thông qua phép nối điểm nằm trong đa giác (point-in-polygon) giữa tọa độ tâm tract và polygon của county. Trường hợp tâm tract nằm trên ranh giới polygon hoặc gần bờ biển, quy trình sử dụng phép gán polygon gần nhất trong hệ tọa độ EPSG:5070 với ngưỡng khoảng cách tối đa 5 km. Mỗi tract được gán duy nhất vào một county. GADM chỉ được sử dụng nghiêm ngặt cho bước phân nhóm không gian này, không phải nguồn của tọa độ tâm, đặc trưng đô thị hay luồng OD.
 
@@ -777,7 +782,7 @@ $$
 $$
 trong đó $\mathcal{G}_c$ là tập hợp các county xuất hiện trong tập dữ liệu của vùng đô thị $c$.
 
-Quan trọng là việc chuyển độ phân giải quan sát từ cấp thành phố sang cấp county không làm thay đổi phạm vi đánh giá: mô hình vẫn tái tạo và được đánh giá trên tập hỗ trợ $\Omega_c$ của vùng đô thị mục tiêu; chỉ có tín hiệu giám sát tổng hợp trong bước hiệu chỉnh trở nên chi tiết hơn theo không gian.
+Trong quy trình này, việc chuyển độ phân giải quan sát từ cấp thành phố sang cấp county không làm thay đổi phạm vi đánh giá: mô hình vẫn tái tạo và được đánh giá trên tập hỗ trợ $\Omega_c$ của vùng đô thị mục tiêu, trong khi tín hiệu giám sát tổng hợp trong bước hiệu chỉnh trở nên chi tiết hơn theo không gian.
 
 Trong số 50 vùng đô thị của benchmark, có đúng 39 vùng single-county (nơi toàn bộ các tract thuộc cùng một county duy nhất, do đó $\lvert\mathcal{G}_c\rvert = 1$). Với 39 vùng này, phân hoạch theo county hoàn toàn trùng khớp với phân hoạch cấp thành phố, dẫn đến $M_{1,\mathrm{county}} \equiv M_{1,\mathrm{city}}$ và $\Delta\mathrm{CPC}_{\mathrm{res},c} = 0$ về mặt toán học. Chỉ có 11 vùng đô thị trải rộng qua từ 2 đến 7 county tạo ra phân hoạch mới thực sự.
 
@@ -795,12 +800,12 @@ Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-cou
 Đối với nhóm 11 vùng đô thị multi-county (chiếm 22% tập benchmark), hiệu chỉnh cấp county đạt mức cải thiện tại 9/11 vùng, với mức tăng bổ sung trung bình là $+0.00063$ (Bảng S3 và Hình S1).
 
 ![Hình S1](figures/fig_s1_spatial_resolution.png)
-**Hình S1. So sánh mức tăng CPC của hiệu chỉnh cấp thành phố và cấp county trên 11 vùng đô thị multi-county. Phân tích mang tính thăm dò; 39 vùng single-county không được hiển thị vì hai cách phân nhóm tương đương về mặt toán học.**
+**Hình S1. So sánh mức tăng CPC của hiệu chỉnh cấp thành phố và cấp county trên 11 vùng đô thị multi-county. Phân tích mang tính thăm dò. Trong hình, 39 vùng single-county không được hiển thị vì hai cách phân nhóm tương đương về mặt toán học.**
 
 <div style="page-break-before: always;"></div>
 ### Bảng S3: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
 
-*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị được tổng hợp ở cấp thành phố. Kết quả của nhóm 11 vùng đô thị được báo cáo ở mức mô tả; không trình bày khoảng tin cậy hoặc kiểm định giả thuyết riêng cho nhóm này.*
+*Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị được tổng hợp ở cấp thành phố. Kết quả của nhóm 11 vùng đô thị được báo cáo ở mức mô tả, nên không trình bày khoảng tin cậy hoặc kiểm định giả thuyết riêng cho nhóm này.*
 
 | Thành phố | Số county gốc | $M_0$ CPC | $M_{1,\mathrm{city}}$ CPC | $M_{1,\mathrm{county}}$ CPC | $\Delta\mathrm{CPC}_{\mathrm{city}}$ | $\Delta\mathrm{CPC}_{\mathrm{county}}$ | $\Delta\mathrm{CPC}_{\mathrm{res},c}$ |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -822,6 +827,6 @@ Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-cou
 
 Phân tích chỉ gồm 11 vùng đô thị có nhiều county và được báo cáo ở mức mô tả. Kết quả chưa đủ để khái quát lợi ích của việc tăng độ phân giải không gian sang các vùng đô thị khác.
 
-County là đơn vị hành chính và không nhất thiết tương ứng với các vùng di chuyển chức năng. Các nhóm quan sát chỉ bao gồm những tract thuộc phạm vi benchmark, không đại diện cho toàn bộ lưu lượng trên địa bàn county.
+Bên cạnh giới hạn về số lượng vùng đô thị, county là đơn vị hành chính và không nhất thiết tương ứng với các vùng di chuyển chức năng. Các nhóm quan sát chỉ bao gồm những tract thuộc phạm vi benchmark, không đại diện cho toàn bộ lưu lượng trên địa bàn county.
 
-Phân phối được xây dựng theo thiết lập oracle. Hiệu quả với quan sát thu thập độc lập, bao gồm sai số phân nhóm và khác biệt về độ phủ, cần được đánh giá thêm.
+Ngoài ra, phân phối vẫn được xây dựng theo thiết lập oracle, nên hiệu quả với quan sát thu thập độc lập, bao gồm sai số phân nhóm và khác biệt về độ phủ, cần được đánh giá thêm.
