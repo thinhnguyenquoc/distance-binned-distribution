@@ -87,7 +87,7 @@ Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omeg
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
 
-Các thử nghiệm chính sử dụng một phân phối di chuyển theo khoảng cách ở cấp thành phố. Với mỗi giá trị $K$, các biên nhóm được xác định lại từ phân vị khoảng cách của tập huấn luyện. Cụ thể, trong mỗi fold, $K-1$ biên bên trong được xác định từ các phân vị $b/K$, $b=1,\ldots,K-1$, của khoảng cách giữa các cặp OD liên vùng thuộc 35 thành phố huấn luyện. Mỗi cặp đóng góp một giá trị khoảng cách với trọng số bằng nhau. Do đó, các biên được xem là pair-weighted theo số cặp. Các thành phố validation và kiểm tra không được sử dụng để xác định biên. Hai biên ngoài được đặt cố định tại $a_0=0$ và $a_K=+\infty$, tạo thành các khoảng $I_b=(a_{b-1},a_b]$ bao phủ toàn bộ các cặp có $d_{c,ij}>0$. Tỷ trọng luồng di chuyển mục tiêu rơi vào nhóm khoảng cách thứ $b$ được định nghĩa là:
+Nghiên cứu chia khoảng cách di chuyển thành $K$ nhóm và tính tỷ trọng tổng lưu lượng thuộc từng nhóm tại mỗi thành phố. Trong mỗi fold, các mốc chia được chọn sao cho số cặp OD của 35 thành phố huấn luyện trong các nhóm xấp xỉ bằng nhau, với mỗi cặp được tính một lần bất kể cường độ luồng. Các mốc này được xác định lại cho từng giá trị $K$ rồi áp dụng chung cho các thành phố validation và kiểm tra. Để bao phủ cả những khoảng cách ngoài phạm vi quan sát trong tập huấn luyện, mốc đầu được đặt tại $a_0=0$ và mốc cuối tại $a_K=+\infty$. Với nhóm thứ $b$ được ký hiệu là $I_b=(a_{b-1},a_b]$, tỷ trọng lưu lượng của nhóm được tính bằng tổng cường độ luồng trong nhóm chia cho tổng cường độ luồng của thành phố:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -96,7 +96,7 @@ $$
 Các tỷ trọng được chuẩn hóa để: $\sum_{b=1}^K Y_{c,b} = 1$.
 Toàn bộ vector phân phối khoảng cách của thành phố $c$ được ký hiệu là $Y_{D,c} = (Y_{c,1}, \dots, Y_{c,K})$. Trong phần diễn giải, $Y_D$ được dùng như tên viết gọn cho loại quan sát này.
 
-Do các biên được xác định chung từ tập huấn luyện, một số khoảng cự ly xa có thể không chứa cặp OD tại những thành phố có phạm vi địa lý nhỏ. Gọi $\mathcal A_c$ là tập các nhóm có ít nhất một cặp thuộc $\Omega_c$, và $K_{\mathrm{act},c}=|\mathcal A_c|$ là số nhóm hoạt động của thành phố $c$. Các nhóm rỗng có tỷ trọng bằng 0 và được loại khỏi phép tính. Vì vậy, các đại lượng của toán tử được biểu diễn trên tập nhóm hoạt động (chi tiết quy trình chuẩn hóa và co giãn được trình bày trong Phụ lục S2).
+Do sử dụng chung các mốc chia từ tập huấn luyện, một số nhóm khoảng cách có thể không chứa cặp OD nào tại những thành phố có phạm vi địa lý nhỏ. Gọi $\mathcal A_c$ là tập các nhóm có ít nhất một cặp thuộc $\Omega_c$, và $K_{\mathrm{act},c}=|\mathcal A_c|$ là số nhóm hoạt động của thành phố $c$. Với nhóm rỗng, cả tỷ trọng lưu lượng quan sát và dự báo đều bằng 0. Vì không có cặp OD nào cần điều chỉnh trong nhóm này, nghiên cứu chỉ tính và áp dụng hệ số hiệu chỉnh cho các nhóm hoạt động, qua đó tránh phép chia cho 0. Các mốc chia khoảng cách vẫn được giữ nguyên. Trong thiết lập oracle, tỷ trọng của các nhóm hoạt động vốn đã có tổng bằng 1 nên không thay đổi khi bỏ qua nhóm rỗng. Quy trình chuẩn hóa và tính hệ số hiệu chỉnh được trình bày trong Phụ lục S2.
 
 $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố mục tiêu và được sử dụng như một quan sát oracle tại thời điểm hiệu chỉnh. Một biến thể thăm dò sử dụng phân phối theo origin-county được đánh giá trên các vùng đô thị multi-county, thiết lập và giới hạn của phân tích này được trình bày trong Phụ lục S7.
 
@@ -106,23 +106,23 @@ $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố m�
 
 ### 3.4.1. Các baseline và giao diện dự báo chung
 
-Nghiên cứu sử dụng mạng nơ-ron đồ thị (Graph Neural Network, GNN) làm baseline chính, cùng với mạng perceptron đa lớp (Multilayer Perceptron, MLP) và Gravity hai tham số để đánh giá mức độ phụ thuộc của hiệu quả hiệu chỉnh vào mô hình dự báo ban đầu. Cả ba baseline đều tạo ra dự báo cường độ luồng trên tập hỗ trợ dương liên vùng đã biết và được áp dụng cùng một phép hiệu chỉnh khi các tham số mô hình được giữ cố định. Trong thiết kế này, GNN và MLP đại diện cho hai baseline neural phi tuyến, còn Gravity hai tham số cung cấp một mốc tham chiếu cổ điển đơn giản hơn. So sánh này giúp đánh giá liệu lợi ích hiệu chỉnh có còn xuất hiện khi dự báo ban đầu đến từ các mô hình neural có độ chính xác cao hơn trong benchmark hiện tại.
+Nghiên cứu sử dụng cả mô hình tương tác không gian truyền thống và mô hình học máy để đánh giá liệu lợi ích của phân phối khoảng cách mục tiêu có được duy trì trên các phương pháp dự báo khác nhau hay không. Gravity hai tham số được chọn làm mốc tham chiếu truyền thống, còn mạng nơ-ron đồ thị (Graph Neural Network, GNN) và mạng perceptron đa lớp (Multilayer Perceptron, MLP) cho phép khảo sát hiệu quả trên các mô hình học máy có và không khai thác quan hệ lân cận giữa các vùng. Để so sánh nhất quán, cả ba mô hình được huấn luyện và đánh giá theo cùng giao thức liên thành phố, đồng thời dự báo trên cùng tập hỗ trợ dương liên vùng đã biết. Sau khi huấn luyện, các tham số được giữ cố định và đầu ra của từng mô hình được áp dụng cùng một phép hiệu chỉnh.
 
-GNN sử dụng hai lớp truyền thông điệp có điều kiện theo khoảng cách, với phép tổng hợp trung bình lân cận, LayerNorm, kết nối residual và dropout 0.1. Mỗi tract được biểu diễn bằng 26 đặc trưng đô thị và được chiếu thành embedding 64 chiều. Decoder cặp OD là một MLP có cấu trúc $130–64–32–1$, nhận đầu vào gồm embedding của vùng xuất phát và vùng đích, khoảng cách biến đổi bằng $\log(1+d_{c,ij})$ và log gravity prior nội tại. Hai tham số của gravity prior được học đồng thời với toàn bộ mạng.
+Trong nhóm mô hình học máy, GNN được sử dụng làm baseline chính. Mỗi tract được biểu diễn bằng 26 đặc trưng đô thị và được chiếu thành biểu diễn ẩn 64 chiều. Để kết hợp thông tin từ các vùng lân cận, mô hình sử dụng hai lớp truyền thông điệp có điều kiện theo khoảng cách, với phép tổng hợp trung bình lân cận, LayerNorm, kết nối residual và dropout 0.1. Các biểu diễn thu được sau đó được đưa vào decoder cặp OD, là một MLP có cấu trúc $130–64–32–1$. Decoder nhận biểu diễn của vùng xuất phát và vùng đích, khoảng cách biến đổi bằng $\log(1+d_{c,ij})$ và log gravity prior nội tại để tạo dự báo cường độ luồng. Hai tham số của gravity prior được học đồng thời với toàn bộ mạng.
 
-MLP thay thế hai lớp truyền thông điệp của GNN bằng hai khối residual MLP xử lý độc lập từng node, đồng thời giữ nguyên đặc trưng đầu vào, kích thước embedding, decoder cặp OD, cấu hình huấn luyện và tổng số tham số. Vì vậy, MLP được sử dụng như một ablation có kiểm soát để đánh giá vai trò của truyền thông điệp giữa các node.
+Từ kiến trúc này, baseline MLP được xây dựng bằng cách thay hai lớp truyền thông điệp bằng hai khối residual MLP xử lý từng vùng độc lập. Các thành phần còn lại được giữ thống nhất với GNN, gồm đặc trưng đầu vào, kích thước biểu diễn ẩn, cấu trúc decoder, cấu hình huấn luyện và tổng số tham số. Hai decoder có cùng cấu trúc nhưng được học riêng trong từng mô hình, nên không dùng chung trọng số. Nhờ thiết kế so sánh có kiểm soát này, nghiên cứu có thể xem xét liệu lợi ích hiệu chỉnh có phụ thuộc vào cơ chế trao đổi thông tin giữa các vùng hay không.
 
-Baseline Gravity hai tham số dự báo cường độ luồng dựa trên tích dân số của vùng xuất phát và vùng đích cùng khoảng cách địa lý:
+Để mở rộng phép kiểm tra ra ngoài nhóm mô hình neural, nghiên cứu sử dụng thêm Gravity hai tham số. Mô hình này biểu diễn trực tiếp cường độ luồng thông qua tích dân số của vùng xuất phát và vùng đích cùng khoảng cách địa lý:
 
 $$
-\hat{t}_{c,ij}^{(0,\mathrm{grav})} = \exp(G)\frac{P_{c,i}P_{c,j}}{\tilde d_{c,ij}^{\,\alpha}}, \qquad (i,j)\in\Omega_c.
+\hat{t}_{c,ij}^{(0)} = \exp(G)\frac{P_{c,i}P_{c,j}}{\tilde d_{c,ij}^{\,\alpha}}, \qquad (i,j)\in\Omega_c.
 $$
 
-Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách. Theo đó, luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Để bảo đảm ổn định số học, dân số $P_{c,i}$ và $P_{c,j}$ được chặn dưới tại 1, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng riêng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
+Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách. Theo đó, luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Ở đây, $P_{c,i}$ và $P_{c,j}$ là dân số của vùng xuất phát và vùng đích, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
-Dữ liệu huấn luyện gồm các cặp OD có lưu lượng quan sát nguyên dương, $t_{c,ij}\in\{1,2,\ldots\}$. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Phân phối NB nền được tham số hóa bằng trung bình $\mu$ và tham số phân tán $\phi$:
+Dữ liệu huấn luyện chỉ gồm các cặp OD có lưu lượng quan sát là số nguyên dương. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Để trình bày phân phối này, gọi $T$ là biến ngẫu nhiên biểu diễn cường độ luồng và $t$ là một giá trị quan sát. Phân phối nhị thức âm nền (NB) có trung bình $\mu>0$ và tham số phân tán $\phi>0$. Xác suất quan sát giá trị $t$ theo phân phối nền được ký hiệu là $p_{\mathrm{NB}}(t\mid\mu,\phi)$ và được tính như sau:
 
 $$
 p_{\mathrm{NB}}(t\mid\mu,\phi)
@@ -133,7 +133,9 @@ p_{\mathrm{NB}}(t\mid\mu,\phi)
 \qquad t=0,1,2,\ldots
 $$
 
-Theo quy ước này, $E[T]=\mu$, $\operatorname{Var}(T)=\mu+\mu^2/\phi$, và $p_{\mathrm{NB}}(0)=\left(\phi/(\phi+\mu)\right)^\phi$. Phân phối ZTNB là phân phối có điều kiện trên giá trị quan sát lớn hơn 0:
+Trong công thức, $\Gamma(\cdot)$ là hàm Gamma, với $\Gamma(t+1)=t!$ khi $t$ là số nguyên không âm. Theo cách tham số hóa này, phân phối NB nền có $E[T]=\mu$ và $\operatorname{Var}(T)=\mu+\mu^2/\phi$. Với cùng giá trị trung bình, $\phi$ nhỏ hơn tương ứng với phương sai lớn hơn.
+
+Phân phối nền cho phép cả luồng bằng 0, với xác suất $p_{\mathrm{NB}}(0\mid\mu,\phi)=\left(\phi/(\phi+\mu)\right)^\phi$. Tuy nhiên, dữ liệu huấn luyện chỉ gồm các luồng dương. Vì vậy, nghiên cứu sử dụng phân phối ZTNB, ký hiệu là $p_+$, bằng cách loại trường hợp bằng 0 và chia các xác suất còn lại cho xác suất luồng dương:
 
 $$
 p_+(t\mid\mu,\phi)
@@ -143,19 +145,21 @@ p_+(t\mid\mu,\phi)
 \qquad t=1,2,\ldots
 $$
 
-Trong đó, $\mu>0$ là trung bình của phân phối NB nền trước khi điều kiện hóa, còn $\phi>0$ là tham số phân tán. Hàm mất mát được tính bằng âm log-hợp lý trung bình trên các cặp OD của từng thành phố:
+Mẫu số $1-p_{\mathrm{NB}}(0\mid\mu,\phi)$ bảo đảm tổng xác suất trên các giá trị dương bằng 1. Sự khác nhau về miền giá trị của $t$ trong hai công thức phản ánh bước điều kiện hóa này, không phải sự khác nhau giữa các tập dữ liệu.
+
+Với mỗi cặp OD, mạng dự báo tham số trung bình nền $\mu_{c,ij}$, còn $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp trong mỗi mô hình. Gọi $\mathcal S_c$ là tập các cặp có luồng dương được đưa vào huấn luyện tại thành phố nguồn $c$. Theo mã nguồn hiện tại, tập này bao gồm cả cặp nội vùng và liên vùng, trong khi việc chọn checkpoint, hiệu chỉnh và đánh giá CPC sử dụng tập liên vùng $\Omega_c$. Hàm mất mát $\mathcal L_c$ là trung bình âm logarit xác suất của các luồng quan sát trên tập huấn luyện:
 
 $$
 \mathcal L_c
 =
--\frac{1}{|\Omega_c|}
-\sum_{(i,j)\in\Omega_c}
+-\frac{1}{|\mathcal S_c|}
+\sum_{(i,j)\in\mathcal S_c}
 \log p_+(t_{c,ij}\mid\mu_{c,ij},\phi).
 $$
 
-Trong quá trình huấn luyện, mỗi bước cập nhật sử dụng một thành phố và hàm mất mát trung bình trên các cặp OD của thành phố đó.
+Trong đó, $|\mathcal S_c|$ là số cặp được dùng để huấn luyện tại thành phố $c$. Việc tối thiểu hóa hàm mất mát khuyến khích mô hình gán xác suất cao hơn cho các luồng đã quan sát. Mỗi bước cập nhật sử dụng một thành phố và lấy trung bình mất mát trên các cặp của thành phố đó.
 
-Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Tham số phân tán $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp OD trong mỗi mô hình. Các phép biến đổi bảo đảm tham số dương và các biện pháp ổn định số học được trình bày trong Phụ lục S1. Khi suy luận, cường độ luồng dự báo là kỳ vọng có điều kiện của phân phối ZTNB:
+Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Các phép biến đổi bảo đảm tham số dương và các biện pháp ổn định số học được trình bày trong Phụ lục S1. Khi suy luận, $\mu_{c,ij}$ chưa phải dự báo cường độ cuối cùng vì đây là trung bình của phân phối nền có cả trường hợp bằng 0. Dự báo được tính bằng kỳ vọng của phân phối sau khi điều kiện hóa trên luồng dương:
 
 $$
 \hat t_{c,ij}^{(0)}
@@ -164,7 +168,7 @@ $$
 {1-p_{\mathrm{NB}}(0\mid\mu_{c,ij},\phi)}.
 $$
 
-Kỳ vọng có điều kiện này là dự báo baseline được đưa vào bước hiệu chỉnh ở mục 3.4.3. Kiến trúc và quy tắc huấn luyện được giữ cố định giữa các fold. Các phép biến đổi phụ thuộc dữ liệu được fit trên 35 thành phố huấn luyện của từng fold, còn checkpoint được chọn theo CPC của năm thành phố validation. Các thành phố kiểm tra không được sử dụng để chọn siêu tham số, checkpoint hoặc tiêu chí dừng. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
+Do trường hợp $T=0$ không đóng góp vào kỳ vọng của phân phối nền, kỳ vọng trên luồng dương bằng trung bình nền chia cho xác suất luồng dương. Giá trị dự báo này có thể là số thập phân dù nhãn quan sát là số nguyên. Đây là dự báo baseline được đưa vào bước hiệu chỉnh ở mục 3.4.3. Kiến trúc và quy tắc huấn luyện được giữ cố định giữa các fold. Các phép biến đổi phụ thuộc dữ liệu được fit trên 35 thành phố huấn luyện của từng fold, còn checkpoint được chọn theo CPC của năm thành phố validation. Các thành phố kiểm tra không được sử dụng để chọn siêu tham số, checkpoint hoặc tiêu chí dừng. Chi tiết siêu tham số huấn luyện và các biện pháp ổn định số học được trình bày trong Phụ lục S1.
 
 ### 3.4.3. Toán tử hiệu chỉnh khoảng cách tại thời điểm suy luận
 
