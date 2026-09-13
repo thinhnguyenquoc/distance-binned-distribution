@@ -18,6 +18,11 @@ Protocol:
 """
 
 import os
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 import sys
 import json
 import time
@@ -27,7 +32,6 @@ import torch
 import pandas as pd
 from pathlib import Path
 from scipy import stats
-import matplotlib.pyplot as plt
 import datetime
 import hashlib
 
@@ -41,7 +45,23 @@ from src.data.urban_graph import build_radius_graph
 from src.calibration.bin_calibration import calibrate_kbins
 from src.training.evaluate import evaluate_moving_and_full
 
-from statsmodels.stats.multitest import multipletests
+try:
+    from statsmodels.stats.multitest import multipletests
+except ImportError:
+    def multipletests(pvals, alpha=0.05, method="holm"):
+        pvals = np.asarray(pvals)
+        n = len(pvals)
+        order = np.argsort(pvals)
+        sorted_p = pvals[order]
+        adj_p = np.empty(n)
+        for i in range(n):
+            adj_p[i] = (n - i) * sorted_p[i]
+        adj_p = np.maximum.accumulate(adj_p)
+        adj_p = np.clip(adj_p, 0.0, 1.0)
+        p_corrected = np.empty(n)
+        p_corrected[order] = adj_p
+        reject = p_corrected <= alpha
+        return reject, p_corrected, None, None
 
 # ---------------------------------------------------------------------------
 # Canonical K grid -- FROZEN before paper submission.
@@ -58,7 +78,7 @@ def generate_file_hash(filepath: str) -> str:
 
 def run_experiment(args):
     data_root = args.data_root
-    output_dir = Path("results/k_sensitivity_v1")
+    output_dir = Path(getattr(args, "output_dir", "results/k_sensitivity_v1"))
     output_dir.mkdir(parents=True, exist_ok=True)
     
     device = torch.device(args.device)
@@ -96,14 +116,14 @@ def run_experiment(args):
             print(f"  [{datetime.datetime.now().strftime('%H:%M:%S')}] -> Evaluating City {city_idx}/{len(test_cities)}: {target_city}")
             
             for seed in seeds:
-                ckpt_path = Path("results/checkpoints") / f"5fold_fold{fold}_seed{seed}.pt"
+                ckpt_path = Path(getattr(args, "checkpoint_dir", "results/checkpoints")) / f"5fold_fold{fold}_seed{seed}.pt"
                 if not ckpt_path.exists():
                     raise FileNotFoundError(
                         f"[FATAL] Mandatory checkpoint {ckpt_path} missing for fold {fold}, seed {seed}. "
                         "K-sensitivity requires all canonical checkpoints to be present for certified evaluation."
                     )
                 
-                model, scaler, _ = load_checkpoint(str(ckpt_path), device_str=args.device)
+                model, scaler, metadata = load_checkpoint(str(ckpt_path), device_str=args.device)
                 model.eval()
                 
                 city_data = load_city(target_city, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
@@ -114,7 +134,15 @@ def run_experiment(args):
                 pair_o = city_data.pair_o_idx.numpy()
                 pair_d = city_data.pair_d_idx.numpy()
                 pair_dist = city_data.pair_distance.numpy()
-                pair_dist_km = np.expm1(pair_dist)
+                if metadata.get("hyperparams", {}).get("training_support") == "positive_interzonal":
+                    from src.data.dataset import load_raw_city
+                    raw = load_raw_city(target_city, data_root=data_root)
+                    if not (np.array_equal(pair_o, raw.pair_o_idx.numpy())
+                            and np.array_equal(pair_d, raw.pair_d_idx.numpy())):
+                        raise ValueError("Raw distance and prediction pair order mismatch")
+                    pair_dist_km = raw.dist_km
+                else:
+                    pair_dist_km = np.expm1(pair_dist)
                 
                 inter_mask = (pair_o != pair_d) & (pair_dist_km > 0.0)
                 n_inter = inter_mask.sum()
@@ -251,13 +279,14 @@ def run_experiment(args):
         # Bootstrap
         rng = np.random.default_rng(42) # Bootstrap seed protocol
         boot_means = []
-        for _ in range(10000):
-            s = []
-            for fold in [1, 2, 3, 4, 5]:
-                vals = d[d["fold"] == fold]["delta_cpc"].values
-                if len(vals) > 0:
+        fold_vals_list = [d[d["fold"] == fold]["delta_cpc"].values for fold in [1, 2, 3, 4, 5]]
+        fold_vals_list = [v for v in fold_vals_list if len(v) > 0]
+        if fold_vals_list:
+            for _ in range(10000):
+                s = []
+                for vals in fold_vals_list:
                     s.extend(rng.choice(vals, size=len(vals), replace=True))
-            boot_means.append(np.mean(s))
+                boot_means.append(np.mean(s))
         ci_low, ci_high = np.percentile(boot_means, [2.5, 97.5]) if boot_means else (0,0)
         
         pos_cities = np.sum(delta > 0)
@@ -309,15 +338,23 @@ def run_experiment(args):
         
         raw_contrast_ps.append(p_ck)
         
+        contrast_fold_vals = []
+        for fold in [1, 2, 3, 4, 5]:
+            f_cities = df_all[(df_all["K"] == 8) & (df_all["fold"] == fold)]["city"].values
+            common_f = [c for c in f_cities if c in common]
+            if common_f:
+                f_v = dk.loc[common_f]["delta_cpc"].values - d8.loc[common_f]["delta_cpc"].values
+                if len(f_v) > 0:
+                    contrast_fold_vals.append(f_v)
+
         boot_means = []
-        for _ in range(10000):
-            s = []
-            for fold in [1, 2, 3, 4, 5]:
-                f_cities = df_all[(df_all["K"] == 8) & (df_all["fold"] == fold)]["city"].values
-                f_vals = dk.loc[f_cities]["delta_cpc"].values - d8.loc[f_cities]["delta_cpc"].values
-                s.extend(rng.choice(f_vals, size=len(f_vals), replace=True))
-            boot_means.append(np.mean(s))
-        ci_low, ci_high = np.percentile(boot_means, [2.5, 97.5])
+        if contrast_fold_vals:
+            for _ in range(10000):
+                s = []
+                for f_vals in contrast_fold_vals:
+                    s.extend(rng.choice(f_vals, size=len(f_vals), replace=True))
+                boot_means.append(np.mean(s))
+        ci_low, ci_high = np.percentile(boot_means, [2.5, 97.5]) if boot_means else (0, 0)
         
         rk = dk["delta_cpc"].mean() / mean_d8 if mean_d8 > 0 else None
         
@@ -441,7 +478,9 @@ def run_experiment(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_root", default="data")
+    parser.add_argument("--data_root", "--data-root", default="data")
+    parser.add_argument("--output-dir", default="results/k_sensitivity_v1")
+    parser.add_argument("--checkpoint-dir", default="results/checkpoints")
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--smoke_test", action="store_true")
     args = parser.parse_args()

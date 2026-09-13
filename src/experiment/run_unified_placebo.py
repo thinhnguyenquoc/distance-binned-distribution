@@ -107,6 +107,7 @@ def run_unified_placebo(
     b_draws: int = 1000,
     data_root: str = "data",
     output_dir: Path = Path("results/unified_placebo_v1"),
+    checkpoint_dir: Path = Path("results/checkpoints"),
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = Path("results/e1/splits_manifest_v2.json")
@@ -188,7 +189,7 @@ def run_unified_placebo(
 
             seed_runs = []
             for seed in seeds:
-                ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{seed}.pt")
+                ckpt_path = checkpoint_dir / f"5fold_fold{fold_id}_seed{seed}.pt"
                 model, scaler, _ = load_checkpoint(ckpt_path, device_str="cpu")
                 model.eval()
 
@@ -421,5 +422,13 @@ Both placebos provide valid, complementary answers to two distinct scientific qu
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--b", type=int, default=1000)
+    parser.add_argument("--data-root", default="data")
+    parser.add_argument("--checkpoint-dir", type=Path, default=Path("results/checkpoints"))
+    parser.add_argument("--output-dir", type=Path, default=Path("results/unified_placebo_v1"))
     args = parser.parse_args()
-    run_unified_placebo(b_draws=args.b)
+    run_unified_placebo(
+        b_draws=args.b,
+        data_root=args.data_root,
+        output_dir=args.output_dir,
+        checkpoint_dir=args.checkpoint_dir,
+    )

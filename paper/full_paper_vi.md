@@ -1,5 +1,7 @@
 # Cải thiện tái tạo cường độ luồng OD zero-shot bằng phân phối di chuyển theo khoảng cách của thành phố mục tiêu
 
+> **Trạng thái bản thảo:** Phần phương pháp đã được cập nhật cho giao thức chỉ sử dụng luồng liên vùng khi huấn luyện cả GNN, MLP và Gravity. Các số liệu, bảng, hình và nhận định định lượng hiện có vẫn thuộc thực nghiệm trước khi thống nhất tập huấn luyện, chưa phải kết quả của giao thức mới. Những nội dung này cần được cập nhật sau khi huấn luyện lại và chạy lại các phân tích liên quan.
+
 ## Tóm tắt
 
 Việc chuyển giao mô hình sang một thành phố mới, nơi không có nhãn cường độ OD phục vụ huấn luyện, vẫn là một thách thức. Mặc dù các mô hình zero-shot đã khai thác đặc điểm đô thị và khoảng cách địa lý để thực hiện nhiệm vụ này, mức cải thiện độ chính xác mà phân phối di chuyển theo khoảng cách có thể mang lại cho các mô hình đó vẫn chưa được làm rõ. Để khảo sát giá trị của thông tin tổng hợp này, nghiên cứu sử dụng phân phối di chuyển theo khoảng cách của thành phố mục tiêu để hiệu chỉnh đầu ra của mô hình zero-shot được giữ nguyên tham số. Thí nghiệm được thực hiện trên tập hỗ trợ dương liên vùng đã biết, với phân phối oracle được tính trực tiếp từ dữ liệu OD tham chiếu.
@@ -82,12 +84,14 @@ $$
 \Omega_c = \left\{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\right\}.
 $$
 
+Trong giao thức liên vùng thống nhất, các cặp nội vùng có $i=j$ được loại khỏi dữ liệu OD trước khi đưa vào mô hình. Cả GNN, MLP và Gravity đều sử dụng tập $\Omega_c$ của các thành phố nguồn để huấn luyện hoặc ước lượng tham số. Tại các thành phố validation và kiểm tra, việc chọn checkpoint, hiệu chỉnh và đánh giá cũng chỉ sử dụng tập liên vùng tương ứng. Các vùng và đặc trưng đô thị vẫn được giữ nguyên để xây dựng biểu diễn không gian.
+
 Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omega_c$, không giải quyết bài toán phát hiện liên kết (link discovery) hay phân loại cặp có luồng zero trong $\mathcal{P}_c$. Trong toàn bài, các cặp ngoài $\Omega_c$ được xem là chưa biết và không thuộc phạm vi đánh giá.
 
 
 ## 3.3. Phân phối di chuyển theo khoảng cách và cấu hình quan sát cấp thành phố
 
-Nghiên cứu chia khoảng cách di chuyển thành $K$ nhóm và tính tỷ trọng tổng lưu lượng thuộc từng nhóm tại mỗi thành phố. Trong mỗi fold, các mốc chia được chọn sao cho số cặp OD của 35 thành phố huấn luyện trong các nhóm xấp xỉ bằng nhau, với mỗi cặp được tính một lần bất kể cường độ luồng. Các mốc này được xác định lại cho từng giá trị $K$ rồi áp dụng chung cho các thành phố validation và kiểm tra. Để bao phủ cả những khoảng cách ngoài phạm vi quan sát trong tập huấn luyện, mốc đầu được đặt tại $a_0=0$ và mốc cuối tại $a_K=+\infty$. Với nhóm thứ $b$ được ký hiệu là $I_b=(a_{b-1},a_b]$, tỷ trọng lưu lượng của nhóm được tính bằng tổng cường độ luồng trong nhóm chia cho tổng cường độ luồng của thành phố:
+Nghiên cứu chia khoảng cách di chuyển thành $K$ nhóm và tính tỷ trọng tổng lưu lượng thuộc từng nhóm tại mỗi thành phố. Trong mỗi fold, các mốc chia được chọn sao cho số cặp OD liên vùng thuộc $\Omega_c$ của 35 thành phố huấn luyện trong các nhóm xấp xỉ bằng nhau, với mỗi cặp được tính một lần bất kể cường độ luồng. Các mốc này được xác định lại cho từng giá trị $K$ rồi áp dụng chung cho các thành phố validation và kiểm tra. Để bao phủ cả những khoảng cách ngoài phạm vi quan sát trong tập huấn luyện, mốc đầu được đặt tại $a_0=0$ và mốc cuối tại $a_K=+\infty$. Với nhóm thứ $b$ được ký hiệu là $I_b=(a_{b-1},a_b]$, tỷ trọng lưu lượng của nhóm được tính bằng tổng cường độ luồng trong nhóm chia cho tổng cường độ luồng của thành phố:
 
 $$
 Y_{c,b} = \frac{\sum_{(i,j) \in \Omega_c} t_{c,ij} \mathbf{1}(d_{c,ij} \in I_b)}{\sum_{(i,j) \in \Omega_c} t_{c,ij}}.
@@ -106,7 +110,7 @@ $Y_{D,c}$ được tổng hợp từ luồng ground-truth của thành phố m�
 
 ### 3.4.1. Các baseline và giao diện dự báo chung
 
-Nghiên cứu sử dụng cả mô hình tương tác không gian truyền thống và mô hình học máy để đánh giá liệu lợi ích của phân phối khoảng cách mục tiêu có được duy trì trên các phương pháp dự báo khác nhau hay không. Gravity hai tham số được chọn làm mốc tham chiếu truyền thống, còn mạng nơ-ron đồ thị (Graph Neural Network, GNN) và mạng perceptron đa lớp (Multilayer Perceptron, MLP) cho phép khảo sát hiệu quả trên các mô hình học máy có và không khai thác quan hệ lân cận giữa các vùng. Để so sánh nhất quán, cả ba mô hình được huấn luyện và đánh giá theo cùng giao thức liên thành phố, đồng thời dự báo trên cùng tập hỗ trợ dương liên vùng đã biết. Sau khi huấn luyện, các tham số được giữ cố định và đầu ra của từng mô hình được áp dụng cùng một phép hiệu chỉnh.
+Nghiên cứu sử dụng cả mô hình tương tác không gian truyền thống và mô hình học máy để đánh giá liệu lợi ích của phân phối khoảng cách mục tiêu có được duy trì trên các phương pháp dự báo khác nhau hay không. Gravity hai tham số được chọn làm mốc tham chiếu truyền thống, còn mạng nơ-ron đồ thị (Graph Neural Network, GNN) và mạng perceptron đa lớp (Multilayer Perceptron, MLP) cho phép khảo sát hiệu quả trên các mô hình học máy có và không khai thác quan hệ lân cận giữa các vùng. Để so sánh nhất quán, cả ba mô hình được huấn luyện và đánh giá theo cùng giao thức liên thành phố, với dữ liệu OD chỉ gồm các cặp liên vùng thuộc $\Omega_c$. Điều kiện này được áp dụng từ bước huấn luyện đến bước hiệu chỉnh và đánh giá, nhờ đó loại bỏ sự khác biệt về việc sử dụng luồng nội vùng giữa các mô hình. Sau khi huấn luyện, các tham số được giữ cố định và đầu ra của từng mô hình được áp dụng cùng một phép hiệu chỉnh.
 
 Trong nhóm mô hình học máy, GNN được sử dụng làm baseline chính. Mỗi tract được biểu diễn bằng 26 đặc trưng đô thị và được chiếu thành biểu diễn ẩn 64 chiều. Để kết hợp thông tin từ các vùng lân cận, mô hình sử dụng hai lớp truyền thông điệp có điều kiện theo khoảng cách, với phép tổng hợp trung bình lân cận, LayerNorm, kết nối residual và dropout 0.1. Các biểu diễn thu được sau đó được đưa vào decoder cặp OD, là một MLP có cấu trúc $130–64–32–1$. Decoder nhận biểu diễn của vùng xuất phát và vùng đích, khoảng cách biến đổi bằng $\log(1+d_{c,ij})$ và log gravity prior nội tại để tạo dự báo cường độ luồng. Hai tham số của gravity prior được học đồng thời với toàn bộ mạng.
 
@@ -118,11 +122,11 @@ $$
 \hat{t}_{c,ij}^{(0)} = \exp(G)\frac{P_{c,i}P_{c,j}}{\tilde d_{c,ij}^{\,\alpha}}, \qquad (i,j)\in\Omega_c.
 $$
 
-Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách. Theo đó, luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Ở đây, $P_{c,i}$ và $P_{c,j}$ là dân số của vùng xuất phát và vùng đích, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
+Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách. Theo đó, luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Ở đây, $P_{c,i}$ và $P_{c,j}$ là dân số của vùng xuất phát và vùng đích, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu liên vùng gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
-Dữ liệu huấn luyện chỉ gồm các cặp OD có lưu lượng quan sát là số nguyên dương. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Để trình bày phân phối này, gọi $T$ là biến ngẫu nhiên biểu diễn cường độ luồng và $t$ là một giá trị quan sát. Phân phối nhị thức âm nền (NB) có trung bình $\mu>0$ và tham số phân tán $\phi>0$. Xác suất quan sát giá trị $t$ theo phân phối nền được ký hiệu là $p_{\mathrm{NB}}(t\mid\mu,\phi)$ và được tính như sau:
+Dữ liệu huấn luyện chỉ gồm các cặp OD liên vùng thuộc $\Omega_c$ có lưu lượng quan sát là số nguyên dương. Hai baseline neural sử dụng phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB) [@grogger1991truncated]. Để trình bày phân phối này, gọi $T$ là biến ngẫu nhiên biểu diễn cường độ luồng và $t$ là một giá trị quan sát. Phân phối nhị thức âm nền (NB) có trung bình $\mu>0$ và tham số phân tán $\phi>0$. Xác suất quan sát giá trị $t$ theo phân phối nền được ký hiệu là $p_{\mathrm{NB}}(t\mid\mu,\phi)$ và được tính như sau:
 
 $$
 p_{\mathrm{NB}}(t\mid\mu,\phi)
@@ -147,17 +151,17 @@ $$
 
 Mẫu số $1-p_{\mathrm{NB}}(0\mid\mu,\phi)$ bảo đảm tổng xác suất trên các giá trị dương bằng 1. Sự khác nhau về miền giá trị của $t$ trong hai công thức phản ánh bước điều kiện hóa này, không phải sự khác nhau giữa các tập dữ liệu.
 
-Với mỗi cặp OD, mạng dự báo tham số trung bình nền $\mu_{c,ij}$, còn $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp trong mỗi mô hình. Gọi $\mathcal S_c$ là tập các cặp có luồng dương được đưa vào huấn luyện tại thành phố nguồn $c$. Theo mã nguồn hiện tại, tập này bao gồm cả cặp nội vùng và liên vùng, trong khi việc chọn checkpoint, hiệu chỉnh và đánh giá CPC sử dụng tập liên vùng $\Omega_c$. Hàm mất mát $\mathcal L_c$ là trung bình âm logarit xác suất của các luồng quan sát trên tập huấn luyện:
+Với mỗi cặp OD, mạng dự báo tham số trung bình nền $\mu_{c,ij}$, còn $\phi$ được học cùng các tham số mạng và dùng chung cho mọi cặp trong mỗi mô hình. Tại mỗi thành phố nguồn $c$, hàm mất mát chỉ sử dụng các cặp liên vùng thuộc $\Omega_c$, thống nhất với phạm vi chọn checkpoint, hiệu chỉnh và đánh giá CPC. Hàm mất mát $\mathcal L_c$ là trung bình âm logarit xác suất của các luồng quan sát trên tập huấn luyện:
 
 $$
 \mathcal L_c
 =
--\frac{1}{|\mathcal S_c|}
-\sum_{(i,j)\in\mathcal S_c}
+-\frac{1}{|\Omega_c|}
+\sum_{(i,j)\in\Omega_c}
 \log p_+(t_{c,ij}\mid\mu_{c,ij},\phi).
 $$
 
-Trong đó, $|\mathcal S_c|$ là số cặp được dùng để huấn luyện tại thành phố $c$. Việc tối thiểu hóa hàm mất mát khuyến khích mô hình gán xác suất cao hơn cho các luồng đã quan sát. Mỗi bước cập nhật sử dụng một thành phố và lấy trung bình mất mát trên các cặp của thành phố đó.
+Trong đó, $|\Omega_c|$ là số cặp liên vùng có luồng dương được dùng để huấn luyện tại thành phố $c$. Việc tối thiểu hóa hàm mất mát khuyến khích mô hình gán xác suất cao hơn cho các luồng đã quan sát. Mỗi bước cập nhật sử dụng một thành phố và lấy trung bình mất mát trên các cặp của thành phố đó.
 
 Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Các phép biến đổi bảo đảm tham số dương và các biện pháp ổn định số học được trình bày trong Phụ lục S1. Khi suy luận, $\mu_{c,ij}$ chưa phải dự báo cường độ cuối cùng vì đây là trung bình của phân phối nền có cả trường hợp bằng 0. Dự báo được tính bằng kỳ vọng của phân phối sau khi điều kiện hóa trên luồng dương:
 
@@ -501,7 +505,7 @@ Theo thứ tự cột trong `src.data.dataset.NODE_FEATURE_COLUMNS`, 26 đặc t
 
 Khi đọc CSV, các giá trị thiếu được gán bằng 0, đồng thời NaN/Inf cũng được thay bằng 0. Các cột này không được biến đổi logarit. Trong mỗi fold, `load_cities()` khớp một `StandardScaler` trên đặc trưng nút gộp của 35 thành phố huấn luyện. Sau đó, dữ liệu validation và thành phố mục tiêu chỉ được biến đổi bằng `transform` với các thống kê đã học. Các thống kê chuẩn hóa này được lưu trong checkpoint.
 
-Để xây dựng đồ thị, mỗi tract được xem là một nút có tọa độ tâm `(lon, lat)` lấy từ `meta.csv`. Khoảng cách giữa các nút được tính bằng công thức Haversine với bán kính Trái Đất 6371 km. Cấu hình chính sử dụng đồ thị bán kính 5.0 km có cạnh tự nối và các cạnh hai chiều sau bước đối xứng hóa. Nếu một nút không có nút lân cận khác trong bán kính này, mã nguồn nối nó với nút gần nhất. Mỗi cạnh mang thuộc tính khoảng cách địa lý theo km. Như vậy, đồ thị được xây dựng từ thông tin địa lý quan sát được mà không sử dụng luồng OD.
+Để xây dựng đồ thị, mỗi tract được xem là một nút có tọa độ tâm `(lon, lat)` lấy từ `meta.csv`. Khoảng cách giữa các nút được tính bằng công thức Haversine với bán kính Trái Đất 6371 km. Cấu hình chính sử dụng đồ thị bán kính 5.0 km có cạnh tự nối và các cạnh hai chiều sau bước đối xứng hóa. Cạnh tự nối trong đồ thị phục vụ xử lý đặc trưng của từng vùng, không phải nhãn luồng OD nội vùng và không bị loại khi lọc các cặp OD có $i=j$. Nếu một nút không có nút lân cận khác trong bán kính này, mã nguồn nối nó với nút gần nhất. Mỗi cạnh mang thuộc tính khoảng cách địa lý theo km. Như vậy, đồ thị được xây dựng từ thông tin địa lý quan sát được mà không sử dụng luồng OD.
 
 ### S1.4. Cấu hình siêu tham số kiến trúc và phân tách baseline
 
@@ -532,6 +536,8 @@ Cấu hình siêu tham số chính xác được trích xuất trực tiếp t�
 | | Tổng số tham số mô hình | 33,668 | Giữ cùng tổng số tham số giữa GNN và MLP |
 
 **Ghi chú phân tách tham số:** Hai tham số $(G_{\mathrm{NN}}, \alpha_{\mathrm{NN}})$ của gravity prior nội tại trong các mạng neural là các biến khả vi được tối ưu hóa đồng thời end-to-end cùng toàn bộ mạng qua AdamW và được lưu trữ trực tiếp trong checkpoint. Ngược lại, baseline Gravity hai tham số cổ điển độc lập được ước lượng riêng biệt bằng phương pháp bình phương tối thiểu pooled log-linear OLS trên các thành phố huấn luyện ($G_{\mathrm{OLS}} \approx -8.54, \alpha_{\mathrm{OLS}} \approx 1.66$ trên Fold 1). Hai mô hình này hoàn toàn không dùng chung hay chia sẻ hệ số với nhau.
+
+**Giao thức liên vùng thống nhất:** Script `run_interzonal_experiment.py` tạo bản dữ liệu riêng chỉ giữ các cặp có $i \ne j$, $d_{c,ij}>0$ và luồng quan sát dương. Dữ liệu gốc được giữ nguyên. Cả ba mô hình sử dụng bản dữ liệu đã lọc và cùng cách chia thành phố đã khóa. Khoảng cách dùng để xác định biên nhóm, tổng hợp phân phối và hiệu chỉnh được lấy từ cùng dữ liệu khoảng cách gốc, còn phép biến đổi logarit chỉ phục vụ đầu vào mạng. Checkpoint mới ghi nhận phạm vi huấn luyện liên vùng và mã kiểm tra của dữ liệu để ngăn việc dùng nhầm mô hình từ giao thức cũ. Checkpoint và kết quả mới được lưu riêng tại `results/interzonal_only/artifacts`, kèm thông tin kiểm tra dữ liệu và cấu hình chạy. Các đường dẫn checkpoint cũ dưới đây chỉ ghi nhận nguồn gốc của thực nghiệm trước khi thay đổi tập huấn luyện.
 
 **Dấu vết tái lập:** Phân chia thành phố được lưu trong một split manifest cố định (`results/e1/splits_manifest_v2.json`, SHA-256: `96a09089574c37dbcf13112b5bcd20c738327df3c08f5915fdcb2a9f15110543`). Mỗi checkpoint lưu fold, model seed, cấu hình mô hình và thống kê chuẩn hóa tương ứng (`results/checkpoints/5fold_fold{f}_seed{s}.pt` và `mlp_fold{f}_seed{s}.pt`). Trong mã nguồn, baseline GNN được triển khai bằng class `UrbanGNN`, và baseline MLP được triển khai bằng class `ZeroShotMLPModel` (sử dụng bộ mã hóa `NodeMLP`). Các định danh này được giữ nguyên để tương thích với các checkpoint và script tạo kết quả hiện có. Các bảng và hình được tạo từ kết quả cấp thành phố đã lưu bằng các script phân tích trong repository.
 

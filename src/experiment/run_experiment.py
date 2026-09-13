@@ -46,6 +46,7 @@ def run_target_city_experiments(
     knn_k: int = 10,
     device_str: str = "cpu",
     bin_edges: np.ndarray = None,
+    exact_distances: bool = False,
 ) -> Dict[str, Any]:
     assert scaler is not None, "StandardScaler must be pre-fitted on source cities."
     if bin_edges is None:
@@ -66,7 +67,15 @@ def run_target_city_experiments(
     pair_o = city_data.pair_o_idx.numpy()
     pair_d = city_data.pair_d_idx.numpy()
     pair_dist = city_data.pair_distance.numpy()
-    pair_dist_km = np.expm1(pair_dist)
+    if exact_distances:
+        from src.data.dataset import load_raw_city
+        raw = load_raw_city(city_name, data_root=data_root)
+        if not (np.array_equal(pair_o, raw.pair_o_idx.numpy())
+                and np.array_equal(pair_d, raw.pair_d_idx.numpy())):
+            raise ValueError("Raw distance and prediction pair order mismatch")
+        pair_dist_km = raw.dist_km
+    else:
+        pair_dist_km = np.expm1(pair_dist)
     inter_mask = (pair_o != pair_d) & (pair_dist_km > 0.0)
     n_inter_pairs = int(inter_mask.sum())
     total_inter_trips = float(t_true[inter_mask].sum())

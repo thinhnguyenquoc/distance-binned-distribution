@@ -231,7 +231,7 @@ def fast_cal_metrics(
 
 
 def run_noise_robustness(args: argparse.Namespace) -> None:
-    data_root = "data"
+    data_root = getattr(args, "data_root", "data")
     grid_mode = getattr(args, "grid", "fine")
     if grid_mode == "fine":
         epsilons = [0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
@@ -629,6 +629,7 @@ def generate_summary(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--data-root", default="data")
     parser.add_argument("--b", "--replicates", dest="b", type=int, default=1000)
     parser.add_argument("--grid", type=str, choices=["fine", "coarse"], default="fine", help="Grid: 'fine' [0..0.05] or 'coarse' [0..0.20]")
     parser.add_argument("--output_dir", "--output-dir", dest="output_dir", type=str, default=None)

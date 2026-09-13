@@ -48,6 +48,7 @@ def run_5fold_experiment(
     seeds: list[int] | None = None,
     folds_to_run: list[int] | None = None,
     device_str: str | None = None,
+    training_provenance: dict | None = None,
 ):
     os.makedirs(output_dir, exist_ok=True)
     splits = generate_35_5_10_splits(data_root=data_root)
@@ -68,13 +69,14 @@ def run_5fold_experiment(
     print("=" * 85)
     print("STARTING 5-FOLD CROSS-VALIDATION (MOVING-BIN CALIBRATION FRAMEWORK)")
     print(f"Device: {device_str} | Epochs: {epochs_per_fold} | Graph: {graph_type} (r={radius_km}km)")
-    print(f"Primary Calibration Domain: Omega_c^+ (Interzonal moving bins 1, 2, 3)")
+    print(f"Primary Calibration Domain: Omega_c^+ (Positive interzonal support, K=8)")
     print(f"Folds to run: {folds_to_run}")
     print("=" * 85)
 
     out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
     out_file = Path(output_dir) / out_file_name
     run_signature = {
+        "lr": lr,
         "backbone": backbone,
         "seeds": list(seeds),
         "folds": list(folds_to_run),
@@ -87,6 +89,9 @@ def run_5fold_experiment(
         "loss_type": loss_type,
         "split_manifest_sha256": split_manifest_sha256,
     }
+
+    if training_provenance:
+        run_signature.update(training_provenance)
 
     all_city_results = []
     if out_file.exists():
@@ -136,6 +141,8 @@ def run_5fold_experiment(
                 "lr": lr,
                 "backbone": backbone,
             }
+            if training_provenance:
+                expected_config.update(training_provenance)
             if _ckpt_path.exists():
                 print(f"--- Found existing checkpoint {_ckpt_path}. Loading... ---")
                 model, scaler, metadata = load_checkpoint(_ckpt_path, device_str=device_str, expected_config=expected_config)
@@ -169,6 +176,7 @@ def run_5fold_experiment(
                     seed=seed,
                     fold=fold_id,
                     split_manifest_sha256=split_manifest_sha256,
+                    training_provenance=training_provenance,
                 )
             models.append(model)
             scalers.append(scaler)
@@ -203,6 +211,7 @@ def run_5fold_experiment(
                     knn_k=knn_k,
                     device_str=device_str,
                     bin_edges=bin_edges,
+                    exact_distances=bool(training_provenance),
                 )
                 seed_results.append(res)
                 

@@ -33,7 +33,8 @@ from src.experiment.e1_core import (
 )
 # Import split loading and checkpoint utilities
 from src.data.city_splits import load_splits_manifest_v2
-from src.data.yd_extractor import compute_kbin_edges
+from src.data.yd_extractor import compute_kbin_edges, extract_yd_kbins
+from src.data.dataset import load_city
 from src.training.train import load_checkpoint
 
 
@@ -114,6 +115,7 @@ def _load_existing_completed(
 def run_e1_specificity_from_checkpoints(
     data_root: str = "data",
     output_dir: Path = DEFAULT_OUTPUT_DIR,
+    checkpoint_dir: Path | str = Path("results/checkpoints"),
     folds: list[int] | None = None,
     seeds: list[int] | None = None,
     device: str = "cpu",
@@ -129,6 +131,7 @@ def run_e1_specificity_from_checkpoints(
     if seeds != CANONICAL_SEEDS:
         raise ValueError(f"E1 canonical specificity requires seeds {CANONICAL_SEEDS}, got {seeds}")
 
+    checkpoint_dir = Path(checkpoint_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     results_path = output_dir / "e1_specificity_results.json"
     tables_dir = output_dir / "tables"
@@ -160,7 +163,7 @@ def run_e1_specificity_from_checkpoints(
 
         models = {}
         for seed in seeds:
-            ckpt_path = Path("results/checkpoints") / f"5fold_fold{fold_id}_seed{seed}.pt"
+            ckpt_path = checkpoint_dir / f"5fold_fold{fold_id}_seed{seed}.pt"
             if not ckpt_path.exists():
                 raise FileNotFoundError(f"Missing mandatory canonical GNN checkpoint: {ckpt_path}")
             model, scaler, metadata = load_checkpoint(ckpt_path, device_str=device)
@@ -172,9 +175,17 @@ def run_e1_specificity_from_checkpoints(
             model.eval()
             models[seed] = (model, scaler)
 
+        test_yd_cache = {}
+        for tc in test_cities:
+            cd_tc = load_city(tc, data_root=data_root)
+            dist_tc = np.expm1(cd_tc.pair_distance.numpy())
+            inter_tc = (cd_tc.pair_o_idx.numpy() != cd_tc.pair_d_idx.numpy()) & (dist_tc > 0.0)
+            t_gt_tc = cd_tc.pair_trips.numpy().astype(np.float64)
+            test_yd_cache[tc] = extract_yd_kbins(dist_tc, t_gt_tc, bin_edges, inter_tc)
+
         for city in run_cities:
             if (fold_id, city) in completed:
-                print(f"  -> Reusing saved city result: {city}")
+                print(f"  -> Reusing saved city result: {city}", flush=True)
                 continue
 
             city_seed_results = []
@@ -190,6 +201,7 @@ def run_e1_specificity_from_checkpoints(
                     fold_id=fold_id,
                     device=device,
                     data_root=data_root,
+                    test_yd_cache=test_yd_cache,
                 )
                 result["model_seed"] = seed
                 raw_seed_results.append(result)
@@ -202,13 +214,14 @@ def run_e1_specificity_from_checkpoints(
                 f"  -> {city:<16} M0={averaged['cpc_baseline']:.4f} "
                 f"target_d={averaged['delta_cpc_target']:+.4f} "
                 f"wrong9_d={averaged['delta_cpc_wrong']:+.4f} "
-                f"specificity={averaged['delta_cpc_specificity']:+.4f}"
+                f"specificity={averaged['delta_cpc_specificity']:+.4f}",
+                flush=True
             )
 
             summary = compute_summary(all_averaged, bootstrap_seed=2024)
             _write_json(results_path, {
                 "protocol": "e1-v2-canonical-9-donor-specificity-from-checkpoints",
-                "checkpoint_source": "results/checkpoints/5fold_fold{fold}_seed{seed}.pt",
+                "checkpoint_source": str(checkpoint_dir / "5fold_fold{fold}_seed{seed}.pt"),
                 "seeds": seeds,
                 "folds": folds,
                 "smoke": smoke,
@@ -222,7 +235,7 @@ def run_e1_specificity_from_checkpoints(
     write_tables(all_averaged, summary, table_dir=tables_dir)
     payload = {
         "protocol": "e1-v2-canonical-9-donor-specificity-from-checkpoints",
-        "checkpoint_source": "results/checkpoints/5fold_fold{fold}_seed{seed}.pt",
+        "checkpoint_source": str(checkpoint_dir / "5fold_fold{fold}_seed{seed}.pt"),
         "seeds": seeds,
         "folds": folds,
         "smoke": smoke,
@@ -239,6 +252,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run E1-v2 9-donor specificity on canonical frozen GNN checkpoints")
     parser.add_argument("--data-root", default="data")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--checkpoint-dir", type=Path, default=Path("results/checkpoints"))
     parser.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4, 5])
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--smoke", action="store_true")
@@ -249,6 +263,7 @@ if __name__ == "__main__":
     run_e1_specificity_from_checkpoints(
         data_root=args.data_root,
         output_dir=args.output_dir,
+        checkpoint_dir=args.checkpoint_dir,
         folds=args.folds,
         device=args.device,
         smoke=args.smoke,

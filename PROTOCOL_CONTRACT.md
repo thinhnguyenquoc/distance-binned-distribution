@@ -19,6 +19,13 @@ LOCKED EXPERIMENT CONTRACT
    All primary CPC claims are on Omega_c.
 
 3. Training:
+   Authorized interzonal rerun: run_interzonal_experiment.py uses ONLY
+   positive interzonal Omega_c for GNN, MLP, and classical Gravity fitting.
+   It retains locked city splits and geography-only graphs (including self-loops),
+   and stores filtered data, provenance, checkpoints and results separately
+   under results/interzonal_only. Historical numerical results must not be
+   presented as results of this rerun until regenerated.
+   Historical frozen protocol (retained for provenance):
    Current frozen backbone is trained on available positive observed OD pairs.
    Primary validation/evaluation is interzonal Omega_c.
    Do not change training support unless explicitly instructed.

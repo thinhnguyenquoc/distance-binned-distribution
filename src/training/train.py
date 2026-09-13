@@ -310,6 +310,7 @@ def train_zero_shot_model(
     split_manifest_sha256: str | None = None,
     checkpoint_path: Optional[Union[str, Path]] = None,
     run_tag: Optional[str] = None,
+    training_provenance: Optional[dict] = None,
 ) -> tuple:
 
     """
@@ -344,6 +345,12 @@ def train_zero_shot_model(
         print(f"    [Setup] Precomputing graph structures for {len(train_city_names)} source cities onto {device}...", flush=True)
 
     train_cities, scaler = load_cities(train_city_names, data_root=data_root)
+    if training_provenance and training_provenance.get("training_support") == "positive_interzonal":
+        for city in train_cities:
+            if not ((city.pair_o_idx != city.pair_d_idx) & (city.pair_distance > 0)
+                    & (city.pair_trips >= 1)).all():
+                raise ValueError(f"{city.city_name}: intrazonal/invalid label in interzonal training")
+
 
     # Precompute spatial graphs G^urban for training cities
     city_graphs = []
@@ -577,6 +584,8 @@ def train_zero_shot_model(
             "scaler_fit_n_cities":   len(train_city_names),
             "scaler_fit_n_rows":     int(scaler.n_samples_seen_),
         }
+        if training_provenance:
+            hp.update(training_provenance)
         saved_path = save_checkpoint(
             path=checkpoint_path,
             model=model,
