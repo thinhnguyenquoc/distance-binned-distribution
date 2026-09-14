@@ -52,6 +52,15 @@ def main():
     grav_rows = grav['city_level_results']
     assert len(grav_rows) == len({r['city'] for r in grav_rows}) == 50
     assert {r['city']: r['n_pairs'] for r in grav_rows} == counts
+    assert grav['training_support'] == 'positive_interzonal' and grav['K'] == 8
+    assert grav['folds'] == [1, 2, 3, 4, 5]
+    assert {r['city']: r['fold'] for r in grav_rows} == {r['city']: r['fold'] for r in g['city_level_results']}
+    comparison = json.loads((ART/'backbone_comparison.json').read_text())['summaries']['gravity']
+    gravity_delta = np.array([r['M1_city_oracle_obs']['cpc_inter'] - r['M0']['cpc_inter'] for r in grav_rows])
+    np.testing.assert_allclose(gravity_delta, [r['delta_city'] for r in grav_rows], atol=1e-15)
+    assert abs(gravity_delta.mean() - comparison['mean_delta_cpc']) < 1e-15
+    assert int((gravity_delta > 0).sum()) == comparison['cities_improved']
+    assert abs(wilcoxon(gravity_delta, alternative='two-sided').pvalue - comparison['wilcoxon_two_sided_p']) < 1e-15
 
     target={r['city']:r['delta_city'] for r in g['city_level_results']}
     intra=read('intra_bin_mechanism_diagnostic.json')
@@ -91,7 +100,7 @@ def main():
         if e>0:
             eps.append(float(e));ps.append(float(wilcoxon(group.delta_cpc_mean,alternative='greater').pvalue))
     ps=np.array(ps);order=np.argsort(ps);adj=np.empty(len(ps));adj[order]=np.minimum(1,np.maximum.accumulate(ps[order]*np.arange(len(ps),0,-1)))
-    report={'data_inventory_verified':True,'cities':50,'interzonal_od_pairs':sum(counts.values()),
+    report={'data_inventory_verified':True,'cities':50,'gravity_support_and_statistics_verified':True,'interzonal_od_pairs':sum(counts.values()),
             'intrazonal_od_pairs':0,'nonpositive_od_flows':0,'noninteger_positive_flows':noninteger,
             'active_bins_city_counts':{str(k):list(bins.values()).count(k) for k in sorted(set(bins.values()))},
             'main_k8_placebo_mechanism_agreement_tolerance':1e-12,

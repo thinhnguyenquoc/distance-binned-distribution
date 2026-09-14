@@ -1,6 +1,7 @@
 {
   "data_inventory_verified": true,
   "cities": 50,
+  "gravity_support_and_statistics_verified": true,
   "interzonal_od_pairs": 6065339,
   "intrazonal_od_pairs": 0,
   "nonpositive_od_flows": 0,
