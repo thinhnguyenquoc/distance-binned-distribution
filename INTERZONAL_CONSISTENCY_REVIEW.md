@@ -32,3 +32,6 @@ MPLBACKEND=Agg .venv/bin/python -m src.experiment.run_noise_robustness --data-ro
 ```
 
 Các phân tích này chưa được chạy đầy đủ với checkpoint mới. Placebo và phân tích cơ chế vẫn cần chuyển đường dẫn và kiểm tra riêng trước khi tái tạo toàn bộ paper.
+
+Phân tích Direct-OD (`direct_od_equivalence_v1`) và Partial-OD (`partial_od_equivalence_v2`) hiện tại không dùng trực tiếp cho các bảng/hình chính của bài báo, được lưu trữ như phân tích kiểm toán/bổ trợ (Audit D) để trả lời phản biện hoặc đưa vào phụ lục sau.
+

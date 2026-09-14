@@ -46,6 +46,7 @@ from src.data.yd_extractor import compute_kbin_edges
 from src.calibration.bin_calibration import calibrate_kbins
 from src.training.evaluate import compute_cpc_pair
 from src.training.train import load_checkpoint, infer_zero_shot
+from src.experiment.od_source_guard import lock_sources
 
 PARTIAL_OD_BASE_SEED = 202608231
 PRIMARY_GRID_DIRECT = [
@@ -76,10 +77,10 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _checkpoint_hashes(fold_id: int, model_seeds: List[int]) -> Dict[str, str]:
+def _checkpoint_hashes(fold_id: int, model_seeds: List[int], checkpoint_dir: Path) -> Dict[str, str]:
     hashes = {}
     for seed in model_seeds:
-        path = Path("results/checkpoints") / f"5fold_fold{fold_id}_seed{seed}.pt"
+        path = Path(checkpoint_dir) / f"5fold_fold{fold_id}_seed{seed}.pt"
         if not path.exists():
             raise RuntimeError(f"Checkpoint missing for fold {fold_id} seed {seed}: {path}")
         hashes[str(seed)] = _sha256_file(path)
@@ -242,10 +243,11 @@ def apply_od_fe_prediction(
 def select_fold_lambda(
     fold_id: int,
     val_cities: List[str],
-    data_root: str = "data",
+    data_root: str = "results/interzonal_only/data",
     model_seeds: List[int] = [1, 10, 100],
     b_val: int = 50,
-    device: str = "cpu"
+    device: str = "cpu",
+    checkpoint_dir: Path = Path("results/interzonal_only/artifacts/checkpoints")
 ) -> Tuple[float, pd.DataFrame]:
     """
     Strictly selects lambda on the 5 validation cities of the fold.
@@ -255,7 +257,7 @@ def select_fold_lambda(
     # Load fold models
     fold_models: Dict[int, Tuple[Any, Any]] = {}
     for s in model_seeds:
-        ckpt_path = Path("results/checkpoints") / f"5fold_fold{fold_id}_seed{s}.pt"
+        ckpt_path = Path(checkpoint_dir) / f"5fold_fold{fold_id}_seed{s}.pt"
         if not ckpt_path.exists():
             raise RuntimeError(f"Missing checkpoint {ckpt_path}")
         model, scaler, _ = load_checkpoint(ckpt_path, device_str=device)
@@ -483,20 +485,24 @@ def _process_city_replicates_chunk(
 
 def run_fold_direct_od(
     fold_id: int,
-    data_root: str = "data",
-    output_dir: Path = Path("results/direct_od_equivalence_v1"),
+    data_root: str = "results/interzonal_only/data",
+    output_dir: Path = Path("results/interzonal_only/artifacts/direct_od_equivalence_v1"),
     replicates: int = 200,
     p_grid: List[float] = None,
     smoke: bool = False,
     smoke_cities: int = 1,
     resume: bool = False,
     num_workers: int = 8,
-    device: str = "cpu"
+    device: str = "cpu",
+    checkpoint_dir: Path = Path("results/interzonal_only/artifacts/checkpoints")
 ) -> Dict[str, Any]:
     if p_grid is None:
         p_grid = PRIMARY_GRID_DIRECT.copy()
 
+    source_identity = lock_sources(data_root, checkpoint_dir, output_dir)
     fold_dir = output_dir / f"fold_{fold_id}"
+    if fold_dir.exists() and any(fold_dir.iterdir()) and not resume:
+        raise RuntimeError(f"Existing fold artifacts in {fold_dir}. Use --resume or a new output directory.")
     fold_dir.mkdir(parents=True, exist_ok=True)
     
     raw_csv_path = fold_dir / "raw.csv"
@@ -515,7 +521,7 @@ def run_fold_direct_od(
     b_val = 50 if not smoke else 5
     manifest_path = Path("results/e1/splits_manifest_v2.json")
     split_manifest_sha256 = _sha256_file(manifest_path)
-    checkpoint_sha256 = _checkpoint_hashes(fold_id, model_seeds)
+    checkpoint_sha256 = _checkpoint_hashes(fold_id, model_seeds, checkpoint_dir)
     lambda_signature = {
         "fold_id": fold_id,
         "val_cities": val_cities,
@@ -524,6 +530,7 @@ def run_fold_direct_od(
         "lambda_candidates": [float(value) for value in LAMBDA_CANDIDATES],
         "split_manifest_sha256": split_manifest_sha256,
         "checkpoint_sha256": checkpoint_sha256,
+        "source_identity": source_identity,
     }
 
     # 1. Select / Load Fold Lambda
@@ -545,7 +552,8 @@ def run_fold_direct_od(
             data_root=data_root,
             model_seeds=model_seeds,
             b_val=b_val,
-            device=device
+            device=device,
+            checkpoint_dir=checkpoint_dir
         )
         selection_df.to_csv(lambda_csv_path, index=False)
         with open(lambda_json_path, "w", encoding="utf-8") as f:
@@ -573,6 +581,7 @@ def run_fold_direct_od(
         "n_p_levels": len(p_grid),
         "split_manifest_sha256": split_manifest_sha256,
         "checkpoint_sha256": checkpoint_sha256,
+        "source_identity": source_identity,
     }
 
     # Check already completed cities if resume is True with protocol signature verification
@@ -606,7 +615,7 @@ def run_fold_direct_od(
     # Load frozen GNN models
     models: Dict[int, Tuple[Any, Any]] = {}
     for s in model_seeds:
-        ckpt_path = Path("results/checkpoints") / f"5fold_fold{fold_id}_seed{s}.pt"
+        ckpt_path = Path(checkpoint_dir) / f"5fold_fold{fold_id}_seed{s}.pt"
         if not ckpt_path.exists():
             raise RuntimeError(f"Checkpoint missing for fold {fold_id} seed {s}: {ckpt_path}")
         model, scaler, _ = load_checkpoint(ckpt_path, device_str=device)
@@ -854,12 +863,15 @@ def run_fold_direct_od(
 
 
 def aggregate_combined_direct_od(
-    output_dir: Path = Path("results/direct_od_equivalence_v1"),
-    p_grid: List[float] = None
+    output_dir: Path = Path("results/interzonal_only/artifacts/direct_od_equivalence_v1"),
+    p_grid: List[float] = None,
+    data_root: str = "results/interzonal_only/data",
+    checkpoint_dir: Path = Path("results/interzonal_only/artifacts/checkpoints")
 ) -> None:
     if p_grid is None:
         p_grid = PRIMARY_GRID_DIRECT.copy()
 
+    source_identity = lock_sources(data_root, checkpoint_dir, output_dir, aggregate=True)
     combined_dir = output_dir / "combined"
     combined_dir.mkdir(parents=True, exist_ok=True)
     (combined_dir / "figures").mkdir(parents=True, exist_ok=True)
@@ -890,7 +902,8 @@ def aggregate_combined_direct_od(
             "p_grid": [float(p) for p in p_grid],
             "n_p_levels": len(p_grid),
             "split_manifest_sha256": _sha256_file(Path("results/e1/splits_manifest_v2.json")),
-            "checkpoint_sha256": _checkpoint_hashes(f, [1, 10, 100]),
+            "checkpoint_sha256": _checkpoint_hashes(f, [1, 10, 100], checkpoint_dir),
+            "source_identity": source_identity,
         }
         with open(fold_dir / "run_manifest.json", "r", encoding="utf-8") as mf:
             fold_manifest = json.load(mf)
@@ -1205,8 +1218,9 @@ def generate_direct_od_figures(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Direct Partial-OD Information Equivalence v1")
-    parser.add_argument("--data_root", type=str, default="data")
-    parser.add_argument("--output_dir", type=str, default="results/direct_od_equivalence_v1")
+    parser.add_argument("--data-root", "--data_root", dest="data_root", default="results/interzonal_only/data")
+    parser.add_argument("--checkpoint-dir", type=Path, default=Path("results/interzonal_only/artifacts/checkpoints"))
+    parser.add_argument("--output-dir", "--output_dir", dest="output_dir", default="results/interzonal_only/artifacts/direct_od_equivalence_v1")
     parser.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4, 5], help="Folds to execute")
     parser.add_argument("--cities", type=int, default=10, help="Number of test cities per fold")
     parser.add_argument("--b", type=int, default=200, help="Monte Carlo replicates per city")
@@ -1220,7 +1234,7 @@ if __name__ == "__main__":
     out_p = Path(args.output_dir)
 
     if args.aggregate_only:
-        aggregate_combined_direct_od(output_dir=out_p)
+        aggregate_combined_direct_od(output_dir=out_p, data_root=args.data_root, checkpoint_dir=args.checkpoint_dir)
     else:
         for f_id in args.folds:
             run_fold_direct_od(
@@ -1232,7 +1246,8 @@ if __name__ == "__main__":
                 smoke_cities=args.cities,
                 resume=args.resume,
                 num_workers=args.workers,
-                device=args.device
+                device=args.device,
+                checkpoint_dir=args.checkpoint_dir
             )
         if not args.smoke and set(args.folds) == {1, 2, 3, 4, 5}:
-            aggregate_combined_direct_od(output_dir=out_p)
+            aggregate_combined_direct_od(output_dir=out_p, data_root=args.data_root, checkpoint_dir=args.checkpoint_dir)
