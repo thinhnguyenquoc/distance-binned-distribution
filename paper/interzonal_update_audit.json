@@ -1,0 +1,71 @@
+{
+  "data_inventory_verified": true,
+  "cities": 50,
+  "interzonal_od_pairs": 6065339,
+  "intrazonal_od_pairs": 0,
+  "nonpositive_od_flows": 0,
+  "noninteger_positive_flows": 0,
+  "active_bins_city_counts": {
+    "5": 2,
+    "6": 1,
+    "7": 7,
+    "8": 40
+  },
+  "main_k8_placebo_mechanism_agreement_tolerance": 1e-12,
+  "max_abs_noise_zero_vs_main": 1.5533009969960487e-06,
+  "max_abs_spatial_city_vs_main": 1.5533009968989042e-06,
+  "noise_paper_test": {
+    "alternative": "greater",
+    "adjustment": "Holm across five positive epsilon levels",
+    "values": [
+      {
+        "epsilon": 0.01,
+        "p_raw": 4.884981308350689e-14,
+        "p_holm": 2.4424906541753444e-13
+      },
+      {
+        "epsilon": 0.02,
+        "p_raw": 1.497202362088501e-11,
+        "p_holm": 5.988809448354004e-11
+      },
+      {
+        "epsilon": 0.03,
+        "p_raw": 3.899365275117361e-08,
+        "p_holm": 1.1698095825352084e-07
+      },
+      {
+        "epsilon": 0.04,
+        "p_raw": 0.000827447962857164,
+        "p_holm": 0.001654895925714328
+      },
+      {
+        "epsilon": 0.05,
+        "p_raw": 0.1326688354941412,
+        "p_holm": 0.1326688354941412
+      }
+    ]
+  },
+  "sources_sha256": {
+    "results/interzonal_only/artifacts/5fold_results.json": "fa42ba17687ad978bf99634d41a363191515d348727ee86a5ce24178a5c929dc",
+    "results/interzonal_only/artifacts/mlp_backbone_results.json": "b6df220114c82a1204f938323a97a769a243083b04deeed46c536b3c5b231a91",
+    "results/interzonal_only/artifacts/gravity_backbone_results.json": "62ec4938296a1277d446d256ba91ca6ac9044c2511b2716f3a9cd5964a533ce3",
+    "results/interzonal_only/artifacts/backbone_comparison.json": "6557459331ad8124b98dafce8d6f7f5ffee937d5f901b5d6bccb0f198bd956b4",
+    "results/interzonal_only/artifacts/intra_bin_mechanism_diagnostic.json": "e8e3f93a7611fca7606bd59a57a731aaa11cf37566edc49704b465603e653a62",
+    "results/interzonal_only/artifacts/unified_placebo/bootstrap_fold_stratified/unified_placebo_summary.json": "00cf3960809048601c1e62b82ed6ac2c6bdbabbe9eda62d9a85d3c23139d3938",
+    "results/interzonal_only/artifacts/unified_placebo/bootstrap_fold_stratified/bootstrap_method.json": "50fd23bbf5010d9a179554ec132c4da258dc12752455dbe313c7eb1db24b830b",
+    "results/interzonal_only/artifacts/unified_placebo/unified_placebo_per_city.csv": "10f6f03645c71ad45aa30f053d7debe6dbf24deb84997f5cf92f6dbe44707e90",
+    "results/interzonal_only/artifacts/k_sensitivity/k_sensitivity_raw.json": "2038ebfa76b0740b3e1026d15900d42f810093d9f6c3f814af6537af5772039c",
+    "results/interzonal_only/artifacts/k_sensitivity/k_sensitivity_summary.json": "b40762f865b1f24d5a981cee8db110906a2822d7a66067893c8acebce7478a26",
+    "results/interzonal_only/artifacts/spatial_resolution/spatial_resolution_summary.json": "64ed92a32903d1f5611debceadc3e5248f3c1a38f03be7272a5be34ffdb491cb",
+    "results/interzonal_only/artifacts/spatial_resolution/spatial_resolution_per_city.json": "9c45cc47952c4aefc1150435d7501b74053324ae50aed6155fc2d25720e3ebe2",
+    "results/interzonal_only/artifacts/audit/dpre_mechanism_summary.json": "bf2bcd4de1d55285ca96b4824819a616c1ba10cc0ae2c6cf9d0e44c33cd3180d",
+    "results/interzonal_only/artifacts/noise_robustness/noise_summary.json": "7cc3a356d2f378096143a1f3e37931b57be910a7847227ab7ce595e7777d0c4a",
+    "results/interzonal_only/artifacts/noise_robustness/noise_per_city.csv": "eceb492e6685d14dd75d49cebbeec81d698fdb9951f250eb18bba2afb6048a7b"
+  },
+  "limitations": [
+    "Checkpoint training provenance is incomplete. Data checks do not prove historical training scope.",
+    "Direct-OD and Partial-OD historical results are not included.",
+    "Noise source summary uses two-sided benefit tests. Manuscript retains its stated one-sided protocol using p-values recomputed here from the same city-level observations.",
+    "Noise and spatial re-evaluation differ from the main result by less than 1e-5 per city. Sources remain separate."
+  ]
+}
