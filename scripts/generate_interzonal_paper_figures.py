@@ -208,8 +208,8 @@ def generate_figure4(artifacts_dir: Path, figures_dir: Path):
 
 
 def generate_figure5(artifacts_dir: Path, figures_dir: Path):
-    """Figure 5: Noise dose-response & TV crossover."""
-    json_path = artifacts_dir / "noise_robustness" / "noise_summary.json"
+    """Figure 5: Observed noise levels with bootstrap confidence intervals."""
+    json_path = artifacts_dir / "noise_robustness_extended" / "noise_summary.json"
     if not json_path.exists():
         print("Warning: noise_summary.json not found, skipping Figure 5")
         return
@@ -218,7 +218,6 @@ def generate_figure5(artifacts_dir: Path, figures_dir: Path):
         data = json.load(f)
 
     res = data["results_by_eps"]
-    eps_cross = data.get("eps_cross_zero_dCPC") or data.get("eps_cross")
 
     epsilons = sorted([float(e) for e in res.keys()])
     eps_pct = [e * 100 for e in epsilons]
@@ -229,14 +228,15 @@ def generate_figure5(artifacts_dir: Path, figures_dir: Path):
 
     fig, ax = plt.subplots(figsize=(6.4, 4.0))
 
-    ax.plot(eps_pct, means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=4, label="Mean $\\Delta\\mathrm{CPC}$")
-    ax.fill_between(eps_pct, ci_lowers, ci_uppers, color=PRIMARY_BLUE, alpha=0.18, zorder=2, label="95% bootstrap CI")
-
+    ax.errorbar(
+        eps_pct, means,
+        yerr=[np.array(means) - np.array(ci_lowers), np.array(ci_uppers) - np.array(means)],
+        fmt="o", linestyle="none", color=PRIMARY_BLUE, markersize=5.5,
+        capsize=4, elinewidth=1.4, zorder=4,
+        label="Observed mean and 95% bootstrap CI",
+    )
     ax.axhline(0, color="#333333", linestyle="-", linewidth=0.9, zorder=2)
-    if eps_cross is not None:
-        ax.axvline(eps_cross * 100, color=MUTED_RED, linestyle="--", linewidth=1.2, zorder=3)
-        ax.text(eps_cross * 100 + 0.12, 0.0002, f"$\\epsilon_{{\\mathrm{{cross}}}} \\approx {eps_cross*100:.2f}\\%$",
-                color=MUTED_RED, fontsize=9.5, fontweight="bold", verticalalignment="bottom")
+    ax.set_xticks(eps_pct)
 
     ax.set_xlabel("TV noise $\\epsilon$ (%)", fontweight="bold")
     ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
