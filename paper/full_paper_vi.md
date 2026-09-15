@@ -84,7 +84,7 @@ $$
 \Omega_c = \left\{(i,j) \in \mathcal{P}_c : t_{c,ij} \ge 1\right\}.
 $$
 
-Trong giao thức liên vùng thống nhất, các cặp nội vùng có $i=j$ được loại khỏi dữ liệu OD trước khi đưa vào mô hình. Giao thức quy định cả GNN, MLP và Gravity sử dụng tập $\Omega_c$ của các thành phố nguồn để huấn luyện hoặc ước lượng tham số. Tại các thành phố validation và kiểm tra, việc chọn checkpoint, hiệu chỉnh và đánh giá cũng chỉ sử dụng tập liên vùng tương ứng. Các vùng và đặc trưng đô thị vẫn được giữ nguyên để xây dựng biểu diễn không gian.
+Trong giao thức liên vùng thống nhất, cả GNN, MLP và Gravity được huấn luyện, chọn checkpoint, hiệu chỉnh và đánh giá hoàn toàn trên tập hỗ trợ liên vùng $\Omega_c$. Các vùng và đặc trưng đô thị vẫn được giữ nguyên để xây dựng biểu diễn không gian.
 
 Mô hình dự báo cường độ luồng trên tập hỗ trợ dương $\Omega_c$, không giải quyết bài toán phát hiện liên kết (link discovery) hay phân loại cặp có luồng zero trong $\mathcal{P}_c$. Trong toàn bài, các cặp ngoài $\Omega_c$ được xem là chưa biết và không thuộc phạm vi đánh giá.
 
@@ -122,7 +122,7 @@ $$
 \hat{t}_{c,ij}^{(0)} = \exp(G)\frac{P_{c,i}P_{c,j}}{\tilde d_{c,ij}^{\,\alpha}}, \qquad (i,j)\in\Omega_c.
 $$
 
-Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách. Theo đó, luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Ở đây, $P_{c,i}$ và $P_{c,j}$ là dân số của vùng xuất phát và vùng đích, còn $\tilde d_{c,ij}=\max(d_{c,ij},0.1\,\mathrm{km})$ là khoảng cách dùng trong công thức Gravity. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu liên vùng gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
+Trong đó, $G$ là logarit của hệ số quy mô toàn cục và $\alpha$ là tham số điều khiển mức độ phụ thuộc vào khoảng cách. Theo đó, luồng dự báo giảm theo khoảng cách khi $\alpha>0$. Ở đây, $P_{c,i}$ và $P_{c,j}$ là dân số của vùng xuất phát và vùng đích. Hai tham số $(G,\alpha)$ được ước lượng bằng bình phương tối thiểu trong không gian log trên dữ liệu liên vùng gộp từ các thành phố huấn luyện của từng fold, độc lập với các tham số gravity prior trong hai mô hình neural.
 
 ### 3.4.2. Mục tiêu và cấu hình huấn luyện
 
