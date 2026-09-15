@@ -1,6 +1,5 @@
 # Cải thiện tái tạo cường độ luồng OD zero-shot bằng phân phối di chuyển theo khoảng cách của thành phố mục tiêu
 
-> **Trạng thái bản thảo:** Số liệu và hình thực nghiệm đã được cập nhật từ bộ `results/interzonal_only/artifacts`. Dữ liệu OD của bộ này đã được kiểm tra chỉ chứa các cặp liên vùng dương. Kết quả Gravity theo bộ mới đã được bổ sung đầy đủ. Metadata nguồn huấn luyện của checkpoint hiện có chưa đầy đủ, nên việc xác nhận toàn bộ chuỗi nguồn gốc thực nghiệm vẫn chưa hoàn tất.
 
 
 ## Tóm tắt
@@ -864,3 +863,5 @@ Phân tích chỉ gồm 11 vùng đô thị có nhiều county và được báo
 Bên cạnh giới hạn về số lượng vùng đô thị, county là đơn vị hành chính và không nhất thiết tương ứng với các vùng di chuyển chức năng. Các nhóm quan sát chỉ bao gồm những tract thuộc phạm vi benchmark, không đại diện cho toàn bộ lưu lượng trên địa bàn county.
 
 Ngoài ra, phân phối vẫn được xây dựng theo thiết lập oracle, nên hiệu quả với quan sát thu thập độc lập, bao gồm sai số phân nhóm và khác biệt về độ phủ, cần được đánh giá thêm.
+
+**Trạng thái bản thảo:** Số liệu và hình thực nghiệm đã được cập nhật từ bộ `results/interzonal_only/artifacts`. Dữ liệu OD của bộ này đã được kiểm tra chỉ chứa các cặp liên vùng dương. Kết quả Gravity theo bộ mới đã được bổ sung đầy đủ. Metadata nguồn huấn luyện của checkpoint hiện có chưa đầy đủ, nên việc xác nhận toàn bộ chuỗi nguồn gốc thực nghiệm vẫn chưa hoàn tất.
