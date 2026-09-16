@@ -24,10 +24,10 @@ def main():
     sources = {}
     def read(name):
         path = ART / name
-        sources[str(path.relative_to(ROOT))] = sha(path)
+        sources[path.relative_to(ROOT).as_posix()] = sha(path)
         return json.loads(path.read_text())
     protocol = json.loads((BASE/'interzonal_protocol.json').read_text())
-    actual = {str(p.relative_to(BASE/'data')): sha(p) for p in sorted((BASE/'data').rglob('*')) if p.is_file()}
+    actual = {p.relative_to(BASE/'data').as_posix(): sha(p) for p in sorted((BASE/'data').rglob('*')) if p.is_file()}
     assert actual == protocol['filtered_files'], 'Data inventory changed'
     counts = {}
     noninteger = 0
@@ -71,7 +71,7 @@ def main():
     placebo=read('unified_placebo/bootstrap_fold_stratified/unified_placebo_summary.json')
     read('unified_placebo/bootstrap_fold_stratified/bootstrap_method.json')
     path=ART/'unified_placebo/unified_placebo_per_city.csv'
-    sources[str(path.relative_to(ROOT))]=sha(path)
+    sources[path.relative_to(ROOT).as_posix()]=sha(path)
     pc=pd.read_csv(path)
     assert len(pc)==pc.city.nunique()==50
     assert max(abs(r.d_cpc_target-target[r.city]) for r in pc.itertuples())<1e-12
@@ -88,9 +88,9 @@ def main():
     assert spatial_discrepancy<1e-5
     assert all(r['delta_cpc_resolution']==0 for r in spatial if not r['is_multi_county'])
     read('audit/dpre_mechanism_summary.json')
-    read('noise_robustness/noise_summary.json')
-    path=ART/'noise_robustness/noise_per_city.csv'
-    sources[str(path.relative_to(ROOT))]=sha(path)
+    read('noise_robustness_extended/noise_summary.json')
+    path=ART/'noise_robustness_extended/noise_per_city.csv'
+    sources[path.relative_to(ROOT).as_posix()]=sha(path)
     noise=pd.read_csv(path)
     noise_discrepancy=max(abs(r.delta_cpc_mean-target[r.target_city]) for r in noise[noise.epsilon==0].itertuples())
     assert noise_discrepancy<1e-5
@@ -106,12 +106,12 @@ def main():
             'main_k8_placebo_mechanism_agreement_tolerance':1e-12,
             'max_abs_noise_zero_vs_main':noise_discrepancy,
             'max_abs_spatial_city_vs_main':spatial_discrepancy,
-            'noise_paper_test':{'alternative':'greater','adjustment':'Holm across five positive epsilon levels',
+            'noise_paper_test':{'alternative':'greater','adjustment':'Holm across ten positive epsilon levels',
                                 'values':[{'epsilon':e,'p_raw':float(p),'p_holm':float(a)} for e,p,a in zip(eps,ps,adj)]},
             'sources_sha256':sources,
             'limitations':['Checkpoint training provenance is incomplete. Data checks do not prove historical training scope.',
                            'Direct-OD and Partial-OD historical results are not included.',
-                           'Noise source summary uses two-sided benefit tests. Manuscript retains its stated one-sided protocol using p-values recomputed here from the same city-level observations.',
+                           'Noise source summary and manuscript use one-sided benefit tests with Holm adjustment across ten positive epsilon levels.',
                            'Noise and spatial re-evaluation differ from the main result by less than 1e-5 per city. Sources remain separate.']}
 
     (ROOT/'paper/interzonal_update_audit.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')

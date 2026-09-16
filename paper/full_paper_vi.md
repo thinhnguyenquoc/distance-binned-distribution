@@ -285,7 +285,7 @@ Các cột biểu diễn mức thay đổi CPC trung bình so với baseline GNN
 
 | Điều kiện | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Wilcoxon $p$ hai phía |
 |:---|:---:|:---:|:---:|
-| Phân phối oracle đúng thành phố | $+0.00672$ | $[+0.00530, +0.00813]$ | $1.78 \times 10^{-14}$ |
+| Phân phối oracle đúng thành phố | $+0.00672$ | $[+0.00529, +0.00815]$ | $1.78 \times 10^{-14}$ |
 | Đối chứng từ thành phố huấn luyện, dose-matched | $+0.00130$ | $[+0.00025, +0.00236]$ | $2.78 \times 10^{-1}$ |
 | Phân phối trung bình tập huấn luyện, dose-matched | $+0.00312$ | $[+0.00183, +0.00444]$ | $4.15 \times 10^{-4}$ |
 | Đối chứng hoán vị log-ratio hiệu chỉnh | $-0.00817$ | $[-0.01026, -0.00637]$ | $1.78 \times 10^{-15}$ |
@@ -352,7 +352,7 @@ Mức tăng CPC trung bình đạt +0.00672 với GNN và +0.00503 với MLP, v�
 
 | Baseline | CPC trước hiệu chỉnh | CPC sau hiệu chỉnh | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện |
 |:---|:---:|:---:|:---:|:---:|:---:|
-| GNN | $0.69498$ | $0.70170$ | $+0.00672$ | $[+0.00531, +0.00812]$ | 49/50 (98.0%) |
+| GNN | $0.69498$ | $0.70170$ | $+0.00672$ | $[+0.00529, +0.00815]$ | 49/50 (98.0%) |
 | MLP | $0.69834$ | $0.70337$ | $+0.00503$ | $[+0.00389, +0.00627]$ | 48/50 (96.0%) |
 | Gravity hai tham số | $0.38868$ | $0.38952$ | $+0.00083$ | $[+0.00017, +0.00154]$ | 22/50 (44.0%) |
 

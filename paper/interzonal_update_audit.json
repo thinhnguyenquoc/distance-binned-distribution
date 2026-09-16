@@ -17,32 +17,57 @@
   "max_abs_spatial_city_vs_main": 1.5533009968989042e-06,
   "noise_paper_test": {
     "alternative": "greater",
-    "adjustment": "Holm across five positive epsilon levels",
+    "adjustment": "Holm across ten positive epsilon levels",
     "values": [
       {
         "epsilon": 0.01,
         "p_raw": 4.884981308350689e-14,
-        "p_holm": 2.4424906541753444e-13
+        "p_holm": 4.884981308350689e-13
       },
       {
         "epsilon": 0.02,
         "p_raw": 1.497202362088501e-11,
-        "p_holm": 5.988809448354004e-11
+        "p_holm": 1.347482125879651e-10
       },
       {
         "epsilon": 0.03,
         "p_raw": 3.899365275117361e-08,
-        "p_holm": 1.1698095825352084e-07
+        "p_holm": 3.119492220093889e-07
       },
       {
         "epsilon": 0.04,
         "p_raw": 0.000827447962857164,
-        "p_holm": 0.001654895925714328
+        "p_holm": 0.005792135740000148
       },
       {
         "epsilon": 0.05,
         "p_raw": 0.1326688354941412,
-        "p_holm": 0.1326688354941412
+        "p_holm": 0.7960130129648473
+      },
+      {
+        "epsilon": 0.06,
+        "p_raw": 0.673613902376359,
+        "p_holm": 1.0
+      },
+      {
+        "epsilon": 0.07,
+        "p_raw": 0.9660981516079774,
+        "p_holm": 1.0
+      },
+      {
+        "epsilon": 0.08,
+        "p_raw": 0.9993821482208292,
+        "p_holm": 1.0
+      },
+      {
+        "epsilon": 0.09,
+        "p_raw": 0.9999998134393779,
+        "p_holm": 1.0
+      },
+      {
+        "epsilon": 0.1,
+        "p_raw": 0.9999999998988391,
+        "p_holm": 1.0
       }
     ]
   },
@@ -60,13 +85,13 @@
     "results/interzonal_only/artifacts/spatial_resolution/spatial_resolution_summary.json": "64ed92a32903d1f5611debceadc3e5248f3c1a38f03be7272a5be34ffdb491cb",
     "results/interzonal_only/artifacts/spatial_resolution/spatial_resolution_per_city.json": "9c45cc47952c4aefc1150435d7501b74053324ae50aed6155fc2d25720e3ebe2",
     "results/interzonal_only/artifacts/audit/dpre_mechanism_summary.json": "bf2bcd4de1d55285ca96b4824819a616c1ba10cc0ae2c6cf9d0e44c33cd3180d",
-    "results/interzonal_only/artifacts/noise_robustness/noise_summary.json": "7cc3a356d2f378096143a1f3e37931b57be910a7847227ab7ce595e7777d0c4a",
-    "results/interzonal_only/artifacts/noise_robustness/noise_per_city.csv": "eceb492e6685d14dd75d49cebbeec81d698fdb9951f250eb18bba2afb6048a7b"
+    "results/interzonal_only/artifacts/noise_robustness_extended/noise_summary.json": "26ccff6456d393e38c472d1f0b187487e893ba98254443c5d85320f8c93ea031",
+    "results/interzonal_only/artifacts/noise_robustness_extended/noise_per_city.csv": "3a916ce9ada95f1b99f27ec5c4c50c87903014ce7bdd525cabc51475ce16b649"
   },
   "limitations": [
     "Checkpoint training provenance is incomplete. Data checks do not prove historical training scope.",
     "Direct-OD and Partial-OD historical results are not included.",
-    "Noise source summary uses two-sided benefit tests. Manuscript retains its stated one-sided protocol using p-values recomputed here from the same city-level observations.",
+    "Noise source summary and manuscript use one-sided benefit tests with Holm adjustment across ten positive epsilon levels.",
     "Noise and spatial re-evaluation differ from the main result by less than 1e-5 per city. Sources remain separate."
   ]
 }
