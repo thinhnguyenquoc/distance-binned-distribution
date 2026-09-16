@@ -257,7 +257,7 @@ Mỗi cột biểu diễn chênh lệch CPC giữa dự báo sau hiệu chỉnh 
 
 ### Bảng 2. Kết quả hiệu chỉnh oracle cấp thành phố với GNN trên 50 thành phố ($K=8$).
 
-| Điều kiện | CPC trung bình ± SD | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện | Wilcoxon $p$ (hai phía) |
+| Điều kiện | $\overline{\mathrm{CPC}} \pm \mathrm{SD}$ | $\overline{\Delta\mathrm{CPC}}$ | CI 95% ($\overline{\Delta\mathrm{CPC}}$) | Thành phố cải thiện | Wilcoxon $p$ (hai phía) |
 |:---|:---:|:---:|:---:|:---:|:---:|
 | Baseline zero-shot ($M_0$) | $0.69498 \pm 0.04341$ | — | — | — | — |
 | Hiệu chỉnh oracle ($M_1$) | $0.70170 \pm 0.04315$ | $+0.00672$ | $[+0.00529, +0.00815]$ | $49/50\ (98.0\%)$ | $1.78 \times 10^{-14}$ |
@@ -283,7 +283,7 @@ Các cột biểu diễn mức thay đổi CPC trung bình so với baseline GNN
 
 **Phần A. Thay đổi CPC so với baseline zero-shot**
 
-| Điều kiện | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Wilcoxon $p$ hai phía |
+| Điều kiện | $\overline{\Delta\mathrm{CPC}}$ | CI 95% ($\overline{\Delta\mathrm{CPC}}$) | Wilcoxon $p$ (hai phía) |
 |:---|:---:|:---:|:---:|
 | Phân phối oracle đúng thành phố | $+0.00672$ | $[+0.00529, +0.00815]$ | $1.78 \times 10^{-14}$ |
 | Đối chứng từ thành phố huấn luyện, dose-matched | $+0.00130$ | $[+0.00025, +0.00236]$ | $2.78 \times 10^{-1}$ |
@@ -292,7 +292,7 @@ Các cột biểu diễn mức thay đổi CPC trung bình so với baseline GNN
 
 **Phần B. Chênh lệch CPC giữa phân phối đúng thành phố và từng đối chứng**
 
-| Đối chứng | Chênh lệch CPC trung bình | CI 95% của chênh lệch trung bình | Wilcoxon $p$ một phía | Thành phố có CPC mục tiêu cao hơn đối chứng |
+| Đối chứng | $\overline{\Delta\mathrm{CPC}}$ | CI 95% ($\overline{\Delta\mathrm{CPC}}$) | Wilcoxon $p$ (một phía) | Thành phố mục tiêu > đối chứng |
 |:---|:---:|:---:|:---:|:---:|
 | Đối chứng từ thành phố huấn luyện, dose-matched | $+0.00542$ | $[+0.00442, +0.00648]$ | $8.88 \times 10^{-15}$ | 48/50 |
 | Phân phối trung bình tập huấn luyện, dose-matched | $+0.00360$ | $[+0.00272, +0.00455]$ | $5.68 \times 10^{-13}$ | 46/50 |
@@ -309,7 +309,7 @@ Trước hết, khi số nhóm khoảng cách danh nghĩa tăng từ $K=2$ lên 
 
 ### Bảng 4. Mức thay đổi CPC theo số nhóm khoảng cách $K$ trên 50 thành phố.
 
-| Số nhóm $K$ | $\Delta\mathrm{CPC}$ trung bình | Trung vị $\Delta\mathrm{CPC}$ | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện |
+| Số nhóm $K$ | $\overline{\Delta\mathrm{CPC}}$ | $\mathrm{Median}(\Delta\mathrm{CPC})$ | CI 95% ($\overline{\Delta\mathrm{CPC}}$) | Thành phố cải thiện |
 |:---|:---:|:---:|:---:|:---:|
 | $K = 2$ | $+0.00137$ | $+0.00030$ | $[+0.00081, +0.00203]$ | 41/50 (82.0%) |
 | $K = 4$ | $+0.00317$ | $+0.00111$ | $[+0.00223, +0.00421]$ | 43/50 (86.0%) |
@@ -350,7 +350,7 @@ Mức tăng CPC trung bình đạt +0.00672 với GNN và +0.00503 với MLP, v�
 
 ### Bảng 5. Mức cải thiện CPC sau hiệu chỉnh oracle theo kiến trúc baseline trên 50 thành phố ($K=8$).
 
-| Baseline | CPC trước hiệu chỉnh | CPC sau hiệu chỉnh | $\Delta\mathrm{CPC}$ trung bình | CI 95% của $\Delta\mathrm{CPC}$ trung bình | Thành phố cải thiện |
+| Baseline | $\overline{\mathrm{CPC}}\ (M_0)$ | $\overline{\mathrm{CPC}}\ (M_1)$ | $\overline{\Delta\mathrm{CPC}}$ | CI 95% ($\overline{\Delta\mathrm{CPC}}$) | Thành phố cải thiện |
 |:---|:---:|:---:|:---:|:---:|:---:|
 | GNN | $0.69498$ | $0.70170$ | $+0.00672$ | $[+0.00529, +0.00815]$ | 49/50 (98.0%) |
 | MLP | $0.69834$ | $0.70337$ | $+0.00503$ | $[+0.00389, +0.00627]$ | 48/50 (96.0%) |
@@ -665,7 +665,7 @@ $$
 
 ### Bảng S2: Các thước đo đánh giá bổ sung cho GNN với $K=8$.
 
-| Thước đo | Baseline $M_0$ | Sau hiệu chỉnh $M_1$ | Thay đổi trung bình | Trung vị thay đổi | Thành phố cải thiện |
+| Thước đo | Baseline $M_0$ | Sau hiệu chỉnh $M_1$ | $\overline{\Delta}$ | $\mathrm{Median}(\Delta)$ | Thành phố cải thiện |
 |:---|---:|---:|---:|---:|---:|
 | NRMSE $\downarrow$ | 1.70597 | 1.67182 | -0.03415 | -0.02347 | 42/50 |
 | $\operatorname{RMSE}_{\mathrm{log1p}}$ $\downarrow$ | 0.93084 | 0.89099 | -0.03985 | -0.02142 | 46/50 |

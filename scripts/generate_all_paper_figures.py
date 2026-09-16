@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -83,29 +84,22 @@ def generate_figure2():
     )
 
     ax.axhline(0, color="#333333", linewidth=0.8, linestyle="-", zorder=4)
-    ax.axhline(mean_delta, color=ACCENT_GREEN, linewidth=1.2, linestyle="--",
-               label=f"Mean $\\Delta\\mathrm{{CPC}} = +{mean_delta:.5f}$", zorder=4)
-    ax.axhline(median_delta, color=ORANGE, linewidth=1.0, linestyle=":",
-               label=f"Median $\\Delta\\mathrm{{CPC}} = +{median_delta:.5f}$", zorder=4)
+    l1 = ax.axhline(mean_delta, color=ACCENT_GREEN, linewidth=1.2, linestyle="--",
+                    label=f"Mean $\\Delta\\mathrm{{CPC}} = +{mean_delta:.5f}$", zorder=4)
+    l2 = ax.axhline(median_delta, color=ORANGE, linewidth=1.0, linestyle=":",
+                    label=f"Median $\\Delta\\mathrm{{CPC}} = +{median_delta:.5f}$", zorder=4)
+
+    pos_count = int(np.sum(deltas > 0))
+    p3 = mpatches.Patch(facecolor=PRIMARY_BLUE, edgecolor="#144a70", linewidth=0.5,
+                        label=f"Positive gain: {pos_count}/50")
 
     ax.set_xticks(range(n_cities))
     ax.set_xticklabels(cities, rotation=90, ha="center", va="top", fontsize=8)
     ax.set_xlim(-0.8, n_cities - 0.2)
-    ax.set_ylabel(r"$\Delta\mathrm{CPC}$ ($M_1 - M_0$)", fontweight="bold")
+    ax.set_ylabel(r"$\Delta\mathrm{CPC}$", fontweight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.35, zorder=1)
-    ax.legend(loc="upper left", frameon=True, framealpha=0.9)
-
-    # Annotation box
-    pos_count = np.sum(deltas > 0)
-    ax.text(
-        0.98, 0.05,
-        f"Positive gain: {pos_count}/50 ({pos_count/n_cities*100:.0f}%)",
-        transform=ax.transAxes,
-        fontsize=8.5,
-        verticalalignment="bottom",
-        horizontalalignment="right",
-        bbox=dict(boxstyle="round,pad=0.4", facecolor="#f0f0f0", edgecolor="#cccccc", alpha=0.95)
-    )
+    ax.legend(handles=[l1, l2, p3], loc="upper left", ncol=3, frameon=True, framealpha=0.9,
+              handlelength=1.2, handletextpad=0.5, columnspacing=1.2)
 
     fig.savefig(FIGURES_DIR / "fig2_main_per_city.png", dpi=300)
     fig.savefig(FIGURES_DIR / "fig2_main_per_city.pdf")
