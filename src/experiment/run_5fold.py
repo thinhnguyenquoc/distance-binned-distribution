@@ -211,7 +211,6 @@ def run_5fold_experiment(
                     knn_k=knn_k,
                     device_str=device_str,
                     bin_edges=bin_edges,
-                    exact_distances=bool(training_provenance),
                 )
                 seed_results.append(res)
                 

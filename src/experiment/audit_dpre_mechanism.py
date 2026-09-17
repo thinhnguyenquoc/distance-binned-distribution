@@ -25,7 +25,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 
 def partial_corr(x: np.ndarray, y: np.ndarray, covars: np.ndarray) -> tuple[float, float]:
-    """Compute partial correlation between x and y controlling for covars."""
+    """Partial correlation between x and y given covars, with df = n - k - 2."""
     # Fit residuals
     if covars.ndim == 1:
         covars = covars[:, np.newaxis]
@@ -39,9 +39,17 @@ def partial_corr(x: np.ndarray, y: np.ndarray, covars: np.ndarray) -> tuple[floa
     beta_y = np.linalg.lstsq(X_cov, y, rcond=None)[0]
     res_y = y - X_cov @ beta_y
 
-    # Pearson corr between residuals
-    r, p = stats.pearsonr(res_x, res_y)
-    return float(r), float(p)
+    # Pearson coefficient of the residuals; p-value must not reuse Pearson's df = n - 2.
+    r = float(stats.pearsonr(res_x, res_y).statistic)
+    n_obs = len(x)
+    n_controls = covars.shape[1]
+    dof = n_obs - n_controls - 2
+    if dof <= 0:
+        return r, float("nan")
+    denom = max(1.0 - r * r, np.finfo(float).tiny)
+    t_stat = r * np.sqrt(dof / denom)
+    p = float(2.0 * stats.t.sf(abs(t_stat), df=dof))
+    return r, p
 
 
 def run_dpre_mechanism_diagnostic(
@@ -115,7 +123,7 @@ def run_dpre_mechanism_diagnostic(
     cov_beta2 = s2 * np.linalg.inv(X2.T @ X2)
     se2 = np.sqrt(np.diag(cov_beta2))
     t_stats2 = beta2 / se2
-    p_vals2 = [2.0 * (1.0 - stats.t.cdf(abs(t), df=n - k)) for t in t_stats2]
+    p_vals2 = [2.0 * stats.t.sf(abs(t), df=n - k) for t in t_stats2]
     r2_2 = 1.0 - np.var(res2) / np.var(y_delta)
 
     features2 = ["Intercept", "d_pre_tv", "m0_cpc", "log_n_inter_pairs", "log_n_tracts", "mean_distance_km"]
@@ -199,4 +207,14 @@ We investigate whether the strong observed correlation between baseline distance
 
 
 if __name__ == "__main__":
-    run_dpre_mechanism_diagnostic()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--intra-json", type=Path, default=Path("results/intra_bin_mechanism_diagnostic.json"))
+    parser.add_argument("--results-5fold", type=Path, default=Path("results/5fold_results.json"))
+    parser.add_argument("--output-dir", type=Path, default=Path("results/audit"))
+    args = parser.parse_args()
+    run_dpre_mechanism_diagnostic(
+        intra_json_path=args.intra_json,
+        results_5fold_path=args.results_5fold,
+        output_dir=args.output_dir,
+    )

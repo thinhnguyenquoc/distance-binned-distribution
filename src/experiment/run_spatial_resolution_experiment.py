@@ -124,7 +124,7 @@ def run_spatial_resolution_city(
     
     cd = load_city(city, data_root=DATA_ROOT, feature_scaler=scaler)
     ei, ed = build_radius_graph(cd.lon_lat, radius_km=5.0)
-    dist_km = np.expm1(cd.pair_distance.numpy())
+    dist_km = np.asarray(cd.dist_km, dtype=np.float64)
     inter_mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
     t_gt = cd.pair_trips.numpy().astype(np.float64)
     
@@ -229,7 +229,8 @@ def compute_resolution_summary(results: list[dict], bootstrap_seed: int = DEFAUL
     ci_scity_l, ci_scity_h = fold_bootstrap(d_spec_city, fid, seed=bootstrap_seed)
     ci_scounty_l, ci_scounty_h = fold_bootstrap(d_spec_county, fid, seed=bootstrap_seed)
     
-    _, p_res = safe_wilcoxon(d_res, alternative="greater")
+    # Resolution contrast is an effect (two-sided); specificity contrasts are superiority (one-sided).
+    _, p_res = safe_wilcoxon(d_res, alternative="two-sided")
     _, p_scity = safe_wilcoxon(d_spec_city, alternative="greater")
     _, p_scounty = safe_wilcoxon(d_spec_county, alternative="greater")
     
@@ -354,7 +355,20 @@ For single-county cities, all tracts belong to the same origin county, meaning $
     (TABLES_DIR / "spatial_resolution_per_city.md").write_text("# Complete Spatial Resolution Breakdown (50 Cities)\n\n" + "\n".join(rows) + "\n", encoding="utf-8")
 
 
-def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAULT_SEED, smoke: bool = False):
+def run_spatial_resolution_experiment(
+    device_str: str = "cpu",
+    seed: int = DEFAULT_SEED,
+    smoke: bool = False,
+    data_root: str = "data",
+    checkpoint_dir: str = "results/checkpoints",
+    output_dir: str = str(PROJECT_ROOT / "results" / "spatial_resolution"),
+):
+    global DATA_ROOT, RESULTS_DIR, TABLES_DIR
+    DATA_ROOT = data_root
+    RESULTS_DIR = Path(output_dir)
+    TABLES_DIR = RESULTS_DIR / "tables"
+    ckpt_dir = Path(checkpoint_dir)
+
     t_global_start = time.time()
     device = torch.device(device_str)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -364,6 +378,7 @@ def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAU
     log_msg("SPATIAL RESOLUTION EXPERIMENT: ORIGIN COUNTY-LEVEL VS CITY-LEVEL CALIBRATION")
     log_msg("=" * 75)
     log_msg(f"  Configuration: K={K_MOVE} bins, q={Q_CALIB}, Seed={seed}, Device={device_str}")
+    log_msg(f"  Data root: {DATA_ROOT}, Checkpoints: {ckpt_dir}, Output: {RESULTS_DIR}")
     
     MANIFEST_PATH = PROJECT_ROOT / "results" / "e1" / "splits_manifest_v2.json"
     splits = load_splits_manifest_v2(str(MANIFEST_PATH), data_root=DATA_ROOT)
@@ -395,7 +410,7 @@ def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAU
         fold_city_seed_results = {city: [] for city in test10}
 
         for m_seed in ([1, 10, 100] if not smoke else [1, 10]):
-            ckpt_path = Path(f"results/checkpoints/5fold_fold{fold_id}_seed{m_seed}.pt")
+            ckpt_path = ckpt_dir / f"5fold_fold{fold_id}_seed{m_seed}.pt"
             if not ckpt_path.exists():
                 raise FileNotFoundError(f"Missing mandatory checkpoint {ckpt_path}")
             
@@ -407,7 +422,7 @@ def run_spatial_resolution_experiment(device_str: str = "cpu", seed: int = DEFAU
             test_yd_cache = {}
             for t_city in test10:
                 cd_t = load_city(t_city, data_root=DATA_ROOT, feature_scaler=scaler, fit_scaler=False)
-                dist_t = np.expm1(cd_t.pair_distance.numpy())
+                dist_t = np.asarray(cd_t.dist_km, dtype=np.float64)
                 inter_t = (cd_t.pair_o_idx.numpy() != cd_t.pair_d_idx.numpy()) & (dist_t > 0.0)
                 t_gt_t = cd_t.pair_trips.numpy().astype(np.float64)
                 test_yd_cache[t_city] = extract_yd_kbins(dist_t, t_gt_t, bin_edges, inter_t)
@@ -485,6 +500,16 @@ if __name__ == "__main__":
     parser.add_argument("--smoke", action="store_true", help="Run quick smoke test on subset of cities")
     parser.add_argument("--device", default="cpu", help="PyTorch device (cpu/cuda)")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Random seed")
+    parser.add_argument("--data-root", default="data")
+    parser.add_argument("--checkpoint-dir", default="results/checkpoints")
+    parser.add_argument("--output-dir", default=str(PROJECT_ROOT / "results" / "spatial_resolution"))
     args = parser.parse_args()
     
-    run_spatial_resolution_experiment(device_str=args.device, seed=args.seed, smoke=args.smoke)
+    run_spatial_resolution_experiment(
+        device_str=args.device,
+        seed=args.seed,
+        smoke=args.smoke,
+        data_root=args.data_root,
+        checkpoint_dir=args.checkpoint_dir,
+        output_dir=args.output_dir,
+    )

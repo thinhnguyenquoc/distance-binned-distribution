@@ -684,7 +684,7 @@ def test_gate_14_raw_to_summary_reproduction():
     
     mean_d = float(np.mean(d_vals))
     pos_count = int(np.sum(d_vals > 0))
-    _, p_w = stats.wilcoxon(d_vals, alternative="greater")
+    _, p_w = stats.wilcoxon(d_vals, alternative="two-sided")
     
     expected_summary = res["rq1_delta_r"]["city"]["delta_cpc_inter"]
     assert abs(mean_d - expected_summary["mean"]) < 1e-12, "GNN city delta mean disagrees with summary"

@@ -70,7 +70,7 @@ def audit_calibration_weights(data_root: str = "data", output_dir: Path = Path("
                 cd = load_city(city, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
                 ei, ed = build_radius_graph(cd.lon_lat, radius_km=5.0, include_self_loop=True, cache_key=f"{city}_tracts")
 
-                dist_km = np.expm1(cd.pair_distance.numpy())
+                dist_km = np.asarray(cd.dist_km, dtype=np.float64)
                 inter_mask = (cd.pair_o_idx.numpy() != cd.pair_d_idx.numpy()) & (dist_km > 0.0)
                 t_gt = cd.pair_trips.numpy().astype(np.float64)
 

@@ -160,6 +160,8 @@ $$
 
 Here $\mu>0$ is the mean of the base NB before truncation, not the conditional mean after truncation, and $\phi>0$ is its shape/dispersion parameter. In training, each parameter update uses a single city and the loss averaged over the OD pairs of that city.
 
+We examined the distribution of positive interzonal OD counts used for neural-model training ($N = 6{,}065{,}339$ across 50 cities). Across all 50 cities, the empirical variance exceeded the mean (variance-to-mean ratio ranged from 708.0 to 2,648.5; pooled ratio 1,682.3), indicating substantial overdispersion. On the pooled positive-support data, a zero-truncated negative-binomial model provided a substantially higher likelihood ($\Delta\mathrm{LL} \approx +1.147 \times 10^9$) and lower information criteria than a zero-truncated Poisson model ($\Delta\mathrm{AIC} \approx -2.294 \times 10^9$, likelihood-ratio statistic $2.294 \times 10^9$, $p < 10^{-300}$). These empirical diagnostics motivated the use of the ZTNB likelihood for the neural baselines. The comparison concerns positive interzonal counts only and does not characterize zero flows in the full OD matrix. Detailed distributional diagnostics are reported in Supplementary Section S1.3.
+
 Both neural baselines use the same training protocol with the AdamW optimization algorithm [@loshchilov2019adamw], select checkpoints by validation CPC, and are repeated over three model seeds. The dispersion parameter $\phi$ is learned jointly with network parameters and shared across all OD pairs in each model. Parameter transformations ensuring positivity and numerical stabilization measures are detailed in Supplementary Section S1. At inference, the predicted flow intensity is the conditional expectation of the ZTNB distribution:
 
 $$
@@ -476,17 +478,49 @@ During training, the ZTNB log-likelihood is computed using `torch.lgamma`. To pr
 * A stabilizing constant $\epsilon = 10^{-8}$ is added to $\mu$ and $\phi$ in logarithmic terms; the probability at 0 is normalized numerically through $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ with an upper bound of $1.0 - 10^{-7}$. When inferring the conditional expectation, the denominator $1 - p_{\mathrm{NB}}(0)$ is lower-bounded by $10^{-6}$.
 * The gradient of all model parameters is clipped to a maximum Euclidean norm of $\|\mathbf{g}\|_2 \le 5.0$ using `torch.nn.utils.clip_grad_norm_`.
 
-### S1.3. The 26 features and spatial graph
+### S1.3. Empirical distributional diagnostics for positive interzonal counts
+
+We evaluated the empirical distribution of positive interzonal flows across all 50 benchmark metropolitan datasets to motivate the choice of the training likelihood. The support is defined by $(i \neq j, d_{c,ij} > 0, t_{c,ij} \ge 1)$, comprising $N = 6{,}065{,}339$ observed positive OD pairs across the 50 cities.
+
+Table S1 summarizes the descriptive dispersion statistics and the likelihood-based model comparison between a zero-truncated Poisson (ZTP) model and a zero-truncated Negative Binomial (ZTNB) model. Under equidispersion, the variance-to-mean ratio satisfies $\operatorname{Var}(T)/\operatorname{E}[T] \approx 1$. Across all 50 individual cities, the sample variance strictly exceeded the sample mean, with city-level variance-to-mean ratios ranging from 708.0 to 2,648.5 (median: 1,720.6; pooled ratio: 1,682.3). 
+
+Both candidate distributions were fitted to the pooled positive support:
+- For ZTP, the parameter estimate is $\widehat{\lambda} = 114.995$, yielding a log-likelihood of $-1{,}176{,}972{,}598$ and $\mathrm{AIC} = 2{,}353{,}945{,}202$.
+- For ZTNB, the estimated underlying parameters are $\widehat{\mu} = 16.834$ and dispersion parameter $\widehat{\phi} = 0.02418$, yielding a log-likelihood of $-30{,}127{,}195$ and $\mathrm{AIC} = 60{,}254{,}393$.
+
+ZTNB achieves an improvement in log-likelihood of $+1{,}146{,}845{,}403$ and an AIC reduction of approximately $2.294 \times 10^9$ points over ZTP (likelihood-ratio test statistic $2.294 \times 10^9$, $p < 10^{-300}$). The small estimated dispersion parameter $\widehat{\phi}$ directly accounts for the severe empirical overdispersion on positive flows. These results provide an empirical justification for selecting the ZTNB loss over an equidispersed Poisson loss for the neural baselines. This comparison is conditional on positive interzonal support ($t \ge 1$) and does not characterize zero flows in the unobserved OD matrix.
+
+#### Table S1: Empirical distributional diagnostics of positive interzonal flows ($N = 6{,}065{,}339$)
+| Diagnostic statistic / Model metric | Value |
+|:---|---:|
+| Total positive interzonal observations ($N$) | 6,065,339 |
+| Pooled sample mean ($\overline{t}$) | 115.00 |
+| Pooled sample variance ($s^2$) | 193,459.92 |
+| Pooled variance-to-mean ratio ($s^2 / \overline{t}$) | 1,682.33 |
+| Cities with variance-to-mean ratio > 1 | 50 / 50 |
+| City variance-to-mean ratio range [Min, Median, Max] | [708.03, 1,720.64, 2,648.51] |
+| Zero-Truncated Poisson (ZTP): $\widehat{\lambda}$ | 115.00 |
+| Zero-Truncated Poisson (ZTP): Log-Likelihood | -1,176,972,597.85 |
+| Zero-Truncated Poisson (ZTP): AIC | 2,353,945,201.70 |
+| Zero-Truncated Negative Binomial (ZTNB): $\widehat{\mu}$ | 16.83 |
+| Zero-Truncated Negative Binomial (ZTNB): $\widehat{\phi}$ | 0.02418 |
+| Zero-Truncated Negative Binomial (ZTNB): Log-Likelihood | -30,127,194.53 |
+| Zero-Truncated Negative Binomial (ZTNB): AIC | 60,254,393.06 |
+| $\Delta\text{Log-Likelihood}$ (ZTNB vs. ZTP) | **+1,146,845,403.32** |
+| Likelihood-Ratio Statistic ($2\Delta\mathrm{LL}$) | **2,293,690,806.63** |
+| Likelihood-Ratio Test $p$-value | **< 1e-300** |
+
+### S1.4. The 26 features and spatial graph
 
 In the order defined by `src.data.dataset.NODE_FEATURE_COLUMNS`, the 26 features are 13 Census features: `total_population`, `median_age`, `median_income`, `per_capita_income`, `employment_rate`, `unemployment_rate`, `commute_transit_pct`, `commute_active_pct`, `commute_wfh_pct`, `zero_vehicle_pct`, `avg_vehicles_per_household`, `higher_education_pct`, `homeownership_rate`; 8 POI features: `office`, `office_density`, `industrial`, `industrial_density`, `commercial`, `commercial_density`, `education_primary`, `education_primary_density`; and 5 Road features: `road_length_total`, `road_density`, `road_count`, `motorway_length`, `primary_length`. Missing CSV values are read as 0, and NaN/Inf values are replaced by 0. No log transform is applied to these columns in the loader. Within each fold, `load_cities()` fits one `StandardScaler` on concatenated node features from the 35 training cities; validation and target cities use `transform` only, and scaler statistics are stored in the checkpoint.
 
 Nodes are tracts with centroid coordinates `(lon, lat)` from `meta.csv`. Distances are Haversine distances using Earth radius 6371 km. The frozen main configuration uses a 5.0 km radius graph with self-loops and symmetric edges; if a node has no other node within the radius, the nearest node is added as a fallback. Edge attributes are geographic distances in km. The graph uses observable geography only and never OD flows.
 
-### S1.4. Architecture hyperparameters and baseline separation
+### S1.5. Architecture hyperparameters and baseline separation
 
-The exact hyperparameter configuration extracted directly from the trained model checkpoints (`results/checkpoints/5fold_*.pt` and `mlp_*.pt`) is presented in Table S1.
+The exact hyperparameter configuration extracted directly from the trained model checkpoints (`results/checkpoints/5fold_*.pt` and `mlp_*.pt`) is presented in Table S2.
 
-#### Table S1: Architectural and training hyperparameters of zero-shot baselines
+#### Table S2: Architectural and training hyperparameters of zero-shot baselines
 | Component | Hyperparameter | Value | Description |
 |:---|:---|:---:|:---|
 | **GNN Encoder** | Input feature dimension ($d_{\mathrm{in}}$) | 26 | Demographics, socio-economic, and urban features |
@@ -626,7 +660,7 @@ $$
 
 3. **Spearman rank-correlation coefficient ($\rho_{\mathrm{Spearman}}$)**: Spearman rank correlation is computed between the observed and predicted intensity vectors on $\Omega_c$. Larger values indicate better agreement in OD-pair rankings.
 
-### Table S2: Supplementary evaluation metrics for GNN with $K=8$.
+### Table S3: Supplementary evaluation metrics for GNN with $K=8$.
 
 | Metric | Baseline $M_0$ | Post-calibration $M_1$ | Mean Change | Median Change | Improved Cities |
 |:---|---:|---:|---:|---:|---:|
@@ -778,14 +812,14 @@ $$
 
 This modest pooled increase is driven by the 39 single-county areas, whose increase is exactly zero by construction.
 
-For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark, county-level calibration improves performance in 9/11 areas, with a mean additional increase of $+0.00063$ (Table S3 and Figure S1).
+For the 11 multi-county metropolitan areas, which comprise 22% of the benchmark, county-level calibration improves performance in 9/11 areas, with a mean additional increase of $+0.00063$ (Table S4 and Figure S1).
 
 ![Figure S1](figures/fig_s1_spatial_resolution.png)
 **Figure S1. Comparison of CPC gains from city-level and county-level calibration across 11 multi-county metropolitan areas. The analysis is exploratory; the 39 single-county areas are omitted because the two groupings are mathematically equivalent.**
 
 <div style="page-break-before: always;"></div>
 
-### Table S3: Descriptive city-level results for the multi-county spatial-resolution analysis
+### Table S4: Descriptive city-level results for the multi-county spatial-resolution analysis
 
 *The table compares the zero-shot baseline ($M_0$), city-level oracle calibration ($M_{1,\mathrm{city}}$), and origin-county-conditioned oracle calibration ($M_{1,\mathrm{county}}$) for 11 metropolitan datasets whose tracts are assigned to more than one county. The resolution gain is defined as $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Values are summarized at the city level. Results for the 11 multi-county metropolitan areas are reported descriptively; separate confidence intervals and hypothesis tests are not presented for this subgroup.*
 

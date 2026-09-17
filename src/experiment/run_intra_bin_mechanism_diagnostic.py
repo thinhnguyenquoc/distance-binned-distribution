@@ -25,6 +25,7 @@ from src.data.city_splits import load_splits_manifest_v2
 from src.data.dataset import load_city, load_raw_city
 from src.data.urban_graph import build_radius_graph
 from src.data.yd_extractor import compute_equal_width_kbin_edges, compute_kbin_edges, extract_yd_kbins
+from src.experiment.e1_core import manifest_sha256, verify_checkpoint_provenance
 from src.experiment.run_backbone_robustness import fit_gravity_parameters
 from src.training.evaluate import compute_cpc_pair
 from src.training.train import infer_zero_shot, load_checkpoint
@@ -122,7 +123,7 @@ def _city_seed_diagnostic(
     city_data = load_city(city, data_root=data_root, feature_scaler=scaler, fit_scaler=False)
     edge_index, edge_dist = build_radius_graph(city_data.lon_lat.numpy(), radius_km=5.0)
     truth = city_data.pair_trips.numpy().astype(np.float64)
-    distances_km = np.expm1(city_data.pair_distance.numpy())
+    distances_km = np.asarray(city_data.dist_km, dtype=np.float64)
     inter_mask = (city_data.pair_o_idx.numpy() != city_data.pair_d_idx.numpy()) & (distances_km > 0.0)
 
     prediction = infer_zero_shot(model, city_data, edge_index, edge_dist, device=device).numpy().astype(np.float64)
@@ -200,10 +201,12 @@ def _city_gravity_diagnostic(
 def run_diagnostic(
     data_root: str = "data",
     output_path: Path = DEFAULT_OUTPUT,
+    checkpoint_dir: Path | str = Path("results/checkpoints"),
     device_str: str = "cpu",
     backbone: str = "gnn",
     binning: str = "quantile",
 ) -> dict[str, Any]:
+    checkpoint_dir = Path(checkpoint_dir)
     if backbone not in {"gnn", "mlp", "gravity"}:
         raise ValueError(f"Unsupported checkpoint backbone: {backbone}")
     if binning not in {"quantile", "equal_width"}:
@@ -232,10 +235,15 @@ def run_diagnostic(
         models = {}
         for seed in CANONICAL_SEEDS:
             checkpoint_name = f"5fold_fold{fold}_seed{seed}.pt" if backbone == "gnn" else f"mlp_fold{fold}_seed{seed}.pt"
-            checkpoint = Path("results/checkpoints") / checkpoint_name
+            checkpoint = checkpoint_dir / checkpoint_name
             model, scaler, metadata = load_checkpoint(checkpoint, device_str=device_str)
-            if metadata.get("seed") != seed or metadata.get("hyperparams", {}).get("fold") != fold:
-                raise RuntimeError(f"Checkpoint provenance mismatch: {checkpoint}")
+            verify_checkpoint_provenance(
+                metadata,
+                checkpoint,
+                expected_seed=seed,
+                expected_fold=fold,
+                expected_manifest_sha256=manifest_sha256(manifest_path),
+            )
             models[seed] = (model, scaler)
 
         for city in sorted(split["test"]):
@@ -284,10 +292,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the post hoc intra-bin mechanism diagnostic")
     parser.add_argument("--data-root", default="data")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--checkpoint-dir", type=Path, default=Path("results/checkpoints"))
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--backbone", choices=["gnn", "mlp", "gravity"], default="gnn")
     parser.add_argument("--binning", choices=["quantile", "equal_width"], default="quantile")
     args = parser.parse_args()
-    result = run_diagnostic(args.data_root, args.output, args.device, args.backbone, args.binning)
+    result = run_diagnostic(
+        data_root=args.data_root,
+        output_path=args.output,
+        checkpoint_dir=args.checkpoint_dir,
+        device_str=args.device,
+        backbone=args.backbone,
+        binning=args.binning,
+    )
     print(json.dumps(result["correlations"], indent=2))
     print(json.dumps(result["rank_invariance"], indent=2))

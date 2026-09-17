@@ -1,16 +1,18 @@
 """
-Master script to generate five publication-ready empirical figures for Section 4.
+Master script to generate publication-ready empirical figures for interzonal_only dataset.
 
-Outputs saved to paper/figures/ in both PNG (300 DPI) and vector PDF formats:
+Outputs saved to results/interzonal_only/artifacts/figures/ (and optionally paper/figures/):
 - fig2_main_per_city.png / .pdf
 - fig3_structural_validity_placebo.png / .pdf
 - fig4_resolution_sensitivity.png / .pdf
 - fig5_noise_dose_response.png / .pdf
 - fig6_mechanistic_dpre.png / .pdf
+- fig_s1_spatial_resolution.png / .pdf
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 import matplotlib.patches as mpatches
@@ -18,9 +20,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
-
-FIGURES_DIR = Path("paper/figures")
-FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 # Global Publication Aesthetics (Nature/Science/TR-C styling)
 plt.rcParams.update({
@@ -48,9 +47,9 @@ ORANGE = "#ff7f0e"
 GRAY = "#7f7f7f"
 
 
-def generate_figure2():
+def generate_figure2(artifacts_dir: Path, figures_dir: Path):
     """Figure 2: Ordered per-city Delta CPC across all 50 test cities."""
-    json_path = Path("results/5fold_results.json")
+    json_path = artifacts_dir / "5fold_results.json"
     with open(json_path, "r", encoding="utf-8") as f:
         d5 = json.load(f)
 
@@ -101,15 +100,18 @@ def generate_figure2():
     ax.legend(handles=[l1, l2, p3], loc="upper left", ncol=3, frameon=True, framealpha=0.9,
               handlelength=1.2, handletextpad=0.5, columnspacing=1.2)
 
-    fig.savefig(FIGURES_DIR / "fig2_main_per_city.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig2_main_per_city.pdf")
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(figures_dir / "fig2_main_per_city.png", dpi=300)
+    fig.savefig(figures_dir / "fig2_main_per_city.pdf")
     plt.close(fig)
     print("Generated Figure 2")
 
 
-def generate_figure3():
-    """Figure 3 / Hình 3: Target Specificity and Bin-Order Controls (Target Y_D vs Dose-Matched Donor vs Permuted Y_D)."""
-    summary_path = Path("results/unified_placebo_v1/unified_placebo_reconciled_summary.json")
+def generate_figure3(artifacts_dir: Path, figures_dir: Path):
+    """Figure 3: Target Specificity and Controls."""
+    summary_path = artifacts_dir / "unified_placebo" / "bootstrap_fold_stratified" / "unified_placebo_summary.json"
+    if not summary_path.exists():
+        summary_path = artifacts_dir / "unified_placebo" / "unified_placebo_summary.json"
     with open(summary_path, "r", encoding="utf-8") as f:
         summary_data = json.load(f)
 
@@ -134,27 +136,28 @@ def generate_figure3():
     ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.35)
 
-    # Clean numeric values positioned cleanly above/below the CI error bars
     ax.text(0, ci_high[0] + 0.0006, f"{means[0]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=PRIMARY_BLUE)
     ax.text(1, ci_high[1] + 0.0006, f"{means[1]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color="#555555")
     ax.text(2, ci_low[2] - 0.0011, f"{means[2]:+.5f}", ha="center", fontsize=9.5, fontweight="bold", color=MUTED_RED)
 
-    ax.set_ylim(-0.0125, +0.0075)
+    min_y = min(-0.015, min(ci_low) * 1.25)
+    max_y = max(+0.012, max(ci_high) * 1.25)
+    ax.set_ylim(min_y, max_y)
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig3_structural_validity_placebo.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig3_structural_validity_placebo.pdf")
+    fig.savefig(figures_dir / "fig3_structural_validity_placebo.png", dpi=300)
+    fig.savefig(figures_dir / "fig3_structural_validity_placebo.pdf")
     plt.close(fig)
     print("Generated Figure 3 (Placebo controls)")
 
 
-def generate_figure4():
-    """Figure 4 / Hình 4: Calibration Gain vs. Distance-Bin Resolution (K sweep)."""
-    k_json = Path("results/k_sensitivity_v1/k_sensitivity_summary.json")
+def generate_figure4(artifacts_dir: Path, figures_dir: Path):
+    """Figure 4: Calibration Gain vs. Distance-Bin Resolution (K sweep)."""
+    k_json = artifacts_dir / "k_sensitivity" / "k_sensitivity_summary.json"
     with open(k_json, "r") as f:
         k_data = json.load(f)
 
     k_map = {row["K"]: row for row in k_data["summary"]}
-    k_vals = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+    k_vals = sorted(list(k_map.keys()))
     k_means = [k_map[k]["mean_delta"] for k in k_vals]
     k_ci_low = [k_map[k]["ci_low"] for k in k_vals]
     k_ci_high = [k_map[k]["ci_high"] for k in k_vals]
@@ -164,26 +167,25 @@ def generate_figure4():
     yerr_low = np.array(k_means) - np.array(k_ci_low)
     yerr_high = np.array(k_ci_high) - np.array(k_means)
 
-    # Plot trend curve with error bars
     ax.plot(k_vals, k_means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=3)
     ax.errorbar(k_vals, k_means, yerr=[yerr_low, yerr_high], fmt="none",
                 ecolor=PRIMARY_BLUE, capsize=3.5, elinewidth=1.2, zorder=3)
 
-    # Highlight K=8 main setting (anchor)
-    k8_idx = k_vals.index(8)
-    ax.plot(8, k_means[k8_idx], marker="o", markersize=8.5, color=PRIMARY_BLUE,
-            markeredgecolor="#0f3b5c", markeredgewidth=1.8, zorder=5)
-    ax.axvline(8, color="#888888", linestyle=":", linewidth=1.1, alpha=0.7, zorder=2)
-    ax.annotate(
-        "Main setting",
-        xy=(8, k_means[k8_idx]),
-        xytext=(8.6, k_means[k8_idx] - 0.0009),
-        fontsize=9.0,
-        fontweight="bold",
-        color="#172b3a",
-        arrowprops=dict(arrowstyle="->", color="#333333", lw=1.0, shrinkA=3, shrinkB=4),
-        zorder=6
-    )
+    if 8 in k_vals:
+        k8_idx = k_vals.index(8)
+        ax.plot(8, k_means[k8_idx], marker="o", markersize=8.5, color=PRIMARY_BLUE,
+                markeredgecolor="#0f3b5c", markeredgewidth=1.8, zorder=5)
+        ax.axvline(8, color="#888888", linestyle=":", linewidth=1.1, alpha=0.7, zorder=2)
+        ax.annotate(
+            "Main setting",
+            xy=(8, k_means[k8_idx]),
+            xytext=(8.6, k_means[k8_idx] - 0.0012),
+            fontsize=9.0,
+            fontweight="bold",
+            color="#172b3a",
+            arrowprops=dict(arrowstyle="->", color="#333333", lw=1.0, shrinkA=3, shrinkB=4),
+            zorder=6
+        )
 
     ax.set_xticks(k_vals)
     ax.set_xticklabels([f"{k}" for k in k_vals])
@@ -191,24 +193,27 @@ def generate_figure4():
     ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.35)
 
-    ax.set_ylim(+0.0000, +0.0085)
+    ax.set_ylim(+0.0000, max(k_ci_high) * 1.15)
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig4_resolution_sensitivity.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig4_resolution_sensitivity.pdf")
+    fig.savefig(figures_dir / "fig4_resolution_sensitivity.png", dpi=300)
+    fig.savefig(figures_dir / "fig4_resolution_sensitivity.pdf")
     plt.close(fig)
     print("Generated Figure 4 (K-sensitivity)")
 
 
-def generate_figure5():
-    """Figure 5 / Hình 5: Noise dose-response & TV crossover."""
-    json_path = Path("results/noise_robustness_fine_v1/noise_summary.json")
+def generate_figure5(artifacts_dir: Path, figures_dir: Path):
+    """Figure 5: Observed noise levels with bootstrap confidence intervals."""
+    json_path = artifacts_dir / "noise_robustness_extended" / "noise_summary.json"
+    if not json_path.exists():
+        print("Warning: noise_summary.json not found, skipping Figure 5")
+        return
+
     with open(json_path, "r") as f:
         data = json.load(f)
 
     res = data["results_by_eps"]
-    eps_cross = data.get("eps_cross_zero_dCPC", 0.0444)
 
-    epsilons = [0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    epsilons = sorted([float(e) for e in res.keys()])
     eps_pct = [e * 100 for e in epsilons]
 
     means = [res[str(e)]["mean_delta_cpc"] for e in epsilons]
@@ -217,15 +222,15 @@ def generate_figure5():
 
     fig, ax = plt.subplots(figsize=(6.4, 4.0))
 
-    ax.plot(eps_pct, means, marker="o", color=PRIMARY_BLUE, linewidth=2.0, markersize=5.5, zorder=4, label="Mean $\\Delta\\mathrm{CPC}$")
-    ax.fill_between(eps_pct, ci_lowers, ci_uppers, color=PRIMARY_BLUE, alpha=0.18, zorder=2, label="95% bootstrap CI")
-
+    ax.errorbar(
+        eps_pct, means,
+        yerr=[np.array(means) - np.array(ci_lowers), np.array(ci_uppers) - np.array(means)],
+        fmt="o", linestyle="none", color=PRIMARY_BLUE, markersize=5.5,
+        capsize=4, elinewidth=1.4, zorder=4,
+        label="Observed mean and 95% bootstrap CI",
+    )
     ax.axhline(0, color="#333333", linestyle="-", linewidth=0.9, zorder=2)
-    ax.axvline(eps_cross * 100, color=MUTED_RED, linestyle="--", linewidth=1.2, zorder=3)
-
-    # Direct annotation for crossover threshold
-    ax.text(eps_cross * 100 + 0.12, 0.0002, f"$\\epsilon_{{\\mathrm{{cross}}}} \\approx {eps_cross*100:.2f}\\%$",
-            color=MUTED_RED, fontsize=9.5, fontweight="bold", verticalalignment="bottom")
+    ax.set_xticks(eps_pct)
 
     ax.set_xlabel("TV noise $\\epsilon$ (%)", fontweight="bold")
     ax.set_ylabel("Mean $\\Delta\\mathrm{CPC}$", fontweight="bold")
@@ -233,26 +238,60 @@ def generate_figure5():
     ax.legend(loc="upper right", frameon=True, framealpha=0.9)
 
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig5_noise_dose_response.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig5_noise_dose_response.pdf")
+    fig.savefig(figures_dir / "fig5_noise_dose_response.png", dpi=300)
+    fig.savefig(figures_dir / "fig5_noise_dose_response.pdf")
     plt.close(fig)
     print("Generated Figure 5 (Noise dose-response)")
 
 
-def generate_figure_s1():
-    """Figure S1: Spatial resolution comparison on 11 multi-county MSAs."""
-    sp_json = Path("results/spatial_resolution/spatial_resolution_summary.json")
+def generate_figure6(artifacts_dir: Path, figures_dir: Path):
+    """Figure 6: Mechanistic Diagnostic - Baseline Distance Misalignment d_pre vs Delta CPC."""
+    csv_path = artifacts_dir / "audit" / "dpre_mechanism_data.csv"
+    df = pd.read_csv(csv_path)
+
+    x = df["d_pre_tv"].values
+    y = df["delta_cpc"].values
+
+    slope, intercept, r_val, p_val, std_err = stats.linregress(x, y)
+
+    fig, ax = plt.subplots(figsize=(6.2, 4.2))
+
+    ax.scatter(x, y, color=PRIMARY_BLUE, edgecolor="#144a70", s=45, alpha=0.85, zorder=3, label=f"Cities ($N={len(df)}$)")
+
+    x_grid = np.linspace(x.min(), x.max(), 100)
+    y_fit = intercept + slope * x_grid
+    ax.plot(x_grid, y_fit, color=ACCENT_GREEN, linewidth=2.0, zorder=4, label=f"Linear fit ($r = {r_val:+.3f}$)")
+
+    ax.axhline(0, color="#333333", linewidth=0.8, linestyle="--", alpha=0.5, zorder=2)
+    ax.set_xlabel("Baseline distance mismatch $d_{\\mathrm{pre}}$", fontweight="bold")
+    ax.set_ylabel("Calibration gain $\\Delta\\mathrm{CPC}$", fontweight="bold")
+    ax.grid(True, linestyle="--", alpha=0.35)
+    ax.legend(loc="lower right", frameon=True, framealpha=0.9)
+
+    fig.tight_layout()
+    fig.savefig(figures_dir / "fig6_mechanistic_dpre.png", dpi=300)
+    fig.savefig(figures_dir / "fig6_mechanistic_dpre.pdf")
+    plt.close(fig)
+    print("Generated Figure 6")
+
+
+def generate_figure_s1(artifacts_dir: Path, figures_dir: Path):
+    """Figure S1: Spatial resolution comparison on multi-county MSAs."""
+    sp_json = artifacts_dir / "spatial_resolution" / "spatial_resolution_summary.json"
+    if not sp_json.exists():
+        print("Warning: spatial_resolution_summary.json not found, skipping Figure S1")
+        return
+
     with open(sp_json, "r") as f:
         sp_data = json.load(f)
 
     mc_cities = sp_data["multi_county_subset"]["cities"]
-    sp_per_city_json = Path("results/spatial_resolution/spatial_resolution_per_city.json")
+    sp_per_city_json = artifacts_dir / "spatial_resolution" / "spatial_resolution_per_city.json"
     with open(sp_per_city_json, "r") as f:
         sp_city_data = json.load(f)
 
     sp_city_map = {row["city"]: row for row in sp_city_data}
 
-    # Sort cities by resolution gain: Delta CPC_res = Delta CPC_county - Delta CPC_city
     items = []
     for c in mc_cities:
         row = sp_city_map[c]
@@ -264,7 +303,6 @@ def generate_figure_s1():
             "d_res": d_res
         })
 
-    # Sort descending by d_res (highest gain from county resolution first)
     items.sort(key=lambda x: x["d_res"], reverse=True)
 
     clean_names = [it["name"] for it in items]
@@ -284,49 +322,26 @@ def generate_figure_s1():
     ax.grid(axis="y", linestyle="--", alpha=0.35)
 
     fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig_s1_spatial_resolution.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig_s1_spatial_resolution.pdf")
+    fig.savefig(figures_dir / "fig_s1_spatial_resolution.png", dpi=300)
+    fig.savefig(figures_dir / "fig_s1_spatial_resolution.pdf")
     plt.close(fig)
     print("Generated Figure S1 (Spatial resolution standalone)")
 
 
-def generate_figure6():
-    """Figure 6: Mechanistic Diagnostic - Baseline Distance Misalignment d_pre vs Delta CPC."""
-    csv_path = Path("results/audit/dpre_mechanism_data.csv")
-    df = pd.read_csv(csv_path)
+def main():
+    parser = argparse.ArgumentParser(description="Generate publication figures for interzonal_only")
+    parser.add_argument("--artifacts-dir", type=Path, default=Path("results/interzonal_only/artifacts"))
+    parser.add_argument("--figures-dir", type=Path, default=Path("results/interzonal_only/artifacts/figures"))
+    args = parser.parse_args()
 
-    x = df["d_pre_tv"].values
-    y = df["delta_cpc"].values
-
-    slope, intercept, r_val, p_val, std_err = stats.linregress(x, y)
-
-    fig, ax = plt.subplots(figsize=(6.2, 4.2))
-
-    ax.scatter(x, y, color=PRIMARY_BLUE, edgecolor="#144a70", s=45, alpha=0.85, zorder=3, label="Cities ($N=50$)")
-
-    # Regression line
-    x_grid = np.linspace(x.min(), x.max(), 100)
-    y_fit = intercept + slope * x_grid
-    ax.plot(x_grid, y_fit, color=ACCENT_GREEN, linewidth=2.0, zorder=4, label="Linear fit")
-
-    ax.axhline(0, color="#333333", linewidth=0.8, linestyle="--", alpha=0.5, zorder=2)
-    ax.set_xlabel("Baseline distance mismatch $d_{\\mathrm{pre}}$", fontweight="bold")
-    ax.set_ylabel("Calibration gain $\\Delta\\mathrm{CPC}$", fontweight="bold")
-    ax.grid(True, linestyle="--", alpha=0.35)
-    ax.legend(loc="lower right", frameon=True, framealpha=0.9)
-
-    fig.tight_layout()
-    fig.savefig(FIGURES_DIR / "fig6_mechanistic_dpre.png", dpi=300)
-    fig.savefig(FIGURES_DIR / "fig6_mechanistic_dpre.pdf")
-    plt.close(fig)
-    print("Generated Figure 6")
+    args.figures_dir.mkdir(parents=True, exist_ok=True)
+    generate_figure2(args.artifacts_dir, args.figures_dir)
+    generate_figure3(args.artifacts_dir, args.figures_dir)
+    generate_figure4(args.artifacts_dir, args.figures_dir)
+    generate_figure5(args.artifacts_dir, args.figures_dir)
+    generate_figure6(args.artifacts_dir, args.figures_dir)
+    generate_figure_s1(args.artifacts_dir, args.figures_dir)
 
 
 if __name__ == "__main__":
-    generate_figure2()
-    generate_figure3()
-    generate_figure4()
-    generate_figure5()
-    generate_figure6()
-    generate_figure_s1()
-    print("All empirical figures and Figure S1 successfully generated in paper/figures/")
+    main()

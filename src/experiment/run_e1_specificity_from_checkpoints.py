@@ -178,7 +178,7 @@ def run_e1_specificity_from_checkpoints(
         test_yd_cache = {}
         for tc in test_cities:
             cd_tc = load_city(tc, data_root=data_root)
-            dist_tc = np.expm1(cd_tc.pair_distance.numpy())
+            dist_tc = np.asarray(cd_tc.dist_km, dtype=np.float64)
             inter_tc = (cd_tc.pair_o_idx.numpy() != cd_tc.pair_d_idx.numpy()) & (dist_tc > 0.0)
             t_gt_tc = cd_tc.pair_trips.numpy().astype(np.float64)
             test_yd_cache[tc] = extract_yd_kbins(dist_tc, t_gt_tc, bin_edges, inter_tc)

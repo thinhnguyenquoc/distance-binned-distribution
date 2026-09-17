@@ -134,16 +134,9 @@ def run_experiment(args):
                 pair_o = city_data.pair_o_idx.numpy()
                 pair_d = city_data.pair_d_idx.numpy()
                 pair_dist = city_data.pair_distance.numpy()
-                if metadata.get("hyperparams", {}).get("training_support") == "positive_interzonal":
-                    from src.data.dataset import load_raw_city
-                    raw = load_raw_city(target_city, data_root=data_root)
-                    if not (np.array_equal(pair_o, raw.pair_o_idx.numpy())
-                            and np.array_equal(pair_d, raw.pair_d_idx.numpy())):
-                        raise ValueError("Raw distance and prediction pair order mismatch")
-                    pair_dist_km = raw.dist_km
-                else:
-                    pair_dist_km = np.expm1(pair_dist)
-                
+                # Binning must use the same raw km distances that defined the bin edges.
+                pair_dist_km = np.asarray(city_data.dist_km, dtype=np.float64)
+
                 inter_mask = (pair_o != pair_d) & (pair_dist_km > 0.0)
                 n_inter = inter_mask.sum()
                 
@@ -310,14 +303,14 @@ def run_experiment(args):
             "p_2s_raw": p_2s,
         })
         
-    # P-value adjustments
+    # P-value adjustments: Delta CPC is a pre/post effect, so the two-sided p is primary.
     secondary_ks = [K for K in K_values if K != 8]
-    raw_ps = [next((s["p_1s_raw"] for s in summary_data if s["K"] == K), 1.0) for K in secondary_ks]
+    raw_ps = [next((s["p_2s_raw"] for s in summary_data if s["K"] == K), 1.0) for K in secondary_ks]
     _, adj_ps, _, _ = multipletests(raw_ps, alpha=0.05, method="holm")
     adj_p_map = dict(zip(secondary_ks, adj_ps))
     
     for s in summary_data:
-        s["p_1s_adj"] = float(adj_p_map.get(s["K"], 0.0)) if s["K"] in adj_p_map else None
+        s["p_2s_adj"] = float(adj_p_map.get(s["K"], 0.0)) if s["K"] in adj_p_map else None
         
     # Contrasts
     d8 = df_all[df_all["K"] == 8].set_index("city")
@@ -384,10 +377,10 @@ def run_experiment(args):
     md.append("# 5-Fold Distance-Bin Number Sensitivity Test v1")
     md.append(f"\nEvaluating all cities (Folds 1-5): {df_all['city'].nunique()}")
     md.append("\n## Primary Results")
-    md.append("| K | Mean M0 CPC | Mean M1 CPC | Mean $\\Delta$ CPC | 95% CI | Positive cities | Mean $K_{active}$ | Mean $w_{max}$ | Adjusted p |")
+    md.append("| K | Mean M0 CPC | Mean M1 CPC | Mean $\\Delta$ CPC | 95% CI | Positive cities | Mean $K_{active}$ | Mean $w_{max}$ | Adjusted two-sided p |")
     md.append("|--:|--:|--:|--:|--:|--:|--:|--:|--:|")
     for s in summary_data:
-        p_str = f"{s['p_1s_adj']:.4e}" if s['p_1s_adj'] is not None else "-"
+        p_str = f"{s['p_2s_adj']:.4e}" if s['p_2s_adj'] is not None else "-"
         md.append(f"| {s['K']} | {s['m0_cpc']:.4f} | {s['m1_cpc']:.4f} | {s['mean_delta']:.4f} | [{s['ci_low']:.4f}, {s['ci_high']:.4f}] | {s['pos_cities']}/{s['total_cities']} | {s['k_act_mean']:.1f} | {s['w_max_mean']:.1f} | {p_str} |")
         
     md.append("\n## Contrasts (vs K=8)")

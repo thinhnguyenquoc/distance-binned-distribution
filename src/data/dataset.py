@@ -93,6 +93,9 @@ class CityData:
     pair_trips:     torch.Tensor       # (E,) raw counts, all >= 1
     bin_labels:     torch.LongTensor   # (E,) distance bin index (0-3)
 
+    # Canonical distances for binning; expm1(pair_distance) is NOT bit-identical to this.
+    dist_km:        Optional[np.ndarray] = None   # (E,) raw pairwise distance in km
+
 
 # ---------------------------------------------------------------------------
 # Distance bin assignment
@@ -402,6 +405,7 @@ def load_city(
         pair_distance = raw.pair_distance,
         pair_trips    = raw.pair_trips,
         bin_labels    = raw.bin_labels,
+        dist_km       = raw.dist_km,
     )
 
     if use_cache:
@@ -458,6 +462,7 @@ def load_cities(
                 pair_distance = raw.pair_distance,
                 pair_trips    = raw.pair_trips,
                 bin_labels    = raw.bin_labels,
+                dist_km       = raw.dist_km,
             )
             if use_cache:
                 _CITY_DATA_CACHE[cache_key] = cd

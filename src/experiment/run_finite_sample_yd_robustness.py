@@ -124,6 +124,7 @@ def run_experiment(
     output_dir: Path = DEFAULT_OUTPUT,
     replicates: int = 1000,
     smoke: bool = False,
+    checkpoint_dir: Path = Path("results/checkpoints"),
 ) -> dict[str, Any]:
     sample_sizes = [50, 100, 250] if smoke else SAMPLE_SIZES
     folds = [1] if smoke else [1, 2, 3, 4, 5]
@@ -142,7 +143,7 @@ def run_experiment(
             raise RuntimeError(f"Expected K={K}, got {k_active} in fold {fold}")
         for city in sorted(split["test"])[:city_limit]:
             raw = load_city(city, data_root=data_root, feature_scaler=None, fit_scaler=True)
-            distances = np.expm1(raw.pair_distance.numpy())
+            distances = np.asarray(raw.dist_km, dtype=np.float64)
             origins = raw.pair_o_idx.numpy()
             destinations = raw.pair_d_idx.numpy()
             inter = (origins != destinations) & (distances > 0.0)
@@ -165,7 +166,7 @@ def run_experiment(
             seed_results: list[np.ndarray] = []
             clean_results: list[float] = []
             for model_seed in MODEL_SEEDS:
-                checkpoint = Path("results/checkpoints") / f"5fold_fold{fold}_seed{model_seed}.pt"
+                checkpoint = Path(checkpoint_dir) / f"5fold_fold{fold}_seed{model_seed}.pt"
                 model, scaler, metadata = load_checkpoint(checkpoint, device_str="cpu")
                 if metadata.get("seed") != model_seed or metadata.get("hyperparams", {}).get("fold") != fold:
                     raise RuntimeError(f"Checkpoint provenance mismatch: {checkpoint}")
@@ -236,7 +237,8 @@ def run_experiment(
         deltas = np.array([row["delta_cpc"] for row in rows])
         tv = np.array([row["empirical_tv"] for row in rows])
         try:
-            p_value = float(wilcoxon(deltas, alternative="greater").pvalue)
+            # Gain over M0 is a pre/post effect: two-sided.
+            p_value = float(wilcoxon(deltas, alternative="two-sided").pvalue)
         except ValueError:
             p_value = 1.0
         summary["results"][key] = {"sample_trips": None if key == "inf" else int(key), "mean_delta_cpc": float(deltas.mean()), "median_delta_cpc": float(np.median(deltas)), "ci95_delta_cpc": list(_fold_bootstrap(city_rows, "delta_cpc", key, n_boot=10000)), "mean_empirical_tv": float(tv.mean()), "win_rate": float(np.mean(deltas > 0.0)), "harm_rate": float(np.mean(deltas < 0.0)), "wilcoxon_p_raw": p_value, "n_cities": len(rows)}
@@ -263,8 +265,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run finite-sample Y_D observation robustness")
     parser.add_argument("--data-root", default="data")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--checkpoint-dir", type=Path, default=Path("results/checkpoints"))
     parser.add_argument("--replicates", type=int, default=1000)
     parser.add_argument("--smoke", action="store_true")
     args = parser.parse_args()
-    result = run_experiment(args.data_root, args.output_dir, args.replicates, args.smoke)
+    result = run_experiment(args.data_root, args.output_dir, args.replicates, args.smoke, args.checkpoint_dir)
     print(json.dumps(result["thresholds"], indent=2))
