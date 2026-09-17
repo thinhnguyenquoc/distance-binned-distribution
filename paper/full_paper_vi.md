@@ -163,6 +163,8 @@ $$
 
 Trong đó, $|\Omega_c|$ là số cặp liên vùng có luồng dương được dùng để huấn luyện tại thành phố $c$. Việc tối thiểu hóa hàm mất mát khuyến khích mô hình gán xác suất cao hơn cho các luồng đã quan sát. Mỗi bước cập nhật sử dụng một thành phố và lấy trung bình mất mát trên các cặp của thành phố đó.
 
+Nghiên cứu đã kiểm tra phân phối thực nghiệm của các luồng OD liên vùng dương dùng để huấn luyện ($N = 6{,}065{,}339$ trên 50 thành phố). Trên toàn bộ 50/50 thành phố, phương sai mẫu đều vượt trung bình mẫu (tỷ số phương sai/trung bình dao động từ 708.0 đến 2,648.5; tỷ số gộp là 1,682.3), cho thấy hiện tượng overdispersion rất mạnh. Trên dữ liệu positive-support gộp, mô hình zero-truncated negative binomial (ZTNB) đạt log-likelihood cao hơn đáng kể ($\Delta\mathrm{LL} \approx +1.147 \times 10^9$) và tiêu chí thông tin thấp hơn nhiều so với zero-truncated Poisson ($\Delta\mathrm{AIC} \approx -2.294 \times 10^9$, thống kê likelihood-ratio $2.294 \times 10^9$, $p < 10^{-300}$). Các chẩn đoán thực nghiệm này là cơ sở biện minh cho việc chọn hàm hợp lý ZTNB thay cho Poisson cho các baseline neural. Phép so sánh này chỉ áp dụng trên tập quan sát liên vùng dương và không mô tả phân phối các luồng bằng 0 trên toàn bộ ma trận OD. Chi tiết chẩn đoán phân phối được trình bày tại Mục S1.3 trong Phụ lục.
+
 Hai baseline neural sử dụng cùng cấu hình huấn luyện với thuật toán tối ưu AdamW [@loshchilov2019adamw], chọn checkpoint theo CPC trên tập validation và được huấn luyện với ba hạt giống khởi tạo ngẫu nhiên (random seed). Các phép biến đổi bảo đảm tham số dương và các biện pháp ổn định số học được trình bày trong Phụ lục S1. Khi suy luận, $\mu_{c,ij}$ chưa phải dự báo cường độ cuối cùng vì đây là trung bình của phân phối nền có cả trường hợp bằng 0. Dự báo được tính bằng kỳ vọng của phân phối sau khi điều kiện hóa trên luồng dương:
 
 $$
@@ -500,7 +502,39 @@ Trong quá trình huấn luyện, log-likelihood của ZTNB được tính toán
 * Hằng số ổn định $\epsilon = 10^{-8}$ được cộng vào $\mu$ và $\phi$ trong các số hạng logarit. Đồng thời, xác suất tại 0 được chuẩn hóa số học qua $\log(1 - p_{\mathrm{NB}}(0)) = \operatorname{log1p}(-\exp(\log p_{\mathrm{NB}}(0)))$ với chặn trên $1.0 - 10^{-7}$. Khi suy luận kỳ vọng điều kiện, mẫu số $1 - p_{\mathrm{NB}}(0)$ được chặn dưới bằng $10^{-6}$.
 * Gradient của toàn bộ tham số mô hình được cắt theo chuẩn Euclid tối đa: $\|\mathbf{g}\|_2 \le 5.0$ thông qua `torch.nn.utils.clip_grad_norm_`.
 
-### S1.3. Danh sách 26 đặc trưng và đồ thị không gian
+### S1.3. Chẩn đoán phân phối thực nghiệm cho các luồng liên vùng dương
+
+Nghiên cứu đánh giá phân phối thực nghiệm của các luồng liên vùng dương trên toàn bộ 50 bộ dữ liệu đô thị nhằm làm rõ cơ sở lựa chọn hàm mất mát khi huấn luyện mô hình neural. Không gian hỗ trợ được xác định bởi $(i \neq j, d_{c,ij} > 0, t_{c,ij} \ge 1)$, bao gồm $N = 6{,}065{,}339$ cặp OD dương quan sát được trên 50 thành phố.
+
+Bảng S1 tổng hợp các thống kê phân tán mô tả và kết quả so sánh mô hình dựa trên hàm hợp lý giữa phân phối Poisson cắt cụt tại 0 (Zero-Truncated Poisson, ZTP) và phân phối nhị thức âm cắt cụt tại 0 (Zero-Truncated Negative Binomial, ZTNB). Với giả định Poisson thông thường, dữ liệu phải thỏa mãn tính chất đẳng phân tán (equidispersion) với $\operatorname{Var}(T)/\operatorname{E}[T] \approx 1$. Trên thực tế, ở cả 50/50 thành phố, phương sai mẫu đều vượt xa trung bình mẫu, với tỷ số phương sai/trung bình theo từng thành phố dao động từ 708.0 đến 2,648.5 (trung vị: 1,720.6; tỷ số gộp toàn bộ: 1,682.3).
+
+Hai phân phối ứng viên được ước lượng trên tập hỗ trợ dương gộp:
+- Với ZTP, tham số ước lượng là $\widehat{\lambda} = 114.995$, log-likelihood đạt $-1{,}176{,}972{,}598$ và $\mathrm{AIC} = 2{,}353{,}945{,}202$.
+- Với ZTNB, các tham số ước lượng của phân phối nền là $\widehat{\mu} = 16.834$ và tham số hình dạng/phân tán $\widehat{\phi} = 0.02418$, log-likelihood đạt $-30{,}127{,}195$ và $\mathrm{AIC} = 60{,}254{,}393$.
+
+Mô hình ZTNB cải thiện log-likelihood thêm $+1{,}146{,}845{,}403$ và giảm AIC khoảng $2.294 \times 10^9$ điểm so với ZTP (thống kê kiểm định likelihood-ratio $2.294 \times 10^9$, $p < 10^{-300}$). Ước lượng tham số phân tán $\widehat{\phi}$ rất nhỏ phản ánh trực tiếp hiện tượng overdispersion cực mạnh của các luồng dương. Các kết quả này cung cấp bằng chứng thực nghiệm biện minh cho việc áp dụng hàm mất mát ZTNB thay cho Poisson. Phép so sánh này có điều kiện trên tập dòng chảy liên vùng dương ($t \ge 1$) và không mô tả phân phối các luồng bằng 0 của toàn bộ ma trận OD.
+
+#### Bảng S1: Các chỉ số chẩn đoán phân phối thực nghiệm của các luồng liên vùng dương ($N = 6{,}065{,}339$)
+| Chỉ số thống kê / Thước đo mô hình | Giá trị |
+|:---|---:|
+| Tổng số quan sát liên vùng dương ($N$) | 6,065,339 |
+| Trung bình mẫu gộp ($\overline{t}$) | 115.00 |
+| Phương sai mẫu gộp ($s^2$) | 193,459.92 |
+| Tỷ số phương sai / trung bình gộp ($s^2 / \overline{t}$) | 1,682.33 |
+| Số thành phố có tỷ số phương sai / trung bình > 1 | 50 / 50 |
+| Khoảng biến thiên tỷ số theo thành phố [Min, Median, Max] | [708.03, 1,720.64, 2,648.51] |
+| Zero-Truncated Poisson (ZTP): $\widehat{\lambda}$ | 115.00 |
+| Zero-Truncated Poisson (ZTP): Log-Likelihood | -1,176,972,597.85 |
+| Zero-Truncated Poisson (ZTP): AIC | 2,353,945,201.70 |
+| Zero-Truncated Negative Binomial (ZTNB): $\widehat{\mu}$ | 16.83 |
+| Zero-Truncated Negative Binomial (ZTNB): $\widehat{\phi}$ | 0.02418 |
+| Zero-Truncated Negative Binomial (ZTNB): Log-Likelihood | -30,127,194.53 |
+| Zero-Truncated Negative Binomial (ZTNB): AIC | 60,254,393.06 |
+| $\Delta\text{Log-Likelihood}$ (ZTNB so với ZTP) | **+1,146,845,403.32** |
+| Thống kê Likelihood-Ratio ($2\Delta\mathrm{LL}$) | **2,293,690,806.63** |
+| $p$-value kiểm định Likelihood-Ratio | **< 1e-300** |
+
+### S1.4. Danh sách 26 đặc trưng và đồ thị không gian
 
 Theo thứ tự cột trong `src.data.dataset.NODE_FEATURE_COLUMNS`, 26 đặc trưng được chia thành ba nhóm. Nhóm thứ nhất gồm 13 đặc trưng Census: `total_population`, `median_age`, `median_income`, `per_capita_income`, `employment_rate`, `unemployment_rate`, `commute_transit_pct`, `commute_active_pct`, `commute_wfh_pct`, `zero_vehicle_pct`, `avg_vehicles_per_household`, `higher_education_pct`, `homeownership_rate`. Nhóm thứ hai gồm 8 đặc trưng POI: `office`, `office_density`, `industrial`, `industrial_density`, `commercial`, `commercial_density`, `education_primary`, `education_primary_density`. Nhóm cuối gồm 5 đặc trưng Road: `road_length_total`, `road_density`, `road_count`, `motorway_length`, `primary_length`. 
 
@@ -508,11 +542,11 @@ Khi đọc CSV, các giá trị thiếu được gán bằng 0, đồng thời N
 
 Để xây dựng đồ thị, mỗi tract được xem là một nút có tọa độ tâm `(lon, lat)` lấy từ `meta.csv`. Khoảng cách giữa các nút được tính bằng công thức Haversine với bán kính Trái Đất 6371 km. Cấu hình chính sử dụng đồ thị bán kính 5.0 km có cạnh tự nối và các cạnh hai chiều sau bước đối xứng hóa. Cạnh tự nối trong đồ thị phục vụ xử lý đặc trưng của từng vùng, không phải nhãn luồng OD nội vùng và không bị loại khi lọc các cặp OD có $i=j$. Nếu một nút không có nút lân cận khác trong bán kính này, mã nguồn nối nó với nút gần nhất. Mỗi cạnh mang thuộc tính khoảng cách địa lý theo km. Như vậy, đồ thị được xây dựng từ thông tin địa lý quan sát được mà không sử dụng luồng OD.
 
-### S1.4. Cấu hình siêu tham số kiến trúc và phân tách baseline
+### S1.5. Cấu hình siêu tham số kiến trúc và phân tách baseline
 
-Cấu hình siêu tham số chính xác được trích xuất trực tiếp từ các checkpoint mô hình (`results/checkpoints/5fold_*.pt` và `mlp_*.pt`) được tổng hợp trong Bảng S1.
+Cấu hình siêu tham số chính xác được trích xuất trực tiếp từ các checkpoint mô hình (`results/checkpoints/5fold_*.pt` và `mlp_*.pt`) được tổng hợp trong Bảng S2.
 
-#### Bảng S1: Siêu tham số kiến trúc và huấn luyện của các zero-shot baseline
+#### Bảng S2: Siêu tham số kiến trúc và huấn luyện của các zero-shot baseline
 | Thành phần | Siêu tham số | Giá trị | Mô tả chi tiết |
 |:---|:---|:---:|:---|
 | **GNN Encoder** | Số chiều đặc trưng đầu vào ($d_{\mathrm{in}}$) | 26 | Đặc trưng nhân khẩu, kinh tế và xã hội của tract |
@@ -663,7 +697,7 @@ $$
 
 3. **Hệ số tương quan hạng Spearman ($\rho_{\mathrm{Spearman}}$)**: Tương quan hạng Spearman được tính giữa các vector cường độ quan sát và dự báo trên $\Omega_c$. Giá trị lớn hơn biểu thị mức độ phù hợp cao hơn về thứ hạng giữa các cặp OD.
 
-### Bảng S2: Các thước đo đánh giá bổ sung cho GNN với $K=8$.
+### Bảng S3: Các thước đo đánh giá bổ sung cho GNN với $K=8$.
 
 | Thước đo | Baseline $M_0$ | Sau hiệu chỉnh $M_1$ | $\overline{\Delta}$ | $\mathrm{Median}(\Delta)$ | Thành phố cải thiện |
 |:---|---:|---:|---:|---:|---:|
@@ -830,13 +864,13 @@ $$
 
 Mức tăng pooled khiêm tốn này chịu chi phối bởi 39 vùng single-county có mức tăng bằng 0 tuyệt đối theo cấu trúc.
 
-Đối với nhóm 11 vùng đô thị multi-county (chiếm 22% tập benchmark), hiệu chỉnh cấp county đạt mức cải thiện tại 10/11 vùng, với mức tăng bổ sung trung bình là $+0.00089$ (Bảng S3 và Hình S1).
+Đối với nhóm 11 vùng đô thị multi-county (chiếm 22% tập benchmark), hiệu chỉnh cấp county đạt mức cải thiện tại 10/11 vùng, với mức tăng bổ sung trung bình là $+0.00089$ (Bảng S4 và Hình S1).
 
 ![Hình S1](figures_interzonal/fig_s1_spatial_resolution.png)
 **Hình S1. So sánh mức tăng CPC của hiệu chỉnh cấp thành phố và cấp county trên 11 vùng đô thị multi-county. Phân tích mang tính thăm dò. Trong hình, 39 vùng single-county không được hiển thị vì hai cách phân nhóm tương đương về mặt toán học.**
 
 <div style="page-break-before: always;"></div>
-### Bảng S3: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
+### Bảng S4: Kết quả mô tả theo thành phố cho nhóm phân tích độ phân giải không gian đa county
 
 *Bảng so sánh zero-shot baseline ($M_0$), hiệu chỉnh oracle cấp city ($M_{1,\mathrm{city}}$) và hiệu chỉnh oracle có điều kiện theo origin-county ($M_{1,\mathrm{county}}$) cho 11 bộ dữ liệu đô thị có các tract được gán vào nhiều hơn một county. Mức tăng do độ phân giải được định nghĩa là $\Delta\mathrm{CPC}_{\mathrm{res},c} = \operatorname{CPC}(M_{1,\mathrm{county}}) - \operatorname{CPC}(M_{1,\mathrm{city}})$. Các giá trị được tổng hợp ở cấp thành phố. Kết quả của nhóm 11 vùng đô thị được báo cáo ở mức mô tả, nên không trình bày khoảng tin cậy hoặc kiểm định giả thuyết riêng cho nhóm này.*
 
