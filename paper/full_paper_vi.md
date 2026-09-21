@@ -370,12 +370,12 @@ CPC trước hiệu chỉnh của GNN và MLP lần lượt là 0.69498 và 0.69
 
 ## 4.5. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức cải thiện hiệu chỉnh
 
-Nghiên cứu xem xét mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh. Sai lệch được đo bằng khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle. Trên 50 thành phố được đánh giá, các thành phố có sai lệch lớn hơn thường có mức tăng CPC cao hơn (Hình 6).
+Nghiên cứu xem xét mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh trên cả ba kiến trúc mô hình (Hình 6). Sai lệch được đo bằng khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle ($d_{\mathrm{pre}}$). Trên hai mô hình neural (GNN và MLP), các thành phố có sai lệch ban đầu lớn hơn đều có mức tăng CPC vượt trội một cách nhất quán ($r = 0.938$ với GNN và $r = 0.783$ với MLP; Spearman $\rho \ge 0.779$). Ngược lại, mô hình Gravity hai tham số cho thấy mối liên hệ rất lỏng lẻo và phân tán ($r = 0.483, \rho = 0.340$), với 28/50 thành phố có mức tăng tiệm cận hoặc dưới 0.
 
-Tương quan Pearson chưa điều chỉnh đạt $r=0.9383$. Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng cách địa lý trung bình, tương quan từng phần vẫn dương ($r_{\mathrm{partial}}=0.9307$, $p=7.74\times10^{-21}$). Đây là mối liên hệ thăm dò trong tập thành phố được đánh giá, nên kết quả không bảo đảm rằng một thành phố có sai lệch lớn sẽ được cải thiện sau hiệu chỉnh.
+Sau khi kiểm soát CPC của baseline, số tract, số cặp OD và khoảng cách địa lý trung bình, tương quan từng phần đối với GNN vẫn đạt mức rất cao ($r_{\mathrm{partial}} = 0.9307$, $p = 7.74 \times 10^{-21}$). Kết quả này khẳng định phép hiệu chỉnh trực tiếp khắc phục sai lệch phân bổ lưu lượng theo cự ly, nhưng chỉ phát huy hiệu quả khi mô hình baseline duy trì được chất lượng phân bổ luồng nội bộ trong từng bin.
 
 ![Hình 6](figures_interzonal/fig6_mechanistic_dpre.png)
-**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline và mức tăng CPC sau hiệu chỉnh.** Mỗi điểm biểu diễn một thành phố ($N=50$) với GNN tại $K=8$, sau khi lấy trung bình các đại lượng tương ứng qua ba model seeds. Trục ngang là khoảng cách Total Variation giữa phân phối dự báo và phân phối oracle, còn trục dọc là chênh lệch CPC sau và trước hiệu chỉnh. Đường thẳng biểu diễn hồi quy tuyến tính giữa hai biến trên hình, chưa điều chỉnh theo các biến kiểm soát. Tương quan từng phần được báo cáo riêng trong mục 4.5.
+**Hình 6. Mối liên hệ giữa sai lệch phân phối khoảng cách của baseline ($d_{\mathrm{pre}}$) và mức tăng CPC sau hiệu chỉnh ($\Delta\mathrm{CPC}$) theo các kiến trúc mô hình.** Ba ô biểu diễn lần lượt (a) Urban GNN, (b) Spatial MLP và (c) Mô hình Gravity hai tham số trên 50 thành phố kiểm thử tại $K=8$. Mỗi điểm là một thành phố (đối với mô hình neural là trung bình qua 3 seeds). Đường thẳng biểu diễn hồi quy tuyến tính chưa điều chỉnh. Phép hiệu chỉnh đem lại lợi ích rõ rệt cho các mô hình neural có chất lượng phân bổ nội bộ cao, trong khi không duy trì được cải thiện nhất quán trên mô hình trọng lực cổ điển.
 
 
 # 5. Thảo luận

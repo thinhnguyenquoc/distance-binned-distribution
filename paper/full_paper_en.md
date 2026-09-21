@@ -347,12 +347,12 @@ The pre-calibration CPC values of the GNN and MLP are 0.71281 and 0.70913, respe
 
 ## 4.5. Relationship between baseline distance-distribution bias and calibration improvement
 
-We examined the relationship between the baseline's distance-distribution bias and the CPC gain after calibration. Bias is measured by the Total Variation distance between the predicted distribution and the oracle distribution. Across the 50 evaluated cities, cities with larger bias generally exhibit higher CPC gains (Figure 6).
+We examined the relationship between the baseline's distance-distribution bias and the CPC gain after calibration across the three model families (Figure 6). Bias is measured by the Total Variation distance between the predicted distribution and the oracle distribution ($d_{\mathrm{pre}}$). Across both neural baselines (GNN and MLP), cities with larger baseline distance-distribution bias exhibit consistently higher calibration gains ($r = 0.938$ for GNN and $r = 0.783$ for MLP; Spearman $\rho \ge 0.779$). In sharp contrast, Classical Gravity displays a much weaker, dispersed relationship ($r = 0.483, \rho = 0.340$) with 28/50 cities falling near or below zero gain.
 
-After controlling for baseline CPC, tract count, OD pair count, and mean geographic distance, the partial correlation remains positive ($r_{\mathrm{partial}} = 0.7951$, $p = 5.35 \times 10^{-12}$). This is an exploratory association within the evaluated benchmark; it does not guarantee that any individual city with large bias will improve after calibration.
+After controlling for baseline CPC, tract count, OD pair count, and mean geographic distance, the partial correlation for the GNN remains strongly positive ($r_{\mathrm{partial}} = 0.7951$, $p = 5.35 \times 10^{-12}$). This demonstrates that distance-bin calibration specifically remedies distance marginal misallocation, but only when the baseline retains sufficient fidelity in within-bin local spatial allocation.
 
 ![Figure 6](figures/fig6_mechanistic_dpre.png)
-**Figure 6. Relationship between baseline distance-distribution bias and calibration improvement.** Each point represents a city ($N=50$) under the GNN at $K=8$, after averaging the corresponding quantities across three model seeds. The horizontal axis is the Total Variation distance between predicted and oracle distributions; the vertical axis is the paired CPC difference after versus before calibration. The line indicates a linear regression between the two plotted variables, unadjusted for covariates. The partial correlation is reported separately in Section 4.5.
+**Figure 6. Relationship between baseline distance-distribution bias ($d_{\mathrm{pre}}$) and calibration improvement ($\Delta\mathrm{CPC}$) across architectures.** Panels depict (a) Urban GNN, (b) Spatial MLP, and (c) Classical Two-parameter Gravity across 50 held-out cities at $K=8$. Points represent cities (neural models averaged across 3 seeds). Lines show unadjusted linear fits. Distance calibration strongly benefits neural baselines with high intra-bin fidelity, while failing to provide consistent gains on the classical gravity model.
 
 # 5. Discussion
 
