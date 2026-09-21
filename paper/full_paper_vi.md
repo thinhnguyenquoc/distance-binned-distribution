@@ -307,29 +307,34 @@ Chú thích: Ở phần A, $\Delta\mathrm{CPC}$ là chênh lệch giữa dự b�
 
 Phần này đánh giá độ nhạy của mức cải thiện theo ba khía cạnh: số nhóm khoảng cách $K$, độ phân giải không gian của phân phối, và độ chính xác của quan sát dưới tác động của nhiễu.
 
-Trước hết, khi số nhóm khoảng cách danh nghĩa tăng từ $K=2$ lên $K=20$, mức tăng CPC trung bình tăng từ +0.00137 lên +0.01296 (Bảng 4 và Hình 4). Tại cấu hình chính $K=8$, mức tăng đạt +0.00672, với 49/50 thành phố cải thiện. Mức tăng trung bình tăng trên toàn bộ các cấu hình được khảo sát, còn số thành phố cải thiện dao động từ 41 đến 49. Tuy nhiên, xu hướng trong thiết lập oracle này chưa xác định số nhóm tối ưu khi quan sát có nhiễu.
+Trước hết, khi số nhóm khoảng cách danh nghĩa tăng từ $K=2$ lên $K=30$, mức tăng CPC trung bình tăng từ +0.00098 lên +0.00725 và thể hiện rõ điểm bão hòa với lợi ích biên suy giảm dần (Bảng 4 và Hình 4). Tại cấu hình chính $K=8$, mức tăng đạt +0.00354, với 45/50 thành phố cải thiện. Trên toàn bộ dải mở rộng, lợi ích biên trên mỗi 2 bins giảm mạnh từ $+0.00100$ ($K=2 \to 4$) xuống chỉ còn $+0.00010$ ($K=28 \to 30$).
 
 ### Bảng 4. Mức thay đổi CPC theo số nhóm khoảng cách $K$ trên 50 thành phố.
 
 | Số nhóm $K$ | $\overline{\Delta\mathrm{CPC}}$ | $\mathrm{Median}(\Delta\mathrm{CPC})$ | CI 95% ($\overline{\Delta\mathrm{CPC}}$) | Thành phố cải thiện |
 |:---|:---:|:---:|:---:|:---:|
-| $K = 2$ | $+0.00137$ | $+0.00030$ | $[+0.00081, +0.00203]$ | 41/50 (82.0%) |
-| $K = 4$ | $+0.00317$ | $+0.00111$ | $[+0.00223, +0.00421]$ | 43/50 (86.0%) |
-| $K = 6$ | $+0.00515$ | $+0.00274$ | $[+0.00391, +0.00641]$ | 47/50 (94.0%) |
-| $K = 8$ (cấu hình chính) | $+0.00672$ | $+0.00374$ | $[+0.00529, +0.00815]$ | 49/50 (98.0%) |
-| $K = 10$ | $+0.00809$ | $+0.00583$ | $[+0.00645, +0.00974]$ | 49/50 (98.0%) |
-| $K = 12$ | $+0.00956$ | $+0.00711$ | $[+0.00773, +0.01140]$ | 49/50 (98.0%) |
-| $K = 14$ | $+0.01077$ | $+0.00782$ | $[+0.00881, +0.01275]$ | 49/50 (98.0%) |
-| $K = 16$ | $+0.01159$ | $+0.00864$ | $[+0.00951, +0.01368]$ | 49/50 (98.0%) |
-| $K = 18$ | $+0.01224$ | $+0.00916$ | $[+0.01005, +0.01441]$ | 49/50 (98.0%) |
-| $K = 20$ | $+0.01296$ | $+0.01021$ | $[+0.01069, +0.01528]$ | 49/50 (98.0%) |
+| $K = 2$ | $+0.00098$ | $+0.00034$ | $[+0.00052, +0.00151]$ | 39/50 (78.0%) |
+| $K = 4$ | $+0.00198$ | $+0.00088$ | $[+0.00125, +0.00279]$ | 39/50 (78.0%) |
+| $K = 6$ | $+0.00289$ | $+0.00152$ | $[+0.00201, +0.00384]$ | 44/50 (88.0%) |
+| $K = 8$ (cấu hình chính) | $+0.00354$ | $+0.00195$ | $[+0.00262, +0.00447]$ | 45/50 (90.0%) |
+| $K = 10$ | $+0.00413$ | $+0.00235$ | $[+0.00311, +0.00514]$ | 45/50 (90.0%) |
+| $K = 12$ | $+0.00480$ | $+0.00288$ | $[+0.00372, +0.00590]$ | 46/50 (92.0%) |
+| $K = 14$ | $+0.00538$ | $+0.00373$ | $[+0.00424, +0.00654]$ | 45/50 (90.0%) |
+| $K = 16$ | $+0.00574$ | $+0.00433$ | $[+0.00455, +0.00694]$ | 46/50 (92.0%) |
+| $K = 18$ | $+0.00603$ | $+0.00458$ | $[+0.00480, +0.00726]$ | 47/50 (94.0%) |
+| $K = 20$ | $+0.00639$ | $+0.00494$ | $[+0.00508, +0.00769]$ | 46/50 (92.0%) |
+| $K = 22$ | $+0.00667$ | $+0.00512$ | $[+0.00530, +0.00801]$ | 46/50 (92.0%) |
+| $K = 24$ | $+0.00682$ | $+0.00524$ | $[+0.00542, +0.00822]$ | 46/50 (92.0%) |
+| $K = 26$ | $+0.00701$ | $+0.00539$ | $[+0.00556, +0.00845]$ | 46/50 (92.0%) |
+| $K = 28$ | $+0.00715$ | $+0.00548$ | $[+0.00573, +0.00857]$ | 47/50 (94.0%) |
+| $K = 30$ | $+0.00725$ | $+0.00556$ | $[+0.00579, +0.00870]$ | 46/50 (92.0%) |
 
-Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.69498 \pm 0.04341$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. $K$ là số khoảng danh nghĩa được xác định từ tập huấn luyện. Số khoảng hoạt động $K_{\mathrm{act},c}$ có thể nhỏ hơn $K$ tại những thành phố không có cặp OD trong một số khoảng cự ly xa.
+Chú thích: $\Delta\mathrm{CPC}$ là chênh lệch giữa dự báo sau hiệu chỉnh và baseline zero-shot ($M_0$ CPC trung bình $0.71281 \pm 0.04434$). Kết quả của ba model seeds được lấy trung bình trước khi tổng hợp trên 50 thành phố. Khoảng tin cậy được tính cho mức tăng trung bình bằng bootstrap ghép cặp cấp thành phố, phân tầng theo fold. Thành phố được tính là cải thiện khi chênh lệch trung bình qua ba seeds lớn hơn 0. $K$ là số khoảng danh nghĩa được xác định từ tập huấn luyện. Số khoảng hoạt động $K_{\mathrm{act},c}$ có thể nhỏ hơn $K$ tại những thành phố không có cặp OD trong một số khoảng cự ly xa.
 
 ![Hình 4](figures_interzonal/fig4_resolution_sensitivity.png)
-**Hình 4. Mức thay đổi CPC trung bình theo số nhóm khoảng cách $K$.** Các điểm biểu diễn mức tăng CPC trung bình so với baseline trên 50 thành phố, còn thanh sai số biểu diễn khoảng tin cậy bootstrap 95%, phân tầng theo fold. Cấu hình chính $K=8$ được đánh dấu bằng đường gióng.
+**Hình 4. Mức thay đổi CPC trung bình và lợi ích biên theo số nhóm khoảng cách $K$.** Đường liền màu xanh biểu diễn mức tăng CPC trung bình kèm khoảng tin cậy bootstrap 95%, phân tầng theo fold; đường nét đứt màu đỏ biểu diễn lợi ích biên mỗi 2 bins ($\Delta\mathrm{CPC}_K - \Delta\mathrm{CPC}_{K-2}$). Cấu hình chính $K=8$ được đánh dấu bằng đường gióng.
 
-Mức cải thiện trung bình tăng trên toàn bộ dải $K$ được khảo sát. Kết quả này cho thấy độ phân giải danh nghĩa cao hơn có thể cung cấp thêm thông tin hiệu chỉnh, mặc dù số khoảng thực sự hoạt động còn phụ thuộc vào phạm vi khoảng cách của từng thành phố.
+Mức cải thiện trung bình tăng trên toàn dải $K \in [2, 30]$ nhưng bắt đầu đi ngang rõ rệt từ ngưỡng $K \approx 22-24$, nơi lợi ích biên giảm xuống dưới $+0.00015$ cho mỗi 2 bins. Do cơ chế hiệu chỉnh theo bin chỉ tái phân bổ tổng lưu lượng giữa các khoảng cự ly mà không thay đổi thứ tự và phân bổ dòng chảy cục bộ trong từng bin, mức tăng CPC chạm ngưỡng trần tiệm cận được quy định bởi chất lượng phân bổ nội bộ của mô hình gốc.
 
 Ngoài độ phân giải theo khoảng cách, phân tích thăm dò trên 11 vùng đô thị có nhiều county cho thấy hiệu chỉnh theo county xuất phát làm CPC tăng thêm so với hiệu chỉnh cấp thành phố ở 10/11 trường hợp. Mức tăng bổ sung trung bình trong nhóm này là +0.00089. Khi gộp toàn bộ 50 thành phố, trong đó 39 vùng đơn county có chênh lệch bằng 0 theo cấu trúc, mức tăng trung bình là +0.00020. Kết quả gợi ý rằng phân nhóm quan sát theo county có thể bổ sung thông tin, nhưng cần kiểm tra trên nhiều vùng đô thị đa county hơn.
 

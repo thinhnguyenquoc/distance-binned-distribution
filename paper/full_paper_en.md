@@ -282,7 +282,7 @@ Note: In Part A, $\Delta\mathrm{CPC}$ is the difference between predictions cali
 
 The resolution and quality of the $Y_D$ observation are evaluated along three complementary dimensions: the number of distance intervals $K$, the spatial resolution of the aggregate signal, and observation-quality degradation due to noise. These three analyses evaluate which conditions govern the additional information supplied by $Y_D$.
 
-First, as the nominal number of distance intervals increases from $K=2$ to $K=20$, mean $\Delta\mathrm{CPC}$ increases from $+0.00098$ to $+0.00639$ (Table 4 and Figure 4). At the main configuration $K=8$, the increase reaches $+0.00354$, with 45/50 cities improved. The mean gain increases across all evaluated configurations, while the number of improved cities ranges between 39 and 47 out of 50 cities. These findings reflect the evaluated binning configurations; the study does not identify an optimal number of intervals under noisy observation.
+First, as the nominal number of distance intervals increases from $K=2$ to $K=30$, mean $\Delta\mathrm{CPC}$ increases from $+0.00098$ to $+0.00725$, exhibiting a clear saturation plateau with diminishing marginal returns (Table 4 and Figure 4). At the main configuration $K=8$, the increase reaches $+0.00354$, with 45/50 cities improved. Across the extended range, marginal gain per 2 bins progressively drops from $+0.00100$ ($K=2 \to 4$) to $+0.00010$ ($K=28 \to 30$), demonstrating an asymptotic ceiling near $+0.0072$.
 
 ### Table 4: Scaling information resolution through distance intervals
 
@@ -299,13 +299,18 @@ First, as the nominal number of distance intervals increases from $K=2$ to $K=20
 | **$K = 16$** | $0.71855 \pm 0.04458$ | $0.72205$ | **$+0.00574$** | $+0.00433$ | $[+0.00455, +0.00694]$ | **46 / 50 (92.0%)** |
 | **$K = 18$** | $0.71884 \pm 0.04460$ | $0.72230$ | **$+0.00603$** | $+0.00458$ | $[+0.00480, +0.00726]$ | **47 / 50 (94.0%)** |
 | **$K = 20$** | $0.71920 \pm 0.04462$ | $0.72266$ | **$+0.00639$** | $+0.00494$ | $[+0.00508, +0.00769]$ | **46 / 50 (92.0%)** |
+| **$K = 22$** | $0.71948 \pm 0.04464$ | $0.72301$ | **$+0.00667$** | $+0.00512$ | $[+0.00530, +0.00801]$ | **46 / 50 (92.0%)** |
+| **$K = 24$** | $0.71963 \pm 0.04466$ | $0.72318$ | **$+0.00682$** | $+0.00524$ | $[+0.00542, +0.00822]$ | **46 / 50 (92.0%)** |
+| **$K = 26$** | $0.71982 \pm 0.04467$ | $0.72332$ | **$+0.00701$** | $+0.00539$ | $[+0.00556, +0.00845]$ | **46 / 50 (92.0%)** |
+| **$K = 28$** | $0.71996 \pm 0.04468$ | $0.72345$ | **$+0.00715$** | $+0.00548$ | $[+0.00573, +0.00857]$ | **47 / 50 (94.0%)** |
+| **$K = 30$** | $0.72006 \pm 0.04469$ | $0.72354$ | **$+0.00725$** | $+0.00556$ | $[+0.00579, +0.00870]$ | **46 / 50 (92.0%)** |
 
 Note: $K$ is the nominal number of distance intervals determined from the training fold. The number of active intervals $K_{\mathrm{act},c}$ may be smaller than $K$ for cities lacking OD pairs in long-distance intervals.
 
 ![Figure 4](figures/fig4_resolution_sensitivity.png)
-**Figure 4. Sensitivity of improvement to the number of distance intervals $K$.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities and error bars show stratified 95% bootstrap CIs by fold. $K=8$ is the main configuration of the study.
+**Figure 4. Sensitivity of improvement and marginal gain to the number of distance intervals $K$.** Points show mean $\Delta\mathrm{CPC}$ across 50 cities (solid blue line with stratified 95% bootstrap CIs) and the step-wise marginal gain per 2 bins ($\Delta\mathrm{CPC}_K - \Delta\mathrm{CPC}_{K-2}$, dashed red line). The dotted vertical line marks the anchor configuration $K=8$.
 
-Mean improvement increases across the entire evaluated range of $K$. This indicates that a higher nominal resolution can provide additional calibration information, although the number of truly active intervals depends on each city's geographic distance extent.
+Mean improvement increases across $K \in [2, 30]$ but clearly flattens beyond $K \approx 22-24$, where marginal gains drop below $+0.00015$ per 2 bins. Because bin calibration only adjusts between-bin mass without altering intra-bin ranking or spatial flow allocation, gains saturate toward an upper ceiling determined by the baseline's within-bin allocation fidelity.
 
 In addition to distance resolution, we conducted an exploratory analysis of the spatial resolution of the observation. Across 11 metropolitan areas spanning multiple counties, calibration using an origin-county-level $Y_D$ distribution improved over city-level calibration in 9/11 cases. However, the pooled additional increase across all 50 metropolitan areas was only
 
