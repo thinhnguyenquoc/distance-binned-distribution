@@ -1,0 +1,68 @@
+{
+  "pairwise_mlp_node_features": [
+    "total_population",
+    "median_age",
+    "median_income",
+    "per_capita_income",
+    "employment_rate",
+    "unemployment_rate",
+    "commute_transit_pct",
+    "commute_active_pct",
+    "commute_wfh_pct",
+    "zero_vehicle_pct",
+    "avg_vehicles_per_household",
+    "higher_education_pct",
+    "homeownership_rate",
+    "office",
+    "office_density",
+    "industrial",
+    "industrial_density",
+    "commercial",
+    "commercial_density",
+    "education_primary",
+    "education_primary_density",
+    "road_length_total",
+    "road_density",
+    "road_count",
+    "motorway_length",
+    "primary_length"
+  ],
+  "pairwise_feature": "distance_std",
+  "total_node_features": 26,
+  "expected_mlp_input_dim": 53,
+  "feature_categories": {
+    "census": [
+      "total_population",
+      "median_age",
+      "median_income",
+      "per_capita_income",
+      "employment_rate",
+      "unemployment_rate",
+      "commute_transit_pct",
+      "commute_active_pct",
+      "commute_wfh_pct",
+      "zero_vehicle_pct",
+      "avg_vehicles_per_household",
+      "higher_education_pct",
+      "homeownership_rate"
+    ],
+    "poi": [
+      "office",
+      "office_density",
+      "industrial",
+      "industrial_density",
+      "commercial",
+      "commercial_density",
+      "education_primary",
+      "education_primary_density"
+    ],
+    "road": [
+      "road_length_total",
+      "road_density",
+      "road_count",
+      "motorway_length",
+      "primary_length"
+    ]
+  },
+  "feature_schema_hash": "aaa41647edbe1fd259614ec573698dfe5bea68b2d341b5ae2b357f39fc346c2e"
+}

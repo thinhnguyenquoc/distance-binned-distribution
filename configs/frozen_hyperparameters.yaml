@@ -1,0 +1,59 @@
+# Frozen Architecture and Training Hyperparameters for Zero-Shot OD Flow Models
+# Invariant: Pre-specified at the architecture level, held identical across all 50 source cities.
+# Never tuned per-city or selected using zero-shot target performance.
+
+common:
+  epochs: 40
+  optimizer: AdamW
+  learning_rate: 0.002
+  weight_decay: 0.0001
+  gradient_clip_max_norm: 5.0
+  batch_mode: full_batch_masked_positive_support
+  loss_function: log1p_mse
+  output_activation: softplus
+  seeds: [1, 10, 100]
+  checkpoint_rule: final_epoch
+
+gravity:
+  model_family: Two-Parameter Gravity Model
+  model_label: gravity_2param
+  num_trainable_parameters: 2
+  parameters: [G, alpha]
+  init_G: 0.0
+  init_alpha: 1.0
+  features_used: [origin_population, destination_population, distance_km]
+  preprocessing: raw_physical_scale_no_normalization
+  distance_representation: distance_km_raw
+
+mlp:
+  model_family: Pairwise MLP
+  model_label: pairwise_mlp
+  node_in_dim: 26
+  pair_in_dim: 53  # 26 origin + 26 destination + 1 distance
+  num_layers: 4  # 3 hidden dense blocks + 1 linear output
+  hidden_dims: [64, 64, 32]
+  dropout: 0.1
+  layer_norm: true
+  activation: relu
+  output_activation: softplus
+  graph_type: none
+  message_passing: none
+  gravity_component: none
+  distance_representation: distance_std  # zscore(log1p(distance_km_raw)) fitted on 30% source train
+
+gnn:
+  model_family: Urban-GNN
+  model_label: urban_gnn
+  node_in_dim: 26
+  num_layers: 2
+  node_hidden_dim: 64
+  node_out_dim: 64
+  decoder_hidden_dim: 64
+  dropout: 0.1
+  graph_type: radius
+  graph_radius_km: 5.0
+  graph_distance_representation: distance_km_raw
+  message_passing: distance_modulated_graph_conv
+  message_passing_distance_representation: distance_log  # log1p(distance_km_raw)
+  gravity_component: joint_trainable_gravity_prior
+  gravity_distance_representation: distance_km_raw

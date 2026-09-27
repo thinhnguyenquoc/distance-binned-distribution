@@ -247,3 +247,9 @@ results freeze.zip
 
 # Archived frozen result versions (large, reference only)
 archive/
+
+# Local browser runtime data
+.chrome_tmp/
+
+# Generated split manifest exceeds GitHub's file-size limit
+manifests/od_split_manifest.csv

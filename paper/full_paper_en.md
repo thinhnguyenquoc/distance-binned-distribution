@@ -807,7 +807,7 @@ Among the 50 benchmark metropolitan areas, exactly 39 are single-county areas, w
 
 Across all 50 metropolitan areas, the pooled additional increase from county-level calibration over city-level calibration is very small:
 $$
-\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95% CI } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
+\Delta\mathrm{CPC}_{\mathrm{res}} = +0.00014, \quad \text{95\% CI } [+0.00002,\,+0.00028], \quad \text{Wilcoxon } p = 0.0064.
 $$
 
 This modest pooled increase is driven by the 39 single-county areas, whose increase is exactly zero by construction.

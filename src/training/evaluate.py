@@ -154,28 +154,84 @@ def evaluate_moving_and_full(
         "cpc_inflow": cpc_inflow,
         "cpc_outflow": cpc_outflow,
     }
-    return result
+def compute_mse_pair(t_true: np.ndarray, t_pred: np.ndarray) -> float:
+    """Computes Mean Squared Error."""
+    return float(np.mean((t_true - t_pred) ** 2))
 
-def evaluate_all(t_true: torch.Tensor, t_pred: torch.Tensor) -> dict[str, float]:
-    """
-    DEPRECATED — Compatibility helper for raw full-pair evaluation WITHOUT interzonal filtering.
 
-    WARNING: This function computes CPC over ALL pairs including intrazonal.
-    For scientific claims, use evaluate_moving_and_full() which correctly filters to Omega_c^+.
-    This function must NOT be used to report primary metrics in any experiment.
+def evaluate_calibration_transfer(
+    true_flow: np.ndarray,
+    pred_before: np.ndarray,
+    pred_after: np.ndarray,
+) -> dict[str, float]:
+    r"""
+    Evaluation Module Interface for Cross-City Zero-Shot Transfer and DBD Calibration.
+    Strictly executed AFTER calibration is completed.
+
+    Inputs:
+    - true_flow: Target city ground truth flows on fixed positive support (\Omega_t^+).
+    - pred_before: Baseline predictions on \Omega_t^+ (\hat{T}^{(0)}).
+    - pred_after: Calibrated predictions on \Omega_t^+ (\hat{T}^{(1)}).
+
+    Outputs:
+    - Baseline & Calibrated Metrics: CPC, CPC_norm, MAE, MSE, RMSE, R_vol
+    - Gains: delta_CPC, delta_MAE, delta_MSE
+    - Invariant Checks: Exact volume preservation validation
     """
-    import warnings
-    warnings.warn(
-        "evaluate_all() computes over all pairs without interzonal filtering. "
-        "Use evaluate_moving_and_full() for scientifically valid metrics on Omega_c^+.",
-        DeprecationWarning,
-        stacklevel=2,
+    if not (len(true_flow) == len(pred_before) == len(pred_after)):
+        raise ValueError(
+            f"Array length mismatch: true_flow ({len(true_flow)}), "
+            f"pred_before ({len(pred_before)}), pred_after ({len(pred_after)})"
+        )
+
+    t_true = np.asarray(true_flow, dtype=np.float64)
+    t_before = np.asarray(pred_before, dtype=np.float64)
+    t_after = np.asarray(pred_after, dtype=np.float64)
+
+    # Baseline metrics
+    cpc_before = compute_cpc_pair(t_true, t_before)
+    cpc_norm_before = compute_cpc_norm_pair(t_true, t_before)
+    mae_before = compute_mae_pair(t_true, t_before)
+    mse_before = compute_mse_pair(t_true, t_before)
+    rmse_before = compute_rmse_pair(t_true, t_before)
+
+    # Calibrated metrics
+    cpc_after = compute_cpc_pair(t_true, t_after)
+    cpc_norm_after = compute_cpc_norm_pair(t_true, t_after)
+    mae_after = compute_mae_pair(t_true, t_after)
+    mse_after = compute_mse_pair(t_true, t_after)
+    rmse_after = compute_rmse_pair(t_true, t_after)
+
+    # Diagnostic evaluation-only R_vol
+    total_true = float(np.sum(t_true))
+    if total_true <= 0:
+        raise ValueError("Sum of true flows on positive support must be > 0.")
+
+    r_vol_before = float(np.sum(t_before) / total_true)
+    r_vol_after = float(np.sum(t_after) / total_true)
+
+    # Exact volume preservation check
+    vol_diff = abs(float(np.sum(t_after) - np.sum(t_before)))
+    assert vol_diff < 1e-10, (
+        f"Volume preservation invariant violated in evaluation: "
+        f"|sum(after) - sum(before)| = {vol_diff:.4e} >= 1e-10"
     )
-    t_t = t_true.detach().cpu().numpy().astype(np.float64)
-    t_p = t_pred.detach().cpu().numpy().astype(np.float64)
+
     return {
-        "cpc": compute_cpc_pair(t_t, t_p),
-        "cpc_norm": compute_cpc_norm_pair(t_t, t_p),
-        "rmse_log1p": compute_rmse_log1p_pair(t_t, t_p),
-        "pearson_r": compute_pearson_pair(t_t, t_p),
+        "CPC_before": cpc_before,
+        "CPC_after": cpc_after,
+        "delta_CPC": cpc_after - cpc_before,
+        "CPC_norm_before": cpc_norm_before,
+        "CPC_norm_after": cpc_norm_after,
+        "MAE_before": mae_before,
+        "MAE_after": mae_after,
+        "delta_MAE": mae_after - mae_before,
+        "MSE_before": mse_before,
+        "MSE_after": mse_after,
+        "delta_MSE": mse_after - mse_before,
+        "RMSE_before": rmse_before,
+        "RMSE_after": rmse_after,
+        "delta_RMSE": rmse_after - rmse_before,
+        "R_vol_before": r_vol_before,
+        "R_vol_after": r_vol_after,
     }

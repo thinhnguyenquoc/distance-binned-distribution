@@ -161,10 +161,10 @@ def build_radius_graph(
             cols.append(i)
             dists.append(0.0)
 
+        # Connect strictly within radius_km (excluding self)
         within_radius = np.where((dist_mat[i] <= radius_km) & (dist_mat[i] > 0))[0]
-        if len(within_radius) == 0:
-            closest = np.argsort(dist_mat[i])[1]
-            within_radius = [closest]
+        # For isolated nodes, self-loop guarantees presence in graph.
+        # Do NOT auto-connect nearest neighbor outside radius.
 
         for nbr in within_radius:
             rows.append(i)
@@ -183,10 +183,30 @@ def build_radius_graph(
     edge_index = torch.tensor([e_rows, e_cols], dtype=torch.long)
     edge_dist = torch.tensor(e_dists, dtype=torch.float32)
 
+    # Sanity checks on constructed radius graph:
+    # 1. Non-self edges must satisfy distance <= radius_km + tolerance
+    non_self_mask = edge_index[0] != edge_index[1]
+    if torch.any(non_self_mask):
+        max_edge_d = float(torch.max(edge_dist[non_self_mask]).item())
+        assert max_edge_d <= radius_km + 1e-4, f"Spatial edge distance {max_edge_d:.4f} km exceeds radius {radius_km} km."
+    
+    # 2. Every node must have self-loop if include_self_loop=True
+    if include_self_loop and N > 0:
+        self_loop_nodes = set(edge_index[0][~non_self_mask].tolist())
+        assert len(self_loop_nodes) == N, f"Missing self-loops: found {len(self_loop_nodes)} nodes with self-loops, expected {N}."
+
     res = (edge_index, edge_dist)
     if use_cache:
         _GRAPH_CACHE[key] = res
     return res
+
+
+def compute_spatial_graph_hash(edge_index: torch.Tensor, edge_dist: torch.Tensor) -> str:
+    """Computes a deterministic SHA-256 hash of a spatial graph topology."""
+    import hashlib
+    e_bytes = edge_index.detach().cpu().numpy().tobytes()
+    d_bytes = np.ascontiguousarray(edge_dist.detach().cpu().numpy(), dtype=np.float32).tobytes()
+    return hashlib.sha256(e_bytes + d_bytes).hexdigest()
 
 
 def build_adaptive_radius_graph(

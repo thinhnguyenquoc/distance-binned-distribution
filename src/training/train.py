@@ -32,7 +32,6 @@ from src.data.dataset import (
 from src.data.urban_graph import build_radius_graph, build_knn_graph
 from src.models.zero_shot_model import ZeroShotODModel
 from src.loss.ztnb import ztnb_nll, nb_nll
-from src.training.evaluate import evaluate_all
 
 
 # ---------------------------------------------------------------------------
