@@ -1,22 +1,100 @@
 # Research Protocol: Distance-Binned Distribution (DBD) Calibration for Zero-Shot OD Flow Prediction
 
+> **Protocol Freeze Rule:**  
+> After the revised scientific design is accepted, implementation agents must not introduce new training fractions, bin resolutions, error levels, model variants, calibration rules, controls, thresholds, preprocessing choices, or statistical procedures. Undefined cases must raise a specification issue rather than being resolved autonomously.
+
 ---
 
 ## 1. Nghiên cứu & Mục tiêu (Core Framework)
 
-### 1.1. Bối cảnh & Câu hỏi nghiên cứu
-Nghiên cứu đánh giá khả năng chuyển giao không mẫu (zero-shot transfer) của ba họ mô hình căn bản đại diện cho ba cơ chế khác nhau (`gravity_2param`, `pairwise_mlp`, `urban_gnn`) trong bài toán dự báo lưu lượng di chuyển đô thị (Origin-Destination flow) dưới điều kiện dữ liệu nguồn cực kỳ hạn chế (data-scarce environment).
+### 1.1. Core Scientific Motivation
+Detailed pair-level Origin-Destination (OD) flow data are often difficult or expensive to obtain at sufficient coverage, whereas aggregate mobility summaries such as distance distributions may be obtainable from aggregated mobile-device, location-intelligence, or other privacy-preserving mobility sources.
 
-Hai câu hỏi nghiên cứu trung tâm:
-- **RQ1 (Added Value):** Thông tin phân phối cự ly tổng hợp của thành phố đích ($Y_D^{\text{target}}$) có cải thiện được dự báo chuyển giao zero-shot từ một thành phố nguồn khan hiếm dữ liệu hay không?
-- **RQ2 (Sensitivity & Robustness):** Mức độ cải thiện phụ thuộc như thế nào vào độ phân giải khoảng cách ($K$) và sai số đo lường trong phân phối đích ($\text{TV}$ error)?
+Nghiên cứu này không định vị câu hỏi đơn giản là *"Does target DBD improve zero-shot prediction?"*, mà định vị câu hỏi trung tâm:
+> **Can lightweight aggregate target-city mobility information compensate for limited pair-level OD supervision in cross-city OD flow prediction?**
 
-### 1.2. Luồng thực thi hai tầng
-```mermaid
-flowchart LR
-    A["Source City (30% OD)"] -->|"Training / Optimization"| B["Frozen Base Models (Gravity / MLP / GNN)"]
-    B -->|"Zero-Shot Transfer (49 Cities)"| C["Raw Baseline Predictions"]
-    C -->|"Post-hoc DBD Calibration (Target Y_D)"| D["Calibrated Predictions"]
+#### Cấu trúc thông tin (Information Asymmetry):
+- **Source side:** Có một lượng **pair-level OD supervision hạn chế** ($T_{s,ij}$) dùng để train mô hình nguồn. Trong thiết lập chính (main setting), tỷ lệ $30\%$ positive source OD pairs ($f_{\text{train}} = 0.30$) được dùng như một môi trường khan hiếm giám sát được kiểm soát (*controlled data-scarcity setting*).
+- **Target side:** Target city hoàn toàn:
+  - không dùng pair-level target OD flows để huấn luyện;
+  - không fine-tune mô hình;
+  - không dùng target total flow ($\sum_{(i,j) \in \Omega_t^+} T_{t,ij}$);
+  - chỉ cung cấp vector phân phối cự ly tổng hợp chuẩn hóa (normalized aggregate distance-binned distribution DBD, $p \in \Delta^{K-1}$) cho calibrator.
+- **Bản chất dữ liệu thực nghiệm:** Do dữ liệu thực nghiệm hiện tại trích xuất target DBD từ true OD data, nghiên cứu định vị đây là:
+  > **oracle aggregate target DBD used as a controlled proxy for aggregate mobility information that could originate from an independent mobility data source in practice.**  
+  Tuyệt đối không tuyên bố rằng nghiên cứu hiện tại đã sử dụng mobile-phone hay social-media data thực địa khi chưa nạp nguồn dữ liệu độc lập này.
+
+### 1.2. Research Questions (RQs)
+Nghiên cứu giải quyết chính xác ba câu hỏi nghiên cứu:
+
+- **RQ1 — Added Value under Limited OD Supervision:**
+  > *Under limited source OD supervision, can aggregate target-city distance-binned mobility information improve zero-shot OD flow-intensity reconstruction without using target pair-level OD observations for model training?*  
+  $$\text{limited source OD} + \text{target DBD} \longrightarrow \text{improved zero-shot OD intensity?}$$
+
+- **RQ2 — Dependence on OD Data Scarcity:**
+  > *How does the benefit of target DBD calibration change as the amount of available pair-level source OD supervision varies?*  
+  Khảo sát hàm biến thiên $\Delta \text{CPC}(f)$ theo tỷ lệ giám sát nguồn $f \in \{0.10, 0.30, 1.00\}$. Đây là một giả thuyết khoa học mở cần kiểm chứng thực nghiệm, tuyệt đối không tiên nghiệm giả định monotonicity.
+
+- **RQ3 — Target Information Requirements and Specificity:**
+  > *How does DBD calibration benefit depend on the resolution, measurement error, and target-specific structural alignment of the aggregate mobility information?*  
+  Khảo sát tương tác giữa độ phân giải bin ($K$), sai số đo lường thực tế ($\text{TV}$ error), và phân định giữa thông tin cấu trúc cự ly đặc thù đích với can thiệp donor kiểm chứng liều tương đương nhưng lệch cấu trúc.
+
+### 1.3. Scientific Contributions
+1. **Limited-supervision zero-shot setting:** Thiết lập một khung chuyển giao liên đô thị có kiểm soát (controlled cross-city transfer framework), trong đó baseline models chỉ được huấn luyện từ một phần quan sát OD của thành phố nguồn (source OD supervision scarcity).
+2. **Aggregate target information as calibration signal:** Đánh giá target DBD như một tín hiệu tổng hợp số chiều thấp từ thành phố đích (low-dimensional aggregate target-side signal) có khả năng hiệu chuẩn hậu nghiệm dự báo zero-shot của mô hình đã đóng băng (frozen base models) mà không cần retrain hay fine-tune mô hình.
+3. **Characterizing when DBD is useful:** Định lượng và làm rõ các điều kiện biên hiệu quả của DBD theo:
+   - mức độ giám sát OD nguồn ($f \in \{0.10, 0.30, 1.00\}$);
+   - độ phân giải cự ly ($K$);
+   - sai số quan sát tổng hợp ($\epsilon$);
+   - tính đặc thù cấu trúc đích so với can thiệp kiểm chứng donor tương đương liều can thiệp.
+
+> *Lưu ý về vị trí mô hình:* Ba họ mô hình căn bản (`gravity_2param`, `pairwise_mlp`, `urban_gnn`) không phải là đóng góp chính của nghiên cứu. Chúng đóng vai trò đại diện cho ba cơ chế mô hình hóa khác nhau (vật lý tham số, hồi quy nơ-ron từng cặp, và mạng đồ thị truyền tin không gian kèm prior vật lý) nhằm kiểm tra tính tổng quát của hiệu ứng hiệu chuẩn DBD.
+
+### 1.4. Quy tắc Không tạo Thử nghiệm Full-Factorial (Non-Full-Factorial Invariant)
+> **Strict Factorial Isolation Invariant:**  
+> The study does not execute the full factorial product of training fraction $\times$ bin resolution $\times$ observation error.  
+> Tuyệt đối không chạy lưới tích $\{0.10, 0.30, 1.00\} \times \{2, 4, 8, 12, 20\} \times \{\epsilon\}$. Mỗi thực nghiệm cô lập duy nhất một nhân tố khoa học mục tiêu:
+> - **Experiment A (Main Added Value):** $f = 30\%$, $K = 8$, $\epsilon = 0$;
+> - **Experiment B (OD Scarcity Sensitivity):** $f \in \{0.10, 0.30, 1.00\}$, $K = 8$, $\epsilon = 0$;
+> - **Experiment C (Information Quality Sensitivity):** $f = 30\%$, $K \in \{2, 4, 8, 12, 20\} \times \epsilon \in \{0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10\}$;
+> - **Experiment D (Target Structural Specificity Control):** $f = 30\%$, $K = 8$, $\epsilon = 0$.
+
+### 1.5. Giới hạn Diễn giải Khoa học (Interpretation Boundaries)
+#### Tuyệt đối không tuyên bố (Prohibited Claims):
+- DBD giải quyết bài toán tái tạo ma trận OD toàn diện (DBD solves full OD matrix reconstruction).
+- DBD dự báo tập hỗ trợ zero / non-zero của ma trận OD.
+- DBD thay thế hoàn toàn dữ liệu OD của thành phố đích.
+- DBD đã được chứng minh trích xuất thành công từ điện thoại di động / mạng xã hội trong khuôn khổ thực nghiệm hiện tại.
+- Hiệu chuẩn DBD luôn luôn cải thiện mọi cặp chuyển giao trong mọi trường hợp.
+- Lợi ích của DBD nhất thiết phải tăng đơn điệu khi độ giám sát nguồn suy giảm.
+- Chênh lệch hiệu năng giữa Urban-GNN và Pairwise MLP thuần túy do cơ chế truyền thông điệp (message passing).
+
+#### Có thể tuyên bố nếu kết quả thực nghiệm ủng hộ (Permissible Claims):
+- DBD cung cấp nguồn thông tin tổng hợp hữu ích bổ sung từ phía thành phố đích.
+- DBD cải thiện việc tái tạo cường độ lưu lượng OD có điều kiện (conditional OD intensity reconstruction) dưới điều kiện giám sát nguồn hạn chế.
+- Thông tin di chuyển tổng hợp của thành phố đích có thể bù đắp một phần khoảng trống hiệu năng sinh ra do khan hiếm dữ liệu giám sát OD nguồn.
+- Lợi ích của hiệu chuẩn DBD phụ thuộc vào chất lượng thông tin (độ phân giải, sai số quan sát) và tính khớp cấu trúc đích.
+- Hiệu ứng hiệu chuẩn có tính tổng quát trên các họ mô hình có cơ chế hoạt động dị biệt.
+
+### 1.6. Sơ đồ Khái niệm Nghiên cứu (Main Conceptual Diagram)
+```text
+Limited Source Pair-Level OD (f in {0.10, 0.30, 1.00})
+                    ↓
+            Train Base Model
+ (gravity_2param / pairwise_mlp / urban_gnn)
+                    ↓
+               Freeze Model
+                    ↓
+             Unseen Target City
+                    ↓
+        Raw Zero-Shot OD Prediction
+                    ↓
+           Aggregate Target DBD  <--  Low-dimensional aggregate mobility information
+                    ↓                 (no target pair-level OD labels exposed to calibrator)
+          Post-hoc Calibration
+ (Support-Conditioned Exact-Volume-Preserving)
+                    ↓
+        Calibrated OD Intensities
 ```
 
 ---
@@ -137,24 +215,29 @@ Trong đó:
 #### 8. Mô tả Phương pháp luận chuẩn cho Bài báo về Positive Support (Method Wording):
 > *“All zero-shot evaluation and post-hoc DBD calibration are conducted on a fixed positive interzonal OD support, defined as OD pairs with $i \neq j$, positive distance, and observed flow $T_{ij} \ge 1$. The same target-city support is used for baseline evaluation, DBD construction, calibration, and post-calibration evaluation. Accordingly, the experiment evaluates OD flow intensity reconstruction conditional on the observed positive OD support; predicting the zero/non-zero OD support itself is outside the scope of this study.”*
 
-### 2.2. Phân chia Cố định 30/70 trên Positive OD Support (Fixed 30/70 Split on Positive OD Support)
+### 2.2. Phân chia Cố định trên Positive OD Support & Hợp Đồng Nested Split (Fixed Split & Nested Split Contract)
 
 Từ thời điểm này, việc phân chia dữ liệu của thành phố nguồn bắt buộc phải tuân thủ đúng quy trình nghiêm ngặt dưới đây. Tuyệt đối không thêm stratification, balancing, resampling, retry hay bất kỳ heuristic nào khác.
 
 #### 1. Tập Dữ liệu Được phép Phân chia:
 Với mỗi thành phố nguồn $s$, trước tiên xác định tập positive interzonal OD support:
 $$\Omega_s^+ = \{(i,j) \in \Omega_s \mid i \neq j, \; D_{s,ij} > 0, \; T_{s,ij} \ge 1\}$$
-Chỉ các cặp OD thuộc $\Omega_s^+$ mới được đưa vào bước phân chia 30/70. Tuyệt đối không phân chia trên full matrix, zero-flow pairs hay bất kỳ support nào khác.
+Chỉ các cặp OD thuộc $\Omega_s^+$ mới được đưa vào bước phân chia. Tuyệt đối không phân chia trên full matrix, zero-flow pairs hay bất kỳ support nào khác.
 
-#### 2. Quy tắc Chia Ngẫu nhiên Đồng nhất (Uniform Random Split):
-Thực hiện đúng một lần duy nhất cho mỗi thành phố nguồn:
-$$N_s = |\Omega_s^+|$$
-Số training pairs:
-$$N_s^{\text{train}} = \lfloor 0.30 N_s \rfloor$$
-Số held-out evaluation pairs:
-$$N_s^{\text{eval}} = N_s - N_s^{\text{train}}$$
-Quá trình lấy mẫu là **lấy mẫu ngẫu nhiên đồng nhất không hoàn lại (uniform random sampling without replacement)** trên toàn bộ $\Omega_s^+$ với hạt giống cố định duy nhất:
-$$\text{split\_seed} = 42$$
+#### 2. Hợp Đồng Phân Chia Lồng Nhau Nghiêm Ngặt (Strict Nested Split Contract for $f \in \{0.10, 0.30, 1.00\}$):
+Với mỗi thành phố nguồn $s$:
+1. Lấy positive support $\Omega_s^+$, độ lớn $N_s = |\Omega_s^+|$.
+2. **Deterministic sort** theo `(origin, destination)`.
+3. Sinh đúng một hoán vị duy nhất bằng hạt giống cố định `split_seed = 42`: $\pi_s = \text{Permutation}(\Omega_s^+)$.
+4. Định nghĩa các tập huấn luyện:
+   $$\text{Train}_{10}(s) = \pi_s[:\lfloor 0.10 N_s \rfloor]$$
+   $$\text{Train}_{30}(s) = \pi_s[:\lfloor 0.30 N_s \rfloor]$$
+   $$\text{Train}_{100}(s) = \pi_s[:N_s]$$
+5. **Ràng buộc bất biến lồng nhau (Nesting Invariant):**
+   $$\boxed{\text{Train}_{10}(s) \subset \text{Train}_{30}(s) \subset \text{Train}_{100}(s)}$$
+   - Tập $\text{Train}_{30}(s)$ chính xác là tập huấn luyện 30% dùng trong main Experiment A, Experiment C, và Experiment D.
+   - Tập 70% held-out cho within-source evaluation tại main setting ($f = 0.30$) được định nghĩa là $\Omega_s^+ \setminus \text{Train}_{30}(s)$.
+   - Tuyệt đối **không** tạo hoán vị ngẫu nhiên khác cho mỗi fraction, không resample, không stratify, không retry, không chọn subset dựa trên model performance.
 
 #### 3. Nghiêm cấm Phân tầng & Bao phủ Nhân tạo (No Stratification & No Artificial Coverage):
 - **Không stratification:** Tuyệt đối không phân tầng hoặc cân bằng split theo khoảng cách, độ lớn lưu lượng, origin, destination, tract, dân số, vùng địa lý, distance bin, flow quantile hay node degree.
@@ -162,9 +245,9 @@ $$\text{split\_seed} = 42$$
 - **Không retry chọn split thuận lợi:** Không sinh nhiều split rồi chọn split có CPC cao nhất hoặc mô hình hội tụ tốt nhất. Split seed 42 được tạo một lần và chấp nhận nguyên trạng.
 
 #### 4. Quy trình Thực thi Chuẩn mực (Deterministic Implementation):
-Để đảm bảo kết quả không phụ thuộc vào thứ tự hàng ban đầu trong các tệp CSV, các cặp OD trong $\Omega_s^+$ bắt buộc phải được **sắp xếp theo thứ tự xác định (deterministic sort)** trước khi thực hiện hoán vị:
+Để đảm bảo kết quả không phụ thuộc vào thứ tự hàng ban đầu trong các tệp CSV, các cặp OD trong $\Omega_s^+$ bắt buộc phải được sắp xếp theo thứ tự xác định trước khi thực hiện hoán vị:
 ```python
-def create_source_split(df, source_city):
+def create_nested_source_splits(df, source_city):
     support = df[
         (df["origin"] != df["destination"])
         & (df["distance_km"] > 0)
@@ -177,32 +260,44 @@ def create_source_split(df, source_city):
     rng = np.random.default_rng(42)
     perm = rng.permutation(len(support))
 
-    n_train = int(np.floor(0.30 * len(support)))
-    train_idx = perm[:n_train]
-    heldout_idx = perm[n_train:]
+    n_total = len(support)
+    n_train_10 = int(np.floor(0.10 * n_total))
+    n_train_30 = int(np.floor(0.30 * n_total))
 
+    idx_10 = perm[:n_train_10]
+    idx_30 = perm[:n_train_30]
+    idx_100 = perm[:n_total]
+
+    support["in_train_10"] = False
+    support["in_train_30"] = False
+    support["in_train_100"] = True
+
+    support.loc[idx_10, "in_train_10"] = True
+    support.loc[idx_30, "in_train_30"] = True
+
+    # Main split compatibility: split column for 30/70
     support["split"] = "heldout"
-    support.loc[train_idx, "split"] = "train"
+    support.loc[idx_30, "split"] = "train"
     support["split_seed"] = 42
     return support
 ```
 
 #### 5. Manifest là Source of Truth Duy Nhất:
-Sau khi tạo, toàn bộ kết quả phân chia được lưu trữ cố định tại [`manifests/od_split_manifest.csv`](file:///Users/nguyenquocthinh/Documents/distance-binned-distribution/manifests/od_split_manifest.csv) với cấu trúc:
-`source_city, origin, destination, split, split_seed`
-trong đó $\text{split} \in \{\text{"train"}, \text{"heldout"}\}$.
-- **Source of truth:** Các script huấn luyện không được tự phân chia lại ngẫu nhiên trong code. Mọi quy trình bắt buộc phải load manifest và lọc `split == "train"` cho huấn luyện và `split == "heldout"` cho within-source evaluation.
-- **Nhất quán mô hình:** Cùng một source city $s$, cả ba họ mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`) dùng chung 100% cùng tập train và tập held-out.
-- **Độc lập với Model Seeds:** Ba model seeds $\{1, 10, 100\}$ chỉ dùng cho khởi tạo trọng số ngẫu nhiên và tối ưu hóa; tuyệt đối không thay đổi split 30/70.
+Toàn bộ kết quả phân chia được lưu trữ cố định tại `manifests/od_split_manifest.csv`:
+- `source_city, origin, destination, split, in_train_10, in_train_30, in_train_100, split_seed`
+trong đó `split` tương thích ngược cho main 30/70 split (`split == "train"` tương đương `in_train_30 == True`).
+- **Source of truth:** Các script huấn luyện không được tự phân chia lại ngẫu nhiên trong code. Mọi quy trình bắt buộc phải load manifest và lọc đúng tập training fraction tương ứng.
+- **Nhất quán mô hình:** Cùng một source city $s$ và cùng một fraction $f$, cả ba họ mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`) dùng chung 100% cùng tập train.
+- **Độc lập với Model Seeds:** Ba model seeds $\{1, 10, 100\}$ chỉ dùng cho khởi tạo trọng số ngẫu nhiên và tối ưu hóa; tuyệt đối không thay đổi split.
 
 #### 6. Quy tắc Xử lý Lỗi (Failure Rules):
-Nếu phát hiện trùng lặp khóa `(origin, destination)`, thiếu cặp OD so với $\Omega_s^+$, cặp xuất hiện đồng thời ở train và heldout, hoặc tỷ lệ split sai lệch: pipeline lập tức **RAISE ERROR**, không được tự sửa hay tiếp tục chạy ngầm.
+Nếu phát hiện vi phạm tính lồng nhau ($\text{Train}_{10} \not\subset \text{Train}_{30}$ hoặc $\text{Train}_{30} \not\subset \text{Train}_{100}$), trùng lặp khóa `(origin, destination)`, thiếu cặp OD so với $\Omega_s^+$, hoặc tỷ lệ split sai lệch: pipeline lập tức **RAISE ERROR**, không được tự sửa hay tiếp tục chạy ngầm.
 
 #### 7. Mục đích của Tập 70% Held-Out:
-Tập 70% held-out chỉ được phép dùng để tính các chỉ số within-source evaluation ($\text{CPC}, \text{MAE}, \text{MSE}, \text{RMSE}$). Tuyệt đối không dùng để tuning hyperparameters, early stopping, chọn epoch, chọn checkpoint hay chọn binning.
+Tập 70% held-out tại main setting chỉ được phép dùng để tính các chỉ số within-source evaluation ($\text{CPC}, \text{MAE}, \text{MSE}, \text{RMSE}$). Tuyệt đối không dùng để tuning hyperparameters, early stopping, chọn epoch, chọn checkpoint hay chọn binning.
 
 #### 8. Mô tả Phương pháp luận chuẩn cho Bài báo (Method Wording):
-> *“For each source city, the positive interzonal OD support was randomly partitioned once into a 30% training subset and a 70% within-city held-out subset using a fixed split seed of 42. Sampling was uniform without replacement and was not stratified by distance, flow magnitude, origin, destination, or any other attribute. The resulting split was frozen and reused identically across both model architectures and all model-initialization seeds. The three training seeds affect only stochastic model initialization and optimization; they do not alter the underlying 30/70 OD split.”*
+> *“For each source city, the positive interzonal OD support was partitioned using a deterministic nested split contract with a fixed seed of 42. Following a canonical sort by origin and destination tracts, a single random permutation was generated to define nested training fractions: $Train_{10} \subset Train_{30} \subset Train_{100}$. Sampling was uniform without replacement and was not stratified by distance, flow magnitude, origin, destination, or any other attribute. The main 30% subset serves as the controlled data-scarcity environment across all primary evaluations. The three training seeds affect only stochastic model initialization and optimization; they do not alter the underlying OD splits.”*
 
 ### 2.3. Ba Họ Mô Hình Căn Bản Độc Lập (Three Distinct OD Flow Baseline Families)
 
@@ -303,9 +398,58 @@ $$\boxed{\text{Ba họ mô hình độc lập về cơ chế; không ép buộc 
 
 #### 3. MODEL 3 — URBAN-GNN (`urban_gnn`)
 - **Mục tiêu & Cơ chế:**
-  Mô hình nhận biết cấu trúc đồ thị không gian thông qua cơ chế truyền tin (spatial message passing) trên đồ thị địa lý đô thị $G^{\text{urban}}$:
+  Mô hình nhận biết cấu trúc đồ thị không gian thông qua cơ chế truyền tin (spatial message passing) trên đồ thị địa lý đô thị $G^{\text{urban}}$ kết hợp với thành phần gravity học đồng thời và neural pairwise residual decoder:
   $$h_i = \text{GNN}_{\theta}(X, G^{\text{urban}})$$
-  $$m_{ij} = W_{\text{msg}} [h_j \parallel \log(1 + d_{ij})]$$
+  $$m_{ji} = W_{\text{msg}} [h_j \parallel \log(1 + d_{ji})]$$
+
+- **Hợp đồng Khóa Bất biến Kiến trúc Urban-GNN (Exact Urban-GNN Encoder & Decoder Contract):**
+  > **Chỉ thị Bắt buộc (Strict Invariant):**
+  > Urban-GNN encoder và decoder BẮT BUỘC tái sử dụng chính xác 100% kiến trúc mã nguồn hiện hữu trong `src/models/node_encoder.py` (`UrbanGNN`, `GraphConvLayer`), `src/models/decoder.py` (`PairwiseODDecoder`) và `src/models/od_models.py` (`UrbanGNN`).
+  > Agent TUYỆT ĐỐI KHÔNG được thiết kế lại, đơn giản hóa, thay thế hoặc diễn giải lại bất kỳ thành phần nào của Urban-GNN.
+  > Nếu có bất kỳ sự sai khác nào giữa quy chuẩn thực nghiệm và mã nguồn: **RAISE SPECIFICATION ERROR NGAY LẬP TỨC**. Agent không có quyền tự chọn phương án nào được cho là hợp lý.
+
+  **Chi tiết Kiến trúc Từng Tầng (Frozen Layer-by-Layer Specification):**
+  1. **Spatial Graph Topology ($G^{\text{urban}}$):**
+     - Đồ thị xây dựng trên toàn bộ $N$ tracts trong bảng node canonical của thành phố $c$ ($V_c$).
+     - Ngưỡng cự ly: $r = 5.0\text{ km}$ dựa trên khoảng cách Haversine giữa các tâm centroid tract ($d^{\text{raw}}_{ij} \le 5.0\text{ km}$).
+     - Hướng cạnh: **Đồ thị có hướng đối xứng (Bidirectional / Directed Graph)**. Nếu $d^{\text{raw}}_{uv} \le 5.0\text{ km}$ ($u \neq v$), đồ thị chứa cả hai cạnh $(u, v)$ và $(v, u)$ với $d_{uv} = d_{vu}$.
+     - Self-loops: Danh sách cạnh không gian $E_{\text{graph}}$ của đồ thị bán kính bao gồm cạnh self-loop $(i,i)$ với cự ly $d_{ii} = 0.0$ cho mọi $i \in V_c$ (bảo đảm đỉnh cô lập vẫn có mặt trong đồ thị).
+  2. **GNN Node Input Projection:**
+     $$\text{Input: } x_i \in \mathbb{R}^{26} \implies h_i^{(0)} = \operatorname{Dropout}_{0.1}\left(\operatorname{ReLU}\left(\operatorname{LayerNorm}_{64}\left(W_{\text{in}} x_i + b_{\text{in}}\right)\right)\right) \in \mathbb{R}^{64}$$
+     với $W_{\text{in}} \in \mathbb{R}^{64 \times 26}$.
+  3. **Message-Passing Layers ($L = 2$ layers cố định):**
+     Với mỗi layer $\ell \in \{0, 1\}$ (`GraphConvLayer(64, 64)`):
+     - **Audit Đối chiếu Mã nguồn về Self-Loop & $W_{\text{self}}$:**
+       > *Mã nguồn baseline (`src/data/urban_graph.py` và `src/models/node_encoder.py`) hiện tại đưa cả cạnh self-loop $(i,i)$ vào đồ thị $G^{\text{urban}}$ (qua `include_self_loop=True`) đồng thời lớp `GraphConvLayer` cũng áp dụng phép biến đổi $W_{\text{self}} h_i$.*
+       > **Quy chuẩn bất biến:** Pipeline BẮT BUỘC giữ nguyên 100% cơ chế kép này đúng theo implementation hiện hữu. Agent TUYỆT ĐỐI KHÔNG được tự ý gỡ bỏ self-loop khỏi đồ thị, không gỡ bỏ $W_{\text{self}}$, không sửa aggregation operator, và không cố gắng "tinh gọn" vì cho rằng thông tin đỉnh bị tính hai lần.
+     - **Message Function:** Với mỗi cạnh $(j \to i)$ có cự ly $d_{ji}$ km:
+       $$m_{ji}^{(\ell)} = W_{\text{msg}}^{(\ell)} \left[ h_j^{(\ell)} \parallel \log(1 + d_{ji}) \right] + b_{\text{msg}}^{(\ell)} \in \mathbb{R}^{64}$$
+       với $W_{\text{msg}}^{(\ell)} \in \mathbb{R}^{64 \times (64 + 1)}$ và $b_{\text{msg}}^{(\ell)} \in \mathbb{R}^{64}$.
+     - **Aggregation Operator:** **Scatter Mean**. Tổng message được chia cho in-degree (clamp tối thiểu bằng 1.0):
+       $$\text{Agg}_i^{(\ell)} = \frac{\sum_{j \in \mathcal{N}(i)} m_{ji}^{(\ell)}}{\max\left(1, \; |\mathcal{N}(i)|\right)}$$
+     - **Node-Update & Self-Feature Combination:**
+       $$h_i^{(\text{agg}, \ell)} = \operatorname{LayerNorm}_{64}\left(\operatorname{ReLU}\left(\text{Agg}_i^{(\ell)} + W_{\text{self}}^{(\ell)} h_i^{(\ell)} + b_{\text{self}}^{(\ell)}\right)\right)$$
+       với $W_{\text{self}}^{(\ell)} \in \mathbb{R}^{64 \times 64}$.
+     - **Residual Skip Connection & Dropout:**
+       $$h_i^{(\ell+1)} = h_i^{(\ell)} + \operatorname{Dropout}_{0.1}\left(h_i^{(\text{agg}, \ell)}\right)$$
+  4. **Node Output Projection:**
+     $$h_i = W_{\text{out}} h_i^{(2)} + b_{\text{out}} \in \mathbb{R}^{64}$$
+     với $W_{\text{out}} \in \mathbb{R}^{64 \times 64}$.
+  5. **Joint Classical Gravity Prior Component:**
+     - Trainable parameters: $G \in \mathbb{R}$ và $\alpha = \exp(\text{log\_alpha}) > 0$.
+     - Baseline clamping bảo đảm hữu hạn tuyệt đối:
+       $$\log T_{ij}^{\text{grav}} = G + \log(\max(P_i, 1.0)) + \log(\max(P_j, 1.0)) - \alpha \log(\max(D_{ij}, 0.1))$$
+  6. **Neural Residual Pairwise OD Decoder:**
+     - Vector ghép nối đầu vào edge: $e_{ij} = [h_i \parallel h_j \parallel \log(1 + D_{ij}) \parallel \log T_{ij}^{\text{grav}}] \in \mathbb{R}^{130}$ ($2 \times 64 + 2 = 130$).
+     - Cấu trúc mạng:
+       $$\operatorname{Linear}(130 \to 64) \to \operatorname{LayerNorm}(64) \to \operatorname{ReLU}() \to \operatorname{Dropout}(0.1) \to \operatorname{Linear}(64 \to 32) \to \operatorname{ReLU}() \to \operatorname{Dropout}(0.1) \to \operatorname{Linear}(32 \to 1)$$
+     - Trọng số và bias của lớp `Linear(32 -> 1)` cuối cùng bắt buộc khởi tạo bằng 0 (`nn.init.zeros_`), bảo đảm $\text{residual}_{ij} \approx 0$ tại bước khởi tạo.
+     - Hàm kết hợp và hàm kích hoạt đầu ra:
+       $$\hat{T}_{ij} = \operatorname{Softplus}\left(\log T_{ij}^{\text{grav}} + \text{residual}_{ij}\right) + 10^{-4}$$
+  7. **Khóa Bất biến Huấn luyện & Chuyển giao:**
+     - Toàn bộ tham số $(W_{\text{in}}, W_{\text{msg}}, W_{\text{self}}, W_{\text{out}}, W_{\text{dec}}, G, \text{log\_alpha})$ được tối ưu hóa đồng thời bằng Log1p-MSE qua 40 epochs với `AdamW`, learning rate $\eta = 2 \times 10^{-3}$, weight decay $10^{-4}$, gradient clipping $5.0$.
+     - Dự báo zero-shot sang target city $t$ tái sử dụng nguyên vẹn forward function và các trọng số đã freeze từ epoch 40.
+
 - **Quy tắc Bất biến Xây dựng Đồ thị Không gian (Spatial Graph Construction Contract):**
   - **Tập đỉnh hoàn chỉnh (Full Tract Node Set $V_c$):** Đồ thị không gian của mỗi thành phố $c$ bắt buộc phải được xây dựng từ **toàn bộ tập tract nodes** có trong bảng node canonical:
     $$V_c = \{\text{all tracts in canonical node table of city } c\}$$
@@ -330,35 +474,6 @@ $$\boxed{\text{Ba họ mô hình độc lập về cơ chế; không ép buộc 
     assert all(raw_haversine_km <= 5.0 + 1e-4)  # cho mọi non-self edge
     assert every_node_has_self_loop
     ```
-- **Thành phần Gravity kết hợp đồng thời (Joint Gravity Component):**
-  Khác với MLP, Urban-GNN duy trì thành phần vật lý gravity hiển ngôn được tích hợp từ baseline `GravityPrior` (`src/models/gravity.py`):
-  $$\log T_{ij}^{\text{grav}} = G + \log(\max(P_i, 1.0)) + \log(\max(P_j, 1.0)) - \alpha \log(\max(D_{ij}, 0.1))$$
-  - **Quy tắc Ổn định Số học Kế thừa từ Baseline Code (Baseline Numerical Clamping Invariant):**
-    - Để triệt tiêu nguy cơ $\log(0) = -\infty$ khi gặp các tract có dân số $P = 0$ (hoặc cự ly cực nhỏ) đưa vào nơ-ron decoder, baseline code sử dụng quy tắc cắt dưới tường minh:
-      ```python
-      log_pi = torch.log(torch.clamp(population_i, min=1.0))
-      log_pj = torch.log(torch.clamp(population_j, min=1.0))
-      log_d = torch.log(torch.clamp(distance_km, min=0.1))
-      ```
-    - Quy tắc này bảo đảm giá trị $\log T_{ij}^{\text{grav}}$ luôn luôn **hữu hạn** ($\in \mathbb{R}$) đối với mọi cặp OD dương, ngăn ngừa hoàn toàn hiện tượng $-\infty$ đi vào các lớp `nn.Linear` và `nn.LayerNorm` của `PairwiseODDecoder`.
-    - Cùng với hàm kích hoạt $\operatorname{Softplus}$ đặt sau residual decoder và số hạng $+10^{-4}$, Urban-GNN luôn tạo ra dự báo $\hat{T}_{ij} > 0$ hữu hạn trên toàn bộ tập hỗ trợ $\Omega_t^+$ ($P_{\text{covered}} = 1.0$).
-  - $G, \alpha$ là các tham số học đồng thời (*jointly trainable*) cùng các trọng số GNN trên 30% training OD pairs nguồn (không pre-fit riêng rẽ, không đóng băng trước, không detach gradient).
-- **Công thức Dự báo Chính xác & Cơ chế Kết hợp Cố định (Exact Prediction Equation):**
-  Phương trình dự báo cuối cùng của Urban-GNN được audit và đóng băng chính xác từ mã nguồn hiện hữu:
-  $$\boxed{\hat{T}_{ij} = \operatorname{Softplus}\left(\log T_{ij}^{\text{grav}} + \operatorname{MLP}_{\text{dec}}\left([h_i \parallel h_j \parallel \log(1 + D_{ij}) \parallel \log T_{ij}^{\text{grav}}]\right)\right) + 10^{-4}}$$
-  Trong đó:
-  1. **Neural Edge Representation:** $e_{ij} = [h_i \parallel h_j \parallel \log(1 + D_{ij}) \parallel \log T_{ij}^{\text{grav}}] \in \mathbb{R}^{2 \cdot d_h + 2}$ (với $d_h = 64 \implies 130$ chiều).
-  2. **Neural Residual Decoder ($\operatorname{MLP}_{\text{dec}}$):**
-     $$\operatorname{Linear}(130 \to 64) \to \text{LayerNorm} \to \text{ReLU} \to \text{Dropout}(0.1) \to \operatorname{Linear}(64 \to 32) \to \text{ReLU} \to \text{Dropout}(0.1) \to \operatorname{Linear}(32 \to 1)$$
-     Lớp tuyến tính cuối cùng được khởi tạo bằng 0 (`nn.init.zeros_`), giúp tại thời điểm khởi tạo, $\text{Residual}_{ij} \approx 0$ và mô hình bắt đầu từ $\operatorname{Softplus}(\log T_{ij}^{\text{grav}})$.
-  3. **Quy tắc Kết hợp (Combination Operation):** Phép cộng log-scale (*additive log-space residual offset*):
-     $$\log \mu_{ij} = \log T_{ij}^{\text{grav}} + \text{Residual}_{ij}$$
-  4. **Vị trí Hàm kích hoạt (Activation Placement):** $\operatorname{Softplus}$ được đặt **sau** bước cộng residual, kèm số hạng dịch chuyển số học $+10^{-4}$:
-     $$\hat{T}_{ij} = \operatorname{Softplus}(\log \mu_{ij}) + 10^{-4}$$
-  - **Khóa Bất biến Kiến trúc (Architecture Invariant):**
-    - Tuyệt đối không thay đổi sang $T^{\text{grav}} + T^{\text{neural}}$, không $T^{\text{grav}} \times T^{\text{neural}}$, không thay đổi thứ tự hay vị trí Softplus.
-    - Không detach gradient của thành phần gravity; $G, \alpha$ nhận gradient trực tiếp từ final loss $\mathcal{L}(\hat{T}, T)$ trong suốt 40 epochs.
-    - Dự báo zero-shot sang target $t$ sử dụng chính xác cùng forward function và cùng bộ trọng số đã đóng băng $(G_s, \alpha_s, \theta_{\text{GNN}})$.
 - **Mô tả Phương pháp luận chuẩn cho Bài báo (Paper Wording):**
   > *“For each city, the spatial graph is constructed over the complete tract set using centroid-based Haversine distance and a fixed 5-km radius, with self-loops included. The OD train/held-out split affects only supervised flow labels and does not alter the graph topology. Urban-GNN integrates spatial message passing on this geographic radius graph with a jointly trained two-parameter gravity prior. Origin and destination node embeddings, log-distance, and log-gravity flow are concatenated into a pairwise decoder that learns an additive log-space residual offset: $\hat{T}_{ij} = \operatorname{Softplus}(\log T_{ij}^{\text{grav}} + \operatorname{MLP}_{\text{dec}}([h_i \parallel h_j \parallel \log(1 + D_{ij}) \parallel \log T_{ij}^{\text{grav}}])) + 10^{-4}$. Both components are trained jointly end-to-end and frozen before zero-shot transfer.”*
 - **Huấn luyện:** Huấn luyện bằng Log1p-MSE với 3 seeds $\{1, 10, 100\}$, mỗi seed học bộ $(G, \alpha, \theta_{\text{GNN}})$ riêng.
@@ -390,6 +505,11 @@ $$\boxed{\text{Ba họ mô hình độc lập về cơ chế; không ép buộc 
 
 #### 6. Cấu hình Huấn luyện Chung & Quy tắc Chọn Mô hình:
 - **Kiểu dữ liệu bắt buộc (Global Floating-Point Precision):** Khóa cố định `dtype = torch.float32` (hoặc `np.float32` đối với mảng dự báo nơ-ron trước calibration; và `np.float64` cho phân phối DBD và tỷ lệ calibration) cho toàn bộ 3 họ mô hình. Mọi tensor trọng số, gradient, đầu vào và forward activations đều được tính toán trên `torch.float32`.
+- **Hợp đồng Tối ưu Hóa Toàn Tập (Training Batch Contract):**
+  > **Chỉ thị Bắt buộc (Strict Full-Batch Contract):**
+  > Toàn bộ cả ba họ mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`) BẮT BUỘC sử dụng tối ưu hóa toàn tập (**Strict Full-Batch Optimization**) trên toàn bộ tập con cố định 30% source training positive OD pairs $\Omega_{s,\text{train}}^+$.
+  > - **Định nghĩa 1 Epoch:** Đúng 1 lần forward pass và chính xác 1 lần optimizer update trên toàn bộ $N_{s}^{\text{train}}$ cặp OD.
+  > - **Tuyệt đối Nghiêm cấm:** Mini-batching, DataLoader batch size, DataLoader shuffling, drop_last, sample reordering giữa các epoch, resampling, gradient accumulation, hoặc dynamic batch sizing.
 - **Optimizer:** `AdamW`, Learning rate $\eta = 2 \times 10^{-3}$, Weight decay $= 10^{-4}$, Gradient clipping $= 5.0$.
 - **Số epoch:** $40$ epochs cố định, không early stopping.
 - **Checkpoint chuyển giao:** Lấy duy nhất checkpoint tại epoch cuối cùng (epoch 40).
@@ -398,8 +518,43 @@ $$\boxed{\text{Ba họ mô hình độc lập về cơ chế; không ép buộc 
 #### 7. Mô tả Phương pháp luận chuẩn cho Bài báo (Method Wording):
 > *“We evaluate three distinct modeling families: a parsimonious two-parameter physics-based gravity model, a DeepGravity-inspired pairwise MLP adapted to direct flow-intensity regression in the absence of target origin outflows, and a graph-based neural model (Urban-GNN) featuring spatial message passing and a jointly trained gravity component. All three baseline families are trained on the exact same 30% positive OD pairs per source city and transferred unchanged to unseen target cities. The same post-hoc DBD calibration operator is applied across model families, with support conditioning when a baseline assigns zero mass to an observed target distance bin.”*
 
-### 2.4. Giao thức Đa Hạt Giống (Multi-Seed Protocol)
-Để đảm bảo tính khoa học trung thực và loại bỏ hoàn toàn thiên kiến do khởi tạo trọng số ngẫu nhiên:
+### 2.4. Giao thức Đa Hạt Giống & Hợp Đồng Tái Lập Tất Định Cấp Thực Thi (Multi-Seed & Strict Run-Level Determinism Contract)
+- **Hợp đồng Tái lập Tất định Cấp Thực thi (Strict Run-Level Determinism Contract):**
+  Mục tiêu của nghiên cứu là bảo đảm tính tái lập tất định (*strictly reproducible and deterministic*) khi thực thi lại trên **cùng mã nguồn, cùng bộ dữ liệu, cùng manifests, cùng môi trường phần mềm và cùng cấu hình phần cứng/backend**. Protocol không tuyên bố tính đồng nhất bit-to-bit giữa các phiên bản PyTorch, phiên bản CUDA hoặc các kiến trúc phần cứng khác nhau.
+  
+  Mọi quá trình thực thi bắt buộc ghi nhận metadata môi trường đầy đủ vào file kiểm toán:
+  ```text
+  python_version
+  numpy_version
+  torch_version
+  device_type
+  cuda_version
+  cudnn_version
+  ```
+
+- **Quy chuẩn PYTHONHASHSEED & Cấm Phụ thuộc Thứ tự Hash:**
+  `PYTHONHASHSEED` bắt buộc phải được thiết lập bởi môi trường thực thi trước khi tiến trình Python khởi động (`PYTHONHASHSEED=42`). Việc gán `os.environ["PYTHONHASHSEED"]` bên trong code Python đang chạy không thỏa mãn yêu cầu này.
+  Đồng thời, toàn bộ pipeline khoa học **tuyệt đối không được phụ thuộc vào thứ tự hash của Python (không dùng set/dict iteration không sắp xếp cho bất kỳ kết quả khoa học nào)**.
+
+- **Khởi tạo Hạt giống Mô hình:**
+  Với mỗi mô hình nơ-ron và mỗi hạt giống huấn luyện $r \in \{1, 10, 100\}$, khối mã khởi tạo môi trường sau BẮT BUỘC phải được thực thi **trước** khi khởi tạo mô hình hoặc optimizer:
+  ```python
+  import random
+  import numpy as np
+  import torch
+
+  random.seed(r)
+  np.random.seed(r)
+  torch.manual_seed(r)
+  if torch.cuda.is_available():
+      torch.cuda.manual_seed_all(r)
+  torch.use_deterministic_algorithms(True)
+  torch.backends.cudnn.benchmark = False
+  torch.backends.cudnn.deterministic = True
+  ```
+  - **Quy tắc bất biến:** Khởi tạo trọng số mô hình chỉ được phép diễn ra **sau** khi toàn bộ các seeds và cờ deterministic algorithms ở trên đã được thiết lập đầy đủ.
+  - Tuyệt đối không cho phép bất kỳ module nội bộ nào tự sinh seed ngẫu nhiên độc lập ngoài $r$.
+
 - **Áp dụng Đa hạt giống:**
   - Đối với 2 họ mô hình nơ-ron (`pairwise_mlp`, `urban_gnn`): Huấn luyện độc lập qua **3 random seeds cố định**:
     $$\text{Seeds} \in \{1, 10, 100\}$$
@@ -492,7 +647,24 @@ Ba representations này phục vụ các mục đích độc lập và tuyệt �
   - `assert np.allclose(distance_std, (distance_log - source_mean) / source_std)`.
   - Radius graph: `assert raw_haversine_distance_km <= 5.0` cho mọi cạnh không phải self-loop.
   - Gravity: Sử dụng đúng `distance_km_raw`.
-- **Quy tắc đặc trưng không biến thiên (Zero-variance distance rule):** Nếu khoảng cách trong 30% train của source có $\sigma_s^{\text{distance}} < 10^{-12}$, đặt $d_{\text{std}} = 0$ cho MLP. Quy tắc này hoàn toàn không ảnh hưởng đến Gravity, GNN graph, GNN gravity prior hay DBD bins vì các thành phần này luôn dùng raw km.
+- **Quy tắc đặc trưng không biến thiên (Zero-variance rules):**
+  - **Pairwise Distance:** Nếu khoảng cách trong 30% train của source có $\sigma_s^{\text{distance}} < 10^{-12}$, đặt $d_{\text{std}} = 0$ cho MLP. Quy tắc này hoàn toàn không ảnh hưởng đến Gravity, GNN graph, GNN gravity prior hay DBD bins vì các thành phần này luôn dùng raw km.
+  - **Node Features (Source and Target):** Với mọi đặc trưng node $f$, nếu độ lệch chuẩn mẫu trên source $\sigma_{s,f} < 10^{-12}$, đánh dấu `zero_variance_flag = True` và gán giá trị sau biến đổi bằng $0.0$ cho toàn bộ các node trên source và target:
+    ```python
+    std_f = float(np.std(col_data, ddof=1))
+    if std_f < 1e-12:
+        transformed_feature = np.zeros_like(col_data, dtype=np.float32)
+        zero_variance_flag = True
+    ```
+- **Quy chuẩn Định nghĩa Thống kê Toàn cục (Global Summary Statistics Standard):**
+  Trong toàn bộ dự án, mọi báo cáo thống kê mô tả bắt buộc tuân thủ đúng một chuẩn tính toán:
+  ```python
+  std = float(np.std(x, ddof=1))
+  q25 = float(np.quantile(x, 0.25, method="linear"))
+  q75 = float(np.quantile(x, 0.75, method="linear"))
+  IQR = q75 - q25
+  positive_count = int(np.sum(x > 0.0))  # strictly positive (> 0), not >= 0
+  ```
 - **Tuyệt đối không tự “đồng nhất preprocessing”:** Không được đưa ra nhận định “để công bằng cả 3 mô hình nên dùng cùng một normalized distance”. Mỗi thành phần sử dụng biểu diễn khoảng cách phù hợp với bản chất cơ chế của nó.
 
 #### 4. Quy tắc Bất biến (Invariants & Safety Rules):
@@ -536,55 +708,89 @@ Ba representations này phục vụ các mục đích độc lập và tuyệt �
 
 Sau khi fit trên 30% positive OD support của thành phố nguồn $s$, toàn bộ tham số mô hình được **đóng băng (freeze)** và suy luận trực tiếp sang 49 thành phố đích còn lại. Toàn bộ raw predictions $\hat{T}^{(0)}_{s,t,ij,\text{model},\text{seed}}$ được lưu trữ làm baseline bất biến trước khi tiến hành DBD calibration.
 
-### 3.2. Giao thức Phân khoảng Cự ly Đặc thù Nguồn (Source-Specific Fixed-Width Distance Binning)
+### 3.2. Giao thức Phân khoảng Cự ly Đặc thù Nguồn (Source-Specific Nominal Distance Binning)
 Để đảm bảo quy trình zero-shot hoàn toàn trong sạch, không sử dụng bất kỳ thông tin nào từ thành phố đích để định hình cấu trúc bin:
 
 1. **Xác định distance cap từ 30% training split của source city:**
    Với mỗi thành phố nguồn $s$, chỉ lấy các khoảng cách thực tế từ tập training 30%:
    $$D^{(s)}_{\text{cap}} = P_{99}\left(d_{ij} \mid (i,j) \in \Omega^{\text{train}}_s\right)$$
+   - **Quy chuẩn Tính Phân Vị Tuyệt Đối (Strict Quantile Method):**
+     ```python
+     D_cap = float(np.quantile(source_train_distance_km.astype(np.float64), 0.99, method="linear"))
+     assert np.isfinite(D_cap)
+     assert D_cap > 0.0
+     ```
    - Sử dụng phân vị 99 ($P_{99}$) để tránh các cặp OD ngoại lai quá xa làm giãn độ rộng bin bất hợp lý.
    - Tuyệt đối không dùng 70% held-out của source, không dùng dữ liệu/khoảng cách của target city, không dùng flow $T_{ij}$.
-2. **Định nghĩa các bins có độ rộng cố định cho từng độ phân giải $K$:**
-   Độ rộng mỗi bin:
+2. **Định nghĩa các bins cự ly cho từng độ phân giải $K$:**
+   > **Thuật ngữ Toán học Chính xác (Nominal Bins Wording):**
+   > $K$ biểu thị **số lượng bin danh nghĩa (nominal number of bins)**. $K - 1$ khoảng cự ly đầu tiên có độ rộng cố định $w_s(K) = D^{(s)}_{\text{cap}} / K$; khoảng cự ly thứ $K$ là khoảng tràn nửa mở (open-ended overflow bin) bắt đầu từ $(K-1) w_s(K)$ kéo dài vô cực.
+   
+   Độ rộng $K-1$ bin đầu:
    $$w_s(K) = \frac{D^{(s)}_{\text{cap}}}{K}$$
    Hệ thống $K$ khoảng cự ly của source $s$ được cố định như sau:
    $$B^{(s,K)}_1 = [0, w_s), \quad B^{(s,K)}_2 = [w_s, 2w_s), \quad \ldots, \quad B^{(s,K)}_K = [(K-1)w_s, \infty)$$
-   Bin cuối cùng $B^{(s,K)}_K$ hấp thụ toàn bộ khoảng cách vượt quá $D^{(s)}_{\text{cap}}$.
+   Bin cuối cùng $B^{(s,K)}_K$ hấp thụ toàn bộ khoảng cách vượt quá $(K-1)w_s$.
 3. **Ý nghĩa phương pháp luận (Source-Specific, Target-Independent):**
    Binning phản ánh đúng quy mô vật lý tự nhiên của thành phố nguồn, đồng thời hoàn toàn độc lập với thành phố đích (không dùng global bins từ 50 cities, không dùng target-specific bins, không học từ target distribution).
 4. **Quy tắc nhất quán tuyệt đối (Consistency Invariant):**
    Với một thành phố nguồn $s$: cùng split 30%, cùng $D^{(s)}_{\text{cap}}$, cùng ranh giới bin $B^{(s,K)}$ được dùng chung bất biến cho cả ba họ mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`), 3 seeds và toàn bộ 49 target cities.
 
-### 3.3. Công thức DBD Calibration (Pure Distance-Binned Distribution Calibration)
+### 3.3. Công thức DBD Calibration (Support-Conditioned Pure Distance-Binned Distribution Calibration)
 Khi mô hình nguồn $s$ chuyển giao sang thành phố đích $t$, cả phân phối dự đoán $q_{s,t}$ và phân phối thực nghiệm đích $p_{s,t}$ đều được tính toán trên **chính hệ thống bin của source $B^{(s,K)}$ và độc quyền trên tập hỗ trợ dương interzonal $\Omega_t^+$**:
-1. **Phân phối đích trên bins của source:**
+
+1. **Kiểm tra Tính Hợp Lệ Toàn Cục của Baseline Flow (Baseline Total Prediction Guard):**
+   Trước khi tính toán phân phối $q$, bộ hiệu chuẩn kiểm tra tổng lưu lượng dự báo baseline:
+   ```python
+   pred_total = float(np.sum(pred_before, dtype=np.float64))
+   if not np.isfinite(pred_total) or pred_total <= 0.0:
+       raise CalibrationDomainError(
+           f"Baseline total predicted flow is non-positive or non-finite: {pred_total} "
+           f"(source={source_city}, target={target_city}, model={model_name})"
+       )
+   ```
+   **Chính sách Thất bại (Hard Failure Policy):** Nếu `pred_total <= 0` hoặc không hữu hạn: **RAISE CalibrationDomainError**. Tuyệt đối không fallback ngầm sang uniform $q$, không cộng $\epsilon$ smoothing, và không gán $q = p$.
+
+2. **Phân phối đích trên bins của source:**
    $$p_{s,t,b} = \frac{\sum_{(i,j) \in \Omega_t^+ \cap B^{(s,K)}_b} T_{t,ij}}{\sum_{(i,j) \in \Omega_t^+} T_{t,ij}}, \quad \sum_{b=1}^K p_{s,t,b} = 1$$
-2. **Phân phối dự báo từ mô hình nguồn:**
+3. **Phân phối dự báo từ mô hình nguồn:**
    $$q_{s,t,b} = \frac{\sum_{(i,j) \in \Omega_t^+ \cap B^{(s,K)}_b} \hat{T}^{(0)}_{s,t,ij}}{\sum_{(i,j) \in \Omega_t^+} \hat{T}^{(0)}_{s,t,ij}}, \quad \sum_{b=1}^K q_{s,t,b} = 1$$
-3. **Tỷ lệ hiệu chuẩn từng bin (Piecewise Pure Calibration Ratio - không dùng $\epsilon$ smoothing):**
-   - **Trường hợp chuẩn ($q_{s,t,b} > 0$ trên mọi bin có $p_{s,t,b} > 0$):**
-     Áp dụng cho các mô hình nơ-ron (`pairwise_mlp`, `urban_gnn`) có hàm kích hoạt $\operatorname{Softplus}$ bảo đảm $\hat{T}_{ij} > 0$:
-     $$r_{s,t,b} = \begin{cases} \dfrac{p_{s,t,b}}{q_{s,t,b}}, & q_{s,t,b} > 0 \\ 1, & p_{s,t,b} = 0 \text{ và } q_{s,t,b} = 0 \end{cases}$$
-   - **Xử lý Empty Bin trên support:** Nếu một bin không có cặp OD nào trên support ($p_{s,t,b} = 0$ và $q_{s,t,b} = 0$), bin đó được định nghĩa là empty bin và không thực hiện hiệu chỉnh ($r_{s,t,b} = 1$). Tuyệt đối không dùng smoothing bằng $\epsilon$.
-   - **Xử lý Bất thường khi $q_{s,t,b} = 0$ và $p_{s,t,b} > 0$ (Hỗ trợ Điều kiện hóa cho Two-Parameter Gravity):**
-     Kiểm toán thực nghiệm trên toàn bộ 50 thành phố cho thấy có **122.668 cặp OD dương thuộc $\Omega_t^+$ kết nối với các tract có dân số bằng 0 ($P_i P_j = 0$, chiếm 2,02% tổng số cặp dương)**. Đối với mô hình vật lý `gravity_2param`, các cặp này tự nhiên cho ra dự báo $\hat{T}_{ij} = 0$. Khi một khoảng cự ly xa (ở các độ phân giải mịn $K=12, 20$) chỉ chứa các cặp OD thuộc nhóm này, xác suất dự báo của bin đó sẽ là $q_b = 0$ trong khi thực tế $p_b > 0$.
-     - Vì baseline dự báo $\hat{T}^{(0)} = 0$ trên toàn bộ các cặp trong bin đó, nhân với bất kỳ tỷ lệ hữu hạn nào vẫn cho ra lưu lượng bằng 0 ($0 \times r_b = 0$).
-     - Để bảo toàn toán học và bảo toàn lưu lượng chính xác tuyệt đối ($\sum_{(i,j) \in \Omega_t^+} \hat{T}^{(1)} = \sum_{(i,j) \in \Omega_t^+} \hat{T}^{(0)}$), bộ hiệu chuẩn áp dụng **Support-Conditioned DBD Calibration**: điều kiện hóa phân phối đích trên tập các bin có dự báo dương (positive baseline support):
-       $$B^+ = \{b \in \{1,\ldots,K\} \mid q_{s,t,b} > 0\}, \quad P_{\text{covered}} = \sum_{b \in B^+} p_{s,t,b}$$
-       - Với $b \in B^+$:
-         $$r_{s,t,b} = \frac{p_{s,t,b} / P_{\text{covered}}}{q_{s,t,b}}$$
-       - Với $b \notin B^+$ (các bin có $q_{s,t,b} = 0$):
-         $$r_{s,t,b} = 1.0 \implies \hat{T}^{(1)}_{ij} = 1.0 \times 0.0 = 0.0$$
-       - Khi toàn bộ các bin có $p_b > 0$ đều có $q_b > 0$ (như MLP và GNN), $P_{\text{covered}} = 1.0$ và công thức trùng khớp hoàn toàn $100\%$ với $r_b = p_b / q_b$.
-     - **Ghi nhận Chẩn đoán Kiểm toán Bắt buộc:** Khi chạy Gravity baseline, pipeline bắt buộc xuất thêm 3 trường chẩn đoán kiểm toán:
-       ```text
-       covered_target_mass = P_covered
-       uncovered_target_mass = 1.0 - P_covered
-       n_uncovered_bins = sum(q_b == 0 and p_b > 0)
-       ```
-     - **Diễn giải Khoa học Chuẩn mực cho Bài báo (Paper Wording):**
-       > *“For neural models (MLP, GNN), the Softplus activation ensures strictly positive predictions across all positive-support OD pairs, yielding full support coverage ($P_{\mathrm{covered}} = 1.0$). For the physical Two-Parameter Gravity model, zero-population tracts naturally predict zero flow; when an entire distance bin falls on zero-population tracts, $q_b = 0$ while $p_b > 0$. In such cases, DBD calibration operates as a support-conditioned calibration on the positive baseline support $B^+ = \{b : q_b > 0\}$, renormalizing the target DBD by $P_{\mathrm{covered}}$. Unpredicted bins remain unscaled ($r_b = 1.0$, producing zero flow), preserving exact flow volume without infinite multipliers. We explicitly report the covered target mass $P_{\mathrm{covered}}$ and number of uncovered bins for diagnostic transparency.”*
-4. **Dự báo sau hiệu chuẩn:**
+
+4. **Hợp đồng Hiệu Chuẩn Điều Kiện Hóa Hỗ Trợ Độc Lập Với Tên Mô Hình (Generic Support-Conditioned Calibration Rule):**
+   > **Quy chuẩn Thuật toán Chung (Generic Calibrator Contract):**
+   > Hiệu chuẩn có điều kiện hóa hỗ trợ (Support-Conditioned Calibration) là một **quy tắc số học tổng quát áp dụng cho bất kỳ họ mô hình nào** bất cứ khi nào tồn tại bin có $q_{s,t,b} = 0$ và $p_{s,t,b} > 0$.
+   > Bộ hiệu chuẩn (`calibrate_dbd`) TUYỆT ĐỐI KHÔNG kiểm tra tên mô hình (không dùng logic `if model == 'gravity_2param'`). Calibrator xác định độ phủ hỗ trợ chỉ dựa trên vector xác suất thực tế $q$ và $p$.
+
+   - **Xác định tập hỗ trợ dương của baseline (Exact-Zero Support Rule):**
+     $$B^+ = \{b \in \{1,\ldots,K\} \mid q_{s,t,b} > 0.0\}$$
+     > **Quy chuẩn Không Sai Số Ngưỡng (Exact-Zero Support Invariant):**
+     > Điều kiện thuộc tập $B^+$ được xác định tuyệt đối và duy nhất bằng so sánh `q_b > 0.0`.
+     > Tuyệt đối KHÔNG được áp dụng bất kỳ ngưỡng sai số số học nào như `q_b > 1e-12`, `q_b > eps`, min-probability floor, hay epsilon-clipping để cưỡng ép một bin có xác suất cực nhỏ thành 0 hoặc ngược lại.
+   - **Độ phủ target mass:**
+     $$P_{\text{covered}} = \sum_{b \in B^+} p_{s,t,b}$$
+     - **Trường hợp chuẩn ($P_{\text{covered}} = 1.0$, $|B^+| = K$ hoặc mọi $b \notin B^+$ đều có $p_{s,t,b} = 0$):**
+       Toàn bộ target mass nằm trên các bin có baseline dự báo dương:
+       $$r_{s,t,b} = \begin{cases} \dfrac{p_{s,t,b}}{q_{s,t,b}}, & b \in B^+ \\ 1.0, & b \notin B^+ \text{ (empty bin trên cả p và q)} \end{cases}$$
+     - **Trường hợp khuyết hỗ trợ ($P_{\text{covered}} < 1.0$, tồn tại $b \notin B^+$ có $p_{s,t,b} > 0$):**
+       Xảy ra chủ yếu với mô hình vật lý `gravity_2param` trên các khoảng cự ly chỉ chứa cặp OD có $P_i P_j = 0$, hoặc khi mạng nơ-ron underflow float32 về 0.0:
+       - Tái chuẩn hóa phân phối target trên tập hỗ trợ $B^+$:
+         $$p_{s,t,b}^+ = \frac{p_{s,t,b}}{P_{\text{covered}}}, \quad \forall b \in B^+$$
+       - Tỷ lệ hiệu chuẩn:
+         $$r_{s,t,b} = \begin{cases} \dfrac{p_{s,t,b}^+}{q_{s,t,b}} = \dfrac{p_{s,t,b}}{P_{\text{covered}} \cdot q_{s,t,b}}, & b \in B^+ \\ 1.0, & b \notin B^+ \end{cases}$$
+       - Với $b \notin B^+$, vì $\hat{T}^{(0)}_{ij} = 0.0$, dự báo sau hiệu chuẩn giữ nguyên:
+         $$\hat{T}^{(1)}_{ij} = 1.0 \times 0.0 = 0.0$$
+       - **Bảo toàn lưu lượng chính xác:**
+         $$\sum_{ij \in \Omega_t^+} \hat{T}^{(1)}_{ij} = \sum_{b \in B^+} r_{s,t,b} \sum_{ij \in B_b} \hat{T}^{(0)}_{ij} = \sum_{b \in B^+} \frac{p_{s,t,b}^+}{q_{s,t,b}} \left(q_{s,t,b} \sum_{ij} \hat{T}^{(0)}_{ij}\right) = \left(\sum_{b \in B^+} p_{s,t,b}^+\right) \sum_{ij} \hat{T}^{(0)}_{ij} = \sum_{ij} \hat{T}^{(0)}_{ij}$$
+   - **Ghi nhận Chẩn đoán Kiểm toán Bắt buộc:** Báo cáo cho mọi transfer run:
+     ```text
+     covered_target_mass = P_covered
+     uncovered_target_mass = 1.0 - P_covered
+     n_uncovered_bins = int(np.sum((q == 0) & (p > 0)))
+     ```
+   - **Diễn giải Khoa học Chuẩn mực cho Bài báo (Paper Wording):**
+     > *“Support-conditioned calibration is implemented as a generic numerical operator applicable to any baseline family whenever $q_b = 0$ while $p_b > 0$. The target DBD is renormalized over the effective baseline support $B^+ = \{b : q_b > 0\}$ by $P_{\mathrm{covered}} = \sum_{b \in B^+} p_b$. Unpredicted bins remain unscaled ($r_b = 1.0$, producing zero flow), preserving exact flow volume without infinite multipliers or arbitrary clipping. We explicitly report the covered target mass $P_{\mathrm{covered}}$ and number of uncovered bins across all runs.”*
+
+5. **Dự báo sau hiệu chuẩn:**
    $$\hat{T}^{(1)}_{s,t,ij} = r_{s,t,b(i,j)} \cdot \hat{T}^{(0)}_{s,t,ij}$$
 
 **Tính chất bảo toàn lưu lượng tuyệt đối (Exact Volume-Preservation Invariant):**
@@ -592,209 +798,181 @@ Tổng lưu lượng dự đoán sau hiệu chuẩn được bảo toàn nguyên
 $$\left|\sum_{(i,j) \in \Omega_t^+} \hat{T}^{(1)}_{s,t,ij} - \sum_{(i,j) \in \Omega_t^+} \hat{T}^{(0)}_{s,t,ij}\right| < 10^{-10}$$
 Ghi nhận rõ ràng trong protocol: đây là **exact volume-preserving calibration up to floating-point tolerance on $\Omega_t^+$**. Tuyệt đối không dùng ground-truth total flow của target city ($\sum_{(i,j) \in \Omega_t^+} T_{t,ij}$) ở bất kỳ bước hiệu chuẩn nào trong main experiment.
 
-### 3.4. Thang đo đánh giá (Original Flow Scale Metrics)
-Tất cả các chỉ số được đo trên thang lưu lượng gốc:
+### 3.4. Thang đo đánh giá & Bộ Chỉ Số Chuẩn Hóa Của Evaluator (Canonical 15-Metric Suite)
+Tất cả các chỉ số được đo trên thang lưu lượng gốc, độc quyền trên tập hỗ trợ dương interzonal $\Omega_t^+$:
 - **Common Part of Commuters (CPC):** $\text{CPC} = \frac{2 \sum \min(T, \hat{T})}{\sum T + \sum \hat{T}}$
 - **Scale-Normalized CPC ($1 - \text{TVD}$):** $\text{CPC}_{\text{norm}} = \sum \min\left(\frac{T}{\sum T}, \frac{\hat{T}}{\sum \hat{T}}\right)$
 - **Mean Absolute Error (MAE):** $\text{MAE} = \frac{1}{N} \sum |T - \hat{T}|$
 - **Mean Squared Error (MSE):** $\text{MSE} = \frac{1}{N} \sum (T - \hat{T})^2$
 - **Root Mean Squared Error (RMSE):** $\text{RMSE} = \sqrt{\text{MSE}}$
 
-Định nghĩa mức cải thiện (dương = tốt hơn):
-$$\Delta \text{CPC} = \text{CPC}^{(1)} - \text{CPC}^{(0)}, \quad \Delta \text{MAE} = \text{MAE}^{(0)} - \text{MAE}^{(1)}, \quad \Delta \text{MSE} = \text{MSE}^{(0)} - \text{MSE}^{(1)}$$
+> **Quy chuẩn Bộ Chỉ Số Chuẩn Hóa (Evaluator Metric Canonical Suite):**
+> Bộ đánh giá (`evaluate_calibration_transfer`) BẮT BUỘC trả về đầy đủ **15 metrics chuẩn hóa duy nhất** cho mọi transfer run:
+> - `CPC_before`, `CPC_after`, `delta_CPC` (với $\Delta \text{CPC} = \text{CPC}^{\text{after}} - \text{CPC}^{\text{before}}$)
+> - `CPC_norm_before`, `CPC_norm_after`, `delta_CPC_norm` (với $\Delta \text{CPC}_{\text{norm}} = \text{CPC}_{\text{norm}}^{\text{after}} - \text{CPC}_{\text{norm}}^{\text{before}}$)
+> - `MAE_before`, `MAE_after`, `delta_MAE` (với $\Delta \text{MAE} = \text{MAE}^{\text{before}} - \text{MAE}^{\text{after}}$)
+> - `MSE_before`, `MSE_after`, `delta_MSE` (với $\Delta \text{MSE} = \text{MSE}^{\text{before}} - \text{MSE}^{\text{after}}$)
+> - `RMSE_before`, `RMSE_after`, `delta_RMSE` (với $\Delta \text{RMSE} = \text{RMSE}^{\text{before}} - \text{RMSE}^{\text{after}}$)
+> 
+> Agent TUYỆT ĐỐI KHÔNG được tự ý chọn lọc hoặc bỏ bớt bất kỳ metric nào trong 15 metrics trên khi xuất ra các tệp kết quả.
 
 ---
 
-## 4. Các thực nghiệm thành phần (Experiments A – E)
+### 4. Các thực nghiệm thành phần (Experiments A – D) & Bảng Ánh xạ RQs
 
-#### Experiment A: Main Zero-Shot Transfer Value (Pre-Specified Primary Calibration)
+### Bảng Ánh Xạ Câu Hỏi Nghiên Cứu và Các Thực Nghiệm (RQ ↔ Experiment Mapping)
+
+| Research Question | Experiment | Cấu hình & Nhân tố Mục tiêu |
+|---|---|---|
+| **RQ1: Added value under limited OD supervision** | **Experiment A** | $f_{\text{train}} = 30\%$, $K = 8$, $\epsilon = 0$ (Primary evaluation under controlled data-scarcity) |
+| **RQ2: Dependence on OD scarcity** | **Experiment B** | $f_{\text{train}} \in \{0.10, 0.30, 1.00\}$, $K = 8$, $\epsilon = 0$ (Nested source splits, $\Delta \text{CPC}(f)$, Gap Recovery) |
+| **RQ3: Resolution / error / structural specificity** | **Experiment C + Experiment D** | **Exp C:** $f=30\%$, $K \in \{2,4,8,12,20\} \times \epsilon \in \{0, 0.01,\ldots,0.10\}$ (Unified Master Sensitivity Grid: C1 resolution, C2 error, C3 interaction)<br>**Exp D:** $f=30\%$, $K = 8$, $\epsilon = 0$ (Target Structural Specificity Control vs. Dose-Matched Scaled Donor) |
+
+---
+
+### Experiment A — Main DBD Added Value under Limited OD Supervision (Primary Experiment)
+
+Đây là primary experiment của toàn bộ công trình.
+
 - **Quy chuẩn Cố định Tiền định (Pre-Specified Primary Configuration):**
-  $$\boxed{K = 8, \qquad \epsilon = 0}$$
-  - Kết quả hiệu chuẩn chính của toàn bộ nghiên cứu được **xác định trước (pre-specified)** tại độ phân giải $K = 8$ khoảng cự ly và không có nhiễu quan sát $\epsilon = 0$ (sử dụng oracle normalized target DBD trên $\Omega_t^+$).
-  - **Không chọn $K$ dựa trên kết quả Sensitivity:** Kể cả khi Experiment B cho thấy $K = 12$ hay $K = 20$ mang lại mean $\Delta \text{CPC}$ cao hơn, cấu hình chính của Experiment A vẫn bắt buộc giữ nguyên $K = 8$. Không được dùng bất kỳ kết quả thử nghiệm nào từ Experiment B để thay đổi $K$ chính.
-  - **Không chọn $\epsilon$ dựa trên kết quả:** Thử nghiệm nhiễu (Experiment C/D) thuần túy phục vụ đánh giá tính bền vững (robustness), tuyệt đối không chọn mức nhiễu $\epsilon > 0$ thay thế cho main result dù bất kỳ lý do gì.
-  - **Áp dụng Thống nhất cho cả Ba Họ Mô hình:** Cùng cấu hình tiền định $K=8, \epsilon=0$ được áp dụng bất biến cho `gravity_2param`, `pairwise_mlp` và `urban_gnn`. Tuyệt đối không dùng cấu hình $K$ riêng biệt cho từng mô hình.
-  - **Tách biệt Độc lập Đầu ra:** File kết quả chính `calibration_results.csv` chỉ chứa duy nhất các dòng ứng với $K=8, \epsilon=0$ (chứa đúng $22.050$ seed-level transfer runs overall, tương ứng $7.350$ runs mỗi mô hình; tổng hợp thành $7.350$ seed-averaged results tại `calibration_results_mean.csv`). Toàn bộ các cấu hình độ phân giải và mức nhiễu khác được lưu trữ riêng biệt tại `noise_robustness_results.csv`.
-  - **Sanity Check Bắt buộc:** Khi trích xuất hoặc tạo kết quả main calibration:
+  $$\boxed{f_{\text{train}} = 30\%, \quad K = 8, \quad \epsilon = 0}$$
+  - $30\%$: Mức độ giám sát OD nguồn hạn chế chính (main limited source OD supervision setting).
+  - $K = 8$: Độ phân giải khoảng cách danh nghĩa chính tiền định (pre-specified primary DBD resolution).
+  - $\epsilon = 0$: Phân phối cự ly tổng hợp đích chuẩn (oracle normalized aggregate target DBD).
+- **Pipeline Thực thi:**
+  $$\text{30\% source OD} \longrightarrow \text{Train frozen baseline} \longrightarrow \text{Zero-shot target} \longrightarrow +\text{Target DBD calibration}$$
+- **So sánh Mục tiêu:**
+  $$\text{CPC}_{\text{before}} \quad \text{vs} \quad \text{CPC}_{\text{after}}$$
+  và tương tự với $\text{MAE}, \text{MSE}, \text{RMSE}, \text{CPC}_{\text{norm}}$.
+- **Mục tiêu Khoa học của Experiment A:**
+  > *Test whether target DBD provides measurable added value when the source model itself is learned under limited OD supervision.*
+- **Nguyên tắc Bất biến:**
+  - Giữ nguyên toàn bộ 50 source cities, 49 target cities/source (2.450 source-target pairs per model; 7.350 model-transfer combinations trên 3 model families).
+  - 3 model seeds $\{1, 10, 100\}$ (22.050 seed-level transfer runs overall, tương ứng 7.350 runs mỗi mô hình; tổng hợp thành 7.350 seed-averaged results tại `calibration_results_mean.csv`).
+  - Target-level inference (Tier B) và crossed source-target mixed effects (Tier D).
+  - **Không chọn lại cấu hình:** Không dùng Experiment B, C hoặc D để thay đổi $f_{\text{train}}=30\%$, $K=8$ hay $\epsilon=0$ của Experiment A.
+  - **Sanity check bắt buộc:**
     ```python
-    assert (df["K"] == 8).all(), "Main calibration results must strictly use K=8"
-    assert (df["epsilon"] == 0).all(), "Main calibration results must strictly use epsilon=0"
+    assert (df["train_fraction"] == 0.30).all(), "Experiment A must strictly use train_fraction=0.30"
+    assert (df["K"] == 8).all(), "Experiment A must strictly use K=8"
+    assert (df["epsilon"] == 0).all(), "Experiment A must strictly use epsilon=0"
     ```
   - **Mô tả Phương pháp luận chuẩn cho Bài báo (Paper Wording):**
-    > *“The primary calibration configuration was pre-specified at $K=8$ distance bins using the noiseless target DBD ($\epsilon=0$). Alternative bin resolutions and observation-error levels were evaluated only in sensitivity analyses and were not used to select the primary configuration.”*
+    > *“The primary calibration configuration was pre-specified at $f_{\mathrm{train}}=30\%$ source OD supervision, $K=8$ distance bins, and noiseless target DBD ($\epsilon=0$). Alternative supervision fractions, bin resolutions, and observation-error levels were evaluated in dedicated secondary experiments and were not used to select the primary configuration.”*
 
-- **Scale:** 2,450 source-target transfer pairs per model ($50 \times 49$). Across the three baseline families (`gravity_2param`, `pairwise_mlp`, `urban_gnn`), this yields 7,350 model-transfer combinations. Evaluated across 3 nominal initialization seeds $\{1, 10, 100\}$ (với Two-Parameter Gravity chạy tối ưu tất định và lưu đúng 3 seed-labeled rows giống hệt nhau), toàn bộ thử nghiệm chứa **đúng 7.350 seed-level transfer runs mỗi mô hình** và **chính xác 22.050 runs overall** (tổng hợp thành đúng 7.350 seed-averaged model-transfer combinations trên 3 họ mô hình).
-- **Mục tiêu:** Định lượng mức cải thiện trung bình và phân vị (mean, median, 25/75th percentile) của $\Delta \text{CPC}$, $\Delta \text{MAE}$, $\Delta \text{MSE}$ sau khi tổng hợp các seeds. Báo cáo độc lập cho từng họ mô hình:
-  - `gravity_2param`: 2.450 results (vật lý thuần túy 2 tham số).
-  - `pairwise_mlp`: 2.450 seed-averaged results (hồi quy nơ-ron từng cặp trực tiếp).
-  - `urban_gnn`: 2.450 seed-averaged results (truyền thông điệp đồ thị không gian kèm prior trọng lực).
+---
 
-### Experiment B: Bin Resolution Sensitivity
-- **Cấu hình & Bản chất Phân tích (Slice of Master Sensitivity Grid):**
-  $$\boxed{\text{Experiment B} = \text{Master Grid}\mid_{\epsilon = 0}}$$
-  *“Experiment B is defined strictly as the noiseless ($\epsilon = 0$) slice of the unified master $K \times \text{TV}$ sensitivity grid (Experiment D). It evaluates the effect of increasing source distance bin resolution across $K \in \{2, 4, 8, 12, 20\}$ on zero-shot transfer quality across all 2,450 source-target transfer pairs per model (7,350 model-transfer combinations across the 3 baseline families). No independent runner, separate bin regeneration, or separate model re-inference is executed for Experiment B.”*
-- **Quy chuẩn Bin Nguồn:**
-  *“Distance bins are source-specific but fixed before transfer. For each source city, the distance cap is defined as the 99th percentile of OD distances observed only in the 30% source training split. For each resolution $K \in \{2, 4, 8, 12, 20\}$, this source-specific range is divided into $K$ equal-width physical-distance bins, with the last bin absorbing distances beyond the cap. The resulting bin boundaries are frozen and reused for all 49 target cities, both baseline and calibrated predictions, all seeds, and all three baseline model families.”*
+### Experiment B — Source OD Scarcity Sensitivity
 
-### Experiment C: Observation Error Robustness (Exact TV Perturbation Direction)
-- **Cấu hình & Bản chất Phân tích (Slice of Master Sensitivity Grid):**
-  $$\boxed{\text{Experiment C} = \text{Master Grid}\mid_{K = 8}}$$
-  *“Experiment C is defined strictly as the primary resolution ($K = 8$) slice of the unified master $K \times \text{TV}$ sensitivity grid (Experiment D). It evaluates the robustness of DBD calibration against observation errors in the target distance distribution $p \to \tilde{p}$ across error levels $\epsilon \in \{0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10\}$. No independent noise generation or separate calibration runner is executed for Experiment C.”*
+Đây là experiment mới được thiết lập nhằm trả lời trực tiếp **RQ2**.
 
-1. **Nguyên tắc sinh nhiễu bảo toàn tổng xác suất & Đạt chính xác $TV(p, \tilde{p}) = \epsilon$:**
-   Với mỗi mức nhiễu $\epsilon \in \{0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10\}$ tại độ phân giải $K = 8$ (cũng như mọi $K$ trong Master Grid):
-   - Nếu $\epsilon = 0$: $\tilde{p} = p$ trực tiếp, gán duy nhất `realization_id = 0` (không sinh nhiễu ngẫu nhiên, không lặp lại 20 lần cho case noiseless).
-   - Nếu $\epsilon > 0$: Chạy đúng $R = 20$ realizations (`realization_id = 0 ... 19`). Sinh vector ngẫu nhiên $u_b \sim \mathcal{N}(0, 1)$ ($b=1,\ldots,K$) và triệt tiêu kỳ vọng:
-     $$u_b \leftarrow u_b - \frac{1}{K} \sum_{k=1}^K u_k \implies \sum_{b=1}^K u_b = 0$$
-   - Xác định hệ số co giãn $\alpha$ để Total Variation distance đạt chính xác $\epsilon$:
-     $$\alpha = \frac{2\epsilon}{\sum_{b=1}^K |u_b|} \implies \tilde{p}_b = p_b + \alpha u_b$$
-     *(Đảm bảo $TV(p, \tilde{p}) = \frac{1}{2} \sum_b |p_b - \tilde{p}_b| = \frac{\alpha}{2} \sum_b |u_b| = \epsilon$ chính xác theo thiết kế).*
-2. **Kiểm tra tính khả thi & Cơ chế Rejection Sampling:**
-   - Kiểm tra điều kiện không âm: $\min_b \tilde{p}_b \ge 0$.
-   - Nếu tồn tại $\tilde{p}_b < 0$, **loại bỏ (reject) hoàn toàn hướng $u$ đó và sinh lại $u$ mới** (tối đa 10.000 lần thử).
-   - Tuyệt đối **không** clip giá trị âm về 0 hay re-normalize, vì các thao tác này phá vỡ khoảng cách TV đã thiết kế.
-3. **Tiêu chuẩn kiểm chứng số học bắt buộc (Numerical Validation):**
-   Mỗi phân phối $\tilde{p}$ sinh ra phải vượt qua 3 ràng buộc khắt khe:
-   $$\left| \sum_{b=1}^K \tilde{p}_b - 1 \right| < 10^{-12}, \quad \min_b \tilde{p}_b \ge -10^{-12}, \quad |TV(p, \tilde{p}) - \epsilon| < 10^{-10}$$
-   Nếu vi phạm bất kỳ điều kiện nào: lập tức raise error, tuyệt đối không âm thầm sửa chữa (no silent repair).
-4. **Quy chuẩn Seed Tất định bằng SHA-256 (Canonical String Formatting) & Không dùng Python hash:**
-   - Tuyệt đối không dùng hàm `hash(...)` mặc định của Python vì tính ngẫu nhiên giữa các session (hash randomization).
-   - Tạo canonical string chuẩn hóa:
-     $$\text{canonical\_string} = \text{global\_noise\_seed} \mid \text{source\_city} \mid \text{target\_city} \mid K \mid \text{epsilon\_string} \mid \text{realization\_id}$$
-     với `epsilon_string = f"{epsilon:.6f}"` cố định 6 chữ số thập phân, tên city chuẩn hóa bỏ khoảng trắng thừa.
-   - Băm SHA-256 lấy 8 bytes đầu làm số nguyên không dấu big-endian:
-     $$\text{digest} = \text{SHA256}(\text{canonical\_string.encode('utf-8')})$$
-     $$\text{seed} = \text{int.from\_bytes}(\text{digest}[:8], \text{byteorder}='big', \text{signed}=\text{False}) \pmod{2^{32}}$$
-   - **Bắt buộc:** Khóa seed không chứa model hay model_seed. Cùng một tuple $(\text{source}, \text{target}, K, \epsilon, \text{realization\_id})$ được chia sẻ dùng chung 100% cho cả 3 mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`).
-5. **Chính sách Thất bại Nghiêm ngặt (Hard Failure Policy):**
-   - Giới hạn cố định `max_attempts = 10_000`.
-   - Nếu sau 10.000 lần thử vẫn không tìm được vector hướng $u$ thỏa mãn không âm: **RAISE HARD ERROR và dừng chạy ngay lập tức**.
-   - Bắt buộc ghi nhận log chẩn đoán đầy đủ:
-     `source_city, target_city, K, epsilon, realization_id, noise_seed, max_attempts, min_positive_mass_of_p, number_of_zero_bins`.
-   - Tuyệt đối nghiêm cấm: giảm $\epsilon$, đổi $K$, bỏ realization, skip pair, đổi seed hay fallback ngầm sang thuật toán khác.
-6. **Diễn giải Khoa học (Interpretation):**
-   $\epsilon$ được diễn giải là tỷ lệ xác suất được tái phân bổ qua các bin:
-   > *“$\epsilon$ probability mass of the target distance distribution has been redistributed across distance bins (e.g., $TV = 0.10$ corresponds to moving 10% of probability mass between bins).”*
-   Tuyệt đối không mô tả $\epsilon$ là độ lệch chuẩn Gaussian hay phần trăm sai số từng bin.
-7. **Mô tả Phương pháp luận chuẩn cho Bài báo (Method Wording):**
-   > *“Experiments B and C are predefined slices of the same master $K \times \text{TV}$ sensitivity dataset used in Experiment D, rather than independently generated experimental runs. For each prescribed TV-error level $\epsilon$, we generate a random zero-sum perturbation direction over the target DBD bins and scale its $L_1$ magnitude so that the resulting perturbed distribution satisfies $TV(p, \tilde{p}) = \epsilon$ exactly. Perturbations violating non-negativity are rejected and resampled. Twenty independent realizations are generated for each error level when $\epsilon > 0$, while $\epsilon = 0$ evaluates the single noiseless target distribution.”*
+- **Mục tiêu Khoa học:**
+  > *Test whether the calibration benefit of target DBD changes as pair-level source OD supervision becomes more or less scarce.*
+- **Tập Training Fractions Khóa Cứng (Locked Training Fractions):**
+  $$\boxed{f \in \{0.10, \; 0.30, \; 1.00\}}$$
+  Tuyệt đối không thêm các mức fraction khác (như 0.05, 0.20, 0.50).
+- **Cấu hình Cố định:**
+  $$\boxed{K = 8, \qquad \epsilon = 0}$$
+  Tuyệt đối không chạy full lưới $K \times \text{TV}$ cho từng fraction.
+- **Hợp Đồng Nested Split Bắt Buộc (Nested Split Contract):**
+  Theo đúng quy chuẩn tại §2.2, với mỗi source city $s$:
+  1. Lấy positive support $\Omega_s^+$.
+  2. Sắp xếp xác định theo `(origin, destination)`.
+  3. Sinh duy nhất một hoán vị $\pi_s$ bằng `split_seed = 42`.
+  4. Xác định:
+     $$\text{Train}_{10}(s) = \pi_s[:\lfloor 0.10 N_s \rfloor]$$
+     $$\text{Train}_{30}(s) = \pi_s[:\lfloor 0.30 N_s \rfloor]$$
+     $$\text{Train}_{100}(s) = \pi_s[:N_s]$$
+  5. Đảm bảo bất biến lồng nhau:
+     $$\boxed{\text{Train}_{10} \subset \text{Train}_{30} \subset \text{Train}_{100}}$$
+  - Phân chia $f = 0.30$ trùng khớp 100% với main Experiment A.
+  - Không tạo random permutation khác cho mỗi fraction, không stratify, không resample, không retry, không chọn subset theo model performance.
+- **Evaluation:**
+  Với mỗi fraction $f \in \{0.10, 0.30, 1.00\}$:
+  $$\Delta \text{CPC}(f) = \text{CPC}_{\text{after DBD}}(f) - \text{CPC}_{\text{baseline}}(f)$$
+  Báo cáo độc lập cho cả ba họ mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`).
+  - **Câu hỏi chính:** *Does $\Delta \text{CPC}$ change systematically as source OD supervision changes?*
+  - Tuyệt đối không giả định tính đơn điệu (monotonicity) trước khi quan sát dữ liệu thực nghiệm.
+- **Gap Recovery Analysis (Chỉ số Mô tả Bổ trợ):**
+  Bổ sung chỉ số mô tả phụ nhằm định lượng phần khoảng trống hiệu năng được bù đắp:
+  $$\text{GapRecovery}(f) = \frac{\text{CPC}_{f+\text{DBD}} - \text{CPC}_f}{\text{CPC}_{100\%} - \text{CPC}_f}$$
+  - **Quy tắc Tính Toán & Sanity Checks:**
+    - Chỉ tính khi mẫu số $\text{CPC}_{100\%} - \text{CPC}_f > 0$.
+    - Nếu mẫu số bằng 0, âm, hoặc không hữu hạn: gán $\text{GapRecovery} = \text{NaN}$ và bật cờ chẩn đoán `gap_recovery_valid = False`.
+    - Tuyệt đối **không clip** giá trị vào $[0, 1]$ hoặc làm tròn giả tạo.
+  - **Diễn giải Khoa học Chuẩn mực (Interpretation):**
+    > *“Fraction of the performance gap between limited-supervision baseline and full-supervision source baseline recovered by target DBD calibration.”*
+    Tuyệt đối không gọi đây là sự thay thế nhân quả dữ liệu OD (*no causal replacement claim*). Trong bài báo bắt buộc dùng thuật ngữ *“performance-gap recovery”*, tuyệt đối không dùng cụm từ *“DBD replaces X% of OD data”*.
 
-### Experiment D: Master $K \times \text{TV}$ Sensitivity Grid & Interaction Analysis
+---
+
+### Experiment C — DBD Information Quality Sensitivity
+
+Experiment C hợp nhất toàn bộ các phân tích về độ phân giải cự ly và độ bền sai số quan sát vào một khuôn khổ thực nghiệm đơn nhất, tương ứng trả lời phần đầu của **RQ3**.
+
+- **Master Grid Duy Nhất:**
+  $$K \in \{2, 4, 8, 12, 20\}, \qquad \epsilon \in \{0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10\}$$
+- **Training Fraction Cố Định:**
+  $$\boxed{f_{\text{train}} = 30\%}$$
+  Tuyệt đối không chạy grid này ở $f = 10\%$ hay $f = 100\%$.
 - **Cơ chế Thực thi Đơn nhất (Master Sensitivity Runner):**
-  Chỉ có **duy nhất một execution pipeline** chạy toàn bộ lưới:
-  $$K \in \{2, 4, 8, 12, 20\} \times \epsilon \in \{0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10\}$$
-  với $\text{realizations} = [0]$ khi $\epsilon = 0$ và $\text{realizations} = [0 \ldots 19]$ khi $\epsilon > 0$.
-  Toàn bộ kết quả được ghi vào một file master duy nhất: `noise_robustness_results.csv`.
+  Chỉ có **duy nhất một master execution runner** tạo ra tệp tổng thể `noise_robustness_results.csv`. Các khảo sát C1 và C2 là **derived views** được trích xuất từ master dataset này, không phải các lượt chạy độc lập.
 - **Nguyên tắc Tái sử dụng Dự báo Baseline (Baseline Prediction Caching):**
-  $$\hat{T}^{(0)}_{s,t,ij} \text{ chỉ phụ thuộc } (s, t, \text{model}, \text{model\_seed})$$
-  Không phụ thuộc vào $K, \epsilon, \text{realization\_id}$. Mô hình chỉ thực hiện inference đúng một lần duy nhất cho mỗi cặp source-target-model-seed. Các vòng lặp $K$, $\epsilon$, $\text{realization}$ hoàn toàn chỉ thực hiện:
-  $$\text{choose bins } B^{(s,K)} \to \text{oracle } p \to \text{noise } \tilde{p} \to \text{calibrate } r_b \to \text{evaluate metrics}$$
-  Tuyệt đối không gọi lại `model.forward()` hoặc `model.predict()`.
-- **Đầu ra chính & Phân tích Tương tác (Interaction Analysis):**
-  - Ma trận Heatmap biểu diễn $\text{Mean}(\Delta \text{CPC} \mid K, \epsilon)$ cho từng baseline family.
-  - Phân tích tương tác hai chiều $K \times \epsilon$: Kiểm chứng giả thuyết *liệu độ phân giải cự ly mịn hơn ($K$ lớn) có đem lại thông tin giá trị hơn nhưng nhạy cảm hơn trước sai số quan sát $\epsilon$ hay không?*
-- **Tính nhất quán Tuyệt đối (Consistency Invariant):**
-  Mọi hàng trong Experiment B và C tồn tại đồng nhất 100% trong Experiment D/Master dataset. Các tệp `experiment_b_summary.csv` và `experiment_c_summary.csv` là các derived views được lọc trực tiếp từ master output `noise_robustness_results.csv`. Không có bất kỳ sự sai khác nào giữa các phân tích.
+  $\hat{T}^{(0)}_{s,t,ij}$ chỉ phụ thuộc $(s, t, \text{model}, \text{model\_seed})$ tại $f=30\%$. Dự báo zero-shot được tính đúng một lần duy nhất, sau đó tái sử dụng xuyên suốt toàn bộ các tổ hợp $K \times \epsilon \times \text{realization}$.
 
-### Experiment E: Structural Control Baselines (Dose-Matched Scaled Donor DBD on Source Bins)
-Thí nghiệm kiểm chứng nhằm xác định xem mức tăng hiệu năng của DBD đến từ **cấu trúc khoảng cách đặc thù của thành phố đích (target-aligned structure)** hay chỉ đơn thuần do mô hình nhận một **tác động nhiễu (perturbation magnitude) đủ mạnh**.
+#### C1 — Resolution Sensitivity (Slice $\epsilon = 0$):
+- Slice: $K \in \{2, 4, 8, 12, 20\}$ tại $\epsilon = 0$.
+- Mục tiêu: Trả lời câu hỏi *How much aggregate distance resolution is useful?*
+- Binning cự ly hoàn toàn xác định từ 30% training set của source city ($D^{(s)}_{\text{cap}} = P_{99}(\text{train}_s)$), độc lập với target city.
 
-#### 1. Nguyên tắc Bất biến Bắt buộc: Source City Quyết định Toàn bộ Ranh giới Bin
-$$\boxed{\text{Source city quyết định bin boundaries } B^{(s,K)} \text{ cho cả Baseline, Target và Donor}}$$
+#### C2 — Observation Error Robustness (Slice $K = 8$):
+- Slice: $\epsilon \in \{0, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10\}$ tại $K = 8$.
+- Mục tiêu: Trả lời câu hỏi *How robust is DBD calibration when aggregate target mobility information is noisy?*
+- Sinh nhiễu tuân thủ nghiêm ngặt thuật toán exact-TV perturbation:
+  - $\epsilon = 0$: $\tilde{p} = p$, gán `realization_id = 0`.
+  - $\epsilon > 0$: Đúng $R = 20$ realizations (`realization_id = 0 ... 19`), sinh vector $u$ triệt tiêu kỳ vọng, scale $\alpha = 2\epsilon / \sum |u_b|$, rejection sampling với kiểm tra $\min \tilde{p}_b \ge 0$ (tối đa 10.000 lần thử).
+  - Seed tất định SHA-256 từ `global_noise_seed = 42` kết hợp `source_city | target_city | K | epsilon_string | realization_id`.
+  - Hợp đồng support-conditioning tính toán lại 100% từ phân phối nhiễu $\tilde{p}$ và baseline $q$.
 
-Với một transfer pair $(s,t)$ và một donor city $d$, **toàn bộ 3 phân phối sau bắt buộc phải được biểu diễn trên cùng một hệ bin $B^{(s,K)}$ của thành phố nguồn $s$**:
-$$q_{s,t}, \quad p_{s,t}, \quad p_{s,d}$$
-Trong đó:
-- $q_{s,t}$: Baseline predicted DBD của target $t$, tính trên source bins $B^{(s,K)}$ và tập hỗ trợ dương interzonal $\Omega_t^+$:
-  $$q_{s,t,b} = \frac{\sum_{(i,j) \in \Omega_t^+ \cap B^{(s,K)}_b} \hat{T}^{(0)}_{s,t,ij}}{\sum_{(i,j) \in \Omega_t^+} \hat{T}^{(0)}_{s,t,ij}}$$
-- $p_{s,t}$: Ground-truth Target DBD của target $t$, tính trên source bins $B^{(s,K)}$ và tập hỗ trợ dương interzonal $\Omega_t^+$:
-  $$p_{s,t,b} = \frac{\sum_{(i,j) \in \Omega_t^+ \cap B^{(s,K)}_b} T_{t,ij}}{\sum_{(i,j) \in \Omega_t^+} T_{t,ij}}$$
-- $p_{s,d}$: Donor DBD của donor city $d$, **bắt buộc tính trên chính source bins $B^{(s,K)}$ và tập hỗ trợ dương interzonal của donor $\Omega_d^+$**:
-  $$p_{s,d,b} = \frac{\sum_{(i,j) \in \Omega_d^+ \cap B^{(s,K)}_b} T_{d,ij}}{\sum_{(i,j) \in \Omega_d^+} T_{d,ij}}$$
+#### C3 — Resolution $\times$ Error Interaction (Full Grid $K \times \epsilon$):
+- Phân tích tương tác hai chiều trên toàn bộ ma trận $5 \times 7$.
+- Mục tiêu: Trả lời câu hỏi *Does higher distance resolution provide more information but become more sensitive to observation error?*
+- Trực quan hóa bằng Heatmap $\text{Mean}(\Delta \text{CPC} \mid K, \epsilon)$ cho từng họ mô hình.
 
-> **Cơ sở khoa học:** Hai phân phối DBD chỉ có thể so sánh hoặc khớp liều (dose-match) khi và chỉ khi từng bin của chúng đại diện cho **cùng một khoảng cách vật lý thực tế**. Nếu target $t$ dùng bins của Chicago $[0, 14), [14, 28), \ldots$ mà donor $d$ (Seattle) dùng bins riêng của Seattle $[0, 10), [10, 20), \ldots$ thì dù cùng $K=4$, các chiều vector không cùng ý nghĩa vật lý và việc đo RMS log-ratio dose là vô nghĩa về mặt toán học.
-> 
-> **Quy tắc bất biến (Bin Invariant):** Hệ bin $B^{(s,K)}$ được freeze bất biến cho baseline, target và donor. Tuyệt đối không tính lại bin khi đổi target city, đổi donor city, đổi mô hình hay đổi seed. Chỉ khi đổi sang source city khác mới thay đổi hệ bin.
+---
 
-#### 2. Quy trình Thực nghiệm Chuẩn xác của Experiment E:
-1. **Xác định và đóng băng hệ bin của source $s$:** $B^{(s,K)}$ từ $D^{(s)}_{\text{cap}} = P_{99}(\text{train}_s)$.
-2. **Tính Target DBD:** $p_{s,t}$ trên $B^{(s,K)}$.
-3. **Chọn Donor City $d$ theo Quy tắc Tất định Chuẩn hóa (Deterministic Cyclic Selection) & Tính Donor DBD:** 
-   - **Canonical City Ordering:** Sử dụng thứ tự chữ cái chuẩn hóa của 50 thành phố (`cities_canonical`). Tuyệt đối không lấy từ `set`, filesystem hay truy vấn không tất định.
-   - **Quy tắc duyệt vòng (Cyclic Selection Rule):**
-     1. Tìm vị trí $t_{\text{idx}}$ của target $t$ trong `cities_canonical`.
-     2. Bắt đầu từ thành phố ngay sau target: $(t_{\text{idx}} + 1) \pmod{50}$.
-     3. Duyệt tuần tự theo vòng tròn và chọn thành phố đầu tiên thỏa mãn:
-        $$d \neq t \quad \text{và} \quad d \neq s$$
-     4. Sanity checks bắt buộc: `assert donor_city != source_city` và `assert donor_city != target_city`.
-   - **Tính Độc lập Tuyệt đối:**
-     - Tuyệt đối không dùng `random.choice`, không phụ thuộc model seed, không phụ thuộc noise seed.
-     - Tuyệt đối không chọn donor dựa trên similarity (khoảng cách DBD, địa lý, dân số, số tract, CPC ban đầu hay hiệu năng control).
-     - Không thử nhiều donor rồi chọn donor dễ khớp liều (dose-match). Nếu donor hợp lệ gặp khó khăn khi khớp liều, áp dụng chính sách xử lý của Experiment E, tuyệt đối không đổi donor.
-     - Cả 3 họ mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`) và mọi random seeds sử dụng chung 100% cùng một donor city cho mỗi cặp $(s, t)$.
-   - **Đóng băng trong Manifest:** Toàn bộ 2.450 quan hệ donor được sinh trước và khóa bất biến tại `manifests/donor_mapping.csv` (`source_city, target_city, donor_city, donor_rule, canonical_order_hash`).
-   - **Tính Donor DBD trên Source Bins:** Tính $p_{s,d}$ trên chính hệ bin $B^{(s,K)}$ của source $s$ sử dụng tập positive support $\Omega_d^+$ của donor.
-4. **Đo Calibration Dose (RMS Log-Ratio):**
-   - **Target Dose:**
-     $$\text{Dose}(p_{s,t}, q_{s,t}) = \sqrt{\frac{1}{K} \sum_{b=1}^{K} \left[ \log\left(\frac{p_{s,t,b} + \epsilon}{q_{s,t,b} + \epsilon}\right) \right]^2}$$
-   - **Raw Donor Dose:**
-     $$\text{Dose}(p_{s,d}, q_{s,t}) = \sqrt{\frac{1}{K} \sum_{b=1}^{K} \left[ \log\left(\frac{p_{s,d,b} + \epsilon}{q_{s,t,b} + \epsilon}\right) \right]^2}$$
-     (với $\epsilon = 10^{-9}$ cố định cho toàn bộ thí nghiệm dose matching).
-5. **Biểu diễn Perturbation trong Log-Ratio Space:**
-   $$z_{s,d,b} = \log\left(\frac{p_{s,d,b} + \epsilon_d}{q_{s,t,b} + \epsilon_d}\right), \quad \epsilon_d = 10^{-9}$$
-6. **Tái tạo Scaled Donor DBD Chính Xác Tuyệt Đối (Exact Simplex & Identity-at-Zero Reconstruction):**
-   Để bảo đảm đẳng thức toán học $\boxed{p^{\text{scaled}}_{s,d}(0) = q_{s,t}}$ đạt độ chính xác bit tuyệt đối và bảo toàn không cho các bin dự báo 0 bị gán xác suất nhân tạo:
-   - Với $\lambda = 0$:
-     $$p^{\text{scaled}}_{s,d}(0) = q_{s,t} \implies \text{Dose}\left(p^{\text{scaled}}_{s,d}(0), q_{s,t}\right) = 0.0 \implies f(0) = -D_{\text{target}}$$
-   - Với $\lambda > 0$: Biến đổi được thực hiện trên tập hỗ trợ dương của baseline $B^+ = \{b \in \{1,\ldots,K\} \mid q_{s,t,b} > 0\}$:
-     $$\begin{aligned}
-     \text{Đối với } b \in B^+: \quad & w_b(\lambda) = \exp\left(\log q_{s,t,b} + \lambda z_{s,d,b} - \max_{k \in B^+} (\log q_{s,t,k} + \lambda z_{s,d,k})\right) \\
-     \text{Đối với } b \notin B^+: \quad & w_b(\lambda) = 0.0 \\
-     p^{\text{scaled}}_{s,d,b}(\lambda) &= \frac{w_b(\lambda)}{\sum_{k=1}^K w_k(\lambda)}
-     \end{aligned}$$
-   - Đảm bảo $\lambda \ge 0$, tuyệt đối không tìm kiếm trên $\lambda < 0$ (không đảo chiều donor perturbation).
-   - Kiểm tra nghiêm ngặt: $p^{\text{scaled}}_{s,d,b} \ge -10^{-12}$, $\left|\sum_{b=1}^K p^{\text{scaled}}_{s,d,b} - 1\right| < 10^{-12}$, và $p^{\text{scaled}}_{s,d,b}(\lambda) = 0$ cho mọi $b \notin B^+$.
-7. **Khớp chính xác Dose bằng Thuật toán Brent Duy nhất ($\lambda^*$ Brent Root Finding):**
-   - **Hàm Root:** $f(\lambda) = \text{Dose}\left(p^{\text{scaled}}_{s,d}(\lambda), q_{s,t}\right) - D_{\text{target}}$.
-   - Do $p^{\text{scaled}}(0) = q_{s,t}$ chính xác bit, $f(0) = -D_{\text{target}} \le 0$ một cách chính xác tuyệt đối mà không phụ thuộc vào $\epsilon_d$.
-   - **Trường hợp $D_{\text{target}} < 10^{-12}$:** Gán trực tiếp $\lambda^* = 0$, $p^{\text{scaled}}_{s,d} = q_{s,t}$, $\text{Dose} = 0$, không chạy solver.
-   - **Xác định Bracket Tất định (Deterministic Upper-Bound Doubling):**
-     - Cận dưới: $\lambda_{\text{low}} = 0.0$ ($f(0) = -D_{\text{target}} \le 0$).
-     - Chuỗi cận trên: khởi tạo $\lambda_{\text{high}} = 1.0$, liên tục nhân đôi $\lambda_{\text{high}} \leftarrow 2 \lambda_{\text{high}}$ qua các giá trị $1, 2, 4, 8, \ldots, \le 1024$ cho đến khi $f(\lambda_{\text{high}}) \ge 0$.
-     - **Chính sách Thất bại Nghiêm ngặt (Hard Failure Policy):** Nếu sau khi tăng đến $\lambda_{\text{high}} = 1024$ mà vẫn $f(\lambda_{\text{high}}) < 0$, lập tức **RAISE HARD ERROR và dừng chạy**. Tuyệt đối không fallback sang minimization, không tăng vô hạn, không đổi donor, không scale xấp xỉ.
-   - **Tìm nghiệm bằng Brent Root Finding:** Chạy `brentq(f, lambda_low, lambda_high, xtol=1e-12, rtol=1e-12, maxiter=100)`. Tuyệt đối không dùng bounded minimization thay thế hay làm fallback.
-   - **Kiểm tra Sai số Dose Sau Tìm nghiệm:**
-     $$\text{Dose Error} = \left| \text{Dose}\left(p^{\text{scaled}}_{s,d}(\lambda^*), q_{s,t}\right) - D_{\text{target}} \right| < 10^{-6}$$
-     Nếu $\text{Dose Error} \ge 10^{-6}$, raise error và không thực hiện calibration.
-8. **Hiệu chuẩn Control:**
-   Áp dụng pure ratio piecewise cho donor đã scale:
-   $$r^{\text{control}}_{s,d,b} = \begin{cases} \dfrac{p^{\text{scaled}}_{s,d,b}}{q_{s,t,b}}, & q_{s,t,b} > 0 \\ 1, & p^{\text{scaled}}_{s,d,b} = 0 \text{ và } q_{s,t,b} = 0 \end{cases}, \quad \hat{T}^{\text{control}}_{ij} = r^{\text{control}}_{s,d,b(ij)} \cdot \hat{T}^{(0)}_{ij}$$
-   (Bảo toàn lưu lượng chính xác $|\sum_{(i,j) \in \Omega_t^+} \hat{T}^{\text{control}}_{ij} - \sum_{(i,j) \in \Omega_t^+} \hat{T}^{(0)}_{ij}| < 10^{-10}$, không dùng target total flow).
-9. **Thiết kế Thử nghiệm Cặp & Ưu thế Cấu trúc Đích (Paired Structural Advantage Framework):**
-   Thí nghiệm được cố định tại độ phân giải chính $K = 8$ và $\epsilon = 0$.
-   - **Tập hợp Hạt giống trước khi Đánh giá (Seed Aggregation First):**
-     Với mỗi bộ $(s, t, \text{model})$, lấy trung bình qua 3 model seeds cho cả target calibration và donor control:
-     $$\overline{\Delta \text{CPC}}^{\text{target}}_{s,t} = \frac{1}{3} \sum_{r=1}^3 \Delta \text{CPC}^{\text{target}}_{s,t,r}, \quad \overline{\Delta \text{CPC}}^{\text{control}}_{s,t} = \frac{1}{3} \sum_{r=1}^3 \Delta \text{CPC}^{\text{control}}_{s,t,r}$$
-     Tuyệt đối không coi 3 seeds là 3 quan sát độc lập.
-   - **Định nghĩa Ưu thế Cấu trúc Ghép cặp (Paired Structural Advantage):**
-     Do cả hai can thiệp cùng xuất phát từ đúng một dự báo baseline $\hat{T}^{(0)}_{s,t}$, phân tích dựa trên chênh lệch ghép cặp:
-     $$\boxed{\delta_{s,t} = \overline{\Delta \text{CPC}}^{\text{target}}_{s,t} - \overline{\Delta \text{CPC}}^{\text{control}}_{s,t}}$$
-     $\delta_{s,t} > 0$ biểu thị phân phối DBD khớp cấu trúc đích mang lại lợi ích lớn hơn một can thiệp donor lệch cấu trúc có cùng độ mạnh liều can thiệp. Tuyệt đối không so sánh target và donor như hai nhóm độc lập (no two-sample independent tests).
-   - **Chỉ số Tóm tắt Cấp Thành phố Đích (Primary Target-Level Summary $H_t$):**
-     Với mỗi thành phố đích $t$, tổng hợp qua 49 thành phố nguồn:
+### Experiment D — Target Structural Specificity Control
+
+Thí nghiệm kiểm chứng cấu trúc được định vị là **Experiment D**, trả lời vế thứ hai của **RQ3**.
+
+- **Tên Chính Thức:**
+  > **Experiment D — Target Structural Specificity Control**
+- **Cấu hình Thực Nghiệm:**
+  $$\boxed{f_{\text{train}} = 30\%, \qquad K = 8, \qquad \epsilon = 0}$$
+- **Câu hỏi Khoa học Trọng tâm:**
+  > *Is the observed improvement specifically due to alignment with the target city's mobility-distance structure, or can an equally strong but structurally mismatched intervention produce the same gain?*
+- **So sánh Mục tiêu:**
+  $$\Delta \text{CPC}_{\text{target DBD}} \quad \text{vs} \quad \Delta \text{CPC}_{\text{dose-matched donor}}$$
+- **Nguyên tắc Kỹ thuật Khóa Cứng (Preserved Technical Invariants):**
+  1. **Source city quyết định hệ bin $B^{(s,K)}$:** Cả baseline $q_{s,t}$, target DBD $p_{s,t}$ và donor DBD $p_{s,d}$ đều được biểu diễn trên cùng một hệ bin cự ly vật lý của source $s$.
+  2. **Chọn donor tuần hoàn tất định (Deterministic Cyclic Selection):** Sắp xếp danh mục 50 thành phố chuẩn hóa tại `manifests/cities_canonical.txt`, chọn donor tuần hoàn đầu tiên thỏa mãn $d \neq t$ và $d \neq s$. Khóa cứng tại `manifests/donor_mapping.csv`.
+  3. **Đo liều trên Effective Support $B^+$ (Effective Support RMS Log-Ratio):**
+     $$D_{\text{target}} = \sqrt{\frac{1}{|B^+|} \sum_{b \in B^+} \left[ \log\left(\frac{p_{s,t,b}^+ + 10^{-9}}{q_{s,t,b} + 10^{-9}}\right) \right]^2}$$
+     với $B^+ = \{b \mid q_{s,t,b} > 0.0\}$.
+  4. **Tái tạo donor đã scale chính xác bit tại $\lambda = 0$ ($p^{\text{scaled}}(0) = q_{s,t}$):**
+     $$w_b(\lambda) = \exp\left(\log q_{s,t,b} + \lambda z_{s,d,b} - \max_{k \in B^+} (\log q_{s,t,k} + \lambda z_{s,d,k})\right)$$
+  5. **Khớp liều bằng thuật toán Brent duy nhất ($\lambda^*$ Brent Root Finding):** Nhân đôi bracket $[0, \lambda_{\text{high}}]$ với $\lambda_{\text{high}} \le 1024$. Sai số liều $|\text{Dose}(\lambda^*) - D_{\text{target}}| < 10^{-6}$.
+  6. **Ưu thế cấu trúc ghép cặp (Paired Structural Advantage):**
+     $$\delta_{s,t} = \overline{\Delta \text{CPC}}^{\text{target}}_{s,t} - \overline{\Delta \text{CPC}}^{\text{control}}_{s,t}$$
+  7. **Tóm tắt cấp target và kiểm định thống kê:**
      $$H_t = \frac{1}{49} \sum_{s \neq t} \delta_{s,t}$$
-     Thu được đúng **50 target-level structural-advantage summaries** cho mỗi họ mô hình.
-   - **Báo cáo Thống kê & Bootstrap Resampling Cấp Target:**
-     Trên 50 giá trị $H_t$, báo cáo Mean, Median, IQR, số lượng và tỷ lệ target có $H_t > 0$.
-     Bootstrap 95% CI được tính bằng cách **resample 50 giá trị $H_t$ (10.000 resamples với hoàn lại)**, tuyệt đối không bootstrap trực tiếp 2.450 pairs.
-     Kiểm định Wilcoxon signed-rank test được áp dụng trên $H_1, \ldots, H_{50}$ so với 0, không chạy naive Wilcoxon trên 2.450 pair deltas.
-   - **Mô hình Hiệu ứng Ngẫu nhiên Chéo Kiểm chứng Bền vững (Crossed Mixed-Effects Robustness Model):**
-     Sử dụng toàn bộ dữ liệu 2.450 cặp $\delta_{s,t}$ sau seed aggregation:
-     $$\delta_{s,t} = \beta_0 + u_s + v_t + \epsilon_{s,t}, \quad u_s \sim \mathcal{N}(0, \sigma_s^2), \quad v_t \sim \mathcal{N}(0, \sigma_t^2)$$
-     Ký hiệu: $\delta \sim 1 + (1 \mid \text{source}) + (1 \mid \text{target})$. Báo cáo hệ số cố định $\beta_0$, SE($\beta_0$), 95% Wald CI, phương sai nguồn $\sigma_s^2$, phương sai đích $\sigma_t^2$, và phần dư $\sigma_\epsilon^2$.
+     Đánh giá trên 50 giá trị $H_t$ bằng Bootstrap CI 10.000 lần và Wilcoxon signed-rank test (Holm-Bonferroni correction qua 3 mô hình). Đánh giá độ bền bằng Crossed Mixed-Effects model: $\delta \sim 1 + (1 \mid \text{source}) + (1 \mid \text{target})$.
+- **Diễn giải Khoa học Chuẩn mực (Interpretation):**
+  Nếu $\delta > 0$, nghiên cứu diễn giải:
+  > *“Target-aligned distance structure provides more useful calibration information than a structurally mismatched perturbation of comparable intervention magnitude.”*
+  Tuyệt đối không tuyên bố cơ chế nhân quả vượt quá phạm vi thiết lập thực nghiệm.
 
-#### 3. Mô tả Phương pháp luận chuẩn cho Bài báo (Method Wording):
-> *“Experiment E compares target-aligned DBD calibration with a dose-matched structurally mismatched donor intervention on the same baseline predictions. The paired difference in calibration gain is summarized at the target-city level and evaluated with a crossed source-target mixed-effects robustness model. For each source city $s$, the source-specific bin system $B^{(s,K)}$ is frozen before transfer. Baseline, target, and donor distance distributions are all represented on this same source-defined bin system, ensuring that corresponding DBD components have identical physical-distance semantics.”*
+---
 
 ---
 
@@ -863,7 +1041,7 @@ $$G_s = \frac{1}{49} \sum_{t \neq s} \overline{\Delta \text{CPC}}_{s,t}$$
 - **Không phải Experiment Độc lập:** Không gọi Tầng C là Experiment F, không đánh số experiment mới, không thiết lập hypothesis test riêng về quan hệ giữa held-out performance và calibration gain, không tính Pearson/Spearman correlation trong main protocol, và tuyệt đối không diễn giải nhân quả (no causal claim kiểu *"better source models cause larger DBD gains"*).
 - Xuất ra tệp `source_city_summary.csv` gồm đúng **50 hàng per model** (150 hàng cho 3 mô hình).
 - Schema bắt buộc: `source_city, model, G_s, median_target_gain, IQR_target_gain, std_target_gain, n_targets, positive_targets, positive_target_fraction`.
-- Biểu đồ cấp source (phân phối $G_s$, heatmap $50 \times 50$, so sánh top/bottom sources) chỉ mang tính mô tả bổ trợ trực quan.
+- Biểu đồ cấp source (phân phối $G_s$, heatmap $50 \times 50$, so sánh **đúng top 5 và bottom 5** source models theo $G_s$) chỉ mang tính mô tả bổ trợ trực quan. Agent không được tự chọn số lượng top/bottom sources khác ngoài 5.
 
 #### Tầng D: Mô hình Hiệu ứng Ngẫu nhiên Chéo (Crossed Source-Target Mixed-Effects Robustness Model)
 Đây là **mô hình kiểm chứng độ bền vững chính xử lý cấu trúc phụ thuộc chéo (Primary Dependence-Aware Robustness Analysis)** sinh ra do cùng một source model xuất hiện trong 49 target results và cùng một target city xuất hiện trong 49 source results:
@@ -936,10 +1114,10 @@ Tier D: Crossed Mixed-Effects
    - Tuyệt đối không viết: *"Bootstrap removes the dependence among target cities."*
    - Tuyệt đối không viết: *"Wilcoxon fully accounts for source sharing."*
 3. **Trường hợp Tier B và Tier D cùng nhất quán:**
-   Nếu $\text{mean}(G_t) > 0$, bootstrap CI hoàn toàn dương, Wilcoxon $p < 0.05$, và mixed-effects $\beta_0 > 0$ với CI không chứa 0:
+   Nếu $\text{mean}(G_t) > 0$, bootstrap CI hoàn toàn dương, `wilcoxon_p_holm < 0.05`, và mixed-effects $\beta_0 > 0$ với CI không chứa 0:
    > *“Positive calibration gains are consistently observed in target-level summaries and remain supported after accounting for crossed source- and target-city dependence using a mixed-effects robustness model.”*
 4. **Trường hợp Tier B và Tier D có sự phân kỳ:**
-   Tuyệt đối không che giấu kết quả hoặc chỉ chọn báo cáo tầng có lợi hơn. Nếu Tier B dương nhưng mixed-effects CI chứa 0:
+   Tuyệt đối không che giấu kết quả hoặc chỉ chọn báo cáo tầng có lợi hơn. Nếu Tier B dương nhưng mixed-effects CI chứa 0 hoặc `wilcoxon_p_holm >= 0.05`:
    > *“Target-level summaries show positive average gains, but the dependence-aware mixed-effects analysis provides weaker evidence once shared source and target effects are accounted for.”*
 5. **Dữ liệu phân tích:** 
    Dữ liệu 2.450 source-target pairs (hoặc 7.350 model-transfer combinations across the 3 baseline families) được sử dụng cho biểu đồ phân tán (scatter plots), hàm mật độ KDE, và fitting mô hình mixed-effects, nhưng không dùng làm mẫu độc lập trong các kiểm định giả thuyết ngây thơ (*naive hypothesis tests*).
@@ -953,52 +1131,62 @@ Tier D: Crossed Mixed-Effects
 
 #### Các bảng dữ liệu đầu ra:
 1. **`source_city_results.csv`**: Đánh giá 70% within-city held-out set của từng thành phố theo từng seed qua 3 baseline families (chính xác $50 \text{ cities} \times 3 \text{ models} \times 3 \text{ seeds} = 450$ hàng; Two-Parameter Gravity lưu đủ 3 seed-labeled rows với kết quả tất định giống hệt nhau).
-   `source_city, model, seed, stochastic_training, train_ratio, CPC_eval, MAE_eval, MSE_eval, RMSE_eval`
+   `source_city, model, seed, stochastic_training, train_ratio, CPC_eval, CPC_norm_eval, MAE_eval, MSE_eval, RMSE_eval`
    *(Và tệp tổng hợp `source_city_results_mean.csv` chứa các hàng `mean ± std` qua các seeds — Gravity có std = 0.0).*
 2. **`manifests/gravity_parameters.csv`**: Bảng 2 tham số vật lý của gravity model trên 50 source cities (chính xác $50 \text{ cities} \times 3 \text{ seeds} = 150$ hàng).
    `source_city, seed, stochastic_training, G, alpha, loss_eval`
    - **`manifests/gravity_training_trace.csv`**: Bảng lưu vết huấn luyện từng epoch của gravity model ($50 \text{ cities} \times 40 \text{ epochs} \times 3 \text{ seeds} = 6.000$ hàng).
      `source_city, seed, epoch, G, alpha, train_loss`
 3. **`zero_shot_baseline.csv`**: Kết quả zero-shot thô trước hiệu chuẩn của toàn bộ seed-level transfer runs (chính xác $22.050$ hàng overall; $7.350$ hàng per model; chứa đầy đủ thông tin chẩn đoán scale và volume ratio theo từng transfer run).
-   `source_city, target_city, model, seed, CPC_before, CPC_norm_before, MAE_before, MSE_before, pred_total, true_total, R_vol`
-4. **`calibration_results.csv`**: Kết quả hiệu chuẩn chính tại $K=8$ của toàn bộ seed-level transfer runs (chính xác $22.050$ hàng overall; $7.350$ hàng per model; có cột `epsilon = 0` để kiểm tra sanity check trực tiếp).
-   `source_city, target_city, model, seed, K, epsilon, CPC_before, CPC_after, delta_CPC, MAE_before, MAE_after, delta_MAE, MSE_before, MSE_after, delta_MSE, covered_target_mass, uncovered_target_mass, n_uncovered_bins`
+   `source_city, target_city, model, seed, CPC_before, CPC_norm_before, MAE_before, MSE_before, RMSE_before, pred_total, true_total, R_vol`
+4. **`calibration_results.csv` (Experiment A Output):** Kết quả hiệu chuẩn chính tại $f=30\%, K=8, \epsilon=0$ của toàn bộ seed-level transfer runs (chính xác $22.050$ hàng overall; $7.350$ hàng per model; chứa đủ 15 evaluator canonical metrics và các trường chẩn đoán coverage; có cột `train_fraction = 0.30`, `K = 8`, `epsilon = 0` để kiểm tra sanity check trực tiếp).
+   `source_city, target_city, model, seed, train_fraction, K, epsilon, CPC_before, CPC_after, delta_CPC, CPC_norm_before, CPC_norm_after, delta_CPC_norm, MAE_before, MAE_after, delta_MAE, MSE_before, MSE_after, delta_MSE, RMSE_before, RMSE_after, delta_RMSE, covered_target_mass, uncovered_target_mass, n_uncovered_bins`
    *(Và tệp tổng hợp `calibration_results_mean.csv` chứa đúng **7.350 seed-averaged model-transfer results** — tức 2.450 hàng per model cho 3 họ mô hình).*
-5. **`target_city_summary.csv`**: Bảng thống kê mô tả cấp thành phố đích (Tầng B - Level 1) gồm đúng 50 hàng per model (150 hàng overall cho 3 mô hình). Tuyệt đối không chứa p-values hay global CI.
+5. **`scarcity_results.csv` (Experiment B Output):** Kết quả khảo sát độ nhạy với mức độ giám sát OD nguồn $f \in \{0.10, 0.30, 1.00\}$ tại $K=8, \epsilon=0$:
+   `source_city, target_city, model, seed, train_fraction, K, CPC_before, CPC_after, delta_CPC, MAE_before, MAE_after, delta_MAE, MSE_before, MSE_after, delta_MSE, RMSE_before, RMSE_after, delta_RMSE`
+   - **`scarcity_results_mean.csv`**: Tổng hợp seed-averaged cho Experiment B:
+     `source_city, target_city, model, train_fraction, CPC_before_mean, CPC_after_mean, delta_CPC_mean`
+   - **`scarcity_target_summary.csv`**: Bảng tổng hợp cấp thành phố đích cho từng fraction:
+     `target_city, model, train_fraction, mean_delta_CPC, median_delta_CPC, n_sources, positive_sources`
+   - **`scarcity_gap_recovery.csv`**: Bảng phân tích bù đắp khoảng trống hiệu năng Gap Recovery:
+     `source_city, target_city, model, train_fraction, baseline_CPC_fraction, calibrated_CPC_fraction, baseline_CPC_full, gap_denominator, gap_recovery, gap_recovery_valid`
+6. **`target_city_summary.csv`**: Bảng thống kê mô tả cấp thành phố đích (Tầng B - Level 1) gồm đúng 50 hàng per model (150 hàng overall cho 3 mô hình). Tuyệt đối không chứa p-values hay global CI.
    `target_city, model, G_t, median_source_gain, IQR_source_gain, std_source_gain, n_sources, positive_sources, positive_source_fraction`
-6. **`target_level_inference.csv`**: Bảng suy luận thống kê toàn cục cấp thành phố đích (Tầng B - Level 2) gồm đúng 1 hàng per model (3 hàng overall cho 3 mô hình).
-   `model, n_targets, mean_G, median_G, IQR_G, bootstrap_ci_low, bootstrap_ci_high, wilcoxon_stat, wilcoxon_p, positive_targets, positive_target_fraction`
-7. **`source_city_summary.csv`**: Bảng thống kê mô tả cấp thành phố nguồn (Tầng C) gồm đúng 50 hàng per model (150 hàng overall cho 3 mô hình).
+7. **`target_level_inference.csv`**: Bảng suy luận thống kê toàn cục cấp thành phố đích (Tầng B - Level 2) gồm đúng 1 hàng per model (3 hàng overall cho 3 mô hình).
+   `model, n_targets, mean_G, median_G, IQR_G, bootstrap_ci_low, bootstrap_ci_high, wilcoxon_stat, wilcoxon_p_raw, wilcoxon_p_holm, positive_targets, positive_target_fraction`
+   *(Ngưỡng kết luận ý nghĩa thống kê chính thức là `wilcoxon_p_holm < 0.05`, tuyệt đối không dùng raw p-value để tuyên bố ý nghĩa).*
+8. **`source_city_summary.csv`**: Bảng thống kê mô tả cấp thành phố nguồn (Tầng C) gồm đúng 50 hàng per model (150 hàng overall cho 3 mô hình).
    `source_city, model, G_s, median_target_gain, IQR_target_gain, std_target_gain, n_targets, positive_targets, positive_target_fraction`
-8. **`crossed_effects_results.csv`**: Kết quả ước lượng mô hình hiệu ứng ngẫu nhiên chéo (Tầng D) độc lập cho 3 baseline families (3 hàng overall).
+9. **`crossed_effects_results.csv`**: Kết quả ước lượng mô hình hiệu ứng ngẫu nhiên chéo (Tầng D) độc lập cho 3 baseline families (3 hàng overall).
    `model, n_pairs, estimation_method, optimizer, converged, beta0, se_beta0, ci_low, ci_high, source_variance, target_variance, residual_variance, log_likelihood, warnings`
    - **`crossed_effects_diagnostics.csv`**: Bảng chẩn đoán hội tụ và kiểm tra điều kiện biên của mô hình hiệu ứng chéo (3 hàng overall).
      `model, converged, n_iterations, singular_warning, boundary_warning, hessian_warning, other_warning`
-9. **`noise_robustness_results.csv` (Master Sensitivity Grid Output):** Toàn bộ kết quả thử nghiệm lưới độ nhạy cự ly và độ bền sai số $K \times \text{TV}$ duy nhất cho cả 3 mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`).
-   `source_city, target_city, model, model_seed, K, epsilon, realization_id, noise_seed, actual_TV, CPC_before, CPC_after, delta_CPC, MAE_before, MAE_after, delta_MAE, MSE_before, MSE_after, delta_MSE`
-   *(Mỗi unique case được chạy đúng 1 lần. Tuyệt đối không sinh 3 master files riêng biệt).*
-   - **`experiment_b_summary.csv` (Derived View):** Lọc trực tiếp từ Master dataset với điều kiện `epsilon == 0` và aggregate theo $K$.
-   - **`experiment_c_summary.csv` (Derived View):** Lọc trực tiếp từ Master dataset với điều kiện `K == 8` và aggregate theo $\epsilon$.
-   - **`experiment_d_summary.csv` (Derived View):** Tóm tắt ma trận 2 chiều $K \times \epsilon$ từ toàn bộ Master dataset.
-10. **`manifests/od_split_manifest.csv`**: Bảng phân chia 30/70 OD split cố định trên positive support của 50 source cities.
-    `source_city, origin, destination, split, split_seed`
-11. **`manifests/source_distance_bins.csv`**: Bảng ranh giới khoảng cách cho toàn bộ 50 source cities và tất cả $K$.
+10. **`noise_robustness_results.csv` (Experiment C Master Sensitivity Grid Output):** Toàn bộ kết quả thử nghiệm lưới độ nhạy cự ly và độ bền sai số $K \times \text{TV}$ duy nhất cho cả 3 mô hình (`gravity_2param`, `pairwise_mlp`, `urban_gnn`) tại $f=30\%$.
+    `source_city, target_city, model, model_seed, K, epsilon, realization_id, noise_seed, actual_TV, CPC_before, CPC_after, delta_CPC, CPC_norm_before, CPC_norm_after, delta_CPC_norm, MAE_before, MAE_after, delta_MAE, MSE_before, MSE_after, delta_MSE, RMSE_before, RMSE_after, delta_RMSE, covered_target_mass, uncovered_target_mass, n_uncovered_bins`
+    *(Mỗi unique case được chạy đúng 1 lần. Tuyệt đối không sinh 3 master files riêng biệt).*
+    - **`experiment_c1_resolution_summary.csv` (Derived View C1):** Lọc trực tiếp từ Master dataset với điều kiện `epsilon == 0` và aggregate theo $K$.
+    - **`experiment_c2_error_summary.csv` (Derived View C2):** Lọc trực tiếp từ Master dataset với điều kiện `K == 8` và aggregate theo $\epsilon$.
+    - **`experiment_c3_interaction_summary.csv` (Derived View C3):** Tóm tắt ma trận 2 chiều $K \times \epsilon$ từ toàn bộ Master dataset.
+11. **`manifests/od_split_manifest.csv`**: Bảng phân chia lồng nhau (nested OD splits) cố định trên positive support của 50 source cities.
+    `source_city, origin, destination, split, in_train_10, in_train_30, in_train_100, split_seed`
+12. **`manifests/source_distance_bins.csv`**: Bảng ranh giới khoảng cách cho toàn bộ 50 source cities và tất cả $K$.
     `source_city, train_split_seed, K, D_cap_p99, bin_id, lower_km, upper_km`
-12. **`manifests/source_feature_scalers.csv`**: Bảng tham số tiền xử lý và scaler của từng thành phố nguồn được đóng băng trước transfer.
+13. **`manifests/source_feature_scalers.csv`**: Bảng tham số tiền xử lý và scaler của từng thành phố nguồn được đóng băng trước transfer.
     `source_city, feature_name, feature_type, fit_scope, imputation_method, imputation_value, transform, mean, std, zero_variance_flag, n_samples`
-13. **`manifests/model_feature_schema.json`**: Bảng danh mục thứ tự cố định gồm 26 node features và 1 distance feature cho Pairwise MLP kèm `feature_schema_hash`.
-14. **`manifests/target_support_audit.csv`**: Bảng kiểm toán độc quyền tập hỗ trợ dương interzonal $\Omega_t^+$ cho đúng 50 thành phố đích (chuẩn hóa $50$ hàng, bất biến theo target city).
+14. **`manifests/model_feature_schema.json`**: Bảng danh mục thứ tự cố định gồm 26 node features và 1 distance feature cho Pairwise MLP kèm `feature_schema_hash`.
+15. **`manifests/cities_canonical.txt`**: Danh sách 50 tên thành phố chuẩn hóa được sắp xếp cố định làm Source of Truth duy nhất cho thứ tự các thành phố (50 dòng, 1 thành phố/dòng).
+16. **`manifests/target_support_audit.csv`**: Bảng kiểm toán độc quyền tập hỗ trợ dương interzonal $\Omega_t^+$ cho đúng 50 thành phố đích (chuẩn hóa $50$ hàng, bất biến theo target city).
     `target_city, n_positive_support_pairs, true_total_on_positive_support, support_definition, support_hash`
-15. **`manifests/donor_mapping.csv`**: Bảng ánh xạ donor thành phố đích cố định và tất định cho toàn bộ 2.450 cặp transfer (Experiment E).
+17. **`manifests/donor_mapping.csv`**: Bảng ánh xạ donor thành phố đích cố định và tất định cho toàn bộ 2.450 cặp transfer (Experiment D).
     `source_city, target_city, donor_city, donor_rule, canonical_order_hash`
-16. **`structural_control_results.csv`**: Kết quả kiểm chứng can thiệp Dose-Matched Scaled Donor DBD (Experiment E) cho 3 mô hình ở cấp độ từng seed ($K=8, \epsilon=0$).
+18. **`structural_control_results.csv` (Experiment D Output):** Kết quả kiểm chứng can thiệp Dose-Matched Scaled Donor DBD (Experiment D) cho 3 mô hình ở cấp độ từng seed ($f=30\%, K=8, \epsilon=0$).
     `source_city, target_city, donor_city, model, seed, K, lambda_low, lambda_high, lambda_star, target_dose, donor_raw_dose, donor_scaled_dose, dose_error, root_iterations, root_converged, CPC_before, CPC_target, CPC_donor_control, delta_CPC_target, delta_CPC_donor_control`
-17. **`structural_control_mean.csv`**: Bảng tổng hợp seed-averaged và ưu thế cấu trúc ghép cặp $\delta_{s,t}$ cho 2.450 cặp mỗi mô hình (7.350 hàng tổng cộng).
+19. **`structural_control_mean.csv`**: Bảng tổng hợp seed-averaged và ưu thế cấu trúc ghép cặp $\delta_{s,t}$ cho 2.450 cặp mỗi mô hình (7.350 hàng tổng cộng).
     `source_city, target_city, model, K, target_delta_CPC_mean, control_delta_CPC_mean, structural_advantage_delta`
-18. **`structural_control_target_summary.csv`**: Bảng tổng hợp ưu thế cấu trúc chính cấp thành phố đích $H_t$ (50 hàng mỗi mô hình, 150 hàng tổng cộng).
+20. **`structural_control_target_summary.csv`**: Bảng tổng hợp ưu thế cấu trúc chính cấp thành phố đích $H_t$ (50 hàng mỗi mô hình, 150 hàng tổng cộng).
     `target_city, model, mean_structural_advantage, median_structural_advantage, n_sources, positive_sources`
-19. **`structural_control_inference.csv`**: Bảng suy luận thống kê suy diễn tổng thể cho Experiment E (Bootstrap CI, Wilcoxon, và Crossed Mixed-Effects) cho 3 mô hình.
-    `model, mean_H, median_H, IQR_H, bootstrap_ci_low, bootstrap_ci_high, wilcoxon_stat, wilcoxon_p, positive_targets, n_targets, mixed_beta0, mixed_se, mixed_ci_low, mixed_ci_high, source_variance, target_variance, residual_variance`
+21. **`structural_control_inference.csv`**: Bảng suy luận thống kê suy diễn tổng thể cho Experiment D (Bootstrap CI, Wilcoxon, và Crossed Mixed-Effects) cho 3 mô hình.
+    `model, mean_H, median_H, IQR_H, bootstrap_ci_low, bootstrap_ci_high, wilcoxon_stat, wilcoxon_p_raw, wilcoxon_p_holm, positive_targets, positive_target_fraction, n_targets, mixed_beta0, mixed_se, mixed_ci_low, mixed_ci_high, source_variance, target_variance, residual_variance`
 
 #### Hình ảnh trực quan bổ sung (Figure):
 - **Transfer Heatmap $50 \times 50$:** Ma trận trực quan hóa mức cải thiện $\overline{\Delta \text{CPC}}_{s,t}$ trung bình qua 3 seeds:
@@ -1006,3 +1194,24 @@ Tier D: Crossed Mixed-Effects
   - Trục hoành (Columns): 50 thành phố đích.
   - Giá trị ô: $\overline{\Delta \text{CPC}}_{s,t}$ (đường chéo $s = t$ để trống `NA`).
   - Phục vụ trực quan hóa dị biệt nguồn (source effects), dị biệt đích (target effects) và tính không đồng nhất của DBD calibration. Không thay thế cho suy luận thống kê chính thống.
+
+---
+
+## 6. Scientific Logic of the Experimental Design
+
+Toàn bộ cấu trúc thực nghiệm được thiết kế theo một logic suy luận khoa học khép kín và chặt chẽ:
+
+$$\boxed{\text{Does DBD help?} \implies \textbf{Experiment A}}$$
+*(Test whether target DBD provides measurable added value when the source model itself is learned under limited OD supervision: $f=30\%, K=8, \epsilon=0$)*
+
+$$\boxed{\text{Does its value depend on OD scarcity?} \implies \textbf{Experiment B}}$$
+*(Test whether the calibration benefit changes systematically as source OD supervision varies: $f \in \{0.10, 0.30, 1.00\}, K=8, \epsilon=0$)*
+
+$$\boxed{\text{How much DBD quality is required?} \implies \textbf{Experiment C}}$$
+*(Evaluate sensitivity to bin resolution and robustness against observation errors: $f=30\%, K \in \{2,4,8,12,20\} \times \epsilon \in \{0, 0.01,\ldots,0.10\}$)*
+
+$$\boxed{\text{Does the correct target structure matter?} \implies \textbf{Experiment D}}$$
+*(Distinguish genuine target structural alignment from generic perturbation via dose-matched donor controls: $f=30\%, K=8, \epsilon=0$)*
+
+### Kết Luận Định Hướng Khoa Học (Scientific Framing Synthesis)
+> **The study is not primarily a competition among OD prediction architectures. The three baseline families provide heterogeneous transfer mechanisms on which to test a common scientific hypothesis: whether low-dimensional aggregate target mobility information can improve cross-city OD intensity reconstruction when detailed pair-level OD supervision is limited.**
