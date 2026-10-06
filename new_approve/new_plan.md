@@ -2,7 +2,15 @@
 
 Ngày sửa: 2026-10-06.
 
-Trạng thái: thiết kế đã sửa theo yêu cầu người dùng; CHƯA triển khai vào runner và CHƯA có kết quả v2. Tài liệu này thay thế phạm vi thực nghiệm của new_plan trước đây. Bản trước khi sửa được lưu nguyên trạng ở `new_plan_before_compute_revision_2026-10-06.md` để truy xuất các đặc tả kỹ thuật. Không áp dụng lẫn hai protocol trong một run.
+Trạng thái: **ĐÃ CHỐT THIẾT KẾ theo xác nhận của người dùng ngày 2026-10-06**, bao gồm 60% source test cố định. CHƯA triển khai vào runner và CHƯA có kết quả v2. Tài liệu này là nguồn cấu hình khoa học chính thức cho triển khai v2 và thay thế phạm vi thực nghiệm của new_plan trước đây. Bản trước khi sửa được lưu nguyên trạng ở `new_plan_before_compute_revision_2026-10-06.md` để truy xuất các đặc tả kỹ thuật không bị v2 thay thế. Không áp dụng lẫn hai protocol trong một run.
+
+### Hợp đồng triển khai đã chốt
+
+- Protocol ID: `new_plan_v2_focused`; main fraction 0.40; scarcity fractions {0.10, 0.20, 0.30, 0.40}.
+- Source test là suffix sau Train_40 của cùng permutation và không đổi theo fraction. OD không thuộc active Train_f hoặc Test_source bị bỏ khỏi supervised loss và source evaluation; không tự tăng test lên 70/80/90%.
+- Main comparison: raw zero-shot và calibration bằng normalized DBD từ toàn bộ positive interzonal OD của target; main K=8, TV=0.
+- Model coverage, seeds, loss, controls, thống kê và output counts phải theo các mục dưới. Không tự thêm grid hoặc đổi backbone khi triển khai.
+- Tài liệu chốt thiết kế không có nghĩa runner hiện tại đã tương thích. Chỉ chạy scientific v2 sau migration và smoke QA ở §8. Nếu đặc tả kỹ thuật còn thiếu hoặc mâu thuẫn, báo rõ vấn đề trước khi chạy; không tự điền bằng lựa chọn làm thay đổi thí nghiệm.
 
 ## 1. Mục tiêu và phạm vi kết luận
 
@@ -50,6 +58,15 @@ Training, source test, target DBD và target evaluation đều dùng positive in
 3. Với N = số pairs trên Omega_c, `Train_f = permutation[:floor(f*N)]` cho f trong {0.10, 0.20, 0.30, 0.40}.
 4. `Test_source = permutation[floor(0.40*N):]`, dùng nguyên trạng ở cả bốn fractions.
 5. Các pairs trong Train_40 nhưng ngoài Train_f không tham gia supervised loss ở fraction f và không chuyển vào test.
+
+| Active training | Source test cố định | Pairs không dùng cho loss/test (xấp xỉ) |
+|---|---|---|
+| 40% | 60% | 0% |
+| 30% | 60% | 10% |
+| 20% | 60% | 20% |
+| 10% | 60% | 30% |
+
+Fractions tính trên toàn bộ Omega_s, không tính trên riêng pool 40%. Số pairs thực tế dùng floor như trên. Test cố định giúp đánh giá cùng OD pairs giữa fractions; source test là diagnostic, target evaluation là kết quả chính. Không bắt buộc báo cáo thêm source test theo complement 100%-f.
 
 Bắt buộc `Train_10 <= Train_20 <= Train_30 <= Train_40` và mọi Train_f disjoint với Test_source. Khi floor gây trùng kích thước trên city nhỏ, ghi nhận số pairs thực tế; fail nếu training hoặc test rỗng.
 

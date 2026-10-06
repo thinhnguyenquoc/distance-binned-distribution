@@ -22,7 +22,8 @@ Protocol Requirements:
      Transform:
          d_log = log(1 + d_km)
          d_norm = (d_log - mu_s^distance) / sigma_s^distance
-     where mu_s, sigma_s are estimated ONLY from the 30% training OD split of the source city.
+     where mu_s, sigma_s are estimated only from the protocol's frozen reference
+     source-training OD split.
 
 3. Zero-Variance Safety Rule:
    If sigma_s < 10^{-12}:
@@ -131,12 +132,14 @@ class SourceCityFeatureScaler:
         self,
         raw_source_city: RawCityData,
         source_train_indices: np.ndarray,
+        distance_fit_scope: str = "source_train_od_30pct",
     ) -> "SourceCityFeatureScaler":
         """
         Fits scalers exclusively on source-side observable data:
         - Node features: fitted on all tracts/nodes of source city.
           Missing values imputed using source median before transform.
-        - Distance feature: fitted on the 30% training OD pairs of source city.
+        - Distance feature: fitted on the caller-supplied frozen reference
+          source-training OD pairs.
           Missing values imputed using source median distance before transform.
         """
         # 1. Fit node features
@@ -187,7 +190,10 @@ class SourceCityFeatureScaler:
                 n_samples=X_raw.shape[0],
             )
 
-        # 2. Fit distance feature (from 30% train split)
+        if not distance_fit_scope or not isinstance(distance_fit_scope, str):
+            raise ValueError("distance_fit_scope must be a non-empty string")
+
+        # 2. Fit distance feature from the caller-supplied reference split.
         train_dists = raw_source_city.dist_km[source_train_indices].astype(np.float64)
         valid_dist_mask = np.isfinite(train_dists)
         if int(np.sum(valid_dist_mask)) == 0:
@@ -207,7 +213,7 @@ class SourceCityFeatureScaler:
         self.distance_scaler = SingleFeatureScaler(
             feature_name="distance",
             feature_type="pairwise_distance",
-            fit_scope="source_train_od_30pct",
+            fit_scope=distance_fit_scope,
             transform_type="log1p_zscore",
             imputation_method="source_median",
             imputation_value=d_imputation_val,
