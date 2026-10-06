@@ -14,7 +14,7 @@
     let upBal = 0;
     let lastBatchBal = 0;
     let hasRunAtLeastOnce = false;
-    const MIN_BET = 1e-7; // 10e-8 = 1e-7 BCH
+    const MIN_BET = 128e-7; // 10e-8 = 1e-7 BCH
 
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     const round8 = (num) => Math.round(num * 1e8) / 1e8;
@@ -114,104 +114,116 @@
         try {
             console.log(`[BCH-BOT] Bal: ${bal} | UpBal: ${upBal} | LastBatchBal: ${lastBatchBal} | Bet: ${bet}`);
 
-            if (!hasRunAtLeastOnce) {
-                upBal = bal;
-                lastBatchBal = bal;
-            } else {
-                const batchProfit = round8(bal - lastBatchBal);
-                console.log(`[BCH-BOT] 10-Bet Batch kết thúc! Profit: ${batchProfit}`);
+            // if (!hasRunAtLeastOnce) {
+            //     upBal = bal;
+            //     lastBatchBal = bal;
+            // } else {
+            //     const batchProfit = round8(bal - lastBatchBal);
+            //     console.log(`[BCH-BOT] 10-Bet Batch kết thúc! Profit: ${batchProfit}`);
 
-                if (bal > upBal) {
-                    // Đạt đỉnh vốn mới: Cập nhật đỉnh và reset về MIN_BET
-                    console.log(`[BCH-BOT] Đạt đỉnh mới: ${bal} > ${upBal}. Giảm về MIN_BET.`);
-                    upBal = bal;
+            //     if (bal > upBal) {
+            //         // Đạt đỉnh vốn mới: Cập nhật đỉnh và reset về MIN_BET
+            //         console.log(`[BCH-BOT] Đạt đỉnh mới: ${bal} > ${upBal}. Giảm về MIN_BET.`);
+            //         upBal = bal;
 
-                    let tempBet = bet;
-                    let decreaseCount = 0;
-                    while (round8(tempBet / 2) >= MIN_BET) {
-                        decreaseCount++;
-                        tempBet = round8(tempBet / 2);
-                    }
+            //         let tempBet = bet;
+            //         let decreaseCount = 0;
+            //         while (round8(tempBet / 2) >= MIN_BET) {
+            //             decreaseCount++;
+            //             tempBet = round8(tempBet / 2);
+            //         }
 
-                    if (decreaseCount > 0) {
-                        await clickRepeatedly(decrease, decreaseCount, 300);
-                        bet = tempBet;
-                    }
-                } else if (batchProfit < 0) {
-                    // Kiểm tra trước xem x2 có an toàn không
-                    const nextBet = round8(bet * 2);
-                    if (round8(2 * nextBet + bal) <= upBal) {
-                        console.log(`[BCH-BOT] Batch lỗ (${batchProfit} BCH) -> x2 Bet lên ${nextBet}.`);
-                        await delay(300);
-                        increase?.click();
-                        bet = nextBet;
-                    } else {
-                        console.log(`[BCH-BOT] Batch lỗ nhưng x2 sẽ vượt trần an toàn (${round8(2 * nextBet + bal)} > ${upBal}) -> Không x2.`);
+            //         if (decreaseCount > 0) {
+            //             await clickRepeatedly(decrease, decreaseCount, 300);
+            //             bet = tempBet;
+            //         }
+            //     } else if (batchProfit < 0) {
+            //         // Kiểm tra trước xem x2 có an toàn không
+            //         const nextBet = round8(bet * 2);
+            //         if (round8(2 * nextBet + bal) <= upBal) {
+            //             console.log(`[BCH-BOT] Batch lỗ (${batchProfit} BCH) -> x2 Bet lên ${nextBet}.`);
+            //             await delay(300);
+            //             increase?.click();
+            //             bet = nextBet;
+            //         } else {
+            //             console.log(`[BCH-BOT] Batch lỗ nhưng x2 sẽ vượt trần an toàn (${round8(2 * nextBet + bal)} > ${upBal}) -> Không x2.`);
                         
-                        // Nếu bản thân mức cược hiện tại đã vượt trần: 2*bet + bal > upBal thì hạ cược
-                        if (round8(2 * bet + bal) > upBal && bet > MIN_BET) {
-                            let tempBet = bet;
-                            let decreaseCount = 0;
-                            while (round8(2 * tempBet + bal) > upBal && round8(tempBet / 2) >= MIN_BET) {
-                                decreaseCount++;
-                                tempBet = round8(tempBet / 2);
-                            }
-                            if (decreaseCount > 0) {
-                                console.log(`[BCH-BOT] Hạ cược ${decreaseCount} lần về ${tempBet} để nằm trong trần an toàn.`);
-                                await delay(300);
-                                await clickRepeatedly(decrease, decreaseCount, 300);
-                                bet = tempBet;
-                            }
-                        }
-                    }
-                } else {
-                    // Thắng / hòa: Giữ nguyên cược, chỉ hạ nếu mức cược hiện tại vượt trần an toàn
-                    console.log(`[BCH-BOT] Batch hòa/thắng (+${batchProfit} BCH) -> Giữ nguyên bet.`);
-                    if (round8(2 * bet + bal) > upBal && bet > MIN_BET) {
-                        let tempBet = bet;
-                        let decreaseCount = 0;
-                        while (round8(2 * tempBet + bal) > upBal && round8(tempBet / 2) >= MIN_BET) {
-                            decreaseCount++;
-                            tempBet = round8(tempBet / 2);
-                        }
-                        if (decreaseCount > 0) {
-                            console.log(`[BCH-BOT] Hạ cược an toàn ${decreaseCount} lần về ${tempBet}.`);
-                            await delay(300);
-                            await clickRepeatedly(decrease, decreaseCount, 300);
-                            bet = tempBet;
-                        }
-                    }
-                }
-            }
+            //             // Nếu bản thân mức cược hiện tại đã vượt trần: 2*bet + bal > upBal thì hạ cược
+            //             if (round8(2 * bet + bal) > upBal && bet > MIN_BET) {
+            //                 let tempBet = bet;
+            //                 let decreaseCount = 0;
+            //                 while (round8(2 * tempBet + bal) > upBal && round8(tempBet / 2) >= MIN_BET) {
+            //                     decreaseCount++;
+            //                     tempBet = round8(tempBet / 2);
+            //                 }
+            //                 if (decreaseCount > 0) {
+            //                     console.log(`[BCH-BOT] Hạ cược ${decreaseCount} lần về ${tempBet} để nằm trong trần an toàn.`);
+            //                     await delay(300);
+            //                     await clickRepeatedly(decrease, decreaseCount, 300);
+            //                     bet = tempBet;
+            //                 }
+            //             }
+            //         }
+            //     } else {
+            //         // Thắng / hòa: Giữ nguyên cược, chỉ hạ nếu mức cược hiện tại vượt trần an toàn
+            //         console.log(`[BCH-BOT] Batch hòa/thắng (+${batchProfit} BCH) -> Giữ nguyên bet.`);
+            //         if (round8(2 * bet + bal) > upBal && bet > MIN_BET) {
+            //             let tempBet = bet;
+            //             let decreaseCount = 0;
+            //             while (round8(2 * tempBet + bal) > upBal && round8(tempBet / 2) >= MIN_BET) {
+            //                 decreaseCount++;
+            //                 tempBet = round8(tempBet / 2);
+            //             }
+            //             if (decreaseCount > 0) {
+            //                 console.log(`[BCH-BOT] Hạ cược an toàn ${decreaseCount} lần về ${tempBet}.`);
+            //                 await delay(300);
+            //                 await clickRepeatedly(decrease, decreaseCount, 300);
+            //                 bet = tempBet;
+            //             }
+            //         }
+            //     }
+            // }
 
             // Nghỉ khoảng ~1.5s sau khi phát hiện nút Play sáng trước khi mở popup cho tự nhiên giống người
             const openPopupDelay = 1400 + Math.floor(Math.random() * 300); // 1.4s - 1.7s (~1.5s)
             console.log(`[BCH-BOT] Chờ ${openPopupDelay}ms trước khi bấm mở popup autoplay...`);
             await delay(openPopupDelay);
 
+            if (isAutoplayRunning()) {
+                console.log('[BCH-BOT] CANCEL đang hiển thị -> bỏ qua mở autoplay popup.');
+                return;
+            }
+
+            const currentPlayBtn = findPlayButton();
+            const currentOpenPopupBtn = currentPlayBtn?.querySelector('svg')?.parentElement;
+            if (!currentOpenPopupBtn || currentPlayBtn.disabled) {
+                console.log('[BCH-BOT] Trạng thái PLAY đã thay đổi -> bỏ qua mở autoplay popup.');
+                return;
+            }
+
             // Mở popup cấu hình Autoplay
-            openPopupBtn.click();
+            currentOpenPopupBtn.click();
 
             // Chờ popup mở và kiểm tra input #number-of-games__0 có giá trị là '10'
             let gamesInputValid = false;
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 3; i++) {
                 await delay(300);
                 const gamesInput = document.getElementById('number-of-games__0');
-                if (gamesInput && gamesInput.value.trim() === '10') {
+                if (gamesInput && gamesInput.value.trim() === '100') {
                     gamesInputValid = true;
                     break;
                 }
             }
 
             if (!gamesInputValid) {
-                console.warn('[BCH-BOT] Input number-of-games__0 chưa phải là 10, đóng/bỏ qua popup để an toàn.');
+                console.warn('[BCH-BOT] Input number-of-games__0 chưa phải là 100, đóng/bỏ qua popup để an toàn.');
                 // Đóng popup nếu cần (click lại openPopupBtn hoặc nút đóng nếu có)
                 return;
             }
 
             // Đợi nút START AUTOPLAY xuất hiện
             let startBtn = null;
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 3; i++) {
                 startBtn = findButtonByText('START AUTOPLAY');
                 if (startBtn) break;
                 await delay(300);
@@ -222,6 +234,17 @@
                 const humanDelay = 1800 + Math.floor(Math.random() * 400); // 1.8s - 2.2s
                 console.log(`[BCH-BOT] Chờ ${humanDelay}ms trước khi bấm START AUTOPLAY (human-like delay)...`);
                 await delay(humanDelay);
+
+                if (isAutoplayRunning()) {
+                    console.log('[BCH-BOT] CANCEL đang hiển thị -> không START AUTOPLAY.');
+                    return;
+                }
+
+                startBtn = findButtonByText('START AUTOPLAY');
+                if (!startBtn || startBtn.disabled) {
+                    console.log('[BCH-BOT] START AUTOPLAY không còn khả dụng -> bỏ qua.');
+                    return;
+                }
 
                 // Cập nhật lại số dư mới nhất (nếu có biến động nhẹ trong 2s chờ) trước khi bấm Start
                 const latestBchHeader = Array.from(document.querySelectorAll('header'))
@@ -239,7 +262,7 @@
 
                 // Bước 1: Chờ autoplay thực sự bắt đầu (nút CANCEL xuất hiện) - tối đa 6s
                 let started = false;
-                for (let i = 0; i < 20; i++) {
+                for (let i = 0; i < 3; i++) {
                     await delay(300);
                     if (isAutoplayRunning()) {
                         started = true;
@@ -248,7 +271,7 @@
                 }
 
                 if (started) {
-                    console.log('[BCH-BOT] Autoplay đang chạy... Chờ hoàn tất 10 lượt.');
+                    console.log('[BCH-BOT] Autoplay đang chạy... Chờ hoàn tất 100 lượt.');
                     // Bước 2: Chờ cho tới khi CANCEL biến mất và nút PLAY xuất hiện lại
                     while (isAutoplayRunning() || !findPlayButton()) {
                         await delay(500);

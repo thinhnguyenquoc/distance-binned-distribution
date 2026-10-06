@@ -1,0 +1,361 @@
+"""
+Master 5-Fold Cross-Validation Experiment Runner (Moving-Bin Calibration Framework).
+"""
+
+import os
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+import sys
+import json
+import time
+import argparse
+import torch
+from pathlib import Path
+
+# Ensure root directory is in sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+from implement_new_plan.data.city_splits import generate_35_5_10_splits
+from implement_new_plan.data.yd_extractor import compute_kbin_edges
+from implement_new_plan.training.train import train_zero_shot_model
+from implement_new_plan.experiment.run_experiment import run_target_city_experiments
+from implement_new_plan.experiment.compute_delta_r import analyze_delta_r
+from implement_new_plan.training.train import load_checkpoint
+
+
+def _write_json_atomic(path: Path, payload: dict) -> None:
+    temporary_path = path.with_suffix(path.suffix + ".tmp")
+    with open(temporary_path, "w", encoding="utf-8") as output_file:
+        json.dump(payload, output_file, indent=2)
+        output_file.flush()
+        os.fsync(output_file.fileno())
+    os.replace(temporary_path, path)
+
+
+def run_5fold_experiment(
+    data_root: str = "data",
+    meta_prior_dir: str = "meta_prior",
+    output_dir: str = "results",
+    epochs_per_fold: int = 200,
+    lr: float = 3.2e-3,
+    hidden_dim: int = 64,
+    num_gnn_layers: int = 2,
+    graph_type: str = "radius",
+    radius_km: float = 5.0,
+    knn_k: int = 10,
+    loss_type: str = "ztnb",
+    backbone: str = "gnn",
+    num_trip_seeds: int = 20,
+    seeds: list[int] | None = None,
+    folds_to_run: list[int] | None = None,
+    device_str: str | None = None,
+    training_provenance: dict | None = None,
+):
+    os.makedirs(output_dir, exist_ok=True)
+    splits = generate_35_5_10_splits(data_root=data_root)
+    manifest_path = Path(__file__).resolve().parents[2] / "results" / "e1" / "splits_manifest_v2.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Missing locked split manifest: {manifest_path}")
+    with open(manifest_path, "r", encoding="utf-8") as manifest_file:
+        split_manifest_sha256 = json.load(manifest_file)["manifest_sha256"]
+
+    if device_str is None:
+        device_str = "cuda" if torch.cuda.is_available() else "cpu"
+
+    if folds_to_run is None:
+        folds_to_run = [1, 2, 3, 4, 5]
+    if seeds is None:
+        seeds = [1, 10, 100]
+
+    print("=" * 85)
+    print("STARTING 5-FOLD CROSS-VALIDATION (MOVING-BIN CALIBRATION FRAMEWORK)")
+    print(f"Device: {device_str} | Epochs: {epochs_per_fold} | Graph: {graph_type} (r={radius_km}km)")
+    print(f"Primary Calibration Domain: Omega_c^+ (Positive interzonal support, K=8)")
+    print(f"Folds to run: {folds_to_run}")
+    print("=" * 85)
+
+    out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
+    out_file = Path(output_dir) / out_file_name
+    run_signature = {
+        "lr": lr,
+        "backbone": backbone,
+        "seeds": list(seeds),
+        "folds": list(folds_to_run),
+        "epochs_per_fold": epochs_per_fold,
+        "hidden_dim": hidden_dim,
+        "num_gnn_layers": num_gnn_layers,
+        "graph_type": graph_type,
+        "radius_km": radius_km,
+        "knn_k": knn_k,
+        "loss_type": loss_type,
+        "split_manifest_sha256": split_manifest_sha256,
+    }
+
+    if training_provenance:
+        run_signature.update(training_provenance)
+
+    all_city_results = []
+    if out_file.exists():
+        try:
+            with open(out_file, "r") as f:
+                prev_json = json.load(f)
+                if prev_json.get("experiment_config", {}).get("run_signature") == run_signature:
+                    all_city_results = prev_json.get("city_level_results", [])
+                    print(f"Loaded {len(all_city_results)} existing city records from {out_file}.")
+                else:
+                    print(f"Ignoring stale result artifact with mismatched run signature: {out_file}")
+        except Exception:
+            all_city_results = []
+
+    fold_summaries = {}
+
+    start_total_time = time.time()
+
+    for fold_id in folds_to_run:
+        split = splits[fold_id]
+        train_cities = split["train"]
+        val_cities = split["val"]
+        test_cities = split["test"]
+
+        print("\n" + "#" * 85)
+        print(f"FOLD {fold_id}/5: Training on {len(train_cities)} cities -> Testing on {len(test_cities)} held-out cities")
+        print(f"Validation cities: {val_cities}")
+        print(f"Held-out targets: {test_cities}")
+        print("#" * 85)
+
+        fold_start = time.time()
+        models = []
+        scalers = []
+        for seed_idx, seed in enumerate(seeds):
+            _ckpt_dir  = Path(output_dir) / "checkpoints"
+            _ckpt_name = f"5fold_fold{fold_id}_seed{seed}.pt" if backbone == "gnn" else f"{backbone}_fold{fold_id}_seed{seed}.pt"
+            _ckpt_path = _ckpt_dir / _ckpt_name
+            
+            expected_config = {
+                "hidden_dim": hidden_dim,
+                "num_gnn_layers": num_gnn_layers,
+                "graph_type": graph_type,
+                "radius_km": radius_km,
+                "knn_k": knn_k,
+                "loss_type": loss_type,
+                "epochs": epochs_per_fold,
+                "lr": lr,
+                "backbone": backbone,
+            }
+            if training_provenance:
+                expected_config.update(training_provenance)
+            if _ckpt_path.exists():
+                print(f"--- Found existing checkpoint {_ckpt_path}. Loading... ---")
+                model, scaler, metadata = load_checkpoint(_ckpt_path, device_str=device_str, expected_config=expected_config)
+                checkpoint_hp = metadata.get("hyperparams", {})
+                assert metadata.get("seed") == seed, f"Checkpoint seed mismatch in {_ckpt_path}"
+                assert checkpoint_hp.get("fold") == fold_id, f"Checkpoint fold mismatch in {_ckpt_path}"
+                assert checkpoint_hp.get("split_manifest_sha256") == split_manifest_sha256, (
+                    f"Checkpoint split manifest mismatch in {_ckpt_path}"
+                )
+                model.eval()
+            else:
+                print(f"\n--- Training Seed {seed_idx+1}/{len(seeds)} (Seed: {seed}) [Backbone: {backbone.upper()}] ---")
+                model, scaler = train_zero_shot_model(
+                    train_city_names=train_cities,
+                    data_root=data_root,
+                    epochs=epochs_per_fold,
+                    lr=lr,
+                    hidden_dim=hidden_dim,
+                    num_gnn_layers=num_gnn_layers,
+                    graph_type=graph_type,
+                    radius_km=radius_km,
+                    knn_k=knn_k,
+                    loss_type=loss_type,
+                    backbone=backbone,
+                    device_str=device_str,
+                    verbose=True,
+                    val_city_names=val_cities,
+                    patience=16,
+                    checkpoint_path=_ckpt_path,
+                    run_tag=f"5fold_{backbone}_fold{fold_id}_seed{seed}",
+                    seed=seed,
+                    fold=fold_id,
+                    split_manifest_sha256=split_manifest_sha256,
+                    training_provenance=training_provenance,
+                )
+            models.append(model)
+            scalers.append(scaler)
+        print(f"Fold {fold_id} models trained in {time.time() - fold_start:.1f}s.")
+
+
+
+
+        # Compute Bin Edges from 35 train cities (K=8)
+        bin_edges, K_active = compute_kbin_edges(train_cities, K=8, data_root=data_root)
+
+        # Stage B: Target City Evaluation
+        fold_city_results = [r for r in all_city_results if r.get("fold") == fold_id]
+        completed_cities = {r.get("city") for r in fold_city_results}
+        for target_city in test_cities:
+            if target_city in completed_cities:
+                print(f"  -> Reusing saved result: {target_city}")
+                continue
+            print(f"  -> Evaluating: {target_city:<18}", end="", flush=True)
+            t0 = time.time()
+            
+            seed_results = []
+            for seed_idx, model in enumerate(models):
+                scaler = scalers[seed_idx]
+                res = run_target_city_experiments(
+                    model=model,
+                    city_name=target_city,
+                    scaler=scaler,
+                    data_root=data_root,
+                    graph_type=graph_type,
+                    radius_km=radius_km,
+                    knn_k=knn_k,
+                    device_str=device_str,
+                    bin_edges=bin_edges,
+                )
+                seed_results.append(res)
+                
+            # Average the results across 3 seeds
+            avg_res = seed_results[0].copy()
+            for key in ["M0", "M1_city_oracle_obs", "M1_county_oracle_obs", "M1_subzone_oracle_obs"]:
+                if avg_res[key] is not None:
+                    avg_res[key] = avg_res[key].copy()
+                    for metric in ["cpc_inter", "mae_inter", "rmse_inter", "nrmse_inter", "rmse_log1p_inter", "spearman_inter", "rel_error_total", "cpc_inflow", "cpc_outflow"]:
+                        if metric in avg_res[key]:
+                            avg_res[key][metric] = sum(r[key][metric] for r in seed_results) / len(seed_results)
+            
+            for key in ["rho_c", "average_flow", "mean_distance"]:
+                if key in avg_res and avg_res[key] is not None:
+                    avg_res[key] = sum(r[key] for r in seed_results) / len(seed_results)
+            
+            # Compute Deltas (Primary Estimands)
+            avg_res["delta_city"] = avg_res["M1_city_oracle_obs"]["cpc_inter"] - avg_res["M0"]["cpc_inter"]
+            avg_res["delta_county"] = avg_res["M1_county_oracle_obs"]["cpc_inter"] - avg_res["M0"]["cpc_inter"]
+            avg_res["delta_subzone"] = avg_res["M1_subzone_oracle_obs"]["cpc_inter"] - avg_res["M0"]["cpc_inter"]
+            
+            city_res = avg_res
+            city_res["fold"] = fold_id
+            fold_city_results.append(city_res)
+            all_city_results.append(city_res)
+
+            m0_c = city_res['M0']['cpc_inter']
+            m1_city = city_res['M1_city_oracle_obs']['cpc_inter']
+            m1_county = city_res['M1_county_oracle_obs']['cpc_inter']
+            m1_sub = city_res['M1_subzone_oracle_obs']['cpc_inter']
+
+            print(f" | M0: {m0_c:.4f} | M1_city: {m1_city:.4f} (d={avg_res['delta_city']:+.4f}) | M1_county: {m1_county:.4f} (d={avg_res['delta_county']:+.4f}) | M1_subzone: {m1_sub:.4f} (d={avg_res['delta_subzone']:+.4f}) | {time.time() - t0:.1f}s")
+
+            _write_json_atomic(out_file, {
+                "experiment_config": {
+                    **run_signature,
+                    "total_cities_evaluated": len(all_city_results),
+                    "total_runtime_sec": time.time() - start_total_time,
+                    "run_signature": run_signature,
+                },
+                "rq1_delta_r": analyze_delta_r(all_city_results),
+                "city_level_results": all_city_results,
+            })
+
+        fold_summaries[f"fold_{fold_id}"] = {
+            "test_cities": test_cities,
+            "mean_delta_city": float(sum(r["delta_city"] for r in fold_city_results) / max(1, len(fold_city_results))),
+        }
+        
+        # Intermediate Save
+        out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
+        out_file = Path(output_dir) / out_file_name
+        temp_delta_r = analyze_delta_r(all_city_results)
+        temp_results = {
+            "experiment_config": {
+                "device": device_str,
+                "epochs_per_fold": epochs_per_fold,
+                "hidden_dim": hidden_dim,
+                "graph_type": graph_type,
+                "radius_km": radius_km,
+                "knn_k": knn_k,
+                "loss_type": loss_type,
+                "total_cities_evaluated": len(all_city_results),
+                "total_runtime_sec": time.time() - start_total_time,
+            },
+            "rq1_delta_r": temp_delta_r,
+            "city_level_results": all_city_results,
+        }
+        temp_results["experiment_config"]["run_signature"] = run_signature
+        _write_json_atomic(out_file, temp_results)
+
+    # Cross-city Statistical Aggregation (Final)
+    delta_r_analysis = analyze_delta_r(all_city_results)
+
+    final_results = {
+        "experiment_config": {
+            "device": device_str,
+            "epochs_per_fold": epochs_per_fold,
+            "hidden_dim": hidden_dim,
+            "graph_type": graph_type,
+            "radius_km": radius_km,
+            "knn_k": knn_k,
+            "loss_type": loss_type,
+            "total_cities_evaluated": len(all_city_results),
+            "total_runtime_sec": time.time() - start_total_time,
+        },
+        "rq1_delta_r": delta_r_analysis,
+        "city_level_results": all_city_results,
+    }
+
+    out_file_name = "5fold_results.json" if backbone == "gnn" else f"{backbone}_backbone_results.json"
+    out_file = Path(output_dir) / out_file_name
+    final_results["experiment_config"]["run_signature"] = run_signature
+    _write_json_atomic(out_file, final_results)
+
+    print("\n" + "=" * 85)
+    print("FINAL SUMMARY: UNIFIED RESOLUTION CALIBRATION (CITY / COUNTY / SUBZONE)")
+    print("TASK: OD intensity reconstruction conditional on the observed positive OD support.")
+    print("=" * 85)
+    print(f"Total cities evaluated: {len(all_city_results)}/50")
+
+    for scale in ["city", "county", "subzone"]:
+        if scale in delta_r_analysis:
+            s_data = delta_r_analysis[scale]
+            scale_label = "GADM 4.1 LEVEL-2 COUNTY" if scale == "county" else f"{scale.upper()}"
+            if scale == "subzone":
+                scale_label = "FINE-GRAINED SUBZONE ORACLE / INFORMATION CEILING"
+            print(f"\n[{scale_label}-LEVEL CALIBRATION]")
+            if scale == "subzone":
+                print("  (Note: Subzone is a high-resolution ceiling limit, not used as main evidence for Y_D)")
+            print(f"  M0 Interzonal CPC (Mean):                       {s_data['m0_cpc_inter']['mean']:.4f}")
+            print(f"  M1 Interzonal CPC (Mean):                       {s_data['m1_cpc_inter']['mean']:.4f}")
+            print(f"  Delta Mean +- Std:                              {s_data['delta_cpc_inter']['mean']:+.4f} +- {s_data['delta_cpc_inter']['std']:.4f}")
+            print(f"  Delta 95% CI (Fold-Stratified Bootstrap):       [{s_data['delta_cpc_inter']['ci_95_lower']:+.4f}, {s_data['delta_cpc_inter']['ci_95_upper']:+.4f}]")
+            win_rate = s_data['p_improved'] * 100
+            n_eval_cities = s_data.get('n_cities', len(all_city_results))
+            n_wins = int(s_data['p_improved'] * n_eval_cities)
+            print(f"  Win Rate (Delta > 0):                           {n_wins}/{n_eval_cities} cities ({win_rate:.1f}%)")
+            if "wilcoxon_two_sided_p" in s_data:
+                print(f"  Wilcoxon Two-Sided p-value:                     {s_data['wilcoxon_two_sided_p']:.4e}")
+            if "rank_biserial_r" in s_data:
+                print(f"  Matched-pairs Rank-biserial (r_rb):             {s_data['rank_biserial_r']:.4f}")
+
+    print(f"\nSaved full results to: {out_file.resolve()}")
+    print("=" * 85)
+    return final_results
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", type=int, default=200)
+    parser.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4, 5])
+    parser.add_argument("--graph-type", type=str, default="radius", choices=["radius", "adaptive_radius", "knn"])
+    parser.add_argument("--radius", type=float, default=5.0)
+    parser.add_argument("--knn-k", type=int, default=10)
+    parser.add_argument("--backbone", type=str, default="gnn", choices=["gnn", "mlp"])
+    parser.add_argument("--device", type=str, default=None)
+    args = parser.parse_args()
+    run_5fold_experiment(
+        epochs_per_fold=args.epochs,
+        folds_to_run=args.folds,
+        graph_type=args.graph_type,
+        radius_km=args.radius,
+        knn_k=args.knn_k,
+        loss_type="ztnb",
+        backbone=args.backbone,
+        device_str=args.device,
+    )

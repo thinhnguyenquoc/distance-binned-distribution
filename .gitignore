@@ -253,3 +253,13 @@ archive/
 
 # Generated split manifest exceeds GitHub's file-size limit
 manifests/od_split_manifest.csv
+new_plan_result/checkpoints/*
+manifests/*
+new_plan_result_test/*.csv
+new_plan_result_test/manifests/*.csv
+new_plan_result_test_opt/*.csv
+new_plan_result_test_opt/checkpoints/*.csv
+*.csv
+manifests/source_distance_bins.csv
+manifests/target_support_audit.csv
+manifests/source_feature_scalers.csv
